@@ -2,5 +2,6 @@ using TPSA
 using Test
 
 @testset "TPSA.jl" begin
-    # Write your tests here.
+  @test TPSA.greet_TPSA() == "Hello TPSA!"
+  @test TPSA.greet_TPSA() != "Hello world!"
 end
