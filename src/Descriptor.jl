@@ -1,29 +1,6 @@
-# Descriptor (TPSA) module implementation
+# TPSA Structures Module implementation
 module Descriptor
-export Ctpsa, Tpsa, Desc
-
-mutable struct Ctpsa{T}
-  d::T                      # Ptr to Ctpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::Ref{Cuchar}       # tpsa name
-  coef::Ptr{ComplexF64}  # warning: must be identical to ctpsa up to coef excluded
-end
-
-
-mutable struct Tpsa{T}
-  d::T                      # Ptr to tpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::Ref{Cuchar}       # tpsa name
-  coef::Ptr{Cdouble}     # warning: must be identical to ctpsa up to coef excluded
-end
+export Desc, new
 
 struct Desc{T,C}
   id::Cint                  # index in list of registered descriptors
@@ -42,7 +19,7 @@ struct Desc{T,C}
   monos::Ptr{Cuchar}        # 'matrix' storing the monomials (sorted by var)
   ords::Ptr{Cuchar}         # Order of each mono of To
   To::Ptr{Ptr{Cuchar}}      # Table by orders -- pointers to monos, sorted by order
-  Tv::Ptr{Ptr{Cuchar}}      # Table by vars   -- points to monos, sorted by vars
+  Tv::Ptr{Ptr{Cuchar}}      # Table by vars   -- pointers to monos, sorted by vars
   ocs::Ptr{Ptr{Cuchar}}     # ocs[t,i] -> o; in mul, compute o on thread t; 3 <= o <= mo; terminated with 0
 
   order2idx::Ptr{Cint}      # order to polynomial start index in To (i.e. in TPSA coef[])
@@ -59,5 +36,4 @@ struct Desc{T,C}
   ti::Ptr{Cint}          # idx of tmp ised
   cti::Ptr{Cint}         # idx of tmp used
 end
-
 end
