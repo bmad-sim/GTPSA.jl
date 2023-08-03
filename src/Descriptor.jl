@@ -4,9 +4,9 @@ export Desc, new
 
 struct Desc{T,C}
   id::Cint                  # index in list of registered descriptors
+  nn::Cint                  # nn = nv+np <= 100000
   nv::Cint                  # nv = number of variables
   np::Cint                  # np = number of parameters
-  nn::Cint                  # nn = nv+np <= 100000
   mo::Cuchar                # max orders of vars
   po::Cuchar                # max orders of params
   to::Cuchar                # global order of truncation. Note ord_t in mad_tpsa is typedef for unsigned char (Cuchar)
