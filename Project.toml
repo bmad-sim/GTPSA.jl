@@ -3,6 +3,9 @@ uuid = "dbf3670b-7870-4525-844b-ea5ede5f6926"
 authors = ["Matt Signorelli"]
 version = "1.0.0-DEV"
 
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
 [compat]
 julia = "1"
 
