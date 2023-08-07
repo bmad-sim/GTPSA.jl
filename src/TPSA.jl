@@ -7,44 +7,44 @@ using .RealTPSA
 using .ComplexTPSA
 using Printf
 #import Base: sin
-export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,set_name,cleanup,print_TPSA_mad,MAD_TPSA_DEFAULT, MAD_TPSA_SAME
+export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,set_name!,cleanup,desc_maxlen,MAD_TPSA_DEFAULT, MAD_TPSA_SAME
 
 const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 
 """
-    new_desc(nv::Integer, mo::Integer)::Ptr{Desc{RTPSA,CTPSA}}
+    new_desc(nv::Integer, mo::UInt8)::Ptr{Desc{RTPSA,CTPSA}}
 
   Creates a TPSA descriptor with the specified number of variables and maximum order. 
   The number of parameters is set to 0. 
 
   Input:
     nv -- Number of variables 
-    mo -- Maximum order, must be between 0 and 255 (UInt8) for safe conversion to C
+    mo -- Maximum order, must be between 0x0 and 0x255 (UInt8)
 
   Output:
     A pointer to the TPSA descriptor created, with:
     Desc.nv = nv 
     Desc.mo = mo
 """
-function new_desc(nv::Integer, mo::Integer)::Ptr{Desc{RTPSA,CTPSA}}
+function new_desc(nv::Integer, mo::UInt8)::Ptr{Desc{RTPSA,CTPSA}}
   d = @ccall MAD_TPSA.mad_desc_newv(nv::Cint,mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
   return d
 end
 
 
 """
-    new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer)::Ptr{Desc{RTPSA,CTPSA}}
+    new_desc(nv::Integer, mo::UInt8, np::Integer, po::UInt8)::Ptr{Desc{RTPSA,CTPSA}}
 
   Creates a TPSA descriptor with the specifed number of variables, maximum order,
   number of parameters, and parameter order.
   
   Input:
     nv -- Number of variables 
-    mo -- Maximum order, must be between 0 and 255 (UInt8) for safe conversion to C
+    mo -- Maximum order, must be between 0x0 and 0x255 (UInt8)
     np -- Number of parameters
-    po -- Parameter order,  must be between 0 and 255 (UInt8) for safe conversion to C
+    po -- Parameter order, must be between 0x0 and 0x255 (UInt8)
 
   Output:
     A pointer to the TPSA descriptor created, with:
@@ -53,13 +53,13 @@ end
     Desc.np = np
     Desc.po = po
 """
-function new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer)::Ptr{Desc{RTPSA,CTPSA}}
+function new_desc(nv::Integer, mo::UInt8, np::Integer, po::UInt8)::Ptr{Desc{RTPSA,CTPSA}}
   d = @ccall MAD_TPSA.mad_desc_newvp(nv::Cint, mo::Cuchar, np::Cint, po::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
   return d
 end
 
 """
-  new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer,no::Vector{<:UInt8})::Ptr{Desc{RTPSA,CTPSA}}
+  new_desc(nv::Integer, mo::UInt8, np::Integer, po::UInt8, no::Vector{<:UInt8})::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order,
 number of parameters, parameter order, and individual variable/parameter orders 
@@ -68,9 +68,9 @@ and the next np entries correspond the parameters' orders.
 
 Input:
   nv -- Number of variables 
-  mo -- Maximum order
+  mo -- Maximum order, must be between 0x0 and 0x255 (UInt8)
   np -- Number of parameters
-  po -- Parameter order
+  po -- Parameter order, must be between 0x0 and 0x255 (UInt8)
   no -- Vector of variable and parameter orders, in order. Must be length nv+np (FIGURE OUT order). 
 
 Output:
@@ -81,21 +81,21 @@ Output:
   Desc.po = po
   Desc.no = no
 """
-function new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{<:UInt8})::Ptr{Desc{RTPSA,CTPSA}}
+function new_desc(nv::Integer, mo::UInt8, np::Integer, po::UInt8, no::Vector{<:UInt8})::Ptr{Desc{RTPSA,CTPSA}}
   d = @ccall MAD_TPSA.mad_desc_newvpo(nv::Cint, mo::Cuchar, np::Cint, po::Cuchar, no::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
   return d
 end
 
 
 """
-    new_TPSA(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Integer)::Ptr{RTPSA{Desc}}
+    new_TPSA(d::Ptr{Desc{RTPSA,CTPSA}}, mo::UInt8)::Ptr{RTPSA{Desc}}
 
   Creates a real TPSA defined by the specified descriptor and maximum order.
   If mad_tpsa_default is passed for mo, the mo defined in the descriptor is used.
   
   Input:
     d  -- Descriptor for TPSA
-    mo -- Maximum order of TPSA
+    mo -- Maximum order of TPSA, must be between 0x0 and 0x255 (UInt8)
 
   Output:
     A pointer to the real TPSA created, with:
@@ -103,24 +103,24 @@ end
     RTPSA.mo  = mo
     and all other members initialized to 0.
 """
-function new_TPSA(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Integer)::Ptr{RTPSA{Desc}}
+function new_TPSA(d::Ptr{Desc{RTPSA,CTPSA}}, mo::UInt8)::Ptr{RTPSA{Desc}}
   @ccall MAD_TPSA.mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}},mo::Cuchar)::Ptr{RTPSA{Desc}}
 end
 
 """
-    new_TPSA(t::Ptr{RTPSA{Desc}}, mo::Integer)::Ptr{RTPSA{Desc}}
+    new_TPSA(t::Ptr{RTPSA{Desc}}, mo::UInt8)::Ptr{RTPSA{Desc}}
 
   Creates a real TPSA copy of the inputted TPSA, with maximum order specified by mo.
   If mad_tpsa_same is passed for mo, the mo currently in t is used for the created TPSA.
   
   Input:
     t  -- Pointer to real TPSA to copy
-    mo -- Maximum order of new TPSA
+    mo -- Maximum order of new TPSA, must be between 0x0 and 0x255 (UInt8)
 
   Output:
     A pointer to the real TPSA copy created with maximum order mo.
 """
-function new_TPSA(t::Ptr{RTPSA{Desc}}, mo::Integer)::Ptr{RTPSA{Desc}}
+function new_TPSA(t::Ptr{RTPSA{Desc}}, mo::UInt8)::Ptr{RTPSA{Desc}}
   @ccall MAD_TPSA.mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 end
 
@@ -144,60 +144,44 @@ function set_TPSA!(t::Ptr{RTPSA{Desc}}, i::Integer, n::Integer, v::Vector{<:Floa
 end
 
 """
-NOTE: THIS WILL BE REWRITTEN IN JULIA AND WILL PRINT TO FILES AS WELL.
 
-    print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real,nohdr_::Integer)
+    print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real = 0.0, nohdr_::Bool = false, filename::AbstractString = "", mode::AbstractString="w+")
 
   Prints the TPSA coefficients to stdout with precision eps_. If nohdr_ is not zero, 
   the header is not printed. 
 """
-function print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real, nohdr_::Bool = false)
-  #@ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cint,nohdr_::Cint,0::Cint)::Cvoid
-  t_val =  unsafe_load(t)
-  d_val = unsafe_load(Ptr{Desc{RTPSA,CTPSA}}(t_val.d))
-  if (!nohdr_)
-    if (d_val.np!=0 || d_val.uno!=0) 
-      @printf("\n %-8s:  %c, NV = %3d, MO = %2hhu, NP = %3d, PO = %2hhu", name, "R", d_val.nv, d_val.mo, d_val.np, d_val.po)
-    else
-      @printf("\n %-8s:  %c, NV = %3d, MO = %2hhu", name, "R", d_val.nv, d_val.mo)
-    end
-
-    no = unsafe_wrap(Vector{UInt8}, d_val.no, d_val.np+d_val.nv)
-    if (d_val.uno != 0) # If user defined order for each var/param:
-      print(", NO = ")
-      # print variables
-      for i=1:2:d_val.nv-1
-        @printf("  %hhu %hhu", no[i], no[i+1])
-      end
-      if (d_val.nv % 2 == 1)
-        @printf("  %hhu", no[nv])
-      end
-
-      # print parameters
-      for i = d_val.nv+1:1:d_val.nv+d_val.np
-        if (no[i] != d_val.po)
-          @printf("  %d^%hhu", i+1, no[i])
-        end
-      end
-    end
-    @printf("\n *******************************************************")
+function print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real = 0.0, nohdr_::Bool = false, filename::AbstractString = "", mode::AbstractString="w+")
+  if filename=="" # print to stdout
+    @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cdouble,nohdr_::Cint,0::Cint)::Cvoid
+  else
+    fp = @ccall fopen(filename::Cstring, mode::Cstring)::Ptr{Cvoid}
+    @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cdouble,nohdr_::Cint,fp::Ptr{Cvoid})::Cvoid
+    @ccall fclose(fp::Ptr{Cvoid})::Cvoid
   end
-  @ccall MAD_TPSA.mad_tpsa_update0(t::Ptr{RTPSA{Desc}}, t_val.lo::Cuchar, t_val.hi::Cuchar)::Ptr{RTPSA{Desc}}
-  t_val =  unsafe_load(t)
-  if (t_val.nz != 0)
-    # print the coefficients
-    o2i = d_val.ord2
-  end
-
 end
 
-function print_TPSA_mad(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real,nohdr_::Integer)
-  @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cint,nohdr_::Cint,0::Cint)::Cvoid
-end
+"""
+    set_name(t::Ptr{RTPSA{Desc}}, nam::AbstractString)
 
+  Set the name of a TPSA.
 
-function set_name(t::Ptr{RTPSA{Desc}}, nam::AbstractString)
+  Input:
+    t   -- Source TPSA
+    nam -- String of new name for TPSA
+
+  Output:
+    Sets the TPSA name (RTPSA.nam).
+"""
+function set_name!(t::Ptr{RTPSA{Desc}}, nam::AbstractString)
   @ccall MAD_TPSA.mad_tpsa_setnam(t::Ptr{RTPSA{Desc}}, nam::Cstring)::Cvoid
+end
+
+"""
+NEEDS DOCUMENTATION
+"""
+function desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::UInt8)::Int64
+  ret = @ccall MAD_TPSA.mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Int64
+  return ret
 end
 
 
