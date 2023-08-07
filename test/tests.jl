@@ -132,8 +132,8 @@ end
 #len = unsafe_load(Ptr{UInt8}(str))
 #print(unsafe_string(str + Core.sizeof(UInt8), len))
 
-gtpsa_ex0()
-gtpsa_ex1()
-gtpsa_ex2()
-gtpsa_ex3()
-gtpsa_ex4()
+#gtpsa_ex0()
+#gtpsa_ex1()
+#gtpsa_ex2()
+#gtpsa_ex3()
+#gtpsa_ex4()
