@@ -37,7 +37,7 @@ function gtpsa_ex1()
   t2 = new_TPSA(t1, MAD_TPSA_SAME)
 
   # set order 0 and 1 (quick and dirty!)
-  set_TPSA!(t1, 0, 1+6, [pi/6, 1,1,1,1,1,1])
+  set_TPSA!(t1, 0, 1+6, [pi/6, 1.,1.,1.,1.,1.,1.])
   print_TPSA(t1, "ini", 0, 0)
 
   # t2=sin(t1)
@@ -60,7 +60,7 @@ function gtpsa_ex2()
   t1 = new_TPSA(d, MAD_TPSA_DEFAULT)
   t2 = new_TPSA(t1, MAD_TPSA_SAME)
 
-  set_TPSA!(t1, 0, 1+6, [pi/6, 1, 1, 1, 1, 1, 1])
+  set_TPSA!(t1, 0, 1+6, [pi/6, 1., 1., 1., 1., 1., 1.])
   print_TPSA(t1, "ini", 0, 0)
 
   sin!(t1, t2)
@@ -80,7 +80,7 @@ function gtpsa_ex3()
   t1 = new_TPSA(d, MAD_TPSA_DEFAULT)
   t2 = new_TPSA(t1, MAD_TPSA_SAME)
 
-  set_TPSA!(t1, 0, 1+6, [pi/6, 1, 1, 1, 1, 1, 1])
+  set_TPSA!(t1, 0, 1+6, [pi/6, 1., 1., 1., 1., 1., 1.])
   print_TPSA(t1, "ini", 0, 0)
 
   sin!(t1, t2)
@@ -96,8 +96,20 @@ end
 
 function gtpsa_ex4()
   d10 = new_desc(6, 0, 0, 0, [0x10,0x10,0x10,0x10,0x10,0x10])
+
+
 end
 
+d = new_desc(6, 0, 0, 0, [0x10,0x10,0x10,0x10,0x10,0x10])
+t1 = new_TPSA(d, MAD_TPSA_DEFAULT)
+set_name(t1, "Test123test456")
+set_TPSA!(t1, 0, 1+6, [pi/6, 1., 1., 1., 1., 1., 1.])
+print_TPSA(t1,"init",0)
+print_TPSA_mad(t1,"init",0,0)
+#t = unsafe_load(t1)
+#str = t.nam::Ptr{UInt8}
+#len = unsafe_load(Ptr{UInt8}(str))
+#print(unsafe_string(str + Core.sizeof(UInt8), len))
 
 #gtpsa_ex0()
 #gtpsa_ex1()

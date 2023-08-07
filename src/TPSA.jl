@@ -5,8 +5,9 @@ include("ComplexTPSA.jl")
 using .Descriptor
 using .RealTPSA
 using .ComplexTPSA
+using Printf
 #import Base: sin
-export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,cleanup,MAD_TPSA_DEFAULT, MAD_TPSA_SAME
+export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,set_name,cleanup,print_TPSA_mad,MAD_TPSA_DEFAULT, MAD_TPSA_SAME
 
 const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
@@ -58,7 +59,7 @@ function new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer)::Ptr{Desc{
 end
 
 """
-  new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer,no::Vector{<:Integer})::Ptr{Desc{RTPSA,CTPSA}}
+  new_desc(nv::Integer, mo::Integer, np::Integer, po::Integer,no::Vector{<:UInt8})::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order,
 number of parameters, parameter order, and individual variable/parameter orders 
@@ -70,7 +71,7 @@ Input:
   mo -- Maximum order
   np -- Number of parameters
   po -- Parameter order
-  no -- Vector of variable and parameter orders, in order. Must be length nv+np (FIGURE OUT order). MUST BE 8 BIT NUMBERS!
+  no -- Vector of variable and parameter orders, in order. Must be length nv+np (FIGURE OUT order). 
 
 Output:
   A pointer to the TPSA descriptor created, with:
@@ -124,7 +125,7 @@ function new_TPSA(t::Ptr{RTPSA{Desc}}, mo::Integer)::Ptr{RTPSA{Desc}}
 end
 
 """
-    set_TPSA(t::Ptr{RTPSA{Desc}}, i::Integer, n::Integer, v::Vector{<:Real})
+    set_TPSA(t::Ptr{RTPSA{Desc}}, i::Integer, n::Integer, v::Vector{<:Float64})
 
   Sets the coefficients of the TPSA in indices i:i+n to those in v. That is,
   t.coefs[i:i+n] = v. v must be length n.
@@ -133,12 +134,12 @@ end
     t -- Pointer to real TPSA
     i -- Starting index of coefficients in TPSA to set
     n -- Number of coefficients to set in TPSA
-    v -- Vector values to set coefficients in TPSA. MUST BE 64 BIT NUMBERS!
+    v -- Vector values to set coefficients in TPSA. 
 
   Output:
-    Sets the coefficients in the TPSA t accordingly.
+    Sets the coefficients in the TPSA t accordingly. 
 """
-function set_TPSA!(t::Ptr{RTPSA{Desc}}, i::Integer, n::Integer, v::Vector{<:Real})
+function set_TPSA!(t::Ptr{RTPSA{Desc}}, i::Integer, n::Integer, v::Vector{<:Float64})
   @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cuint, v::Ptr{Cdouble})::Cvoid
 end
 
@@ -150,8 +151,53 @@ NOTE: THIS WILL BE REWRITTEN IN JULIA AND WILL PRINT TO FILES AS WELL.
   Prints the TPSA coefficients to stdout with precision eps_. If nohdr_ is not zero, 
   the header is not printed. 
 """
-function print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real,nohdr_::Integer)
+function print_TPSA(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real, nohdr_::Bool = false)
+  #@ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cint,nohdr_::Cint,0::Cint)::Cvoid
+  t_val =  unsafe_load(t)
+  d_val = unsafe_load(Ptr{Desc{RTPSA,CTPSA}}(t_val.d))
+  if (!nohdr_)
+    if (d_val.np!=0 || d_val.uno!=0) 
+      @printf("\n %-8s:  %c, NV = %3d, MO = %2hhu, NP = %3d, PO = %2hhu", name, "R", d_val.nv, d_val.mo, d_val.np, d_val.po)
+    else
+      @printf("\n %-8s:  %c, NV = %3d, MO = %2hhu", name, "R", d_val.nv, d_val.mo)
+    end
+
+    no = unsafe_wrap(Vector{UInt8}, d_val.no, d_val.np+d_val.nv)
+    if (d_val.uno != 0) # If user defined order for each var/param:
+      print(", NO = ")
+      # print variables
+      for i=1:2:d_val.nv-1
+        @printf("  %hhu %hhu", no[i], no[i+1])
+      end
+      if (d_val.nv % 2 == 1)
+        @printf("  %hhu", no[nv])
+      end
+
+      # print parameters
+      for i = d_val.nv+1:1:d_val.nv+d_val.np
+        if (no[i] != d_val.po)
+          @printf("  %d^%hhu", i+1, no[i])
+        end
+      end
+    end
+    @printf("\n *******************************************************")
+  end
+  @ccall MAD_TPSA.mad_tpsa_update0(t::Ptr{RTPSA{Desc}}, t_val.lo::Cuchar, t_val.hi::Cuchar)::Ptr{RTPSA{Desc}}
+  t_val =  unsafe_load(t)
+  if (t_val.nz != 0)
+    # print the coefficients
+    o2i = d_val.ord2
+  end
+
+end
+
+function print_TPSA_mad(t::Ptr{RTPSA{Desc}}, name::AbstractString, eps_::Real,nohdr_::Integer)
   @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name::Cstring, eps_::Cint,nohdr_::Cint,0::Cint)::Cvoid
+end
+
+
+function set_name(t::Ptr{RTPSA{Desc}}, nam::AbstractString)
+  @ccall MAD_TPSA.mad_tpsa_setnam(t::Ptr{RTPSA{Desc}}, nam::Cstring)::Cvoid
 end
 
 

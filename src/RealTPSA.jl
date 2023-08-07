@@ -1,5 +1,6 @@
 module RealTPSA
 export RTPSA
+const NAMSZ::Int = 16
 
 mutable struct RTPSA{T}
   d::Ptr{T}                      # Ptr to tpsa descriptor
@@ -8,7 +9,7 @@ mutable struct RTPSA{T}
   lo::Cuchar                # lowest used ord
   hi::Cuchar                # highest used ord
   nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::Cstring       # tpsa name
+  nam::NTuple{NAMSZ,Cuchar}       # tpsa name max string length 16 NAMSZ
   coef::Ptr{Cdouble}     # warning: must be identical to ctpsa up to coef excluded
 end
 end

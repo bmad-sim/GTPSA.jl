@@ -1,5 +1,6 @@
 module ComplexTPSA
 export CTPSA
+const NAMSZ::Int = 16
 
 mutable struct CTPSA{T}
   d::Ptr{T}                         # Ptr to ctpsa descriptor
@@ -8,7 +9,7 @@ mutable struct CTPSA{T}
   lo::Cuchar                # lowest used ord
   hi::Cuchar                # highest used ord
   nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::Cstring       # tpsa name
+  nam::NTuple{NAMSZ,Cuchar}       # tpsa name
   coef::Ptr{ComplexF64}  # warning: must be identical to ctpsa up to coef excluded
 end
 end

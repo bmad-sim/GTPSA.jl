@@ -22,7 +22,7 @@ struct Desc{T,C}
   Tv::Ptr{Ptr{Cuchar}}      # Table by vars   -- pointers to monos, sorted by vars
   ocs::Ptr{Ptr{Cuchar}}     # ocs[t,i] -> o; in mul, compute o on thread t; 3 <= o <= mo; terminated with 0
 
-  order2idx::Ptr{Cint}      # order to polynomial start index in To (i.e. in TPSA coef[])
+  ord2idx::Ptr{Cint}      # order to polynomial start index in To (i.e. in TPSA coef[])
   tv2to::Ptr{Cint}          # lookup tv->to
   to2tv::Ptr{Cint}          # lookup to->tv
   H::Ptr{Cint}              # indexing matrix in Tv
