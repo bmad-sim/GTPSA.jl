@@ -7,7 +7,7 @@ using .RealTPSA
 using .ComplexTPSA
 using Printf
 #import Base: sin
-export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,set_name!,cleanup,desc_maxlen,MAD_TPSA_DEFAULT, MAD_TPSA_SAME
+export Desc, RTPSA, CTPSA, new_desc,new_TPSA,set_TPSA!,print_TPSA,sin!,del!,asin!,set_name!,cleanup,desc_maxlen,MAD_TPSA_DEFAULT, MAD_TPSA_SAME, mad_desc_newv
 
 const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
@@ -27,397 +27,386 @@ Variable type conversions:
 "c_ptr tpsa": "Ptr{RTPSA{Desc}}",
 "c_ptr ctpsa": "Ptr{CTPSA{Desc}}"
 """
+# ------------------------------------------------------------------------------------------
+# mad_mono:
 
 """
-    mad_mono_str(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
+    mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
 
 ???
 
 ### Input
-- `n`       -- Monomial and string length
-- `mono_a`  -- Monomial
-- `s`       -- Monomial as string "[0-9]*"
+- `n` -- Monomial and string length
+- `a` -- Monomial
+- `s` -- Monomial as string "[0-9]*"
 
 ### Output
-- `size`    -- Adjusted size n if "\0" found
+- `i`    -- Adjusted size n if "\0" found
 """
 function mad_mono_str(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
-  size = @ccall MAD_TPSA.mad_mono_str(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
-  return size
+  i = @ccall MAD_TPSA.mad_mono_str(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
+  return i
 end
 
 
 """
-    mad_mono_fill!(n::Cint, mono_a::Ptr{Cuchar}, v::Cuchar)
-
-Fills the monomial mono_a with the value v.
-
-### Input
-- `n`      -- Monomial length
-- `mono_a` -- Monomial
-- `v`      -- Value
-"""
-function mad_mono_fill!(n::Cint, mono_a::Ptr{Cuchar}, v::Cuchar)
-  @ccall MAD_TPSA.mad_mono_fill(n::Cint, mono_a::Ptr{Cuchar}, v::Cuchar)::Cvoid
-end
-
-
-"""
-    mad_mono_copy!(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-
-Copies monomial mono_a to monomial mono_b.  
-
-### Input
-- `n`      -- length of monomials
-- `mono_a` -- source monomial
-- `mono_r` -- destination monomial
-"""
-function mad_mono_copy!(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_copy(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})::Cvoid
-end
-
-
-"""
-    mad_mono_rcopy!(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
+  mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
 
 ???
 
 ### Input
-- `n`      -- length of monomials
-- `mono_a` -- source monomial
-- `mono_r` -- destination monomial
+- `n` -- Monomial and string length
+- `a` -- Monomial
+- `s` -- Monomial as string
+
+### Output
+- `s` -- Monomial as string
 """
-function mad_mono_rcopy!(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_rcopy(n::Cint, mono_a::Ptr{Cuchar}, mono_r::Ptr{Cuchar})::Cvoid
+function mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
+  s = @ccall MAD_TPSA.mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
+  return s
+end 
+
+
+"""
+    mad_mono_fill!(n::Cint, a::Ptr{Cuchar}, v::Cuchar)
+
+Fills the monomial a with the value v.
+
+### Input
+- `n` -- Monomial length
+- `a` -- Monomial
+- `v` -- Value
+"""
+function mad_mono_fill!(n::Cint, a::Ptr{Cuchar}, v::Cuchar)
+  @ccall MAD_TPSA.mad_mono_fill(n::Cint, a::Ptr{Cuchar}, v::Cuchar)::Cvoid
 end
 
 
 """
-    mad_mono_min(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
+    mad_mono_copy!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
+
+Copies monomial a to monomial r.  
+
+### Input
+- `n` -- Length of monomials
+- `a` -- Source monomial
+- `r` -- Destination monomial
+"""
+function mad_mono_copy!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_mono_copy(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
+end
+
+
+"""
+  mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
+
+??? min of monomial?
+
+### Input
+- `n`  -- Length of monomial
+- `a`  -- Monomial
+
+### Output
+- `mo` -- Min???
+"""
+function mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
+  mo = @ccall MAD_TPSA.mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
+  return mo
+end
+
+
+"""
+  mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
+
+??? max of monomial?
+
+### Input
+- `n`  -- Length of monomial
+- `a`  -- Monomial
+
+### Output
+- `mo` -- Max???
+"""
+function mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
+  mo = @ccall MAD_TPSA.mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
+  return mo
+end
+
+
+"""
+    mad_mono_ord(n::Cint, a::Ptr{Cuchar})::Cint
+
+Returns the sum of the orders of the monomial a. 
+
+### Input
+- `n` -- Monomial length
+- `a` -- Monomial
+
+### Output
+- `s` -- Sum of orders of monomial
+"""
+function mad_mono_ord(n::Cint, a::Ptr{Cuchar})::Cint
+  s = @ccall MAD_TPSA.mad_mono_ord(n::Cint, a::Ptr{Cuchar})::Cint
+  return s
+end
+
+
+"""
+    mad_mono_ordp(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
+
+Returns the product of the orders of the monomial a.
+
+### Input
+- `n`   -- Monomial length
+- `a`   -- Monomial
+- `stp` -- ????
+
+### Output
+- `p`   -- Product of orders of monomial
+"""
+function mad_mono_ordp(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
+  p = @ccall MAD_TPSA.mad_mono_ordp(n::Cint, a::Ptr{Cuchar})::Cdouble
+  return p
+end
+
+
+"""
+    mad_mono_ordpf(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
+
+Returns the product of factorials of orders of the monomial a.
+
+### Input
+- `n`   -- Monomial length
+- `a`   -- Monomial
+- `stp` -- ????
+
+### Output
+- `p`   -- Product of factorials of orders of monomial
+"""
+function mad_mono_ordpf(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
+  p = @ccall MAD_TPSA.mad_mono_ordpf(n::Cint, a::Ptr{Cuchar})::Cdouble
+  return p
+end
+
+
+"""
+    mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+
+Checks if the monomial a is equal to the monomial b.
+
+### Input
+- `n`   -- Length of monomials
+- `a`   -- Monomial a
+- `b`   -- Monomial b
+
+### Output
+- `ret` -- True if the monomials are equal, false if otherwise
+"""
+function mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  return ret
+end
+
+
+"""
+    mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+
+Checks if monomial a is less than monomial b.
+
+### Input
+- `n`  -- Length of monomials
+- `a`  -- Monomial a
+- `b`  -- Monomial b
+
+### Output
+- `ret` -- True if a < b, false otherwise
+"""
+function mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  return ret
+end
+
+
+"""
+    mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+
+Checks if monomial a is less than or equal to monomial b.
+
+### Input
+- `n`   -- Length of monomials
+- `a`   -- Monomial a
+- `b`   -- Monomial b
+
+### Output
+- `ret` -- True if a <= mono_b, false otherwise
+"""
+function mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+  return ret
+end
+
+
+"""
+    mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
 
 ???
 
 ### Input
-- `n`      -- Length of monomial
-- `mono_a` -- Monomial
+- `n`   -- Length of monomials
+- `a`   -- Monomial a
+- `b`   -- Monomial b
 
 ### Output
-- `min`    -- Minimum order of monomial
+- `ret` -- First a[i]-b[i] != 0 
 """
-function mad_mono_min(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
-  min = @ccall MAD_TPSA.mad_mono_min(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
-  return min
-end
-
-
-"""
-    mad_mono_max(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
-
-???
-
-### Input
-- `n`      -- Monomial length
-- `mono_a` -- Monomial
-
-### Output
-- `max`    -- Maximum order of monomial
-"""
-function mad_mono_max(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
-  max = @ccall MAD_TPSA.mad_mono_max(n::Cint, mono_a::Ptr{Cuchar})::Cuchar
-  return max
-end
-
-
-"""
-    mad_mono_ord(n::Cint, mono_a::Ptr{Cuchar})::Cint
-
-???
-
-### Input
-- `n`      -- Monomial length
-- `mono_a` -- Monomial
-
-### Output
-- `ord`    -- Order of monomial (sum)
-"""
-function mad_mono_ord(n::Cint, mono_a::Ptr{Cuchar})::Cint
-  ord = @ccall MAD_TPSA.mad_mono_ord(n::Cint, mono_a::Ptr{Cuchar})::Cint
-  return ord
-end
-
-
-"""
-    mad_mono_eq(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-
-Checks if the monomial mono_a is equal to the monomial mono_b.
-
-### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
-
-### Output
-- `ret`    -- True if the monomials are equal, false if otherwise
-"""
-function mad_mono_eq(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_eq(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
+function mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_mono_lt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-
-Checks if monomial mono_a is less than monomial mono_b.
-
-### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
-
-### Output
-- `ret`    -- True if mono_a < mono_b, false otherwise
-"""
-function mad_mono_lt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_lt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  return ret
-end
-
-
-"""
-    mad_mono_gt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-
-Checks if monomial mono_a is greater than monomial mono_b.
-
-### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
-
-### Output
-- `ret`    -- True if mono_a > mono_b, false otherwise
-"""
-function mad_mono_gt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_gt(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  return ret
-end
-
-Che
-"""
-    mad_mono_le(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-
-Checks if monomial mono_a is less than or equal to monomial mono_b.
-
-### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
-
-### Output
-- `ret`    -- True if mono_a <= mono_b, false otherwise
-"""
-function mad_mono_le(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_le(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  return ret
-end
-
-
-"""
-    mad_mono_ge(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-
-Checks if monomial mono_a is greater than or equal to monomial mono_b.
-
-  ### Input
-  - `n`      -- Length of monomials
-  - `mono_a` -- Monomial a
-  - `mono_b` -- Monomial b
-  
-  ### Output
-  - `ret`    -- True if mono_a >= mono_b, false otherwise
-  """
-function mad_mono_ge(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_ge(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cuchar
-  return ret
-end
-
-
-"""
-    mad_mono_cmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
-
-???
-
-### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
-
-### Output
-- `ret`    -- First a[i]-b[i] != 0 
-"""
-function mad_mono_cmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_mono_cmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
-  return ret
-end
-
-
-"""
-    mad_mono_rcmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
+    mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
 
 Compare from end. ???
 
 ### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Monomial a
-- `mono_b` -- Monomial b
+- `n`   -- Length of monomials
+- `a`   -- Monomial a
+- `b`   -- Monomial b
 
 ### Output
-- `ret`    -- First a[i]-b[i] != 0
+- `ret` -- First a[i]-b[i] != 0
 """
-function mad_mono_rcmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_mono_rcmp(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar})::Cint
+function mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_mono_add!(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
+    mad_mono_add!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets monomial mono_c = mono_a + mono_b.
+Sets monomial r = a + b.
 
 ### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Source monomial a
-- `mono_b` -- Source monomial b
-- `mono_r` -- Destination monomial, mono_c = mono_a + mono_b
+- `n` -- Length of monomials
+- `a` -- Source monomial a
+- `b` -- Source monomial b
+- `r` -- Destination monomial, r = a + b
 """
-function mad_mono_add!(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_add(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})::Cvoid
+function mad_mono_add!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_mono_add(n::Cint, a::Ptr{Cuchar},b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
 end
 
 
 """
-    mad_mono_sub!(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
+    mad_mono_sub!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets monomial mono_c = mono_a - mono_b.
+Sets monomial r = a - b.
 
 ### Input
-- `n`      -- Length of monomials
-- `mono_a` -- Source monomial a
-- `mono_b` -- Source monomial b
-- `mono_r` -- Destination monomial, mono_c = mono_a - mono_b
+- `n` -- Length of monomials
+- `a` -- Source monomial a
+- `b` -- Source monomial b
+- `r` -- Destination monomial, r = a - b
 """
-function mad_mono_sub!(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_sub(n::Cint, mono_a::Ptr{Cuchar}, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})::Cvoid
+function mad_mono_sub!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_mono_sub(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
 end
 
 
 """
-    mad_mono_cat!(na::Cint, mono_a::Ptr{Cuchar}, nb::Cint, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
+    mad_mono_cat!(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets mono_c equal to the concatenation of the monomials mono_a and mono_b
+Sets monomial r equal to the concatenation of the monomials a and b
 
 ### Input
-- `na`     -- Length of mono_a
-- `mono_a` -- Source monomial a
-- `nb`     -- Length of mono_b
-- `mono_b` -- Source monomial b
-- `mono_r` -- Destination monomial of concatenation of mono_a and mono_b (length na+nb)
+- `n` -- Length of monomonial a
+- `a` -- Source monomial a
+- `m` -- Length of monomial b
+- `b` -- Source monomial b
+- `r` -- Destination monomial of concatenation of a and b (length n+m)
 """
-function mad_mono_cat!(na::Cint, mono_a::Ptr{Cuchar}, nb::Cint, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_cat(na::Cint, mono_a::Ptr{Cuchar}, nb::Cint, mono_b::Ptr{Cuchar}, mono_r::Ptr{Cuchar})::Cvoid
+function mad_mono_cat!(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_mono_cat(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
+end
+
+"""
+  mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
+
+Sets destination monomial r equal to the reverse of source monomial a.
+
+### Input
+- `n` -- Lengths of Monomials
+- `a` -- Source monomial a
+- `r` -- Destination monomial of reverse monomial a
+"""
+function mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_mono_rev(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-n,mono_a,idxs
-bind(C)
-import ; implicit none
-  integer(c_ssz_t), value, intent(in) :: n   ! monomial length
-  integer(c_ord_t), intent(in) :: mono_a(*)  ! src
-  integer(c_idx_t) :: idxs(*)  ! index lookup: a[idxs[i]] is sorted by order
-"""
-"""
-    mad_mono_sort!(n::Cint, mono_a::Ptr{Cuchar}, idxs::Ptr{Cint})
-
-???
-
-### Input
-- `n`      -- Length of monomial
-- `mono_a` -- Source monomial
-- `idxs`   -- Index lookup: a[idxs[i]] is sorted by order
-"""
-function mad_mono_sort!(n::Cint, mono_a::Ptr{Cuchar}, idxs::Ptr{Cint})
-  @ccall MAD_TPSA.mad_mono_sort(n::Cint, mono_a::Ptr{Cuchar}, idxs::Ptr{Cint})::Cvoid
-end
-
-
-"""
-    mad_mono_print(n::Cint, mono_a::Ptr{Cuchar})
+    mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})
 
 Prints the monomial to stdout.
 
 ### Input
-- `n`      -- Length of monomial
-- `mono_a` -- Source monomial to print to stdout
+- `n`  -- Length of monomial
+- `a`  -- Source monomial to print to stdout
+- `fp` -- C FILE pointer, if null will print to stdout 
 """
-function mad_mono_print(n::Cint, mono_a::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_mono_print(n::Cint, mono_a::Ptr{Cuchar})::Cvoid
+function mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})::Cvoid
 end
 
+# ------------------------------------------------------------------------------------------
+# mad_desc:
 
 """
-Original Fortran function:
-nv,mo_
-bind(C)
-! mo = max(1, mo)
-  import ; implicit none
-  type(c_ptr) :: desc                          ! descriptor
-  integer(c_int), value, intent(in) :: nv      ! #vars
-  integer(c_ord_t), value, intent(in) :: mo_   ! order of tpsa, mo=max(1,mo_)
-"""
-"""
-    mad_desc_newv(nv::Cint, mo_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+    mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specified number of variables and maximum order. 
 The number of parameters is set to 0. 
 
 ### Input
-- `nv`   -- Number of variables in th
-- `mo_`  -- Maximum order of TPSA, mo_ = max(1, mo_)
+- `nv`  -- Number of variables in th
+- `mo`  -- Maximum order of TPSA, mo = max(1, mo)
 
 ### Output
-- `desc` -- Descriptor with the specified number of variables and maximum order
+- `ret` -- Descriptor with the specified number of variables and maximum order
 """
-function mad_desc_newv(nv::Cint, mo_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_desc_newv(nv::Cint, mo_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  return desc
+function mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+  ret = @ccall MAD_TPSA.mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+  return ret
 end
 
 
 """
-    mad_desc_newvp(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+    mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order, number of 
 parameters, and parameter order.
 
 ### Input
-- `nv`   -- Number of variables
-- `mo_`  -- Maximum order of TPSA, mo_ = max(1, mo_)
-- `np_`  -- Number of parameters
-- `po_`  -- Order of parameters, po = max(1, po_)
+- `nv`  -- Number of variables
+- `mo`  -- Maximum order of TPSA, mo = max(1, mo)
+- `np_` -- Number of parameters
+- `po_` -- Order of parameters, po = max(1, po_)
 
 ### Output
-- `desc` -- Descriptor with the specified nv, mo, np, and po.
+- `ret` -- Descriptor with the specified nv, mo, np, and po.
 """
-function mad_desc_newvp(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_desc_newvp(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  return desc
+function mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+  ret = @ccall MAD_TPSA.mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+  return ret
 end
 
 
 """
-    mad_desc_newvpo(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
+    mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order, number of parameters, 
 parameter order, and individual variable/parameter orders specified in no. The first nv entries in no 
@@ -425,559 +414,592 @@ correspond to the variables' orders and the next np entries correspond the param
 
 ### Input
 - `nv`   -- Number of variables
-- `mo_`  -- Maximum order of TPSA (mo = max(no_))
+- `mo`   -- Maximum order of TPSA (mo = max(mo , no[0 :nn-1]), nn = nv+np)
 - `np_`  -- Number of parameters
-- `po_`  -- Order of parameters
+- `po_`  -- Order of parameters (po = max(po_, no[nv:nn-1]), po <= mo)
 - `no_`  -- Array of orders of variables and parameters
 
 ### Output
-- `desc` -- Descriptor with the specified nv, mo, np, po, no.
+- `ret` -- Descriptor with the specified nv, mo, np, po, no.
 """
-function mad_desc_newvpo(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_desc_newvpo(nv::Cint, mo_::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
-  return desc
+function mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
+  ret = @ccall MAD_TPSA.mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
+  return ret
 end
 
 
 """
-    mad_desc_del!(desc::Ptr{Desc{RTPSA,CTPSA}})
+    mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
 
-Calls the destructor for the descriptor.
+Calls the destructor for the descriptor, or all descriptors if null pointer is passed.
 
 ### Input
-- `desc` -- Descriptor to destruct
+- `d_` -- Descriptor to destruct. If null, all registered descriptors will be deleted
 """
-function mad_desc_del!(desc::Ptr{Desc{RTPSA,CTPSA}})
-  @ccall MAD_TPSA.mad_desc_del(desc::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
+function mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
+  @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
 end
 
 
 """
-    mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
+    mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar)::Cint
 
-???
+Returns the number of variables in the descriptor, and sets the passed mo_, np_, and po_ to the maximum 
+order, number of parameters, and parameter order respectively. ???
 
 ### Input
-- `desc` -- Descriptor
-- `mo_`  -- Maximum order
-- `np_`  -- Number of parameters
-- `po_`  -- Parameter order
+- `d` -- Descriptor
+- `mo_`  -- Maximum order to be set to that of the descriptor
+- `np_`  -- Number of parameters to be set to that of the descriptor
+- `po_`  -- Parameter order to be set to that of the descriptor
 
 ### Output
-- `nv`   -- Number of variables in TPSA
+- `ret`   -- Number of variables in TPSA
 """
-function mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
-  nv = @ccall MAD_TPSA.mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
-  return nv
+function mad_desc_getnv!(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
+  return ret
 end
 
 
 """
-    mad_desc_maxord(desc::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+    mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
 
 Sets the order of the variables and parameters of the TPSA to those specified in no_ and 
 returns the maximum order of the TPSA.
 
 ### Input
-- `desc` -- Descriptor
-- `nn`   -- Number of variables + number of parameters, no_[1..nn]
-- `no_`  -- Orders of parameters to be filled if provided
+- `d`   -- Descriptor
+- `nn`  -- Number of variables + number of parameters, no_[1..nn]
+- `no_` -- Orders of parameters to be filled if provided
 
 ### Output
-- `mo`   -- Maximum order of TPSA
+- `ret`  -- Maximum order of TPSA
 """
-function mad_desc_maxord(desc::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
-  mo = @ccall MAD_TPSA.mad_desc_maxord(desc::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
-  return mo
+function mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+  return ret
 end
 
 
 """
-    mad_desc_maxlen(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
+    mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `mo`   -- ordlen(maxord) == maxlen
+- `d`   -- Descriptor
+- `mo`  -- ordlen(maxord) == maxlen
 
 ### Output
-- `olen` -- monomials in 0..order
+- `ret` -- monomials in 0..order
 """
-function mad_desc_maxlen(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
-  olen = @ccall MAD_TPSA.mad_desc_maxlen(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
-  return olen
+function mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
+  ret = @ccall MAD_TPSA.mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
+  return ret
 end
 
 
 """
-    mad_desc_gtrunc!(desc::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
+    mad_desc_gtrunc!(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
 
 Sets the global truncation order (to) of the TPSA, and returns the old global truncation order.
 
 ### Input
-- `desc`  -- Descriptor
+- `d`     -- Descriptor
 - `to`    -- New global truncation order
 
 ### Output
 - `oldto` -- Old global truncation order
 """
-function mad_desc_gtrunc!(desc::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
-  oldto = @ccall MAD_TPSA.mad_desc_gtrunc(desc::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
+function mad_desc_gtrunc!(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
+  oldto = @ccall MAD_TPSA.mad_desc_gtrunc(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
   return oldto
 end
 
 
 """
-    mad_desc_isvalids(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
+    mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- String length of 0 (unknown)
-- `s`    -- Monomial as string "[0-9]*"
+- `d`  -- Descriptor
+- `n`  -- String length of 0 (unknown)
+- `s`  -- Monomial as string "[0-9]*"
 
 ### Output
-- `ret`  -- True or false
+- `ret` -- True or false
 """
-function mad_desc_isvalids(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalids(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
+function mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_isvalidm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+    mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- Length of monomial
-- `m`    -- Monomial
+- `d`  -- Descriptor
+- `n`  -- Length of monomial
+- `m`  -- Monomial
 
 ### Output
-- `ret`  -- True or false
+- `ret` -- True or false
 """
-function mad_desc_isvalidm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+function mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
   return ret
 end
 
 
 """
-Original Fortran function:
-desc,n,m
-bind(C)
-import ; implicit none
-  logical(c_bool) :: ret                   ! true or false
-  type(c_ptr), value, intent(in) :: desc   !
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_int), intent(in) :: m(*)       ! sparse monomial (idx,ord)
-"""
-"""
-    mad_desc_isvalidsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+    mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
 
-???
+??? why int isntead uint8
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- Length of monomial
-- `m`    -- Sparse monomial (idx, ord)
+- `d`   -- Descriptor
+- `n`   -- Length of monomial
+- `m`   -- Sparse monomial (idx, ord)
 
 ### Output
-- `ret`  -- True or false.
+- `ret` -- True or false.
 """
-function mad_desc_isvalidsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+function mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_idxs(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
+    mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- String length or 0 (unknown)
-- `s`    -- Monomial as string "[0-9]*"
+- `d`   -- Descriptor
+- `n`   -- String length or 0 (unknown)
+- `s`   -- Monomial as string "[0-9]*"
 
 ### Output
-- `idx`  -- Monomial index or -1
+- `ret` -- Monomial index or -1
 """
-function mad_desc_idxs(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
-  idx = @ccall MAD_TPSA.mad_desc_idxs(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
-  return idx
+function mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
+  return ret
 end
 
 
 """
-    mad_desc_idxm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
 
 ???
 
 ### Input
-- `desc` -- Descriptor
+- `d` -- Descriptor
 - `n`    -- Monomial length
 - `m`    -- Monomial
 
 ### Output
-- `idx`  -- Monomial index or -1
+- `ret`  -- Monomial index or -1
 """
-function mad_desc_idxm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_idxm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+  return ret
+end
+
+
+"""
+    mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
+
+??? Why int instead Uint8
+
+### Input
+- `d`   -- Descriptor
+- `n`   -- Monomial length
+- `m`   -- Sparse monomial (idx,ord)
+
+### Output
+- `ret` -- Monomial index or -1
+"""
+function mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
+  return ret
+end
+
+
+"""
+    mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+
+???
+
+### Input
+- `d`   -- Descriptor
+- `n`   -- Monomial length
+- `m`   -- Monomial
+
+### Output
+- `idx` -- Monomial index or -1
+"""
+function mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+  idx = @ccall MAD_TPSA.mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
   return idx
 end
 
 
 """
-    mad_desc_idxsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- Monomial length
-- `m`    -- Sparse monomial (idx,ord)
+- `d`   -- Descriptor
+- `n`   -- Monomial length
+- `m`   -- Monomial
 
 ### Output
-- `idx`  -- Monomial index or -1
+- `idx` -- Monomial index or -1
 """
-function mad_desc_idxsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_idxsm(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+  idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
   return idx
 end
 
 
 """
-    mad_desc_nxtbyvar(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
 
 ???
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- Monomial length
-- `m`    -- Monomial
+- `d`   -- Descriptor
+- `i`   -- Slot index (must be valid)
+- `n`   -- Monomial length
+- `m_`  -- Monomial to fill (if provided)
 
 ### Output
-- `idx`  -- Monomial index or -1
+- `ret` -- Monomial order
 """
-function mad_desc_nxtbyvar(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_nxtbyvar(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  return idx
+function mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+  return ret
 end
 
-
 """
-    mad_desc_nxtbyord(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+  mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
 
-???
+For debugging.
 
 ### Input
-- `desc` -- Descriptor
-- `n`    -- Monomial length
-- `m`    -- Monomial
-
-### Output
-- `idx`  -- Monomial index or -1
+- `d`  -- Descriptor to debug
+- `fp` -- File to write to. If null, will write to stdout
 """
-function mad_desc_nxtbyord(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_nxtbyord(desc::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  return idx
+function mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})::Cvoid
 end
 
+# ------------------------------------------------------------------------------------------
+# mad_tpsa:
+
 
 """
-    mad_desc_mono(desc::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+    mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
-???
+Creates a real TPSA defined by the specified descriptor and maximum order. If MAD_TPSA_DEFAULT 
+is passed for mo, the mo defined in the descriptor is used. If mo > d_mo, mo = d_mo.
 
 ### Input
-- `desc` -- Descriptor
-- `i`    -- Slot index (must be valid)
-- `n`    -- Monomial length
-- `m_`   -- Monomial to fill (if provided)
+- `d`  -- Descriptor
+- `mo` -- Maximum order
 
 ### Output
-- `ord`   -- Monomial order
+- `t`  -- New real TPSA defined by the descriptor
 """
-function mad_desc_mono(desc::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
-  ord = @ccall MAD_TPSA.mad_desc_mono(desc::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
-  return ord
+function mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
+  t = @ccall MAD_TPSA.mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
+  return t
 end
 
 
 """
-    mad_tpsa_newd(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
-
-Creates a real TPSA defined by the specified descriptor and maximum order.
-If MAD_TPSA_DEFAULT is passed for mo, the mo defined in the descriptor is used.
-
-### Input
-- `desc`    -- Descriptor
-- `mo`      -- Maximum order
-
-### Output
-- `newtpsa` -- New real TPSA defined by the descriptor
-"""
-function mad_tpsa_newd(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
-  newtpsa = @ccall MAD_TPSA.mad_tpsa_newd(desc::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
-  return newtpsa
-end
-
-
-"""
-    mad_tpsa_new(tpsa::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
+    mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
 Creates a real TPSA copy of the inputted TPSA, with maximum order specified by mo.
 If MAD_TPSA_SAME is passed for mo, the mo currently in tpsa is used for the created TPSA.
+  ok with t=(tpsa_t*)ctpsa
 
 ### Input
-- `tpsa`    -- Real TPSA to copy
-- `mo`      -- Maximum order of new TPSA
+- `t`   -- Real TPSA to copy
+- `mo`  -- Maximum order of new TPSA
 
 ### Output
-- `newtpsa` -- New real TPSA with maximum order mo
+- `ret` -- New real TPSA with maximum order mo
 """
-function mad_tpsa_new(tpsa::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
-  newtpsa = @ccall MAD_TPSA.mad_tpsa_new(tpsa::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
-  return newtpsa
+function mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
+  ret = @ccall MAD_TPSA.mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
+  return ret
 end
 
 
 """
-    mad_tpsa_del!(tpsa::Ptr{RTPSA{Desc}})
+    mad_tpsa_del!(t::Ptr{RTPSA{Desc}})
 
 Calls the destructor for the real TPSA.
 
 ### Input
-- `tpsa` -- Real TPSA to destruct
+- `t` -- Real TPSA to destruct
 """
-function mad_tpsa_del!(tpsa::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_del(tpsa::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_del!(t::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_del(t::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-    mad_tpsa_desc(tpsa::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
+    mad_tpsa_desc(t::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
 
 Gets the descriptor for the real TPSA.
 
 ### Input
-- `tpsa`  -- Real TPSA
+- `t`   -- Real TPSA
 
 ### Output
-- `desc`  -- Descriptor for the tpsa
+- `ret` -- Descriptor for the tpsa
 """
-function mad_tpsa_desc(tpsa::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_tpsa_desc(tpsa::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
-  return desc
-end
-
-
-"""
-    mad_tpsa_uid!(tpsa::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
-
-Sets the TPSA uid if uid_ != 0, and returns the current (previous if set) TPSA uid. 
-
-### Input
-- `tpsa` -- Real TPSA
-- `uid_` -- uid to set in the TPSA if uid_ != 0
-
-### Output
-- `uid`  -- Current (previous if set) TPSA uid
-"""
-function mad_tpsa_uid!(tpsa::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
-  uid = @ccall MAD_TPSA.mad_tpsa_uid(tpsa::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
-  return uid
-end
-
-
-"""
-    mad_tpsa_len(tpsa::Ptr{RTPSA{Desc}})::Cint
-
-???
-
-### Input
-- `tpsa`  -- Real TPSA
-
-### Output
-- `len`   -- Monomials in tpsa
-"""
-function mad_tpsa_len(tpsa::Ptr{RTPSA{Desc}})::Cint
-  len = @ccall MAD_TPSA.mad_tpsa_len(tpsa::Ptr{RTPSA{Desc}})::Cint
-  return len
-end
-
-
-"""
-    mad_tpsa_nam(tpsa::Ptr{RTPSA{Desc}})::Cstring
-
-Get the name of the TPSA.
-
-### Input
-- `tpsa` -- Real TPSA
-
-### Output
-- `nam`  -- Name of tpsa (nul term in C)
-"""
-function mad_tpsa_nam(tpsa::Ptr{RTPSA{Desc}})::Cstring
-  nam = @ccall MAD_TPSA.mad_tpsa_nam(tpsa::Ptr{RTPSA{Desc}})::Cstring
-  return nam
-end
-
-
-"""
-    mad_tpsa_ord(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-
-Gets the TPSA order.
-
-### Input
-- `tpsa` -- Real TPSA
-
-### Output
-- `ord`  -- Order of TPSA
-"""
-function mad_tpsa_ord(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  ord = @ccall MAD_TPSA.mad_tpsa_ord(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  return ord
-end
-
-
-"""
-Original Fortran function:
-n,tpsa
-bind(C)
-import ; implicit none
-  integer(c_ord_t) :: ord                   ! max of all tpsas order
-  integer(c_ssz_t), value, intent(in) :: n  ! #tpsa
-  type(c_ptr), intent(in) :: tpsa(*)
-"""
-"""
-    mad_tpsa_ordn(n::Cint, tpsa::Ptr{RTPSA{Desc}})::Cuchar
-
-Gets the max of all TPSAs order. ???
-
-### Input
-- `n`    -- #tpsa
-- `tpsa` -- TPSA
-
-### Output
-- `ord` -- Order
-"""
-function mad_tpsa_ordn(n::Cint, tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  ord = @ccall MAD_TPSA.mad_tpsa_ordn(n::Cint, tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  return ord
-end
-
-
-"""
-    mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-
-Sanity check of the TPSA integrity.
-
-### Input
-- `tpsa` -- Real TPSA to check if valid
-
-### Output
-- `ret`  -- True if valid TPSA, false otherwise
-"""
-function mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+function mad_tpsa_desc(t::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
+  ret = @ccall MAD_TPSA.mad_tpsa_desc(t::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
   return ret
 end
 
 
 """
-    mad_tpsa_copy!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_uid!(t::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
 
-Makes a copy of the real TPSA tpsa to tpsa_r.
+Sets the TPSA uid if uid_ != 0, and returns the current (previous if set) TPSA uid. 
 
 ### Input
-- `tpsa`   -- Source real TPSA
-- `tpsa_r` -- Destination real TPSA
+- `t`    -- Real TPSA
+- `uid_` -- uid to set in the TPSA if uid_ != 0
+
+### Output
+- `ret`  -- Current (previous if set) TPSA uid
 """
-function mad_tpsa_copy!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_copy(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_uid!(t::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_uid(t::Ptr{RTPSA{Desc}}, uid_::Cint)::Cint
+  return ret
 end
 
 
 """
-    mad_tpsa_sclord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, inv::Cuchar)
+    mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
 
 ???
 
 ### Input
-- `tpsa`   -- Source real TPSA
-- `tpsa_r` -- Destination real TPSA
-- `inv`    -- scl by inverse
+- `t`   -- Real TPSA
+
+### Output
+- `ret` -- Monomials in tpsa
 """
-function mad_tpsa_sclord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, inv::Cuchar)
-  @ccall MAD_TPSA.mad_tpsa_sclord(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, inv::Cuchar)::Cvoid
+function mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA,CTPSA})::Cint
+  return ret
 end
 
 
 """
-    mad_tpsa_getord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cint)
+    mad_tpsa_nam(t::Ptr{RTPSA{Desc}})::Cstring
+
+Get the name of the TPSA.
+
+### Input
+- `t` -- Real TPSA
+
+### Output
+- `ret`  -- Name of tpsa (nul term in C)
+"""
+function mad_tpsa_nam(t::Ptr{RTPSA{Desc}})::Cstring
+  ret = @ccall MAD_TPSA.mad_tpsa_nam(t::Ptr{RTPSA{Desc}})::Cstring
+  return ret
+end
+
+
+"""
+    mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
+
+Gets the TPSA order.
+
+### Input
+- `t` -- Real TPSA
+
+### Output
+- `ret`  -- Order of TPSA
+"""
+function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
+  return ret
+end
+
+"""
+  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+
+???
+
+### Input
+- `t` -- TPSA
+- ???
+
+### Output
+- `mo` -- Order
+"""
+function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+  return mo
+end
+
+
+"""
+    mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
+
+Gets the max order of all TPSAs in t.
+
+### Input
+- `n`  -- Number of TPSAs
+- `t`  -- Array of TPSAs 
+
+### Output
+- `mo` -- Maximum order of all TPSAs
+"""
+function mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
+  mo = @ccall MAD_TPSA.mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
+  return mo
+end
+
+
+"""
+    mad_tpsa_copy!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+
+Makes a copy of the real TPSA t to r.
+
+### Input
+- `t` -- Source real TPSA
+- `r` -- Destination real TPSA
+"""
+function mad_tpsa_copy!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_copy(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sclord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)
+
+???
+
+### Input
+- `t`  -- Source real TPSA
+- `r`  -- Destination real TPSA
+- `inv`-- scl by inverse
+"""
+function mad_tpsa_sclord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)
+  @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)::Cvoid
+end
+
+
+"""
+    mad_tpsa_getord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)
 
 ???
 is ! ?
 
 ### Input
-- `tpsa`   -- Source real TPSA
-- `tpsa_r` -- Destination real TPSA
-- `ord`    -- Order to retrieve
+- `t``  -- Source real TPSA
+- `r`   -- Destination real TPSA
+- `ord` -- Order to retrieve
 """
-function mad_tpsa_getord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cuchar)
-  @ccall MAD_TPSA.mad_tpsa_getord(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cuchar)::Cvoid
+function mad_tpsa_getord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)
+  @ccall MAD_TPSA.mad_tpsa_getord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)::Cvoid
 end
 
 
 """
-    mad_tpsa_cutord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cint)
+    mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
 
 ???
 
 ### Input
-- `tpsa`   -- Source real TPSA
-- `tpsa_r` -- Destination real TPSA
-- `ord`    -- Cut order: 0..-ord or ord..mo
+- `t`   -- Source real TPSA
+- `r`   -- Destination real TPSA
+- `ord` -- Cut order: 0..-ord or ord..mo
 """
-function mad_tpsa_cutord!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cint)
-  @ccall MAD_TPSA.mad_tpsa_cutord(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, ord::Cint)::Cvoid
+function mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
+  @ccall MAD_TPSA.mad_tpsa_cutord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)::Cvoid
+end
+
+"""
+  mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+
+???
+
+### Input
+- `t`    -- Real TPSA
+- `n`    -- Length of idx_
+- `idx_`
+
+### Output
+- `mi` -- ?
+"""
+function mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+  mi = @ccall MAD_TPSA.mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+  return mi
+end
+
+"""
+    mad_tpsa_convert!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+
+???
+
+### Input
+- `t`    -- Source real TPSA
+- `r`    -- Destination real TPSA
+- `n`    -- Length of vector
+- `t2r_` -- Vector of index lookup
+- `pb`   -- Poisson bracket, 0,1:fwd,-1:bwd
+"""
+function mad_tpsa_convert!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+  @ccall MAD_TPSA.mad_tpsa_convert(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
 
 """
-    mad_tpsa_setvar!(tpsa::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
+    mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
 
 ???
 
 ### Input
-- `tpsa` -- Real TPSA
+- `t`    -- Real TPSA
 - `v`    -- 0th order value
 - `iv_`  -- Variable index
 - `scl_` -- 1st order variable value
 """
-function mad_tpsa_setvar!(tpsa::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_setvar(tpsa::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)::Cvoid
+function mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_setnam!(tpsa::Ptr{RTPSA{Desc}}, nam::Cstring)
+    mad_tpsa_setnam!(t::Ptr{RTPSA{Desc}}, nam::Cstring)
 
 Sets the name of the tpsa.
 
 ### Input
-- `tpsa` -- Real TPSA
-- `nam`  -- Name to set for tpsa
+- `t`   -- Real TPSA
+- `nam` -- Name to set for tpsa
 """
-function mad_tpsa_setnam!(tpsa::Ptr{RTPSA{Desc}}, nam::Cstring)
-  @ccall MAD_TPSA.mad_tpsa_setnam(tpsa::Ptr{RTPSA{Desc}}, nam::Cstring)::Cvoid
+function mad_tpsa_setnam!(t::Ptr{RTPSA{Desc}}, nam::Cstring)
+  @ccall MAD_TPSA.mad_tpsa_setnam(t::Ptr{RTPSA{Desc}}, nam::Cstring)::Cvoid
 end
 
 
@@ -987,1973 +1009,1569 @@ end
 Clears the TPSA (reset to 0)
 
 ### Input
-- `tpsa` -- Real TPSA
+- `t` -- Real TPSA
 """
-function mad_tpsa_clear!(tpsa::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_clear(tpsa::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_clear!(t::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_clear(t::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran function:
-tpsa
-bind(C)
-import ; implicit none
-  logical(c_bool) :: ret                    ! true or false
-  type(c_ptr), value, intent(in) :: tpsa
-"""
-"""
-    mad_tpsa_isnul(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+    mad_tpsa_isnul(t::Ptr{RTPSA{Desc}})::Cuchar
+
+??? checks if null c2i?
 
 ### Input
-- `tpsa`
+- `t` -- Real TPSA to check
 
 ### Output
-- `ret`
+- `ret`  -- True or false
 """
-function mad_tpsa_isnul(tpsa::Ptr{RTPSA{Desc}})::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_isnul(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+function mad_tpsa_isnul(t::Ptr{RTPSA{Desc}})::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_isnul(t::Ptr{RTPSA{Desc}})::Cuchar
   return ret
 end
 
 
 """
-Original Fortran subroutine:
-tpsa,tpsa_r,n,t2r_,pb
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa    ! src
-  type(c_ptr), value :: tpsa_r              ! dst
-  integer(c_ssz_t), value, intent(in) :: n  ! vector length
-  integer(c_idx_t), intent(in) :: t2r_(*)   ! vector of index lookup
-  integer(c_int), value, intent(in) :: pb   ! poisson bracket 0,1:fwd,-1:bwd
-"""
-"""
-    mad_tpsa_convert!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+    mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
 
 ### Input
-- `tpsa`
-- `tpsa_r`
-- `n`
-- `t2r_`
-- `pb`
-"""
-function mad_tpsa_convert!(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
-  @ccall MAD_TPSA.mad_tpsa_convert(tpsa::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
-end
-
-
-"""
-Original Fortran function:
-tpsa,n,m_,i
-bind(C)
-import ; implicit none
-  integer(c_ord_t) :: ord                  ! monomial order
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_idx_t), value, intent(in) :: i ! slot index (must be valid)
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_ord_t) :: m_(*)                ! monomial to fill (if provided)
-"""
-"""
-    mad_tpsa_mono(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m_::Ptr{Cuchar}, i::Cint)::Cint
-
-### Input
-- `tpsa`
+- `t`
+- `i`
 - `n`
 - `m_`
-- `i`
 
 ### Output
-- `ord`
+- `ret`
 """
-function mad_tpsa_mono(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m_::Ptr{Cuchar}, i::Cint)::Cint
-  ord = @ccall MAD_TPSA.mad_tpsa_mono(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m_::Ptr{Cuchar}, i::Cint)::Cint
-  return ord
+function mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+  return ret
 end
 
 
 """
-Original Fortran function:
-tpsa,n,s
-bind(C)
-import ; implicit none
-  integer(c_idx_t) :: idx                  ! monomial index or -1
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_ssz_t), value, intent(in) :: n ! string length or 0 (unknown)
-  character(c_char), intent(in) :: s(*)    ! monomial as C string "[0-9]*"
-"""
-"""
-    mad_tpsa_idxs(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
+    mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
 
 ### Input
-- `tpsa`
+- `t`
 - `n`
 - `s`
 
 ### Output
-- `idx`
+- `ret`
 """
-function mad_tpsa_idxs(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
-  idx = @ccall MAD_TPSA.mad_tpsa_idxs(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
-  return idx
+function mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
+  return ret
 end
 
 
+
 """
-Original Fortran function:
-tpsa,n,m
-bind(C)
-import ; implicit none
-  integer(c_idx_t) :: idx                  ! monomial index or -1
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_ord_t), intent(in) :: m(*)     ! monomial
-"""
-"""
-    mad_tpsa_idxm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
+
+
+???
 
 ### Input
-- `tpsa`
+- `t`
 - `n`
 - `m`
 
 ### Output
-- `idx`
+- `ret`
 """
-function mad_tpsa_idxm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_tpsa_idxm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
-  return idx
+function mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
+  return ret
 end
 
 
 """
-Original Fortran function:
-tpsa,n,m
-bind(C)
-import ; implicit none
-  integer(c_idx_t) :: idx                  ! monomial index or -1
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_int), intent(in) :: m(*)       ! sparse monomial (idx,ord)
-"""
-"""
-    mad_tpsa_idxsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
+
+???
 
 ### Input
-- `tpsa`
+- `t`
 - `n`
 - `m`
 
 ### Output
-- `idx`
+- `ret`
 """
-function mad_tpsa_idxsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_tpsa_idxsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
-  return idx
+function mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
+  return ret
 end
 
 
 """
-Original Fortran function:
-tpsa,i,n,m_,v_
-bind(C)
-import ; implicit none                   ! scan for non-zero coefs starting at i
-  integer(c_idx_t) :: idx                  ! next index to start searching or -1
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_idx_t), value, intent(in) :: i ! index to start searching
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_ord_t) :: m_(*)                ! monomial to fill (if provided)
-  real(c_num_t), intent(out) :: v_         ! coeff to fill (if provided)
-"""
-"""
-    mad_tpsa_cycle(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Cdouble)::Cint
+    mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+
+???
 
 ### Input
-- `tpsa`
+- `t`
 - `i`
 - `n`
 - `m_`
 - `v_`
 
 ### Output
-- `idx`
-"""
-function mad_tpsa_cycle(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Cdouble)::Cint
-  idx = @ccall MAD_TPSA.mad_tpsa_cycle(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Cdouble)::Cint
-  return idx
-end
-
-
-"""
-Original Fortran function:
-tpsa
-bind(C)
-import ; implicit none
-  real(c_num_t) :: val                     ! value at order 0 (index 0)
-  type(c_ptr), value, intent(in) :: tpsa   !
-"""
-"""
-    mad_tpsa_get0(tpsa::Ptr{RTPSA{Desc}})::Cdouble
-
-### Input
-- `tpsa`
-
-### Output
-- `val`
-"""
-function mad_tpsa_get0(tpsa::Ptr{RTPSA{Desc}})::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_get0(tpsa::Ptr{RTPSA{Desc}})::Cdouble
-  return val
-end
-
-
-"""
-Original Fortran function:
-tpsa,i
-bind(C)
-import ; implicit none
-  real(c_num_t) :: val                     ! value at index i
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_idx_t), value, intent(in) :: i ! slot index (must be valid)
-"""
-"""
-    mad_tpsa_geti(tpsa::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
-
-### Input
-- `tpsa`
 - `i`
-
-### Output
-- `val`
 """
-function mad_tpsa_geti(tpsa::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_geti(tpsa::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
-  return val
+function mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+  i = @ccall MAD_TPSA.mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+  return i
 end
 
 
 """
-Original Fortran function:
-tpsa,n,s
-bind(C)
-import ; implicit none
-  real(c_num_t) :: val                     ! value at string monomial
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_ssz_t), value, intent(in) :: n ! string length or 0 (unknown)
-  character(c_char), intent(in) :: s(*)    ! monomial as string "[0-9]*"
-"""
-"""
-    mad_tpsa_gets(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
+    mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
+
+???
 
 ### Input
-- `tpsa`
-- `n`
-- `s`
-
-### Output
-- `val`
-"""
-function mad_tpsa_gets(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_gets(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
-  return val
-end
-
-
-"""
-Original Fortran function:
-tpsa,n,m
-bind(C)
-import ; implicit none
-  real(c_num_t) :: val                     ! value at monomial
-  type(c_ptr), value, intent(in) :: tpsa   !
-  integer(c_ssz_t), value, intent(in) :: n ! monomial length
-  integer(c_ord_t), intent(in) :: m(*)     ! monomial
-"""
-"""
-    mad_tpsa_getm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-
-### Input
-- `tpsa`
-- `n`
-- `m`
-
-### Output
-- `val`
-"""
-function mad_tpsa_getm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_getm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-  return val
-end
-
-
-"""
-Original Fortran function:
-tpsa,n,m
-bind(C)
-import ; implicit none
-  real(c_num_t) :: val                      ! value at sparse monomial
-  type(c_ptr), value, intent(in) :: tpsa
-  integer(c_ssz_t), value, intent(in) :: n  ! monomial length
-  integer(c_int), intent(in) :: m(*)        ! sparse monomial (idx,ord)
-"""
-"""
-    mad_tpsa_getsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-
-### Input
-- `tpsa`
-- `n`
-- `m`
-
-### Output
-- `val`
-"""
-function mad_tpsa_getsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_getsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-  return val
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,i,n,v
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa
-  integer(c_idx_t), value, intent(in) :: i  ! slot index (must be valid)
-  integer(c_ssz_t), value, intent(in) :: n  ! vector length
-  real(c_num_t) :: v(*)                     ! vector to fill
-"""
-"""
-    mad_tpsa_getv!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)
-
-### Input
-- `tpsa`
-- `i`
-- `n`
-- `v`
-"""
-function mad_tpsa_getv!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)
-  @ccall MAD_TPSA.mad_tpsa_getv(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,a,b
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  real(c_num_t), value, intent(in) :: a, b   ! t[0] = a*t[0]+b
-"""
-"""
-    mad_tpsa_set0!(tpsa::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
-
-### Input
-- `tpsa`
-- `a`
-- `b`
-"""
-function mad_tpsa_set0!(tpsa::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_set0(tpsa::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,i,a,b
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  integer(c_idx_t), value, intent(in) :: i   ! slot index (must be valid)
-  real(c_num_t), value, intent(in) :: a, b   ! t[i] = a*t[i]+b
-"""
-"""
-    mad_tpsa_seti!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
-
-### Input
-- `tpsa`
-- `i`
-- `a`
-- `b`
-"""
-function mad_tpsa_seti!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_seti(tpsa::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,n,s,a,b
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  integer(c_ssz_t), value, intent(in) :: n   ! string length or 0 (unknown)
-  character(c_char), intent(in) :: s(*)      ! monomial as string "[0-9]*"
-  real(c_num_t), value, intent(in) :: a, b   ! t[s] = a*t[s]+b
-"""
-"""
-    mad_tpsa_sets!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
-
-### Input
-- `tpsa`
-- `n`
-- `s`
-- `a`
-- `b`
-"""
-function mad_tpsa_sets!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_sets(tpsa::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,n,m,a,b
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  integer(c_ssz_t), value, intent(in) :: n   ! monomial length
-  integer(c_ord_t), intent(in) :: m(*)       ! monomial
-  real(c_num_t), value, intent(in) :: a, b   ! t[m] = a*t[m]+b
-"""
-"""
-    mad_tpsa_setm!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
-
-### Input
-- `tpsa`
-- `n`
-- `m`
-- `a`
-- `b`
-"""
-function mad_tpsa_setm!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_setm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,n,m,a,b
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  integer(c_ssz_t), value, intent(in) :: n   ! monomial length
-  integer(c_int), intent(in) :: m(*)         ! sparse monomial (idx,ord)
-  real(c_num_t), value, intent(in) :: a, b   ! t[m] = a*t[m]+b
-"""
-"""
-    mad_tpsa_setsm!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
-
-### Input
-- `tpsa`
-- `n`
-- `m`
-- `a`
-- `b`
-"""
-function mad_tpsa_setsm!(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_setsm(tpsa::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa,i,n,v
-bind(C)
-import ; implicit none
-  type(c_ptr), value :: tpsa
-  integer(c_idx_t), value, intent(in) :: i   ! slot index (must be valid)
-  integer(c_ssz_t), value, intent(in) :: n   ! vector length
-  real(c_num_t), intent(in) :: v(*)          ! vector to copy
-"""
-"""
-    mad_tpsa_setv!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)
-
-### Input
-- `tpsa`
-- `i`
-- `n`
-- `v`
-"""
-function mad_tpsa_setv!(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)
-  @ccall MAD_TPSA.mad_tpsa_setv(tpsa::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Cuchar)::Cvoid
-end
-
-
-"""
-Original Fortran function:
-tpsa_a,tpsa_b,eps_
-bind(C)
-import ; implicit none
-  logical(c_bool) :: ret                    ! true or false
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b
-  real(c_num_t), value, intent(in) :: eps_  ! tolerance during comparison
-"""
-"""
-    mad_tpsa_equ(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps_::Cdouble)::Cuchar
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `eps_`
+- `t`
 
 ### Output
 - `ret`
 """
-function mad_tpsa_equ(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps_::Cdouble)::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_equ(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps_::Cdouble)::Cuchar
+function mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
   return ret
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_dif!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
+
+???
 
 ### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_dif!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_dif(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_add!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_add!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_add(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_sub!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_sub!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sub(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_mul!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_mul!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_mul(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_div!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_div!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_div(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b  ! lhs, rhs
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_pow!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-"""
-function mad_tpsa_pow!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_pow(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,n,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a          ! src
-  integer(c_int), value, intent(in) :: n            ! power (integer)
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_powi!(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `n`
-- `tpsa_r`
-"""
-function mad_tpsa_powi!(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_powi(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,v,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a          ! src
-  real(c_num_t), value, intent(in) :: v             ! power (real)
-  type(c_ptr), value :: tpsa_r                      ! dst
-"""
-"""
-    mad_tpsa_pown!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `v`
-- `tpsa_r`
-"""
-function mad_tpsa_pown!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_pown(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a   ! src
-  type(c_ptr), value :: tpsa_r               ! dst=|src|
-"""
-"""
-    mad_tpsa_abs!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_abs!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_abs(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran function:
-tpsa_a,tpsa_b_
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b_
-  real(c_num_t) :: nrm                       ! sum_i |a[i]-b_[i]|
-"""
-"""
-    mad_tpsa_nrm(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b_::Ptr{RTPSA{Desc}})::Cdouble
-
-### Input
-- `tpsa_a`
-- `tpsa_b_`
+- `t`
+- `i`
 
 ### Output
-- `nrm`
+- `ret`
 """
-function mad_tpsa_nrm(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b_::Ptr{RTPSA{Desc}})::Cdouble
-  nrm = @ccall MAD_TPSA.mad_tpsa_nrm(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b_::Ptr{RTPSA{Desc}})::Cdouble
+function mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
+  return ret
+end
+
+
+"""
+    mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
+
+???
+
+### Input
+- `t`
+- `n`
+- `s`
+
+### Output
+- `ret`
+"""
+function mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
+  return ret
+end
+
+
+"""
+    mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
+
+???
+
+### Input
+- `t`
+- `n`
+- `m`
+
+### Output
+- `ret`
+"""
+function mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
+  val = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
+  return ret
+end
+
+
+"""
+    mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
+
+???
+
+### Input
+- `t`
+- `n`
+- `m`
+
+### Output
+- `ret`
+"""
+function mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
+  return ret
+end
+
+
+"""
+    mad_tpsa_set0!(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
+
+???
+
+### Input
+- `t`
+- `a`
+- `b`
+"""
+function mad_tpsa_set0!(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_set0(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)::Cvoid
+end
+
+
+"""
+    mad_tpsa_seti!(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
+
+???
+
+### Input
+- `t`
+- `i`
+- `a`
+- `b`
+"""
+function mad_tpsa_seti!(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_seti(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)::Cvoid
+end
+
+
+"""
+    mad_tpsa_sets!(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
+
+???
+
+### Input
+- `t`
+- `n`
+- `s`
+- `a`
+- `b`
+"""
+function mad_tpsa_sets!(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_sets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)::Cvoid
+end
+
+
+"""
+    mad_tpsa_setm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
+
+???
+
+### Input
+- `t`
+- `n`
+- `m`
+- `a`
+- `b`
+"""
+function mad_tpsa_setm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_setm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
+end
+
+
+"""
+    mad_tpsa_setsm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
+
+???
+
+### Input
+- `t`
+- `n`
+- `m`
+- `a`
+- `b`
+"""
+function mad_tpsa_setsm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
+end
+
+
+"""
+    mad_tpsa_getv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
+
+???
+
+### Input
+- `t`
+- `i`
+- `n`
+- `v`
+"""
+function mad_tpsa_getv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
+  @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
+end
+
+
+
+"""
+    mad_tpsa_setv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
+
+???
+
+### Input
+- `t`
+- `i`
+- `n`
+- `v`
+"""
+function mad_tpsa_setv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
+  @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
+end
+
+
+"""
+    mad_tpsa_equ(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, tol_::Cdouble)::Cuchar
+
+Checks if the TPSAs a and b are equal within the specified tolerance tol_
+
+### Input
+- `a`    -- TPSA a
+- `b`    -- TPSA b
+- `tol_` -- difference below which the TPSAs are considered equal
+
+### Output
+- `ret`   - True if a == b within tol_
+"""
+function mad_tpsa_equ(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, tol_::Cdouble)::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_equ(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, tol_::Cdouble)::Cuchar
+  return ret
+end
+
+
+"""
+    mad_tpsa_dif!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+???  // (a_i-b_i)/max(|a_i|,1)
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c 
+"""
+function mad_tpsa_dif!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_dif(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_add!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a + b
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c = a + b
+"""
+function mad_tpsa_add!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_add(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sub!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a - b
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c = a - b
+"""
+function mad_tpsa_sub!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sub(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_mul!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a * b
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c = a * b
+"""
+function mad_tpsa_mul!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_mul(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_div!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a / b
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c = a / b
+"""
+function mad_tpsa_div!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_div(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_pow!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a ^ b
+
+### Input
+- `a` -- Source TPSA a
+- `b` -- Source TPSA b
+- `c` -- Destination TPSA c = a ^ b
+"""
+function mad_tpsa_pow!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_pow(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_powi!(a::Ptr{RTPSA{Desc}}, n::Cint, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a ^ n where n is an integer.
+
+### Input
+- `a` -- Source TPSA a
+- `n` -- Integer power
+- `c` -- Destination TPSA c = a ^ n
+"""
+function mad_tpsa_powi!(a::Ptr{RTPSA{Desc}}, n::Cint, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_powi(a::Ptr{RTPSA{Desc}}, n::Cint, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_pown!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+
+Sets the destination TPSA c = a ^ v where v is of double precision.
+
+### Input
+- `a` -- Source TPSA a
+- `v` -- "double" precision power
+- `c` -- Destination TPSA c = a ^ v
+"""
+function mad_tpsa_pown!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_pown(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_nrm(a::Ptr{RTPSA{Desc}})::Cdouble
+
+Calculates the norm of (which???) of TPSA a.
+
+### Input
+- `a`   -- TPSA
+
+### Output
+- `nrm` -- Norm of TPSA a
+"""
+function mad_tpsa_nrm(a::Ptr{RTPSA{Desc}})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_tpsa_nrm(a::Ptr{RTPSA{Desc}}, tpsa_b_::Ptr{RTPSA{Desc}})::Cdouble
   return nrm
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,tpsa_r,iv
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a   ! src
-  type(c_ptr), value :: tpsa_r               ! dst
-  integer(c_int), value, intent(in) :: iv    ! variable number (1st order)
-"""
-"""
-    mad_tpsa_integ!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)
+    mad_tpsa_abs!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the absolute value of TPSA a.
 
 ### Input
-- `tpsa_a`
-- `tpsa_r`
-- `iv`
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = |a|
 """
-function mad_tpsa_integ!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)
-  @ccall MAD_TPSA.mad_tpsa_integ(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
+function mad_tpsa_abs!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_abs(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,tpsa_r,iv
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a   ! src
-  type(c_ptr), value :: tpsa_r               ! dst
-  integer(c_int), value, intent(in) :: iv    ! variable number (1st order)
-"""
-"""
-    mad_tpsa_deriv!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)
+    mad_tpsa_sqrt!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the sqrt of TPSA a.
 
 ### Input
-- `tpsa_a`
-- `tpsa_r`
-- `iv`
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = sqrt(a)
 """
-function mad_tpsa_deriv!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)
-  @ccall MAD_TPSA.mad_tpsa_deriv(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
+function mad_tpsa_sqrt!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sqrt(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,tpsa_r,n,m
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a   ! src
-  type(c_ptr), value :: tpsa_r               ! dst
-  integer(c_ssz_t), value, intent(in) :: n   ! monomial length
-  integer(c_ord_t), intent(in) :: m(*)       ! monomial
-"""
-"""
-    mad_tpsa_derivm!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
+    mad_tpsa_exp!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the exponential of TPSA a.
 
 ### Input
-- `tpsa_a`
-- `tpsa_r`
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = exp(a)
+"""
+function mad_tpsa_exp!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_exp(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+
+"""
+    mad_tpsa_log!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the log of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = log(a)
+"""
+function mad_tpsa_log!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_log(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sincos!(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA s = sin(a) and TPSA c = cos(a)
+
+### Input
+- `a` -- Source TPSA a
+- `s` -- Destination TPSA s = sin(a)
+- `c` -- Destination TPSA c = cos(a)
+"""
+function mad_tpsa_sincos!(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sincos(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the sin of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = sin(a)
+"""
+function mad_tpsa_sin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sin(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_cos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the cos of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = cos(a)
+"""
+function mad_tpsa_cos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_cos(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_tan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the tan of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = tan(a)
+"""
+function mad_tpsa_tan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_tan(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_cot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the cot of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = cot(a)
+"""
+function mad_tpsa_cot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_cot(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the sinc of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = sinc(a)
+"""
+function mad_tpsa_sinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sinc(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sincosh!(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA s = sinh(a) and TPSA c = cosh(a)
+
+### Input
+- `a` -- Source TPSA a
+- `s` -- Destination TPSA s = sinh(a)
+- `c` -- Destination TPSA c = cosh(a)
+"""
+function mad_tpsa_sincosh!(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sincosh(a::Ptr{RTPSA{Desc}}, s::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+  Sets TPSA c to the sinh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = sinh(a)
+"""
+function mad_tpsa_sinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sinh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_cosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the cosh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = cosh(a)
+"""
+function mad_tpsa_cosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_cosh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_tanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the tanh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = tanh(a)
+"""
+function mad_tpsa_tanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_tanh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_coth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the coth of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = coth(a)
+"""
+function mad_tpsa_coth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_coth(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_sinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the sinhc of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = sinhc(a)
+"""
+function mad_tpsa_sinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_sinhc(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_asin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the asin of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = asin(a)
+"""
+function mad_tpsa_asin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_asin(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_acos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the acos of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = acos(a)
+"""
+function mad_tpsa_acos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_acos(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_atan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the atan of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = atan(a)
+"""
+function mad_tpsa_atan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_atan(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_acot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the acot of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = acot(a)
+"""
+function mad_tpsa_acot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_acot(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+"""
+    mad_tpsa_asinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the asinc of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = asinc(a)
+"""
+function mad_tpsa_asinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_asinc(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_asinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the asinh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = asinh(a)
+"""
+function mad_tpsa_asinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_asinh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_acosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the acosh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = acosh(a)
+"""
+function mad_tpsa_acosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_acosh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_atanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the atanh of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = atanh(a)
+"""
+function mad_tpsa_atanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_atanh(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_acoth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the acoth of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = acoth(a)
+"""
+function mad_tpsa_acoth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_acoth(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_asinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the asinhc of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = asinhc(a)
+"""
+function mad_tpsa_asinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_asinhc(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_erf!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the erf of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = erf(a)
+"""
+function mad_tpsa_erf!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_erf(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_erfc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to the erfc of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+- `c` -- Destination TPSA c = erfc(a)
+"""
+function mad_tpsa_erfc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_erfc(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_acc!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+
+Adds a*v to TPSA c. Aliasing OK.
+
+### Input
+- `a` -- Source TPSA a
+- `v` -- Scalar with double precision
+- `c` -- Destination TPSA c += v*a
+"""
+function mad_tpsa_acc!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_acc(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_scl!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to v*a. 
+
+### Input
+- `a` -- Source TPSA a
+- `v` -- Scalar with double precision
+- `c` -- Destination TPSA c = v*a
+"""
+function mad_tpsa_scl!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_scl(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_inv!(a::Ptr{RTPSA{Desc}},  v::Cdouble, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to v/a. 
+
+### Input
+- `a` -- Source TPSA a
+- `v` -- Scalar with double precision
+- `c` -- Destination TPSA c = v*a
+"""
+function mad_tpsa_inv!(a::Ptr{RTPSA{Desc}},  v::Cdouble, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_inv(a::Ptr{RTPSA{Desc}},  v::Cdouble, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+"""
+    mad_tpsa_invsqrt!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+
+Sets TPSA c to v/sqrt(a). 
+
+### Input
+- `a` -- Source TPSA a
+- `v` -- Scalar with double precision
+- `c` -- Destination TPSA c = v*a
+"""
+function mad_tpsa_invsqrt!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_invsqrt(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_unit!(x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+
+???
+
+### Input
+- `x` -- Source TPSA x
+- `r` -- Destination TPSA r
+"""
+function  mad_tpsa_unit!(x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA. mad_tpsa_unit(x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_atan2!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+
+Sets TPSA r to atan2(x,y)
+
+### Input
+- `x` -- Source TPSA x
+- `y` -- Source TPSA y
+- `r` -- Destination TPSA r = atan2(x,y)
+"""
+function  mad_tpsa_atan2!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA. mad_tpsa_atan2(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+"""
+    mad_tpsa_hypot!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+
+Sets TPSA r to sqrt(x^2+y^2)
+
+### Input
+- `x` -- Source TPSA x
+- `y` -- Source TPSA y
+- `r` -- Destination TPSA r = sqrt(x^2+y^2)
+"""
+function  mad_tpsa_hypot!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA. mad_tpsa_hypot(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+"""
+    mad_tpsa_hypot3!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+
+Sets TPSA r to sqrt(x^2+y^2+z^2)
+
+### Input
+- `x` -- Source TPSA x
+- `y` -- Source TPSA y
+- `z` -- Source TPSA z
+- `r` -- Destination TPSA r = sqrt(x^2+y^2)
+"""
+function  mad_tpsa_hypot3!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA. mad_tpsa_hypot3(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+
+"""
+    mad_tpsa_integ!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
+
+??? Integrates TPSA
+
+### Input
+- `a`  -- Source TPSA to integrate
+- `c`  -- Destination TPSA
+- `iv` -- Domain
+"""
+function mad_tpsa_integ!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
+  @ccall MAD_TPSA.mad_tpsa_integ(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
+end
+
+
+"""
+    mad_tpsa_deriv!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
+
+??? Differentiates TPSA
+
+### Input
+- `a`  -- Source TPSA to differentiate
+- `c`  -- Destination TPSA
+- `iv` -- Domain
+"""
+function mad_tpsa_deriv!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
+  @ccall MAD_TPSA.mad_tpsa_deriv(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
+end
+
+
+"""
+    mad_tpsa_derivm!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
+
+???
+
+### Input
+- `a`
+- `c`
 - `n`
 - `m`
 """
-function mad_tpsa_derivm!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
-  @ccall MAD_TPSA.mad_tpsa_derivm(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cvoid
+function mad_tpsa_derivm!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
+  @ccall MAD_TPSA.mad_tpsa_derivm(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,tpsa_b,tpsa_r,nv
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, tpsa_b ! src
-  type(c_ptr), value :: tpsa_r                     ! dst
-  integer(c_int), value, intent(in) :: nv          ! #variables (desc%nv if 0)
-"""
-"""
-    mad_tpsa_poisbra!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, nv::Cint)
+    mad_tpsa_poisbra!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, nv::Cint)
+
+Sets TPSA c to the poisson bracket of TPSAs a and b.
 
 ### Input
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
-- `nv`
+- `a`  -- Source TPSA a
+- `b`  -- Source TPSA b
+- `c`  -- Destination TPSA c = [a, b]
+- `nv` -- Number of variables in the TPSA
 """
-function mad_tpsa_poisbra!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, nv::Cint)
-  @ccall MAD_TPSA.mad_tpsa_poisbra(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, nv::Cint)::Cvoid
+function mad_tpsa_poisbra!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, nv::Cint)
+  @ccall MAD_TPSA.mad_tpsa_poisbra(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, nv::Cint)::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-tpsa_a,n,coef,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-  integer(c_ssz_t), value, intent(in) :: n    ! vector length
-  real(c_num_t), intent(in) :: coef(*)        ! vector of taylor coefs
-"""
-"""
-    mad_tpsa_taylor!(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, coef::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_taylor!(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
+
+???
 
 ### Input
-- `tpsa_a`
+- `a`
 - `n`
 - `coef`
-- `tpsa_r`
-"""
-function mad_tpsa_taylor!(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, coef::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_taylor(tpsa_a::Ptr{RTPSA{Desc}}, n::Cint, coef::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,v,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! src and dst
-  real(c_num_t), value, intent(in) :: v       ! r = r + v*a (r not reset!)
-"""
-"""
-    mad_tpsa_acc!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `v`
-- `tpsa_r`
-"""
-function mad_tpsa_acc!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_acc(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,v,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-  real(c_num_t), value, intent(in) :: v       ! r = v*a
-"""
-"""
-    mad_tpsa_scl!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `v`
-- `tpsa_r`
-"""
-function mad_tpsa_scl!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_scl(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,v,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-  real(c_num_t), value, intent(in) :: v       ! r = v/a
-"""
-"""
-    mad_tpsa_inv!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `v`
-- `tpsa_r`
-"""
-function mad_tpsa_inv!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_inv(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,v,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-  real(c_num_t), value, intent(in) :: v       ! r = v/sqrt(a)
-"""
-"""
-    mad_tpsa_invsqrt!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `v`
-- `tpsa_r`
-"""
-function mad_tpsa_invsqrt!(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_invsqrt(tpsa_a::Ptr{RTPSA{Desc}}, v::Cuchar, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_sqrt!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_sqrt!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sqrt(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_exp!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_exp!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_exp(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_log!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_log!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_log(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_s,tpsa_c
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_s, tpsa_c        ! dst_sin, dst_cos
-"""
-"""
-    mad_tpsa_sincos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_s`
-- `tpsa_c`
-"""
-function mad_tpsa_sincos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sincos(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_sin!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_sin!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sin(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_cos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_cos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_cos(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_tan!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_tan!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_tan(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_cot!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_cot!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_cot(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_sinc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_sinc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sinc(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_s,tpsa_c
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_s, tpsa_c        ! dst_sin, dst_cos
-"""
-"""
-    mad_tpsa_sincosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_s`
-- `tpsa_c`
-"""
-function mad_tpsa_sincosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sincosh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_s::Ptr{RTPSA{Desc}}, tpsa_c::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_sinh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_sinh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sinh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_cosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_cosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_cosh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_tanh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_tanh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_tanh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_coth!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_coth!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_coth(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_sinhc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_sinhc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_sinhc(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_asin!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_asin!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_asin(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_acos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_acos!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_acos(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_atan!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_atan!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_atan(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_acot!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_acot!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_acot(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_asinh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_asinh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_asinh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_acosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_acosh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_acosh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_atanh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_atanh!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_atanh(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_acoth!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_acoth!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_acoth(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_erf!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_erf!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_erf(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-tpsa_a,tpsa_r
-bind(C)
-import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a    ! src
-  type(c_ptr), value :: tpsa_r                ! dst
-"""
-"""
-    mad_tpsa_erfc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `tpsa_a`
-- `tpsa_r`
-"""
-function mad_tpsa_erfc!(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_erfc(tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-a,tpsa_x,b,tpsa_r
-bind(C)
-import ; implicit none
-  real(c_num_t), value, intent(in) :: a, b    ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x    ! src
-  type(c_ptr), value :: tpsa_r                ! dst=a*x+b
-"""
-"""
-    mad_tpsa_axpb!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `a`
-- `tpsa_x`
-- `b`
-- `tpsa_r`
-"""
-function mad_tpsa_axpb!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axpb(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
-end
-
-
-"""
-Original Fortran subroutine:
-a,tpsa_x,b,tpsa_y,c,tpsa_r
-bind(C)
-import ; implicit none
-  real(c_num_t), value, intent(in) :: a, b, c       ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y  ! src
-  type(c_ptr), value :: tpsa_r                      ! dst=a*x+b*y+c
-"""
-"""
-    mad_tpsa_axpbypc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-
-### Input
-- `a`
-- `tpsa_x`
-- `b`
-- `tpsa_y`
 - `c`
-- `tpsa_r`
 """
-function mad_tpsa_axpbypc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axpbypc(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_taylor!(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_taylor(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-a,tpsa_x,tpsa_y,b,tpsa_r
-bind(C)
-import ; implicit none
-  real(c_num_t), value, intent(in) :: a, b          ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y  ! src
-  type(c_ptr), value :: tpsa_r                      ! dst=a*x*y+b
-"""
-"""
-    mad_tpsa_axypb!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_axpb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
+
+??? r = a*x/b?
 
 ### Input
 - `a`
-- `tpsa_x`
-- `tpsa_y`
+- `x`
 - `b`
-- `tpsa_r`
+- `r`
 """
-function mad_tpsa_axypb!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axypb(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_axpb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axpb(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-a,tpsa_x,tpsa_y,b,tpsa_z,c,tpsa_r
-bind(C)
-import ; implicit none
-  real(c_num_t), value, intent(in) :: a, b, c              ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y, tpsa_z ! src
-  type(c_ptr), value :: tpsa_r                             ! dst=a*x*y+b*z+c
-"""
-"""
-    mad_tpsa_axypbzpc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_axpbypc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
 ### Input
 - `a`
-- `tpsa_x`
-- `tpsa_y`
+- `x`
 - `b`
-- `tpsa_z`
+- `y`
 - `c`
-- `tpsa_r`
+- `r`
 """
-function mad_tpsa_axypbzpc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axypbzpc(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_axpbypc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axpbypc(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
-Original Fortran subroutine:
-a,tpsa_x,tpsa_y,b,tpsa_u,tpsa_v,c,tpsa_r
-bind(C)
-import ; implicit none
-  real(c_num_t), value, intent(in) :: a, b, c            ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y, tpsa_u, tpsa_v ! src
-  type(c_ptr), value :: tpsa_r                           ! dst=a*x*y+b*u*v+c
-"""
-"""
-    mad_tpsa_axypbvwpc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_axypb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
+
+???
 
 ### Input
 - `a`
-- `tpsa_x`
-- `tpsa_y`
+- `x`
+- `y`
+- `b`
+- `r`
+"""
+function mad_tpsa_axypb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axypb(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_axypbzpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
+
+???
+
+### Input
+- `a`
+- `x`
+- `y`
+- `b`
+- `z`
+- `c`
+- `r`
+"""
+function mad_tpsa_axypbzpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axypbzpc(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
+end
+
+
+"""
+    mad_tpsa_axypbvwpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+
+### Input
+- `a`
+- `x`
+- `y`
 - `b`
 - `tpsa_u`
 - `tpsa_v`
 - `c`
-- `tpsa_r`
+- `c`
 """
-function mad_tpsa_axypbvwpc!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axypbvwpc(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_axypbvwpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axypbvwpc(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_u::Ptr{RTPSA{Desc}}, tpsa_v::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,tpsa_x,b,tpsa_y,c,tpsa_z,tpsa_r
+a,x,b,y,c,tpsa_z,c
 bind(C)
 import ; implicit none
   real(c_num_t), value, intent(in) :: a, b, c      ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y, tpsa_z ! src
-  type(c_ptr), value :: tpsa_r                     ! dst=a*x^2+b*y^2+c*z^2
+  type(c_ptr), value, intent(in) :: x, y, tpsa_z ! src
+  type(c_ptr), value :: c                     ! dst=a*x^2+b*y^2+c*z^2
 """
 """
-    mad_tpsa_ax2pby2pcz2!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `a`
-- `tpsa_x`
+- `x`
 - `b`
-- `tpsa_y`
+- `y`
 - `c`
 - `tpsa_z`
-- `tpsa_r`
+- `c`
 """
-function mad_tpsa_ax2pby2pcz2!(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_ax2pby2pcz2(a::Cdouble, tpsa_x::Ptr{RTPSA{Desc}}, b::Cdouble, tpsa_y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_ax2pby2pcz2(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, tpsa_z::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_x,a,b,c,tpsa_r
+x,a,b,c,c
 bind(C)
 import ; implicit none
   real(c_num_t), value, intent(in) :: a, b, c   ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x      ! src
-  type(c_ptr), value :: tpsa_r                  ! dst=a*x+sqrt(b+c*x^2)
+  type(c_ptr), value, intent(in) :: x      ! src
+  type(c_ptr), value :: c                  ! dst=a*x+sqrt(b+c*x^2)
 """
 """
-    mad_tpsa_axpsqrtbpcx2!(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_axpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
-- `tpsa_x`
+- `x`
 - `a`
 - `b`
 - `c`
-- `tpsa_r`
+- `c`
 """
-function mad_tpsa_axpsqrtbpcx2!(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_axpsqrtbpcx2(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_axpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_axpsqrtbpcx2(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_x,a,b,c,tpsa_r
+x,a,b,c,c
 bind(C)
 import ; implicit none
   real(c_num_t), value, intent(in) :: a, b, c   ! coefs
-  type(c_ptr), value, intent(in) :: tpsa_x      ! src
-  type(c_ptr), value :: tpsa_r                  ! dst=log(a*x+sqrt(b+c*x^2))
+  type(c_ptr), value, intent(in) :: x      ! src
+  type(c_ptr), value :: c                  ! dst=log(a*x+sqrt(b+c*x^2))
 """
 """
-    mad_tpsa_logaxpsqrtbpcx2!(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_logaxpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
-- `tpsa_x`
+- `x`
 - `a`
 - `b`
 - `c`
-- `tpsa_r`
+- `c`
 """
-function mad_tpsa_logaxpsqrtbpcx2!(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_logaxpsqrtbpcx2(tpsa_x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_logaxpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_logaxpsqrtbpcx2(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_x,tpsa_y,tpsa_r
+x,y,c
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_x, tpsa_y ! src
-  type(c_ptr), value :: tpsa_r                     ! dst=log(x/y)
+  type(c_ptr), value, intent(in) :: x, y ! src
+  type(c_ptr), value :: c                     ! dst=log(x/y)
 """
 """
-    mad_tpsa_logxdy!(tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_logxdy!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
-- `tpsa_x`
-- `tpsa_y`
-- `tpsa_r`
+- `x`
+- `y`
+- `c`
 """
-function mad_tpsa_logxdy!(tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_logxdy(tpsa_x::Ptr{RTPSA{Desc}}, tpsa_y::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_logxdy!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_logxdy(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran function:
-na,tpsa_a
+na,a
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)          ! src
+  type(c_ptr), intent(in) :: a(*)          ! src
   real(c_num_t) :: mnrm                         ! nrm
 """
 """
-    mad_tpsa_mnrm(na::Cint, tpsa_a::Ptr{RTPSA{Desc}})::Cdouble
+    mad_tpsa_mnrm(na::Cint, a::Ptr{RTPSA{Desc}})::Cdouble
 
 ### Input
 - `na`
-- `tpsa_a`
+- `a`
 
 ### Output
 - `mnrm`
 """
-function mad_tpsa_mnrm(na::Cint, tpsa_a::Ptr{RTPSA{Desc}})::Cdouble
-  mnrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, tpsa_a::Ptr{RTPSA{Desc}})::Cdouble
+function mad_tpsa_mnrm(na::Cint, a::Ptr{RTPSA{Desc}})::Cdouble
+  mnrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, a::Ptr{RTPSA{Desc}})::Cdouble
   return mnrm
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_r
+na,a,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)          ! src
-  type(c_ptr) :: tpsa_r(*)                      ! dst
+  type(c_ptr), intent(in) :: a(*)          ! src
+  type(c_ptr) :: c(*)                      ! dst
 """
 """
-    mad_tpsa_minv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_minv!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_r`
+- `a`
+- `c`
 """
-function mad_tpsa_minv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_minv!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_r,select
+na,a,c,select
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)          ! src
-  type(c_ptr) :: tpsa_r(*)                      ! dst
+  type(c_ptr), intent(in) :: a(*)          ! src
+  type(c_ptr) :: c(*)                      ! dst
   integer(c_idx_t), intent(in) :: select(*)     ! slots to selected
 """
 """
-    mad_tpsa_pminv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, select::Ptr{Cint})
+    mad_tpsa_pminv!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, select::Ptr{Cint})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_r`
+- `a`
+- `c`
 - `select`
 """
-function mad_tpsa_pminv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, select::Ptr{Cint})
-  @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}}, select::Ptr{Cint})::Cvoid
+function mad_tpsa_pminv!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, select::Ptr{Cint})
+  @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, select::Ptr{Cint})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,nb,tpsa_b,tpsa_r
+na,a,nb,b,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na, nb   ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*), tpsa_b(*) ! src
-  type(c_ptr) :: tpsa_r(*)                        ! dst[na]
+  type(c_ptr), intent(in) :: a(*), b(*) ! src
+  type(c_ptr) :: c(*)                        ! dst[na]
 """
 """
-    mad_tpsa_compose!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_compose!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
+- `a`
 - `nb`
-- `tpsa_b`
-- `tpsa_r`
+- `b`
+- `c`
 """
-function mad_tpsa_compose!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_compose!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,nb,vb,tpsa_r
+na,a,nb,vb,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na, nb   ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)            ! src
+  type(c_ptr), intent(in) :: a(*)            ! src
   real(c_num_t), intent(in) :: vb(*)              ! src
-  type(c_ptr) :: tpsa_r(*)                        ! dst[na]
+  type(c_ptr) :: c(*)                        ! dst[na]
 """
 """
-    mad_tpsa_translate!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_translate!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
+- `a`
 - `nb`
 - `vb`
-- `tpsa_r`
+- `c`
 """
-function mad_tpsa_translate!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_translate!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,nb,vb,vr
+na,a,nb,vb,vr
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na, nb   ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)            ! src
+  type(c_ptr), intent(in) :: a(*)            ! src
   real(c_num_t), intent(in) :: vb(*)              ! src
   real(c_num_t) :: vr(*)                          ! dst[nb]
 """
 """
-    mad_tpsa_eval!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})
+    mad_tpsa_eval!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})
 
 ### Input
 - `na`
-- `tpsa_a`
+- `a`
 - `nb`
 - `vb`
 - `vr`
 """
-function mad_tpsa_eval!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})
-  @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})::Cvoid
+function mad_tpsa_eval!(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})
+  @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, a::Ptr{RTPSA{Desc}}, nb::Cint, vb::Ptr{Cdouble}, vr::Ptr{Cdouble})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,nr,tpsa_r,n,t2r_,pb
+na,a,nr,c,n,t2r_,pb
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na, nr   ! vectors lengths
-  type(c_ptr), intent(in) :: tpsa_a(*)            ! src
-  type(c_ptr) :: tpsa_r(*)                        ! dst
+  type(c_ptr), intent(in) :: a(*)            ! src
+  type(c_ptr) :: c(*)                        ! dst
   integer(c_ssz_t), value, intent(in) :: n        ! vector length
   integer(c_idx_t), intent(in) :: t2r_(*)         ! vector of index lookup
   integer(c_int), value, intent(in) :: pb         ! poisson bracket 0,1:fwd,-1:bwd
 """
 """
-    mad_tpsa_mconv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nr::Cint, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+    mad_tpsa_mconv!(na::Cint, a::Ptr{RTPSA{Desc}}, nr::Cint, c::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
 
 ### Input
 - `na`
-- `tpsa_a`
+- `a`
 - `nr`
-- `tpsa_r`
+- `c`
 - `n`
 - `t2r_`
 - `pb`
 """
-function mad_tpsa_mconv!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nr::Cint, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
-  @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, nr::Cint, tpsa_r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+function mad_tpsa_mconv!(na::Cint, a::Ptr{RTPSA{Desc}}, nr::Cint, c::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+  @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, a::Ptr{RTPSA{Desc}}, nr::Cint, c::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_r
+na,a,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors length
-  type(c_ptr), value, intent(in) :: tpsa_a      ! src
-  type(c_ptr), intent(out) :: tpsa_r(*)         ! dst
+  type(c_ptr), value, intent(in) :: a      ! src
+  type(c_ptr), intent(out) :: c(*)         ! dst
 """
 """
-    mad_tpsa_vec2fld!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_r`
+- `a`
+- `c`
 """
-function mad_tpsa_vec2fld!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_r
+na,a,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors length
-  type(c_ptr), intent(in) :: tpsa_a(*)          ! src
-  type(c_ptr), value :: tpsa_r                  ! dst
+  type(c_ptr), intent(in) :: a(*)          ! src
+  type(c_ptr), value :: c                  ! dst
 """
 """
-    mad_tpsa_fld2vec!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_fld2vec!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_r`
+- `a`
+- `c`
 """
-function mad_tpsa_fld2vec!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_fld2vec!(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_b,tpsa_r
+na,a,b,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na     ! vectors length
-  type(c_ptr), intent(in) :: tpsa_a(*)          ! src
-  type(c_ptr), value, intent(in) :: tpsa_b      ! src
-  type(c_ptr), value :: tpsa_r                  ! dst
+  type(c_ptr), intent(in) :: a(*)          ! src
+  type(c_ptr), value, intent(in) :: b      ! src
+  type(c_ptr), value :: c                  ! dst
 """
 """
-    mad_tpsa_fgrad!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_fgrad!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
+- `a`
+- `b`
+- `c`
 """
-function mad_tpsa_fgrad!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_fgrad!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_b,tpsa_r
+na,a,b,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na       ! vectors length
-  type(c_ptr), intent(in) :: tpsa_a(*), tpsa_b(*) ! src
-  type(c_ptr), intent(out) :: tpsa_r(*)           ! dst[na]
+  type(c_ptr), intent(in) :: a(*), b(*) ! src
+  type(c_ptr), intent(out) :: c(*)           ! dst[na]
 """
 """
-    mad_tpsa_liebra!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_liebra!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
+- `a`
+- `b`
+- `c`
 """
-function mad_tpsa_liebra!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_liebra!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_b,tpsa_r
+na,a,b,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na       ! vectors length
-  type(c_ptr), intent(in) :: tpsa_a(*), tpsa_b(*) ! src
-  type(c_ptr), intent(out) :: tpsa_r(*)           ! dst[na]
+  type(c_ptr), intent(in) :: a(*), b(*) ! src
+  type(c_ptr), intent(out) :: c(*)           ! dst[na]
 """
 """
-    mad_tpsa_exppb!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_exppb!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
+- `a`
+- `b`
+- `c`
 """
-function mad_tpsa_exppb!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_exppb!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-na,tpsa_a,tpsa_b,tpsa_r
+na,a,b,c
 bind(C)
 import ; implicit none
   integer(c_ssz_t), value, intent(in) :: na       ! vectors length
-  type(c_ptr), intent(in) :: tpsa_a(*)            ! src
-  type(c_ptr), intent(in), optional :: tpsa_b(*)  ! src
-  type(c_ptr), intent(out) :: tpsa_r(*)           ! dst[na]
+  type(c_ptr), intent(in) :: a(*)            ! src
+  type(c_ptr), intent(in), optional :: b(*)  ! src
+  type(c_ptr), intent(out) :: c(*)           ! dst[na]
 """
 """
-    mad_tpsa_logpb!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_tpsa_logpb!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `na`
-- `tpsa_a`
-- `tpsa_b`
-- `tpsa_r`
+- `a`
+- `b`
+- `c`
 """
-function mad_tpsa_logpb!(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, tpsa_a::Ptr{RTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_logpb!(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
@@ -3076,6 +2694,22 @@ import ; implicit none
 """
 function mad_tpsa_debug!(tpsa::Ptr{RTPSA{Desc}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_debug(tpsa::Ptr{RTPSA{Desc}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cvoid
+end
+
+"""
+    mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+
+Sanity check of the TPSA integrity.
+
+### Input
+- `tpsa` -- Real TPSA to check if valid
+
+### Output
+- `ret`  -- True if valid TPSA, false otherwise
+"""
+function mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_isvalid(tpsa::Ptr{RTPSA{Desc}})::Cuchar
+  return ret
 end
 
 
@@ -3485,41 +3119,41 @@ end
 
 """
 Original Fortran subroutine:
-ctpsa,tpsa_r
+ctpsa,c
 bind(C)
 import ; implicit none
   type(c_ptr), value, intent(in) :: ctpsa   ! src
-  type(c_ptr), value :: tpsa_r              ! dst=real(src)
+  type(c_ptr), value :: c              ! dst=real(src)
 """
 """
-    mad_ctpsa_real!(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_real!(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `ctpsa`
-- `tpsa_r`
+- `c`
 """
-function mad_ctpsa_real!(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_real(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_real!(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_real(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa,tpsa_r
+ctpsa,c
 bind(C)
 import ; implicit none
   type(c_ptr), value, intent(in) :: ctpsa   ! src
-  type(c_ptr), value :: tpsa_r              ! dst=imag(src)
+  type(c_ptr), value :: c              ! dst=imag(src)
 """
 """
-    mad_ctpsa_imag!(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_imag!(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
 ### Input
 - `ctpsa`
-- `tpsa_r`
+- `c`
 """
-function mad_ctpsa_imag!(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_imag(ctpsa::Ptr{CTPSA{Desc}}, tpsa_r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_imag!(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_imag(ctpsa::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
@@ -4179,283 +3813,283 @@ end
 
 """
 Original Fortran function:
-ctpsa_a,tpsa_b,eps
+ctpsa_a,b,eps
 bind(C)
 import ; implicit none
   logical(c_bool) :: ret                   ! true or false
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b
+  type(c_ptr), value, intent(in) :: ctpsa_a, b
   real(c_num_t), value, intent(in) :: eps  ! tolerance during comparison
 """
 """
-    mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
+    mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `eps`
 
 ### Output
 - `ret`
 """
-function mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
+function mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_equt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, eps::Cdouble)::Cuchar
   return ret
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_addt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_addt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_addt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_addt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_addt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_addt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_subt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_subt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_subt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_subt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_subt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_subt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_a,ctpsa_b,ctpsa_r
+a,ctpsa_b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, ctpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: a, ctpsa_b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_tsub!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_tsub!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `tpsa_a`
+- `a`
 - `ctpsa_b`
 - `ctpsa_r`
 """
-function mad_ctpsa_tsub!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_tsub(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_tsub!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_tsub(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_dift!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_dift!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_dift!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_dift(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_dift!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_dift(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_a,ctpsa_b,ctpsa_r
+a,ctpsa_b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, ctpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: a, ctpsa_b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_tdif!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_tdif!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `tpsa_a`
+- `a`
 - `ctpsa_b`
 - `ctpsa_r`
 """
-function mad_ctpsa_tdif!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_tdif(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_tdif!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_tdif(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_mult!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_mult!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_mult!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_mult(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_mult!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_mult(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_divt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_divt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_divt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_divt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_divt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_divt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_a,ctpsa_b,ctpsa_r
+a,ctpsa_b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, ctpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: a, ctpsa_b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_tdiv!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_tdiv!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `tpsa_a`
+- `a`
 - `ctpsa_b`
 - `ctpsa_r`
 """
-function mad_ctpsa_tdiv!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_tdiv(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_tdiv!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_tdiv(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r
+ctpsa_a,b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: ctpsa_a, b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_powt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_powt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_powt!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_powt(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_powt!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_powt(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_a,ctpsa_b,ctpsa_r
+a,ctpsa_b,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, ctpsa_b  ! lhs, rhs
+  type(c_ptr), value, intent(in) :: a, ctpsa_b  ! lhs, rhs
   type(c_ptr), value :: ctpsa_r                      ! dst
 """
 """
-    mad_ctpsa_tpow!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_tpow!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `tpsa_a`
+- `a`
 - `ctpsa_b`
 - `ctpsa_r`
 """
-function mad_ctpsa_tpow!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_tpow(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_tpow!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_tpow(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_a,tpsa_b,ctpsa_r,nv
+ctpsa_a,b,ctpsa_r,nv
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_a, tpsa_b ! src
+  type(c_ptr), value, intent(in) :: ctpsa_a, b ! src
   type(c_ptr), value :: ctpsa_r                     ! dst
   integer(c_int), value, intent(in) :: nv        ! #variables (desc%nv if 0)
 """
 """
-    mad_ctpsa_poisbrat!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
+    mad_ctpsa_poisbrat!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
 
 ### Input
 - `ctpsa_a`
-- `tpsa_b`
+- `b`
 - `ctpsa_r`
 - `nv`
 """
-function mad_ctpsa_poisbrat!(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_poisbrat(ctpsa_a::Ptr{CTPSA{Desc}}, tpsa_b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)::Cvoid
+function mad_ctpsa_poisbrat!(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
+  @ccall MAD_TPSA.mad_ctpsa_poisbrat(ctpsa_a::Ptr{CTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-tpsa_a,ctpsa_b,ctpsa_r,nv
+a,ctpsa_b,ctpsa_r,nv
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: tpsa_a, ctpsa_b ! src
+  type(c_ptr), value, intent(in) :: a, ctpsa_b ! src
   type(c_ptr), value :: ctpsa_r                     ! dst
   integer(c_int), value, intent(in) :: nv        ! #variables (desc%nv if 0)
 """
 """
-    mad_ctpsa_tpoisbra!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
+    mad_ctpsa_tpoisbra!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
 
 ### Input
-- `tpsa_a`
+- `a`
 - `ctpsa_b`
 - `ctpsa_r`
 - `nv`
 """
-function mad_ctpsa_tpoisbra!(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_tpoisbra(tpsa_a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)::Cvoid
+function mad_ctpsa_tpoisbra!(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)
+  @ccall MAD_TPSA.mad_ctpsa_tpoisbra(a::Ptr{RTPSA{Desc}}, ctpsa_b::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}}, nv::Cint)::Cvoid
 end
 
 
@@ -5274,221 +4908,221 @@ end
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,b,ctpsa_r
+a,cx,b,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b  ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x    ! src
+  type(c_ptr), value, intent(in) :: cx    ! src
   type(c_ptr), value :: ctpsa_r                ! dst=a*x+b
 """
 """
-    mad_ctpsa_axpb!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axpb!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
+- `cx`
 - `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_axpb!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axpb(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axpb!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axpb(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,b,ctpsa_y,c,ctpsa_r
+a,cx,b,cy,c,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c     ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y ! src
+  type(c_ptr), value, intent(in) :: cx, cy ! src
   type(c_ptr), value :: ctpsa_r                      ! dst=a*x+b*y+c
 """
 """
-    mad_ctpsa_axpbypc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axpbypc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
+- `cx`
 - `b`
-- `ctpsa_y`
+- `cy`
 - `c`
 - `ctpsa_r`
 """
-function mad_ctpsa_axpbypc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axpbypc(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axpbypc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axpbypc(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,ctpsa_y,b,ctpsa_r
+a,cx,cy,b,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b        ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y ! src
+  type(c_ptr), value, intent(in) :: cx, cy ! src
   type(c_ptr), value :: ctpsa_r                      ! dst=a*x*y+b
 """
 """
-    mad_ctpsa_axypb!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axypb!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
-- `ctpsa_y`
+- `cx`
+- `cy`
 - `b`
 - `ctpsa_r`
 """
-function mad_ctpsa_axypb!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axypb(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axypb!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axypb(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,ctpsa_y,b,ctpsa_z,c,ctpsa_r
+a,cx,cy,b,ctpsa_z,c,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c           ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y, ctpsa_z ! src
+  type(c_ptr), value, intent(in) :: cx, cy, ctpsa_z ! src
   type(c_ptr), value :: ctpsa_r                            ! dst=a*x*y+b*z+c
 """
 """
-    mad_ctpsa_axypbzpc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axypbzpc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
-- `ctpsa_y`
+- `cx`
+- `cy`
 - `b`
 - `ctpsa_z`
 - `c`
 - `ctpsa_r`
 """
-function mad_ctpsa_axypbzpc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axypbzpc(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axypbzpc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axypbzpc(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_z::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,ctpsa_y,b,ctpsa_u,ctpsa_v,c,ctpsa_r
+a,cx,cy,b,ctpsa_u,ctpsa_v,c,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c         ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y, ctpsa_u, ctpsa_v ! src
+  type(c_ptr), value, intent(in) :: cx, cy, ctpsa_u, ctpsa_v ! src
   type(c_ptr), value :: ctpsa_r                          ! dst=a*x*y+b*u*v+c
 """
 """
-    mad_ctpsa_axypbvwpc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axypbvwpc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
-- `ctpsa_y`
+- `cx`
+- `cy`
 - `b`
 - `ctpsa_u`
 - `ctpsa_v`
 - `c`
 - `ctpsa_r`
 """
-function mad_ctpsa_axypbvwpc!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axypbvwpc!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc(a::Cdouble, cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_u::Ptr{CTPSA{Desc}}, ctpsa_v::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-a,ctpsa_x,b,ctpsa_y,c,ctpsa_z,ctpsa_r
+a,cx,b,cy,c,ctpsa_z,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c     ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y, ctpsa_z ! src
+  type(c_ptr), value, intent(in) :: cx, cy, ctpsa_z ! src
   type(c_ptr), value :: ctpsa_r                      ! dst=a*x^2+b*y^2+c*z^2
 """
 """
-    mad_ctpsa_ax2pby2pcz2!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_ax2pby2pcz2!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
 - `a`
-- `ctpsa_x`
+- `cx`
 - `b`
-- `ctpsa_y`
+- `cy`
 - `c`
 - `ctpsa_z`
 - `ctpsa_r`
 """
-function mad_ctpsa_ax2pby2pcz2!(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2(a::Cdouble, ctpsa_x::Ptr{CTPSA{Desc}}, b::Cdouble, ctpsa_y::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_ax2pby2pcz2!(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2(a::Cdouble, cx::Ptr{CTPSA{Desc}}, b::Cdouble, cy::Ptr{CTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, ctpsa_z::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_x,a,b,c,ctpsa_r
+cx,a,b,c,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c  ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x       ! src
+  type(c_ptr), value, intent(in) :: cx       ! src
   type(c_ptr), value :: ctpsa_r                   ! dst=a*x+sqrt(b+c*x^2)
 """
 """
-    mad_ctpsa_axpsqrtbpcx2!(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_axpsqrtbpcx2!(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `ctpsa_x`
+- `cx`
 - `a`
 - `b`
 - `c`
 - `ctpsa_r`
 """
-function mad_ctpsa_axpsqrtbpcx2!(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_axpsqrtbpcx2!(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_x,a,b,c,ctpsa_r
+cx,a,b,c,ctpsa_r
 bind(C)
 import ; implicit none
   complex(c_cpx_t), value, intent(in) :: a, b, c  ! coefs
-  type(c_ptr), value, intent(in) :: ctpsa_x       ! src
+  type(c_ptr), value, intent(in) :: cx       ! src
   type(c_ptr), value :: ctpsa_r                   ! dst=log(a*x+sqrt(b+c*x^2))
 """
 """
-    mad_ctpsa_logaxpsqrtbpcx2!(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_logaxpsqrtbpcx2!(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `ctpsa_x`
+- `cx`
 - `a`
 - `b`
 - `c`
 - `ctpsa_r`
 """
-function mad_ctpsa_logaxpsqrtbpcx2!(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2(ctpsa_x::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_logaxpsqrtbpcx2!(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2(cx::Ptr{CTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Ptr{RTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """
 Original Fortran subroutine:
-ctpsa_x,ctpsa_y,ctpsa_r
+cx,cy,ctpsa_r
 bind(C)
 import ; implicit none
-  type(c_ptr), value, intent(in) :: ctpsa_x, ctpsa_y ! src
+  type(c_ptr), value, intent(in) :: cx, cy ! src
   type(c_ptr), value :: ctpsa_r                      ! dst=log(x/y)
 """
 """
-    mad_ctpsa_logxdy!(ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_logxdy!(cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
 
 ### Input
-- `ctpsa_x`
-- `ctpsa_y`
+- `cx`
+- `cy`
 - `ctpsa_r`
 """
-function mad_ctpsa_logxdy!(ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_logxdy(ctpsa_x::Ptr{CTPSA{Desc}}, ctpsa_y::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_logxdy!(cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_logxdy(cx::Ptr{CTPSA{Desc}}, cy::Ptr{CTPSA{Desc}}, ctpsa_r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
@@ -6206,3 +5840,4 @@ end
 
 
 
+end
