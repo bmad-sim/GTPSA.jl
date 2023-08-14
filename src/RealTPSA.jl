@@ -1,17 +1,6 @@
 module RealTPSA
-export RTPSA
-const NAMSZ::Int = 16
-
-mutable struct RTPSA{T}
-  d::Ptr{T}                      # Ptr to tpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::NTuple{NAMSZ,Cuchar}       # tpsa name max string length 16 NAMSZ
-  coef::Ptr{Cdouble}     # warning: must be identical to ctpsa up to coef excluded
-end
+include("Structs.jl")
+using .Structs
 
 
 """
@@ -113,7 +102,7 @@ end
 - `ret` -- Monomials in RTPSA
 """
 function mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
-  ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA,CTPSA})::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
   return ret
 end
 
@@ -152,7 +141,7 @@ function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
 end
 
 """
-  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}...)::Cuchar
 
 ???
 
@@ -163,10 +152,10 @@ end
 ### Output
 - `mo` -- Order
 """
-function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
-  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-  return mo
-end
+#function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}...)::Cuchar
+#  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+#  return mo
+#end
 
 
 """

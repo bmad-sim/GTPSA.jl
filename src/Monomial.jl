@@ -1,5 +1,6 @@
 module Monomial
-
+include("Structs.jl")
+using .Structs
 
 """
     mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint

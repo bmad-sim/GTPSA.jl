@@ -1,17 +1,6 @@
 module ComplexTPSA
-export CTPSA
-const NAMSZ::Int = 16
-
-mutable struct CTPSA{T}
-  d::Ptr{T}                         # Ptr to ctpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
-  nam::NTuple{NAMSZ,Cuchar}       # tpsa name
-  coef::Ptr{ComplexF64}  # warning: must be identical to ctpsa up to coef excluded
-end
+include("Structs.jl")
+using .Structs
 
 
 """
@@ -113,7 +102,7 @@ end
 - `ret` -- Monomials in CTPSA
 """
 function mad_ctpsa_len(t::Ptr{CTPSA{Desc}})::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{CTPSA,CTPSA})::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{CTPSA{Desc}})::Cint
   return ret
 end
 
@@ -163,10 +152,10 @@ end
 ### Output
 - `mo` -- Order
 """
-function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
-  mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-  return mo
-end
+#function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
+#  mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+#  return mo
+#end
 
 
 """
@@ -360,7 +349,7 @@ end
 
 
 """ 
-    mad_ctpsa_cplx!(re_:Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_cplx!(re_::Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
 
 Creates a CTPSA with real and imaginary parts from the RTPSAs re_ and im_ respectively.
 
@@ -369,13 +358,13 @@ Creates a CTPSA with real and imaginary parts from the RTPSAs re_ and im_ respec
 - `im_` -- Imaginary part of CTPSA to make
 - `r`   -- Destination CTPSA with r = re_ + im*im_
 """
-function mad_ctpsa_cplx!(re_:Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_cplx(re_:Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_cplx!(re_::Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{RTPSA{Desc}}, im_::Ptr{RTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_real!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_real!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
 Sets the RTPSA r equal to the real part of CTPSA t.
 
@@ -383,13 +372,13 @@ Sets the RTPSA r equal to the real part of CTPSA t.
 - `t` -- Source CTPSA
 - `r` -- Destination RTPSA with r = Re(t)
 """
-function mad_ctpsa_real!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_real(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_real!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_real(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_imag!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_imag!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
 Sets the RTPSA r equal to the imaginary part of CTPSA t.
 
@@ -397,12 +386,12 @@ Sets the RTPSA r equal to the imaginary part of CTPSA t.
 - `t` -- Source CTPSA
 - `r` -- Destination RTPSA with r = Im(t)
 """
-function mad_ctpsa_imag!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_imag(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_imag!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_imag(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 """ 
-    mad_ctpsa_cabs!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_cabs!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
 Sets the RTPSA r equal to the aboslute value of CTPSA t
 
@@ -410,13 +399,13 @@ Sets the RTPSA r equal to the aboslute value of CTPSA t
 - `t` -- Source CTPSA
 - `r` -- Destination RTPSA with r = |t|
 """
-function mad_ctpsa_cabs!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_cabs(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_cabs!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_cabs(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_carg!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+    mad_ctpsa_carg!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
 Sets the RTPSA r equal to the argument (phase) of CTPSA t
 
@@ -424,13 +413,13 @@ Sets the RTPSA r equal to the argument (phase) of CTPSA t
 - `t` -- Source CTPSA
 - `r` -- Destination RTPSA with r = carg(t)
 """
-function mad_ctpsa_carg!(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_carg(t:Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+function mad_ctpsa_carg!(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_carg(t::Ptr{CTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_unit!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_unit!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
 
 ???
 
@@ -438,13 +427,13 @@ end
 - `t` -- Source CTPSA
 - `r` -- Destination CTPSA
 """
-function mad_ctpsa_unit!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_unit(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_unit!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_unit(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_rect!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_rect!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
 
 ???
 
@@ -452,13 +441,13 @@ end
 - `t` -- Source CTPSA
 - `r` -- Destination CTPSA
 """
-function mad_ctpsa_rect!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_rect(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_rect!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_rect(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
 """ 
-    mad_ctpsa_polar!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+    mad_ctpsa_polar!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
 
 ???
 
@@ -466,8 +455,8 @@ end
 - `t` -- Source CTPSA
 - `r` -- Destination CTPSA
 """
-function mad_ctpsa_polar!(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_polar(t:Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_polar!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_polar(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
@@ -871,7 +860,7 @@ end
 - `a`
 - `b`
 """
-function mad_ctpsa_sets_r!(t::Ptr{CTPSA{Desc}}, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble))
+function mad_ctpsa_sets_r!(t::Ptr{CTPSA{Desc}}, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
   @ccall MAD_TPSA.mad_ctpsa_sets_r(t::Ptr{CTPSA{Desc}}, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
 end
 
@@ -943,7 +932,7 @@ end
 - `v`
 """
 function mad_ctpsa_setv!(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_setv(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, v::PtrComplexF64})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setv(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
 end
 
 
