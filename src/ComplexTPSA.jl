@@ -93,13 +93,13 @@ end
 """
     mad_ctpsa_len(t::Ptr{CTPSA{Desc}})::Cint
 
-???
+    Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
 ### Input
 - `t`   -- Complex TPSA
 
 ### Output
-- `ret` -- Monomials in CTPSA
+- `ret` -- Length of CTPSA
 """
 function mad_ctpsa_len(t::Ptr{CTPSA{Desc}})::Cint
   ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{CTPSA{Desc}})::Cint
@@ -113,7 +113,7 @@ end
 Get the name of the TPSA.
 
 ### Input
-- `t` -- Complex TPSA
+- `t`    -- Complex TPSA
 
 ### Output
 - `ret`  -- Name of CTPSA (nul term in C)
@@ -143,25 +143,25 @@ end
 """
   mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
 
-???
+Returns maximum order of all TPSAs provided.
 
 ### Input
-- `t` -- TPSA
-- `ts`
+- `t`   -- TPSA
+- `ts`  -- Variable number of TPSAs passed as parameters
 
 ### Output
-- `mo` -- Order
+- `mo` -- Maximum order of all TPSAs provided
 """
-#function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
-#  mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-#  return mo
-#end
+function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
+  mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  return mo
+end
 
 
 """
     mad_ctpsa_ordn(n::Cint, t::Ptr{Ptr{CTPSA{Desc}}})::Cuchar
 
-Gets the max order of all TPSAs in t.
+Returns the max order of all TPSAs in t.
 
 ### Input
 - `n`  -- Number of TPSAs

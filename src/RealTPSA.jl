@@ -93,13 +93,13 @@ end
 """
     mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
 
-???
+Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
 ### Input
 - `t`   -- Real TPSA
 
 ### Output
-- `ret` -- Monomials in RTPSA
+- `ret` -- Length of RTPSA
 """
 function mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA{Desc}})::Cint
@@ -113,7 +113,7 @@ end
 Get the name of the TPSA.
 
 ### Input
-- `t` -- Real TPSA
+- `t`    -- Real TPSA
 
 ### Output
 - `ret`  -- Name of RTPSA (nul term in C)
@@ -130,7 +130,7 @@ end
 Gets the TPSA order.
 
 ### Input
-- `t` -- Real TPSA
+- `t`    -- Real TPSA
 
 ### Output
 - `ret`  -- Order of TPSA
@@ -141,27 +141,27 @@ function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
 end
 
 """
-  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}...)::Cuchar
+  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
 
-???
+Returns maximum order of all TPSAs provided.
 
 ### Input
-- `t` -- TPSA
-- `ts`
+- `t`   -- TPSA
+- `ts`  -- Variable number of TPSAs passed as parameters
 
 ### Output
-- `mo` -- Order
+- `mo` -- Maximum order of all TPSAs provided
 """
-#function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}...)::Cuchar
-#  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Vector{Ptr{RTPSA{Desc}}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-#  return mo
-#end
+function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  return mo
+end
 
 
 """
     mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
 
-Gets the max order of all TPSAs in t.
+Returns the max order of all TPSAs in t.
 
 ### Input
 - `n`  -- Number of TPSAs
@@ -274,6 +274,11 @@ end
     mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
 
 ???
+
+iv_ e.g. x = 1, y = 3
+scl_ = slope, used for first order derivative
+
+Specify if you want special variables . TPSA first order slope in taylor series
 
 ### Input
 - `t`    -- Real TPSA

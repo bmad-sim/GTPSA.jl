@@ -70,10 +70,8 @@ end
 """
     mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
 
-Calls the destructor for the descriptor, or all descriptors if null pointer is passed.
+Calls the destructor for the passed descriptor, or all descriptors if null pointer is passed.
 
-### Input
-- `d_` -- Descriptor to destruct. If null, all registered descriptors will be deleted
 """
 function mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
   @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
@@ -84,16 +82,16 @@ end
     mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar)::Cint
 
 Returns the number of variables in the descriptor, and sets the passed mo_, np_, and po_ to the maximum 
-order, number of parameters, and parameter order respectively. ???
+order, number of parameters, and parameter order respectively.
 
 ### Input
 - `d` -- Descriptor
-- `mo_`  -- Maximum order to be set to that of the descriptor
-- `np_`  -- Number of parameters to be set to that of the descriptor
-- `po_`  -- Parameter order to be set to that of the descriptor
 
 ### Output
-- `ret`   -- Number of variables in TPSA
+- `mo_` -- Maximum order of the descriptor
+- `np_` -- Number of parameters of the descriptor
+- `po_` -- Parameter order of the descriptor
+- `ret` -- Number of variables in TPSA
 """
 function mad_desc_getnv!(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
@@ -124,7 +122,7 @@ end
 """
     mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
 
-???
+Gets the maximum length of the TPSA for this descriptor. ???
 
 ### Input
 - `d`   -- Descriptor
@@ -160,15 +158,15 @@ end
 """
     mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
 
-???
+Checks if monomial as string s is valid given maximum order of descriptor.
 
 ### Input
 - `d`  -- Descriptor
-- `n`  -- String length of 0 (unknown)
+- `n`  -- Monomial string length
 - `s`  -- Monomial as string "[0-9]*"
 
 ### Output
-- `ret` -- True or false
+- `ret` -- True if valid, false if invalid
 """
 function mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
   ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
@@ -179,15 +177,15 @@ end
 """
     mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
 
-???
+Checks if monomial as byte array m is valid given maximum order of descriptor.
 
 ### Input
 - `d`  -- Descriptor
 - `n`  -- Length of monomial
-- `m`  -- Monomial
+- `m`  -- Monomial as byte array
 
 ### Output
-- `ret` -- True or false
+- `ret` -- True if valid, false if invalid
 """
 function mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
@@ -198,15 +196,16 @@ end
 """
     mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
 
-??? why int isntead uint8
+Checks the monomial as sparse monomial m (monomial stored as sequence of integers with each pair 
+[(i,o)] such that i = index, o = order) is valid given the maximum order of the descriptor.
 
 ### Input
 - `d`   -- Descriptor
 - `n`   -- Length of monomial
-- `m`   -- Sparse monomial (idx, ord)
+- `m`   -- Sparse monomial [(idx, ord)]
 
 ### Output
-- `ret` -- True or false.
+- `ret` -- True if valid, false if invalid
 """
 function mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
   ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
@@ -217,15 +216,15 @@ end
 """
     mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
 
-???
+Returns the index of the monomial as string s in the descriptor, or -1 if the monomial is invalid.
 
 ### Input
 - `d`   -- Descriptor
-- `n`   -- String length or 0 (unknown)
+- `n`   -- String length or 0 if unknown
 - `s`   -- Monomial as string "[0-9]*"
 
 ### Output
-- `ret` -- Monomial index or -1
+- `ret` -- Monomial index or -1 if invalid monomial
 """
 function mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
   ret = @ccall MAD_TPSA.mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
@@ -236,15 +235,15 @@ end
 """
     mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
 
-???
+Returns the index of the monomial as byte array m in the descriptor, or -1 if the monomial is invalid.
 
 ### Input
 - `d` -- Descriptor
 - `n`    -- Monomial length
-- `m`    -- Monomial
+- `m`    -- Monomial as byte array
 
 ### Output
-- `ret`  -- Monomial index or -1
+- `ret`  -- Monomial index or -1 if invalid
 """
 function mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
@@ -255,15 +254,15 @@ end
 """
     mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
 
-??? Why int instead Uint8
+Returns the index of the monomial as sparse monomial [(i,o)] m in the descriptor, or -1 if the monomial is invalid.
 
 ### Input
 - `d`   -- Descriptor
 - `n`   -- Monomial length
-- `m`   -- Sparse monomial (idx,ord)
+- `m`   -- Sparse monomial [idx,ord)]
 
 ### Output
-- `ret` -- Monomial index or -1
+- `ret` -- Monomial index or -1 if invalid
 """
 function mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
   ret = @ccall MAD_TPSA.mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
@@ -274,15 +273,15 @@ end
 """
     mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
 
-???
+Returns the next monomial after monomial m in the TPSA when sorted by variable.
 
 ### Input
 - `d`   -- Descriptor
 - `n`   -- Monomial length
-- `m`   -- Monomial
+- `m`   -- Monomial as byte array
 
 ### Output
-- `idx` -- Monomial index or -1
+- `idx` -- Monomial index or -1 if no valid next monomial
 """
 function mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
   idx = @ccall MAD_TPSA.mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
@@ -293,15 +292,15 @@ end
 """
     mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
 
-???
+Returns the next monomial after monomial m in the TPSA when sorted by order.
 
 ### Input
 - `d`   -- Descriptor
 - `n`   -- Monomial length
-- `m`   -- Monomial
+- `m`   -- Monomial as byte array
 
 ### Output
-- `idx` -- Monomial index or -1
+- `idx` -- Monomial index or -1 if no valid next monomial
 """
 function mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
   idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
@@ -310,20 +309,21 @@ end
 
 
 """
-    mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+    mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
 
-???
+Returns the order of the monomial at index i, and if n and m_ are provided, then will also fill m_ 
+with the monomial at this index.
 
 ### Input
 - `d`   -- Descriptor
 - `i`   -- Slot index (must be valid)
-- `n`   -- Monomial length
-- `m_`  -- Monomial to fill (if provided)
+- `n`   -- Monomial length (must be provided if m_ is to be filled)
 
 ### Output
-- `ret` -- Monomial order
+- `ret` -- Monomial order at slot index
+- `m_`  -- Monomial to fill (if provided)
 """
-function mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
   return ret
 end
