@@ -8,7 +8,7 @@ using .Structs
     mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specified number of variables and maximum order. 
-The number of parameters is set to 0. 
+The number of parameters is set to 0. Order
 
 ### Input
 - `nv`  -- Number of variables in th
@@ -32,8 +32,8 @@ parameters, and parameter order.
 ### Input
 - `nv`  -- Number of variables
 - `mo`  -- Maximum order of TPSA, mo = max(1, mo)
-- `np_` -- Number of parameters
-- `po_` -- Order of parameters, po = max(1, po_)
+- `np_` -- (Optional) Number of parameters, default is 0
+- `po_` -- (Optional) Order of parameters, po = max(1, po_)
 
 ### Output
 - `ret` -- Descriptor with the specified nv, mo, np, and po.
@@ -54,9 +54,9 @@ correspond to the variables' orders and the next np entries correspond the param
 ### Input
 - `nv`   -- Number of variables
 - `mo`   -- Maximum order of TPSA (mo = max(mo , no[0 :nn-1]), nn = nv+np)
-- `np_`  -- Number of parameters
-- `po_`  -- Order of parameters (po = max(po_, no[nv:nn-1]), po <= mo)
-- `no_`  -- Array of orders of variables and parameters
+- `np_`  -- (Optional) Number of parameters, default is 0
+- `po_`  -- (Optional) Order of parameters (po = max(po_, no[nv:nn-1]), po <= mo)
+- `no_`  -- (Optional) Array of orders of variables and parameters
 
 ### Output
 - `ret` -- Descriptor with the specified nv, mo, np, po, no.
@@ -88,9 +88,9 @@ order, number of parameters, and parameter order respectively.
 - `d` -- Descriptor
 
 ### Output
-- `mo_` -- Maximum order of the descriptor
-- `np_` -- Number of parameters of the descriptor
-- `po_` -- Parameter order of the descriptor
+- `mo_` -- (Optional) Maximum order of the descriptor
+- `np_` -- (Optional) Number of parameters of the descriptor
+- `po_` -- (Optional) Parameter order of the descriptor
 - `ret` -- Number of variables in TPSA
 """
 function mad_desc_getnv!(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
@@ -108,7 +108,7 @@ returns the maximum order of the TPSA.
 ### Input
 - `d`   -- Descriptor
 - `nn`  -- Number of variables + number of parameters, no_[1..nn]
-- `no_` -- Orders of parameters to be filled if provided
+- `no_` -- (Optional) Orders of parameters to be filled if provided
 
 ### Output
 - `ret`  -- Maximum order of TPSA
@@ -122,7 +122,7 @@ end
 """
     mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
 
-Gets the maximum length of the TPSA for this descriptor. ???
+Gets the maximum length of the TPSA given an order. 
 
 ### Input
 - `d`   -- Descriptor
@@ -321,7 +321,7 @@ with the monomial at this index.
 
 ### Output
 - `ret` -- Monomial order at slot index
-- `m_`  -- Monomial to fill (if provided)
+- `m_`  -- (Optional) Monomial to fill if provided
 """
 function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar

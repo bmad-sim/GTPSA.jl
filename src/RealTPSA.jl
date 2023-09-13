@@ -130,10 +130,10 @@ end
 Gets the TPSA order.
 
 ### Input
-- `t`    -- Real TPSA
+- `t`   -- Real TPSA
 
 ### Output
-- `ret`  -- Order of TPSA
+- `ret` -- Order of TPSA
 """
 function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
@@ -146,8 +146,8 @@ end
 Returns maximum order of all TPSAs provided.
 
 ### Input
-- `t`   -- TPSA
-- `ts`  -- Variable number of TPSAs passed as parameters
+- `t`  -- TPSA
+- `ts` -- Variable number of TPSAs passed as parameters
 
 ### Output
 - `mo` -- Maximum order of all TPSAs provided
@@ -183,6 +183,8 @@ Makes a copy of the real TPSA t to r.
 
 ### Input
 - `t` -- Source real TPSA
+
+### Output
 - `r` -- Destination real TPSA
 """
 function mad_tpsa_copy!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
@@ -193,12 +195,15 @@ end
 """
     mad_tpsa_sclord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)
 
-???
+Scales all coefficients by order. If inv == 0, scales coefficients by order (derivation), else scales coefficients 
+by 1/order (integration).
 
 ### Input
 - `t`  -- Source real TPSA
+- `inv`-- Put order up, divide, scale by inv of value of order
+
+### Output
 - `r`  -- Destination real TPSA
-- `inv`-- scl by inverse
 """
 function mad_tpsa_sclord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)::Cvoid
@@ -208,13 +213,14 @@ end
 """
     mad_tpsa_getord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)
 
-???
-is ! ?
+Extract one homogeneous polynomial of the given order
 
 ### Input
 - `t``  -- Source real TPSA
-- `r`   -- Destination real TPSA
 - `ord` -- Order to retrieve
+
+### Output
+- `r`   -- Destination real TPSA
 """
 function mad_tpsa_getord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_getord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)::Cvoid
@@ -224,31 +230,35 @@ end
 """
     mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
 
-???
+Cuts the TPSA off at the given order and above, or ff ord is negative, will cut orders below abs(ord) (e.g. if 
+ord = -3, then orders 0-3 are cut off).
 
 ### Input
 - `t`   -- Source real TPSA
-- `r`   -- Destination real TPSA
 - `ord` -- Cut order: 0..-ord or ord..mo
+
+### Output
+- `r`   -- Destination real TPSA
 """
 function mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
   @ccall MAD_TPSA.mad_tpsa_cutord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)::Cvoid
 end
 
 """
-  mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+  mad_tpsa_maxord!(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
 
-???
+Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to n. If idx_ 
+is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to n. 
 
 ### Input
 - `t`    -- Real TPSA
-- `n`    -- Length of idx_
-- `idx_`
+- `n`    -- Highest order to include in finding the maximum abs(coefficient) in the TPSA, length of idx_ if provided
 
 ### Output
-- `mi` -- ?
+- `idx_` -- (Optional) If provided, is filled with indices to the monomial for each order up to n with maximum abs(coefficient)
+- `mi`   -- Index to the monomial in the TPSA with maximum abs(coefficient)
 """
-function mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+function mad_tpsa_maxord!(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
   mi = @ccall MAD_TPSA.mad_tpsa_maxord(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
   return mi
 end
@@ -256,14 +266,19 @@ end
 """
     mad_tpsa_convert!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
 
-???
+General function to convert TPSAs to different orders and reshuffle canonical coordinates. The destination TPSA will 
+be of order n, and optionally have the variable reshuffling defined by t2r_ and poisson bracket sign. e.g. if 
+t2r_ = {1,2,3,4,6,5} and pb = -1, canonical coordinates 6 and 5 are swapped and the new 5th canonical coordinate 
+will be negated. Useful for comparing with different differential algebra packages.
 
 ### Input
 - `t`    -- Source real TPSA
-- `r`    -- Destination real TPSA
 - `n`    -- Length of vector
-- `t2r_` -- Vector of index lookup
+- `t2r_` -- (Optional) Vector of index lookup
 - `pb`   -- Poisson bracket, 0,1:fwd,-1:bwd
+
+### Output
+- `r`    -- Destination real TPSA with specified order and canonical coordinate reshuffling.
 """
 function mad_tpsa_convert!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_convert(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
@@ -273,18 +288,18 @@ end
 """
     mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
 
-???
+Sets the 0th and 1st order values for the variables 
 
 iv_ e.g. x = 1, y = 3
 scl_ = slope, used for first order derivative
-
+???
 Specify if you want special variables . TPSA first order slope in taylor series
 
 ### Input
 - `t`    -- Real TPSA
-- `v`    -- 0th order value
+- `v`    -- 0th order value (coefficient)
 - `iv_`  -- Variable index
-- `scl_` -- 1st order variable value
+- `scl_` -- 1st order variable value (typically will be 1)
 """
 function mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)::Cvoid
@@ -321,7 +336,7 @@ end
 """
     mad_tpsa_isnul(t::Ptr{RTPSA{Desc}})::Cuchar
 
-??? checks if null c2i?
+Checks if TPSA is 0 or not
 
 ### Input
 - `t` -- Real TPSA to check
@@ -336,18 +351,20 @@ end
 
 
 """
-    mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+    mad_tpsa_mono!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+
+Returns the order of the monomial at index i in the TPSA and optionally the monomial at that index is returned in m_
 
 ### Input
-- `t`
-- `i`
-- `n`
-- `m_`
+- `t`   -- TPSA
+- `i`   -- Index valid in TPSA
+- `n`   -- Length of monomial
 
 ### Output
-- `ret`
+- `m_`  -- (Optional) Monomial at index i in TPSA
+- `ret` -- Order of monomial in TPSA at index i
 """
-function mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+function mad_tpsa_mono!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mono(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
   return ret
 end
@@ -356,13 +373,16 @@ end
 """
     mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
 
+Returns index of monomial in the TPSA given the monomial as string. This generally should not be used, as there 
+are no assumptions about which monomial is attached to which index.
+
 ### Input
-- `t`
-- `n`
-- `s`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `s`   -- Monomial as string
 
 ### Output
-- `ret`
+- `ret` -- Index of monomial in TPSA
 """
 function mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxs(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cint
@@ -374,16 +394,15 @@ end
 """
     mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
 
-
-???
+Returns index of monomial in the TPSA given the monomial as a byte array
 
 ### Input
-- `t`
-- `n`
-- `m`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `s`   -- Monomial as byte array
 
 ### Output
-- `ret`
+- `ret` -- Index of monomial in TPSA
 """
 function mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cint
@@ -394,15 +413,16 @@ end
 """
     mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
 
-???
+Returns index of monomial in the TPSA given the monomial as a sparse monomial. This generally should not be used, as there 
+are no assumptions about which monomial is attached to which index.
 
 ### Input
-- `t`
-- `n`
-- `m`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `s`   -- Monomial as sparse monomial
 
 ### Output
-- `ret`
+- `ret` -- Index of monomial in TPSA
 """
 function mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cint
@@ -411,21 +431,23 @@ end
 
 
 """
-    mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+    mad_tpsa_cycle!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
 
-???
+Used for scanning through each nonzero monomial in the TPSA. Given a starting index (-1 if starting at 0), will 
+optionally fill monomial m_ with the monomial at index i and the value at v_ with the monomials coefficient, and 
+return the next NONZERO monomial index in the TPSA. This is useful for building an iterator through the TPSA.
 
 ### Input
-- `t`
-- `i`
-- `n`
-- `m_`
-- `v_`
+- `t`  -- TPSA to scan
+- `i`  -- Index to start from (-1 to start at 0)
+- `n`  -- Length of monomial
+- `m_` -- (Optional) Monomial to be filled if provided
+- `v_` -- (Optional) Pointer to value of coefficient
 
 ### Output
-- `i`
+- `i`  -- Index of next nonzero monomial in the TPSA, or -1 if reached the end
 """
-function mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+function mad_tpsa_cycle!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
   i = @ccall MAD_TPSA.mad_tpsa_cycle(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
   return i
 end
@@ -434,13 +456,13 @@ end
 """
     mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
 
-???
+Gets the 0th order (scalar) value of the TPSA
 
 ### Input
-- `t`
+- `t`   -- TPSA
 
 ### Output
-- `ret`
+- `ret` -- Scalar value of TPSA
 """
 function mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_get0(t::Ptr{RTPSA{Desc}})::Cdouble
@@ -451,14 +473,14 @@ end
 """
     mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
 
-???
+Gets the coefficient of the monomial at index i. Generally should use mad_tpsa_cycle instead of this.
 
 ### Input
-- `t`
-- `i`
+- `t`   -- TPSA
+- `i`   -- Monomial index
 
 ### Output
-- `ret`
+- `ret` -- Coefficient of monomial at index i
 """
 function mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_geti(t::Ptr{RTPSA{Desc}}, i::Cint)::Cdouble
@@ -469,15 +491,15 @@ end
 """
     mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
 
-???
+Gets the coefficient of the monomial s defined as a string. Generally should use mad_tpsa_cycle instead of this.
 
 ### Input
-- `t`
-- `n`
-- `s`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `s`   -- Monomial as string
 
 ### Output
-- `ret`
+- `ret` -- Coefficient of monomial s in TPSA
 """
 function mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_gets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring)::Cdouble
@@ -488,15 +510,15 @@ end
 """
     mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
 
-???
+Gets the coefficient of the monomial m defined as a byte array. Generally should use mad_tpsa_cycle instead of this.
 
 ### Input
-- `t`
-- `n`
-- `m`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `m`   -- Monomial as byte array
 
 ### Output
-- `ret`
+- `ret` -- Coefficient of monomial m in TPSA
 """
 function mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
   val = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
@@ -507,15 +529,15 @@ end
 """
     mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
 
-???
+Gets the coefficient of the monomial m defined as a sparse monomial. Generally should use mad_tpsa_cycle instead of this.
 
 ### Input
-- `t`
-- `n`
-- `m`
+- `t`   -- TPSA
+- `n`   -- Length of monomial
+- `m`   -- Monomial as sparse monomial
 
 ### Output
-- `ret`
+- `ret` -- Coefficient of monomial m in TPSA
 """
 function mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_getsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint})::Cdouble
@@ -526,12 +548,12 @@ end
 """
     mad_tpsa_set0!(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
 
-???
+Sets the 0th order coefficient (scalar part of TPSA) according to coef[0] = a*coef[0] + b. Does not modify other values in TPSA.
 
 ### Input
-- `t`
-- `a`
-- `b`
+- `t` -- TPSA
+- `a` -- Scaling of current 0th order value
+- `b` -- Constant added to current 0th order value
 """
 function mad_tpsa_set0!(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_set0(t::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble)::Cvoid
@@ -541,13 +563,13 @@ end
 """
     mad_tpsa_seti!(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
 
-???
+Sets the coefficient of monomial at index i to coef[i] = a*coef[i] + b. Does not modify other values in TPSA.
 
 ### Input
-- `t`
-- `i`
-- `a`
-- `b`
+- `t` -- TPSA
+- `i` -- Index of monomial
+- `a` -- Scaling of current coefficient
+- `b` -- Constant added to current coefficient
 """
 function mad_tpsa_seti!(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_seti(t::Ptr{RTPSA{Desc}}, i::Cint, a::Cdouble, b::Cdouble)::Cvoid
@@ -557,14 +579,14 @@ end
 """
     mad_tpsa_sets!(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
 
-???
+Sets the coefficient of monomial defined by string s to coef = a*coef + b. Does not modify other values in TPSA.
 
 ### Input
-- `t`
-- `n`
-- `s`
-- `a`
-- `b`
+- `t` -- TPSA
+- `n` -- Length of monomial
+- `s` -- Monomial as string
+- `a` -- Scaling of current coefficient
+- `b` -- Constant added to current coefficient
 """
 function mad_tpsa_sets!(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_sets(t::Ptr{RTPSA{Desc}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)::Cvoid
@@ -574,14 +596,14 @@ end
 """
     mad_tpsa_setm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
 
-???
+Sets the coefficient of monomial defined by byte array m to coef = a*coef + b. Does not modify other values in TPSA.
 
 ### Input
-- `t`
-- `n`
-- `m`
-- `a`
-- `b`
+- `t` -- TPSA
+- `n` -- Length of monomial
+- `m` -- Monomial as byte array
+- `a` -- Scaling of current coefficient
+- `b` -- Constant added to current coefficient
 """
 function mad_tpsa_setm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
@@ -591,14 +613,14 @@ end
 """
     mad_tpsa_setsm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
 
-???
+Sets the coefficient of monomial defined by sparse monomial m to coef = a*coef + b. Does not modify other values in TPSA.
 
 ### Input
-- `t`
-- `n`
-- `m`
-- `a`
-- `b`
+- `t` -- TPSA
+- `n` -- Length of monomial
+- `m` -- Monomial as sparse monomial
+- `a` -- Scaling of current coefficient
+- `b` -- Constant added to current coefficient
 """
 function mad_tpsa_setsm!(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
@@ -608,13 +630,16 @@ end
 """
     mad_tpsa_getv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
 
-???
+Vectorized getter of the coefficients for monomials with indices i..i+n. Useful for extracting the 1st order parts of 
+a TPSA to construct a matrix (i = 1, n = nv+np = nn). 
 
 ### Input
-- `t`
-- `i`
-- `n`
-- `v`
+- `t` -- TPSA
+- `i` -- Starting index of monomials to get coefficients
+- `n` -- Number of monomials to get coefficients of starting at i
+
+### Output
+- `v` -- Array of coefficients for monomials i..i+n
 """
 function mad_tpsa_getv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
@@ -625,13 +650,13 @@ end
 """
     mad_tpsa_setv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
 
-???
+Vectorized setter of the coefficients for monomials with indices i..i+n. Useful for putting a matrix into a map.
 
 ### Input
-- `t`
-- `i`
-- `n`
-- `v`
+- `t` -- TPSA
+- `i` -- Starting index of monomials to set coefficients
+- `n` -- Number of monomials to set coefficients of starting at i
+- `v` -- Array of coefficients for monomials i..i+n
 """
 function mad_tpsa_setv!(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA{Desc}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
@@ -641,12 +666,12 @@ end
 """
     mad_tpsa_equ(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, tol_::Cdouble)::Cuchar
 
-Checks if the TPSAs a and b are equal within the specified tolerance tol_
+Checks if the TPSAs a and b are equal within the specified tolerance tol_. If tol_ is not specified, DBL_EPSILON is used.
 
 ### Input
 - `a`    -- TPSA a
 - `b`    -- TPSA b
-- `tol_` -- difference below which the TPSAs are considered equal
+- `tol_` -- (Optional) Difference below which the TPSAs are considered equal
 
 ### Output
 - `ret`   - True if a == b within tol_
@@ -660,11 +685,17 @@ end
 """
     mad_tpsa_dif!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
-???  // (a_i-b_i)/max(|a_i|,1)
+For each homogeneous polynomial in TPSAs a and b, calculates either the relative error or absolute error for each order.
+If the maximum coefficient for a given order in a is > 1, the relative error is computed for that order. Else, the absolute 
+error is computed. This is very useful for comparing maps between codes or doing unit tests. In Julia, essentially:
+
+c_i = (a_i.-b_i)/maximum([abs.(a_i)...,1]) where a_i and b_i are vectors of the monomials for an order i
 
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c 
 """
 function mad_tpsa_dif!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -680,6 +711,8 @@ Sets the destination TPSA c = a + b
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c = a + b
 """
 function mad_tpsa_add!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -695,6 +728,8 @@ Sets the destination TPSA c = a - b
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c = a - b
 """
 function mad_tpsa_sub!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -710,6 +745,8 @@ Sets the destination TPSA c = a * b
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c = a * b
 """
 function mad_tpsa_mul!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -725,6 +762,8 @@ Sets the destination TPSA c = a / b
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c = a / b
 """
 function mad_tpsa_div!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -740,6 +779,8 @@ Sets the destination TPSA c = a ^ b
 ### Input
 - `a` -- Source TPSA a
 - `b` -- Source TPSA b
+
+### Output
 - `c` -- Destination TPSA c = a ^ b
 """
 function mad_tpsa_pow!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -755,6 +796,8 @@ Sets the destination TPSA c = a ^ n where n is an integer.
 ### Input
 - `a` -- Source TPSA a
 - `n` -- Integer power
+
+### Output
 - `c` -- Destination TPSA c = a ^ n
 """
 function mad_tpsa_powi!(a::Ptr{RTPSA{Desc}}, n::Cint, c::Ptr{RTPSA{Desc}})
@@ -770,6 +813,8 @@ Sets the destination TPSA c = a ^ v where v is of double precision.
 ### Input
 - `a` -- Source TPSA a
 - `v` -- "double" precision power
+
+### Output
 - `c` -- Destination TPSA c = a ^ v
 """
 function mad_tpsa_pown!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
@@ -780,7 +825,7 @@ end
 """
     mad_tpsa_nrm(a::Ptr{RTPSA{Desc}})::Cdouble
 
-Calculates the norm of (which???) of TPSA a.
+Calculates the norm of TPSA a.
 
 ### Input
 - `a`   -- TPSA
@@ -801,6 +846,8 @@ Sets TPSA c to the absolute value of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = |a|
 """
 function mad_tpsa_abs!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -815,6 +862,8 @@ Sets TPSA c to the sqrt of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = sqrt(a)
 """
 function mad_tpsa_sqrt!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -829,6 +878,8 @@ Sets TPSA c to the exponential of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = exp(a)
 """
 function mad_tpsa_exp!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -844,6 +895,8 @@ Sets TPSA c to the log of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = log(a)
 """
 function mad_tpsa_log!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -858,6 +911,8 @@ Sets TPSA s = sin(a) and TPSA c = cos(a)
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `s` -- Destination TPSA s = sin(a)
 - `c` -- Destination TPSA c = cos(a)
 """
@@ -873,6 +928,8 @@ Sets TPSA c to the sin of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = sin(a)
 """
 function mad_tpsa_sin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -887,6 +944,8 @@ Sets TPSA c to the cos of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = cos(a)
 """
 function mad_tpsa_cos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -901,6 +960,8 @@ Sets TPSA c to the tan of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = tan(a)
 """
 function mad_tpsa_tan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -915,6 +976,8 @@ Sets TPSA c to the cot of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = cot(a)
 """
 function mad_tpsa_cot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -929,6 +992,8 @@ Sets TPSA c to the sinc of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = sinc(a)
 """
 function mad_tpsa_sinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -943,6 +1008,8 @@ Sets TPSA s = sinh(a) and TPSA c = cosh(a)
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `s` -- Destination TPSA s = sinh(a)
 - `c` -- Destination TPSA c = cosh(a)
 """
@@ -958,6 +1025,8 @@ end
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = sinh(a)
 """
 function mad_tpsa_sinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -972,6 +1041,8 @@ Sets TPSA c to the cosh of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = cosh(a)
 """
 function mad_tpsa_cosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -986,6 +1057,8 @@ Sets TPSA c to the tanh of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = tanh(a)
 """
 function mad_tpsa_tanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1000,6 +1073,8 @@ Sets TPSA c to the coth of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = coth(a)
 """
 function mad_tpsa_coth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1014,6 +1089,8 @@ Sets TPSA c to the sinhc of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = sinhc(a)
 """
 function mad_tpsa_sinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1028,6 +1105,8 @@ Sets TPSA c to the asin of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = asin(a)
 """
 function mad_tpsa_asin!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1042,6 +1121,8 @@ Sets TPSA c to the acos of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = acos(a)
 """
 function mad_tpsa_acos!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1056,6 +1137,8 @@ Sets TPSA c to the atan of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = atan(a)
 """
 function mad_tpsa_atan!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1070,6 +1153,8 @@ Sets TPSA c to the acot of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = acot(a)
 """
 function mad_tpsa_acot!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1083,6 +1168,8 @@ Sets TPSA c to the asinc of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = asinc(a)
 """
 function mad_tpsa_asinc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1097,6 +1184,8 @@ Sets TPSA c to the asinh of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = asinh(a)
 """
 function mad_tpsa_asinh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1111,6 +1200,8 @@ Sets TPSA c to the acosh of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = acosh(a)
 """
 function mad_tpsa_acosh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1125,6 +1216,8 @@ Sets TPSA c to the atanh of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = atanh(a)
 """
 function mad_tpsa_atanh!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1139,6 +1232,8 @@ Sets TPSA c to the acoth of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = acoth(a)
 """
 function mad_tpsa_acoth!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1153,6 +1248,8 @@ Sets TPSA c to the asinhc of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = asinhc(a)
 """
 function mad_tpsa_asinhc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1167,6 +1264,8 @@ Sets TPSA c to the erf of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = erf(a)
 """
 function mad_tpsa_erf!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1181,6 +1280,8 @@ Sets TPSA c to the erfc of TPSA a.
 
 ### Input
 - `a` -- Source TPSA a
+
+### Output
 - `c` -- Destination TPSA c = erfc(a)
 """
 function mad_tpsa_erfc!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
@@ -1196,6 +1297,8 @@ Adds a*v to TPSA c. Aliasing OK.
 ### Input
 - `a` -- Source TPSA a
 - `v` -- Scalar with double precision
+
+### Output
 - `c` -- Destination TPSA c += v*a
 """
 function mad_tpsa_acc!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
@@ -1211,6 +1314,8 @@ Sets TPSA c to v*a.
 ### Input
 - `a` -- Source TPSA a
 - `v` -- Scalar with double precision
+
+### Output
 - `c` -- Destination TPSA c = v*a
 """
 function mad_tpsa_scl!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
@@ -1226,6 +1331,8 @@ Sets TPSA c to v/a.
 ### Input
 - `a` -- Source TPSA a
 - `v` -- Scalar with double precision
+
+### Output
 - `c` -- Destination TPSA c = v*a
 """
 function mad_tpsa_inv!(a::Ptr{RTPSA{Desc}},  v::Cdouble, c::Ptr{RTPSA{Desc}})
@@ -1240,6 +1347,8 @@ Sets TPSA c to v/sqrt(a).
 ### Input
 - `a` -- Source TPSA a
 - `v` -- Scalar with double precision
+
+### Output
 - `c` -- Destination TPSA c = v*a
 """
 function mad_tpsa_invsqrt!(a::Ptr{RTPSA{Desc}}, v::Cdouble, c::Ptr{RTPSA{Desc}})
@@ -1250,10 +1359,12 @@ end
 """
     mad_tpsa_unit!(x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-???
+Interpreting TPSA as vector, gets the "unit vector", e.g. r = x/norm(x). May be useful for checking for convergence.
 
 ### Input
 - `x` -- Source TPSA x
+
+### Output
 - `r` -- Destination TPSA r
 """
 function  mad_tpsa_unit!(x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
@@ -1269,6 +1380,8 @@ Sets TPSA r to atan2(x,y)
 ### Input
 - `x` -- Source TPSA x
 - `y` -- Source TPSA y
+
+### Output
 - `r` -- Destination TPSA r = atan2(x,y)
 """
 function  mad_tpsa_atan2!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
@@ -1278,11 +1391,13 @@ end
 """
     mad_tpsa_hypot!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-Sets TPSA r to sqrt(x^2+y^2)
+Sets TPSA r to sqrt(x^2+y^2). Used to oversimplify polymorphism in code but not optimized
 
 ### Input
 - `x` -- Source TPSA x
 - `y` -- Source TPSA y
+
+### Output
 - `r` -- Destination TPSA r = sqrt(x^2+y^2)
 """
 function  mad_tpsa_hypot!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
@@ -1298,6 +1413,8 @@ Sets TPSA r to sqrt(x^2+y^2+z^2)
 - `x` -- Source TPSA x
 - `y` -- Source TPSA y
 - `z` -- Source TPSA z
+
+### Output
 - `r` -- Destination TPSA r = sqrt(x^2+y^2+z^2)
 """
 function  mad_tpsa_hypot3!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
@@ -1309,12 +1426,14 @@ end
 """
     mad_tpsa_integ!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
 
-??? Integrates TPSA
+Integrates TPSA with respect to the variable with index iv.
 
 ### Input
 - `a`  -- Source TPSA to integrate
+- `iv` -- Index of variable to integrate over (e.g. integrate over x, iv = 1). 
+
+### Output
 - `c`  -- Destination TPSA
-- `iv` -- Domain
 """
 function mad_tpsa_integ!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
   @ccall MAD_TPSA.mad_tpsa_integ(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
@@ -1324,12 +1443,14 @@ end
 """
     mad_tpsa_deriv!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
 
-??? Differentiates TPSA
+Differentiates TPSA with respect to the variable with index iv.
 
 ### Input
 - `a`  -- Source TPSA to differentiate
+- `iv` -- Index of variable to take derivative wrt to (e.g. derivative wrt x, iv = 1). 
+
+### Output
 - `c`  -- Destination TPSA
-- `iv` -- Domain
 """
 function mad_tpsa_deriv!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)
   @ccall MAD_TPSA.mad_tpsa_deriv(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, iv::Cint)::Cvoid
@@ -1339,13 +1460,15 @@ end
 """
     mad_tpsa_derivm!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
 
-???
+Differentiates TPSA with respect to the monomial defined by byte array m.
 
 ### Input
-- `a`
-- `c`
-- `n`
-- `m`
+- `a` -- Source TPSA to differentiate
+- `n` -- Length of monomial to differentiate wrt
+- `m` -- Monomial to take derivative wrt
+
+### Output
+- `c` -- Destination TPSA
 """
 function mad_tpsa_derivm!(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})
   @ccall MAD_TPSA.mad_tpsa_derivm(a::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cvoid
@@ -1360,8 +1483,10 @@ Sets TPSA c to the poisson bracket of TPSAs a and b.
 ### Input
 - `a`  -- Source TPSA a
 - `b`  -- Source TPSA b
-- `c`  -- Destination TPSA c = [a, b]
 - `nv` -- Number of variables in the TPSA
+
+### Output
+- `c`  -- Destination TPSA c
 """
 function mad_tpsa_poisbra!(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, nv::Cint)
   @ccall MAD_TPSA.mad_tpsa_poisbra(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}}, nv::Cint)::Cvoid
@@ -1371,13 +1496,14 @@ end
 """
     mad_tpsa_taylor!(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
 
-???
+Computes the result of the Taylor series up to order n-1 with Taylor coefficients coef for the scalar value in a. That is,
+c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ... where a_0 is the scalar part of TPSA a.
 
 ### Input
-- `a`
-- `n`
-- `coef`
-- `c`
+- `a`    -- 
+- `n`    -- Order-1 of Taylor expansion, size of coef array
+- `coef` -- Array of coefficients in Taylor s
+- `c`    -- result
 """
 function mad_tpsa_taylor!(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_taylor(a::Ptr{RTPSA{Desc}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA{Desc}})::Cvoid
@@ -1387,13 +1513,15 @@ end
 """
     mad_tpsa_axpb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
 
-??? r = a*x/b?
+r = a*x + b
 
 ### Input
-- `a`
-- `x`
-- `b`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `b` -- Scalar b
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axpb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axpb(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1403,13 +1531,17 @@ end
 """
     mad_tpsa_axpbypc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
+r = a*x + b*y + c
+
 ### Input
-- `a`
-- `x`
-- `b`
-- `y`
-- `c`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `b` -- Scalar b
+- `y` -- TPSA y
+- `c` -- Scalar c
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axpbypc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axpbypc(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1419,14 +1551,16 @@ end
 """
     mad_tpsa_axypb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
 
-???
+r = a*x*y + b
 
 ### Input
-- `a`
-- `x`
-- `y`
-- `b`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `y` -- TPSA y
+- `b` -- Scalar b
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axypb!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axypb(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1436,16 +1570,18 @@ end
 """
     mad_tpsa_axypbzpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
-???
+r = a*x*y + b*z + c
 
 ### Input
-- `a`
-- `x`
-- `y`
-- `b`
-- `z`
-- `c`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `y` -- TPSA y
+- `b` -- Scalar b
+- `z` -- TPSA z
+- `c` -- Scalar c
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axypbzpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axypbzpc(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, z::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1455,17 +1591,19 @@ end
 """
     mad_tpsa_axypbvwpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, v::Ptr{RTPSA{Desc}}, w::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
-???
+r = a*x*y + b*v*w + c
 
 ### Input
-- `a`
-- `x`
-- `y`
-- `b`
-- `v`
-- `w`
-- `c`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `y` -- TPSA y
+- `b` -- Scalar b
+- `v` -- TPSA v
+- `w` -- TPSA w
+- `c` -- Scalar c
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axypbvwpc!(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, v::Ptr{RTPSA{Desc}}, w::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axypbvwpc(a::Cdouble, x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, b::Cdouble, v::Ptr{RTPSA{Desc}}, w::Ptr{RTPSA{Desc}}, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1475,16 +1613,18 @@ end
 """
     mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-???
+r = a*x^2 + b*y^2 + c*z^2
 
 ### Input
-- `a`
-- `x`
-- `b`
-- `y`
-- `c`
-- `z`
-- `r`
+- `a` -- Scalar a
+- `x` -- TPSA x
+- `b` -- Scalar b
+- `y` -- TPSA y
+- `c` -- Scalar c
+- `z` -- TPSA z
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_ax2pby2pcz2(a::Cdouble, x::Ptr{RTPSA{Desc}}, b::Cdouble, y::Ptr{RTPSA{Desc}}, c::Cdouble, z::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1494,14 +1634,16 @@ end
 """
     mad_tpsa_axpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
-???
+r = a*x + sqrt(b + c*x^2)
 
 ### Input
-- `x`
-- `a`
-- `b`
-- `c`
-- `r`
+- `x` -- TPSA x
+- `a` -- Scalar a
+- `b` -- Scalar b
+- `c` -- Scalar c
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_axpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_axpsqrtbpcx2(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1511,14 +1653,16 @@ end
 """
     mad_tpsa_logaxpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})
 
-???
+r = log(a*x + sqrt(b + c*x^2))
 
 ### Input
-- `x`
-- `a`
-- `b`
-- `c`
-- `r`
+- `x` -- TPSA x
+- `a` -- Scalar a
+- `b` -- Scalar b
+- `c` -- Scalar c
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_logaxpsqrtbpcx2!(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_logaxpsqrtbpcx2(x::Ptr{RTPSA{Desc}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1528,12 +1672,14 @@ end
 """
     mad_tpsa_logxdy!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-???
+r = log(x / y)
 
 ### Input
-- `x`
-- `y`
-- `r`
+- `x` -- TPSA x
+- `y` -- TPSA y
+
+### Output
+- `r` -- Destination TPSA r
 """
 function mad_tpsa_logxdy!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_logxdy(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -1543,11 +1689,15 @@ end
 """
     mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA{Desc}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+mc is a map (m is map)
+Take vector a, write in terms of all variables in mc 
+scalar potential described as TPSA -> vector field
+
+Map to hamiltonian
 
 ### Input
-- `na`
-- `a`
+- `na`  -- Number of TPSA in mc consistent with number of variables in a
+- `a`   
 - `mc`
 """
 function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA{Desc}}, mc::Ptr{Ptr{RTPSA{Desc}}})
@@ -1757,15 +1907,15 @@ end
 """
     mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
 
-Prints the TPSA coefficients to stdout with precision eps_. If nohdr_ is not zero, 
+Prints the TPSA coefficients with precision eps_. If nohdr_ is not zero, 
 the header is not printed. 
 
 ### Input
 - `t`       -- TPSA to print
-- `name_`   -- Name of TPSA
-- `eps_`    -- Precision to output
-- `nohdr_`  -- If True, no header is printed
-- `stream_` --  FILE pointer of output stream. If null, printed to stdout
+- `name_`   -- (Optional) Name of TPSA
+- `eps_`    -- (Optional) Precision to output
+- `nohdr_`  -- (Optional) If True, no header is printed
+- `stream_` -- (Optional) FILE pointer of output stream. Default is stdout
 """
 function mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA{Desc}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
@@ -1778,10 +1928,10 @@ end
 Scans in a TPSA from the stream_.
 
 ### Input
-- `stream_` -- C FILE pointer I/O stream from which to read the TPSA
+- `stream_` -- (Optional) I/O stream from which to read the TPSA, default is stdin
 
 ### Output
-- `t`    -- TPSA scanned from I/O stream_
+- `t`       -- TPSA scanned from I/O stream_
 """
 function mad_tpsa_scan(stream_::Ptr{Cvoid})::Ptr{RTPSA{Desc}}
   t = @ccall MAD_TPSA.mad_tpsa_scan(stream_::Ptr{Cvoid})::Ptr{RTPSA{Desc}}
@@ -1792,15 +1942,16 @@ end
 """
     mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
 
-???
+Read TPSA header. Returns descriptor for TPSA given the header. This is useful for external languages using 
+this library where the memory is managed NOT on the C side.
 
 ### Input
-- `kind_`
-- `name_`
-- `stream_`
+- `kind_`   -- (Optional) Real or complex TPSA, or detect automatically if not provided.
+- `name_`   -- (Optional) Name of TPSA
+- `stream_` -- (Optional) I/O stream to read TPSA from,  default is stdin
 
 ### Output
-- `ret`
+- `ret`     -- Descriptor for the TPSA 
 """
 function mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
   desc = @ccall MAD_TPSA.mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
@@ -1811,11 +1962,14 @@ end
 """
     mad_tpsa_scan_coef!(t::Ptr{RTPSA{Desc}}, stream_::Ptr{Cvoid})
 
-???
+Read TPSA coefficients into TPSA t. This should be used with mad_tpsa_scan_hdr for external languages using 
+this library where the memory is managed NOT on the C side.
 
 ### Input
-- `t`
-- `stream_`
+- `stream_` -- (Optional) I/O stream to read TPSA from,  default is stdin
+
+### Output
+- `t`       -- TPSA with coefficients scanned from stream_
 """
 function mad_tpsa_scan_coef!(t::Ptr{RTPSA{Desc}}, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_scan_coef(t::Ptr{RTPSA{Desc}}, stream_::Ptr{Cvoid})::Cvoid
@@ -1825,14 +1979,14 @@ end
 """
     mad_tpsa_debug(t::Ptr{RTPSA{Desc}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})
 
-???
+Prints TPSA with all information of data structure.
 
 ### Input
-- `t`
-- `name_`
-- `fnam_`
-- `line_`
-- `stream_`
+- `t`       -- TPSA
+- `name_`   -- (Optional) Name of TPSA
+- `fnam_`   -- (Optional) File name to print to
+- `line_`   -- (Optional) Line number in file to start at
+- `stream_` -- (Optional) I/O stream to print to, default is stdout
 """
 function mad_tpsa_debug(t::Ptr{RTPSA{Desc}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_debug(t::Ptr{RTPSA{Desc}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cvoid
@@ -1858,15 +2012,16 @@ end
 """
     mad_tpsa_init(t::Ptr{RTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
-UNSAFE OPERATION! (mo vs allocated!!) ???
+Unsafe initialization of an already existing TPSA t with maximum order mo to the descriptor d. mo must be less than 
+the maximum order of the descriptor. t is modified in palce and also returned.
 
 ### Input
-- `t` 
-- `d`
-- `mo`
+- `t`  -- TPSA to initialize to descriptor d
+- `d`  -- Descriptor
+- `mo` -- Maximum order of the TPSA (must be less than maximum order of the descriptor)
 
 ### Output
-- `t`  
+- `t`  -- TPSA initialized to descriptor d with maximum order mo
 """
 function mad_tpsa_init!(t::Ptr{RTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
   t = @ccall MAD_TPSA.mad_tpsa_init(t::Ptr{RTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
