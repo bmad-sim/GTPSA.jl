@@ -1,9 +1,3 @@
-# TPSA Structures Module implementation
-module Descriptor
-include("Structs.jl")
-using .Structs
-
-
 """
     mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
 
@@ -70,11 +64,21 @@ end
 """
     mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
 
-Calls the destructor for the passed descriptor, or all descriptors if null pointer is passed.
+Calls the destructor for the passed descriptor.
 
 """
 function mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
   @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
+end
+
+"""
+    mad_desc_del!(d_::Ptr{Cvoid})
+
+Calls the destructor for all existing descriptors
+
+"""
+function mad_desc_del!(d_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Cvoid})::Cvoid
 end
 
 
@@ -339,7 +343,4 @@ For debugging.
 """
 function mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})::Cvoid
-end
-
-
 end

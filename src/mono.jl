@@ -1,7 +1,3 @@
-module Monomial
-include("Structs.jl")
-using .Structs
-
 """
     mad_mono_str!(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
 
@@ -346,6 +342,4 @@ Prints the monomial to stdout.
 """
 function mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})::Cvoid
-end
-
 end

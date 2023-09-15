@@ -1,8 +1,3 @@
-module RealTPSA
-include("Structs.jl")
-using .Structs
-
-
 """
     mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
@@ -140,6 +135,7 @@ function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
   return ret
 end
 
+#=
 """
   mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
 
@@ -156,7 +152,7 @@ function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
   mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
   return mo
 end
-
+=#
 
 """
     mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
@@ -2026,7 +2022,4 @@ the maximum order of the descriptor. t is modified in palce and also returned.
 function mad_tpsa_init!(t::Ptr{RTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
   t = @ccall MAD_TPSA.mad_tpsa_init(t::Ptr{RTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
   return t
-end
-
-
 end

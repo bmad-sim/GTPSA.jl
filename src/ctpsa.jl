@@ -1,8 +1,3 @@
-module ComplexTPSA
-include("Structs.jl")
-using .Structs
-
-
 """
     mad_ctpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{CTPSA{Desc}}
 
@@ -139,7 +134,7 @@ function mad_ctpsa_ord(t::Ptr{CTPSA{Desc}})::Cuchar
   ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ptr{CTPSA{Desc}})::Cuchar
   return ret
 end
-
+#=
 """
   mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
 
@@ -156,7 +151,7 @@ function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
   mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
   return mo
 end
-
+=#
 
 """
     mad_ctpsa_ordn(n::Cint, t::Ptr{Ptr{CTPSA{Desc}}})::Cuchar
@@ -2818,6 +2813,4 @@ the maximum order of the descriptor. t is modified in place and also returned.
 function mad_ctpsa_init!(t::Ptr{CTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{CTPSA{Desc}}
   t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ptr{CTPSA{Desc}}, d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{CTPSA{Desc}}
   return t
-end
-
 end
