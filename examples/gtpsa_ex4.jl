@@ -31,3 +31,6 @@ mad_tpsa_del!(t2)
 
 # destroy all created descriptors (optional cleanup)
 mad_desc_del!(C_NULL)
+
+
+println("hello there")
