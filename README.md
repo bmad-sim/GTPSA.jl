@@ -18,10 +18,10 @@ Next, in your ```.julia/dev/``` directory, clone the repository with:
 ```
 git clone https://github.com/bmad-sim/TPSA.jl.git
 ```
-Finally, while in the ```dev``` directory, the Julia package can be used with:
+Finally, while in the ```dev``` directory, the Julia package can be used in the Julia REPL with:
 ```
 using Pkg
 Pkg.activate("TPSA")
 using TPSA
 ```
-Outside ```.julia/dev```, the full path to the ```TPSA``` directory from the current directory should be specified. 
+For Julia programs outside ```.julia/dev```, the full path to the ```TPSA``` directory from the current directory should be specified. 
