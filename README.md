@@ -12,7 +12,7 @@ cd gtpsa
 cmake .
 make
 ```
-Once ```libgtpsa.so``` is made, the path to the shared library must be added to the $LD_LIBRARY_PATH environment variable. This can be done by adding ```export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_parent_dir_of_lipgtpsa.so>``` to your .bashrc file.
+Once ```libgtpsa.so``` is made, the path to the shared library must be added to the ```$LD_LIBRARY_PATH``` environment variable. This can be done by adding ```export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_parent_dir_of_libgtpsa.so>``` to your ```.bashrc``` file.
 
 Next, in your ```.julia/dev/``` directory, clone the repository with:
 ```
@@ -24,4 +24,4 @@ using Pkg
 Pkg.activate("TPSA")
 using TPSA
 ```
-Outside ```.julia/dev```, the full path to the TPSA directory from the current directory should be specified. 
+Outside ```.julia/dev```, the full path to the ```TPSA``` directory from the current directory should be specified. 
