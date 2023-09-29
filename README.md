@@ -12,7 +12,7 @@ cd gtpsa
 cmake .
 make
 ```
-Once ```libgtpsa.so``` is made, the path to the shared library must be added to the ```$LD_LIBRARY_PATH``` environment variable. This can be done by adding ```export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_parent_dir_of_libgtpsa.so>``` to your ```.bashrc``` file.
+LAPACK is required for the GTPSA shared library to work (and on some machines, compile) properly. The CMake file will look for LAPACK on your machine and link it to libgtpsa. To ensure this has been properly done, check that liblapack shows up with ```ldd libgtpsa.so```. Once ```libgtpsa.so``` is made, the path to the shared library must be added to the ```$LD_LIBRARY_PATH``` environment variable. This can be done by adding ```export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_parent_dir_of_libgtpsa.so>``` to your ```.bashrc``` file.
 
 Next, in your ```.julia/dev/``` directory, clone the repository with:
 ```
