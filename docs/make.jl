@@ -21,3 +21,5 @@ makedocs(
     ]
   ]
 )
+
+deploydocs(; repo = "github.com/bmad-sim/TPSA.jl.git")

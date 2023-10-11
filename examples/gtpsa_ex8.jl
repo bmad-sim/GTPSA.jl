@@ -28,7 +28,6 @@ mad_tpsa_print(t3, Base.unsafe_convert(Cstring, "T1+T2"), 0., Int32(0), C_NULL)
 mad_tpsa_mul!(t1, t2, t3)
 mad_tpsa_print(t3, Base.unsafe_convert(Cstring, "T1*T2"), 0., Int32(0), C_NULL)
 
-
 # log of the scalar
 mad_tpsa_log!(t3,t3)
 mad_tpsa_print(t3, Base.unsafe_convert(Cstring, "log(T1*T2)"), 0., Int32(0), C_NULL)
