@@ -1,7 +1,7 @@
 """
     mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
-Creates a real TPSA defined by the specified descriptor and maximum order. If MAD_TPSA_DEFAULT 
+Creates a TPSA defined by the specified descriptor and maximum order. If MAD_TPSA_DEFAULT 
 is passed for mo, the mo defined in the descriptor is used. If mo > d_mo, mo = d_mo.
 
 ### Input
@@ -9,7 +9,7 @@ is passed for mo, the mo defined in the descriptor is used. If mo > d_mo, mo = d
 - `mo` -- Maximum order
 
 ### Output
-- `t`  -- New real TPSA defined by the descriptor
+- `t`  -- New TPSA defined by the descriptor
 """
 function mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
   t = @ccall MAD_TPSA.mad_tpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
@@ -20,16 +20,16 @@ end
 """
     mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
 
-Creates a real TPSA copy of the inputted TPSA, with maximum order specified by mo.
+Creates a TPSA copy of the inputted TPSA, with maximum order specified by mo.
 If MAD_TPSA_SAME is passed for mo, the mo currently in t is used for the created TPSA.
   ok with t=(tpsa_t*)ctpsa
 
 ### Input
-- `t`   -- Real TPSA to copy
+- `t`   -- TPSA to copy
 - `mo`  -- Maximum order of new TPSA
 
 ### Output
-- `ret` -- New real TPSA with maximum order mo
+- `ret` -- New TPSA with maximum order mo
 """
 function mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
   ret = @ccall MAD_TPSA.mad_tpsa_new(t::Ptr{RTPSA{Desc}}, mo::Cuchar)::Ptr{RTPSA{Desc}}
@@ -40,10 +40,10 @@ end
 """
     mad_tpsa_del!(t::Ptr{RTPSA{Desc}})
 
-Calls the destructor for the real TPSA.
+Calls the destructor for the TPSA.
 
 ### Input
-- `t` -- Real TPSA to destruct
+- `t` -- TPSA to destruct
 """
 function mad_tpsa_del!(t::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_del(t::Ptr{RTPSA{Desc}})::Cvoid
@@ -53,10 +53,10 @@ end
 """
     mad_tpsa_desc(t::Ptr{RTPSA{Desc}})::Ptr{Desc{RTPSA,CTPSA}}
 
-Gets the descriptor for the real TPSA.
+Gets the descriptor for the TPSA.
 
 ### Input
-- `t`   -- Real TPSA
+- `t`   -- TPSA
 
 ### Output
 - `ret` -- Descriptor for the RTPSA
@@ -73,7 +73,7 @@ end
 Sets the TPSA uid if uid_ != 0, and returns the current (previous if set) TPSA uid. 
 
 ### Input
-- `t`    -- Real TPSA
+- `t`    -- TPSA
 - `uid_` -- uid to set in the TPSA if uid_ != 0
 
 ### Output
@@ -91,7 +91,7 @@ end
 Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
 ### Input
-- `t`   -- Real TPSA
+- `t`   -- TPSA
 
 ### Output
 - `ret` -- Length of RTPSA
@@ -108,7 +108,7 @@ end
 Get the name of the TPSA.
 
 ### Input
-- `t`    -- Real TPSA
+- `t`    -- TPSA
 
 ### Output
 - `ret`  -- Name of RTPSA (nul term in C)
@@ -125,7 +125,7 @@ end
 Gets the TPSA order.
 
 ### Input
-- `t`   -- Real TPSA
+- `t`   -- TPSA
 
 ### Output
 - `ret` -- Order of TPSA
@@ -135,7 +135,6 @@ function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
   return ret
 end
 
-#=
 """
   mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
 
@@ -149,10 +148,11 @@ Returns maximum order of all TPSAs provided.
 - `mo` -- Maximum order of all TPSAs provided
 """
 function mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
-  mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  #mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  mo = ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (Ptr{RTPSA{Desc}}, Ptr{RTPSA{Desc}}...), t, ts...)
   return mo
 end
-=#
+
 
 """
     mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA{Desc}}})::Cuchar
@@ -175,13 +175,13 @@ end
 """
     mad_tpsa_copy!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-Makes a copy of the real TPSA t to r.
+Makes a copy of the TPSA t to r.
 
 ### Input
-- `t` -- Source real TPSA
+- `t` -- Source TPSA
 
 ### Output
-- `r` -- Destination real TPSA
+- `r` -- Destination TPSA
 """
 function mad_tpsa_copy!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_copy(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
@@ -195,11 +195,11 @@ Scales all coefficients by order. If inv == 0, scales coefficients by order (der
 by 1/order (integration).
 
 ### Input
-- `t`  -- Source real TPSA
+- `t`  -- Source TPSA
 - `inv`-- Put order up, divide, scale by inv of value of order
 
 ### Output
-- `r`  -- Destination real TPSA
+- `r`  -- Destination TPSA
 """
 function mad_tpsa_sclord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, inv::Cuchar)::Cvoid
@@ -212,11 +212,11 @@ end
 Extract one homogeneous polynomial of the given order
 
 ### Input
-- `t``  -- Source real TPSA
+- `t``  -- Source TPSA
 - `ord` -- Order to retrieve
 
 ### Output
-- `r`   -- Destination real TPSA
+- `r`   -- Destination TPSA
 """
 function mad_tpsa_getord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_getord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cuchar)::Cvoid
@@ -230,11 +230,11 @@ Cuts the TPSA off at the given order and above, or ff ord is negative, will cut 
 ord = -3, then orders 0-3 are cut off).
 
 ### Input
-- `t`   -- Source real TPSA
+- `t`   -- Source TPSA
 - `ord` -- Cut order: 0..-ord or ord..mo
 
 ### Output
-- `r`   -- Destination real TPSA
+- `r`   -- Destination TPSA
 """
 function mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
   @ccall MAD_TPSA.mad_tpsa_cutord(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)::Cvoid
@@ -247,7 +247,7 @@ Returns the index to the monomial with maximum abs(coefficient) in the TPSA for 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to n. 
 
 ### Input
-- `t`    -- Real TPSA
+- `t`    -- TPSA
 - `n`    -- Highest order to include in finding the maximum abs(coefficient) in the TPSA, length of idx_ if provided
 
 ### Output
@@ -268,13 +268,13 @@ t2r_ = {1,2,3,4,6,5} and pb = -1, canonical coordinates 6 and 5 are swapped and 
 will be negated. Useful for comparing with different differential algebra packages.
 
 ### Input
-- `t`    -- Source real TPSA
+- `t`    -- Source TPSA
 - `n`    -- Length of vector
 - `t2r_` -- (Optional) Vector of index lookup
 - `pb`   -- Poisson bracket, 0,1:fwd,-1:bwd
 
 ### Output
-- `r`    -- Destination real TPSA with specified order and canonical coordinate reshuffling.
+- `r`    -- Destination TPSA with specified order and canonical coordinate reshuffling.
 """
 function mad_tpsa_convert!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_convert(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
@@ -287,13 +287,26 @@ end
 Sets the 0th and 1st order values for the variables.
 
 ### Input
-- `t`    -- Real TPSA
+- `t`    -- TPSA
 - `v`    -- 0th order value (coefficient)
 - `iv_`  -- Variable index, optional if order of TPSA is 0 (behaves like mad_tpsa_setval then)
 - `scl_` -- 1st order variable value (typically will be 1)
 """
 function mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)::Cvoid
+end
+
+"""
+    mad_tpsa_setval!(t::Ptr{RTPSA{Desc}}, v::Cdouble)
+
+Sets the scalar part of the TPSA to v and all other values to 0 (sets the TPSA order to 0).
+
+### Input
+- `t` -- TPSA to set to scalar
+- `v` -- Scalar value to set TPSA
+"""
+function mad_tpsa_setval!(t::Ptr{RTPSA{Desc}}, v::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_setval(t::Ptr{RTPSA{Desc}}, v::Cdouble)::Cvoid
 end
 
 
@@ -303,7 +316,7 @@ end
 Sets the name of the RTPSA.
 
 ### Input
-- `t`   -- Real TPSA
+- `t`   -- TPSA
 - `nam` -- Name to set for RTPSA
 """
 function mad_tpsa_setnam!(t::Ptr{RTPSA{Desc}}, nam::Cstring)
@@ -317,7 +330,7 @@ end
 Clears the TPSA (reset to 0)
 
 ### Input
-- `t` -- Real TPSA
+- `t` -- TPSA
 """
 function mad_tpsa_clear!(t::Ptr{RTPSA{Desc}})
   @ccall MAD_TPSA.mad_tpsa_clear(t::Ptr{RTPSA{Desc}})::Cvoid
@@ -330,7 +343,7 @@ end
 Checks if TPSA is 0 or not
 
 ### Input
-- `t` -- Real TPSA to check
+- `t`    -- TPSA to check
 
 ### Output
 - `ret`  -- True or false
@@ -2013,7 +2026,7 @@ end
 Sanity check of the TPSA integrity.
 
 ### Input
-- `t` -- Real TPSA to check if valid
+- `t` -- TPSA to check if valid
 
 ### Output
 - `ret`  -- True if valid TPSA, false otherwise

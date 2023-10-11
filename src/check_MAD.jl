@@ -6,15 +6,8 @@
 # mad_desc_del: Extra multiply-dispatched implementation in Julia for C_NULL parameter
 # mad_ctpsa_equt: tol_ in TPSA.jl is correct vs tol in mad_ctpsa.H
 # mad_ctpsa_unit: C code has two equivalent function declarations with x and t. TPSA.jl correct
-
-# To-do:
-# mad_tpsa_ordv
-# mad_tpsa_setval
-# mad_ctpsa_ordv
-# mad_ctpsa_setval
-# mad_ctpsa_setval_r
-# mad_ctpsa_pown_r
-# mad_ctpsa_conj
+# mad_tpsa_ordv: Splats in Julia have names, C they do not, so script will show disagreements
+# mad_ctpsa_ordv: Same as for mad_tpsa_ordv
 
 using Downloads
 
@@ -217,15 +210,15 @@ function get_jl_function_declarations(str)
     i = start_index + 1
   end
 
-    # Remove multiline comments
-    i = 1
-    while occursin("#=", str)
-      len = length(str)
-      start_index = findnext("#=", str, i)[1] - 1
-      end_index = findnext("=#", str, i)[2] + 1
-      str = str[1:start_index] * str[end_index:len]
-      i = start_index + 1
-    end
+  # Remove multiline comments
+  i = 1
+  while occursin("#=", str)
+    len = length(str)
+    start_index = findnext("#=", str, i)[1] - 1
+    end_index = findnext("=#", str, i)[2] + 1
+    str = str[1:start_index] * str[end_index:len]
+    i = start_index + 1
+  end
 
   # Remove single line comments
   i = 1
@@ -334,7 +327,7 @@ end
 str = String(take!(io))
 fun_decs_c  = get_c_function_declarations(str)
 
-str = read("src/mono.jl", String)
+str = read("mono.jl", String)
 fun_decs_jl = get_jl_function_declarations(str)
 println("Comparing mad_mono.h to mono.jl...")
 compare(fun_decs_c, fun_decs_jl)
@@ -351,7 +344,7 @@ end
 str = String(take!(io))
 fun_decs_c  = get_c_function_declarations(str)
 
-str = read("src/desc.jl", String)
+str = read("desc.jl", String)
 fun_decs_jl = get_jl_function_declarations(str)
 println("Comparing mad_desc.h to desc.jl...")
 compare(fun_decs_c, fun_decs_jl)
@@ -368,7 +361,7 @@ end
 str = String(take!(io))
 fun_decs_c  = get_c_function_declarations(str)
 
-str = read("src/rtpsa.jl", String)
+str = read("rtpsa.jl", String)
 fun_decs_jl = get_jl_function_declarations(str)
 println("Comparing mad_tpsa.h to rtpsa.jl...")
 compare(fun_decs_c, fun_decs_jl)
@@ -384,7 +377,7 @@ end
 str = String(take!(io))
 fun_decs_c  = get_c_function_declarations(str)
 
-str = read("src/ctpsa.jl", String)
+str = read("ctpsa.jl", String)
 fun_decs_jl = get_jl_function_declarations(str)
 println("Comparing mad_ctpsa.h to ctpsa.jl...")
 compare(fun_decs_c, fun_decs_jl)

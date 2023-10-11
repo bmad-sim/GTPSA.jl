@@ -134,7 +134,7 @@ function mad_ctpsa_ord(t::Ptr{CTPSA{Desc}})::Cuchar
   ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ptr{CTPSA{Desc}})::Cuchar
   return ret
 end
-#=
+
 """
   mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
 
@@ -148,10 +148,11 @@ Returns maximum order of all TPSAs provided.
 - `mo` -- Maximum order of all TPSAs provided
 """
 function mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
-  mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  # mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (Ptr{CTPSA{Desc}}, Ptr{CTPSA{Desc}}...), t, ts...)
   return mo
 end
-=#
+
 
 """
     mad_ctpsa_ordn(n::Cint, t::Ptr{Ptr{CTPSA{Desc}}})::Cuchar
@@ -312,6 +313,33 @@ function mad_ctpsa_setvar_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, 
   @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
 end
 
+"""
+    mad_ctpsa_setval!(t::Ptr{CTPSA{Desc}}, v::ComplexF64)
+
+Sets the scalar part of the TPSA to v and all other values to 0 (sets the TPSA order to 0).
+
+### Input
+- `t` -- TPSA to set to scalar
+- `v` -- Scalar value to set TPSA
+"""
+function mad_ctpsa_setval!(t::Ptr{CTPSA{Desc}}, v::ComplexF64)
+  @ccall MAD_TPSA.mad_ctpsa_setval(t::Ptr{CTPSA{Desc}}, v::ComplexF64)::Cvoid
+end
+
+"""
+    mad_ctpsa_setval_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble)
+
+Sets the scalar part of the TPSA to v and all other values to 0 (sets the TPSA order to 0).
+Equivalent to mad_ctpsa_setval but without complex-by-value arguments.
+
+### Input
+- `t` -- TPSA to set to scalar
+- `v_re` -- Real part of scalar value to set TPSA
+- `v_im` -- Imaginary part of scalar value to set TPSA
+"""
+function mad_ctpsa_setval_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble)
+  @ccall MAD_TPSA.mad_ctpsa_setval_r(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble)::Cvoid
+end
 
 """
     mad_ctpsa_setnam!(t::Ptr{CTPSA{Desc}}, nam::Cstring)
@@ -1149,7 +1177,7 @@ end
 """
     mad_ctpsa_pown_r!(a::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, c::Ptr{CTPSA{Desc}})
 
-Sets the destination TPSA c = a ^ v where v is of double precision. Without complex-by-power arguments.
+Sets the destination TPSA c = a ^ v where v is of double precision. Without complex-by-value arguments.
 
 ### Input
 - `a`    -- Source TPSA a
@@ -1374,6 +1402,21 @@ Calculates the norm of of TPSA a.
 function mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}})::Cdouble
   nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}}, tpsa_b_::Ptr{CTPSA{Desc}})::Cdouble
   return nrm
+end
+
+"""
+    mad_ctpsa_conj(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})
+
+Calculates the complex conjugate of of TPSA a.
+
+### Input
+- `a` -- Source TPSA a
+
+### Output
+- `c` -- Destination TPSA c = conj(a)
+"""
+function mad_ctpsa_conj!(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})
+  @ccall MAD_TPSA.mad_ctpsa_conj(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})::Cvoid
 end
 
 
