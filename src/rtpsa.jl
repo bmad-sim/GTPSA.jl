@@ -1731,7 +1731,7 @@ end
 Derivating vs a variable,. multiply and add sum
 Deriving a map vs each variable by itself TPSA
 ???
-"Incomplete operator" used by the incomplete poisson bracket- computing PB with only 1 -- [A, . ]  (waiting to be completed)
+"Incomplete operator" used by the incomplete poisson bracket- computing PB with only 1 
 only positive part of PB
 Taking 1 TPSA, derive TPSA vs all variables, multiply result by variable in map and then sum
 

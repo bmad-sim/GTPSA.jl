@@ -2,10 +2,10 @@
     mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
 
 Creates a TPSA descriptor with the specified number of variables and maximum order. 
-The number of parameters is set to 0. Order
+The number of parameters is set to 0.
 
 ### Input
-- `nv`  -- Number of variables in th
+- `nv`  -- Number of variables in the TPSA
 - `mo`  -- Maximum order of TPSA, mo = max(1, mo)
 
 ### Output

@@ -1,0 +1,22 @@
+# Descriptor
+```@docs
+mad_desc_newv
+mad_desc_newvp
+mad_desc_newvpo
+mad_desc_del!(::Ptr{Desc{RTPSA,CTPSA}})
+mad_desc_del!(::Ptr{Cvoid})
+mad_desc_getnv!
+mad_desc_maxord
+mad_desc_maxlen
+mad_desc_gtrunc!
+mad_desc_isvalids
+mad_desc_isvalidm
+mad_desc_isvalidsm
+mad_desc_idxs
+mad_desc_idxm
+mad_desc_idxsm
+mad_desc_nxtbyvar
+mad_desc_nxtbyord
+mad_desc_mono!
+mad_desc_info
+```

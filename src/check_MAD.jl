@@ -36,6 +36,7 @@ function compare(fun_decs_c, fun_decs_jl)
   end
 
   names_jl = [x.name for x in funs_jl]
+  println.(names_jl)
   used = BitArray(undef, length(names_jl))
 
   for fun_c in funs_c
@@ -116,7 +117,7 @@ function c_to_jl_type(type_c)
 end
 
 function get_jl_fun_info(fun)
-  name = strip(replace(fun[1:findnext("(", fun, 1)[1]-1], "!" => ""))
+  name = strip(replace(fun[1:findnext("(", fun, 1)[1]-1], "!" => "!"))
   fun = strip(fun[findnext("(", fun, 1)[1]+1:end])
   if occursin("::", fun[findlast(")", fun)[1]:end])
     return_type = fun[findlast("::", fun)[1]+2:end]
