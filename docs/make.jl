@@ -1,8 +1,6 @@
 using Pkg
-Pkg.activate("../../TPSA.jl")
-Pkg.instantiate()
-using TPSA
-using Documenter, TPSA
+include("../src/TPSA.jl")
+using Documenter, .TPSA
 
 makedocs(
   sitename="TPSA.jl",
