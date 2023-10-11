@@ -74,7 +74,7 @@ end
 """
     mad_desc_del!(d_::Ptr{Cvoid})
 
-Calls the destructor for all existing descriptors
+Calls the destructor for all existing descriptors. Defined to allow C_NULL pointers
 
 """
 function mad_desc_del!(d_::Ptr{Cvoid})
@@ -97,8 +97,8 @@ order, number of parameters, and parameter order respectively.
 - `po_` -- (Optional) Parameter order of the descriptor
 - `ret` -- Number of variables in TPSA
 """
-function mad_desc_getnv!(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_desc_getnv(desc::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
+function mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_getnv(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
   return ret
 end
 
@@ -341,6 +341,6 @@ For debugging.
 - `d`  -- Descriptor to debug
 - `fp` -- File to write to. If null, will write to stdout
 """
-function mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})::Cvoid
+function mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp_::Ptr{Cvoid})::Cvoid
 end

@@ -12,14 +12,14 @@ Writes the monomial defined in the string s, which stores the orders in a human-
 - `a` -- Monomial as a byte array converted from the input string
 - `i` -- Adjusted size n of byte array if '\0' found
 """
-function mad_mono_str!(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
-  i = @ccall MAD_TPSA.mad_mono_str(n::Cint, mono_a::Ptr{Cuchar}, s::Cstring)::Cint
+function mad_mono_str!(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
+  i = @ccall MAD_TPSA.mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
   return i
 end
 
 
 """
-  mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
+  mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
 
 Writes the monomial defined by the byte array a (with orders stored as hexadecimal) into 
 a string s.
@@ -31,8 +31,8 @@ a string s.
 ### Output
 - `s` -- Monomial as string
 """
-function mad_mono_prt!(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
-  s = @ccall MAD_TPSA.mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cstring
+function mad_mono_prt!(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
+  s = @ccall MAD_TPSA.mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
   return s
 end 
 
@@ -331,15 +331,15 @@ end
 
 
 """
-    mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})
+    mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})
 
 Prints the monomial to stdout.
 
 ### Input
 - `n`  -- Length of monomial
 - `a`  -- Source monomial to print to stdout
-- `fp` -- C FILE pointer, if null will print to stdout 
+- `fp_` -- C FILE pointer, if null will print to stdout 
 """
-function mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp::Ptr{Cvoid})::Cvoid
+function mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})::Cvoid
 end

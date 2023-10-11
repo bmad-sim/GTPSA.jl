@@ -15,7 +15,7 @@ Variable type conversions:
 
 const NAMSZ::Int = 16
 
-const MAD_TPSA = :("libgtpsa")
+const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 
