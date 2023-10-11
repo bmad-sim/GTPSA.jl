@@ -1,0 +1,22 @@
+# Monomial
+```@docs
+mad_mono_str!
+mad_mono_prt!
+mad_mono_fill!
+mad_mono_copy!
+mad_mono_min
+mad_mono_max
+mad_mono_ord
+mad_mono_ordp
+mad_mono_ordpf
+mad_mono_eq
+mad_mono_lt
+mad_mono_le
+mad_mono_cmp
+mad_mono_rcmp
+mad_mono_add!
+mad_mono_sub!
+mad_mono_cat!
+mad_mono_rev!
+mad_mono_print
+```
