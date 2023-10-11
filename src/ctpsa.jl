@@ -283,33 +283,33 @@ end
 """
     mad_ctpsa_setvar!(t::Ptr{CTPSA{Desc}}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)
 
-???
+Sets the 0th and 1st order values for the variables.
 
-### Input
-- `t`    -- Complex TPSA
-- `v`    -- 0th order value
-- `iv_`  -- Variable index
-- `scl_` -- 1st order variable value
-"""
+  ### Input
+  - `t`    -- Real TPSA
+  - `v`    -- 0th order value (coefficient)
+  - `iv_`  -- (Optional) Variable index, optional if order of TPSA is 0 (behaves like mad_ctpsa_setval then)
+  - `scl_` -- 1st order variable value (typically will be 1)
+  """
 function mad_ctpsa_setvar!(t::Ptr{CTPSA{Desc}}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)
   @ccall MAD_TPSA.mad_ctpsa_setvar(t::Ptr{CTPSA{Desc}}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)::Cvoid
 end
 
 """
-    mad_ctpsa_setvar_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re::Cdouble, scl_im::Cdouble)
+    mad_ctpsa_setvar_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
 
-???
+Sets the 0th and 1st order values for the variables. Equivalent to mad_ctpsa_setvar but without complex-by-value arguments.
 
 ### Input
-- `t`      -- Complex TPSA
-- `v_re`   -- Real part of 0th order value
-- `v_im`   -- Imaginary part of 0th order value
-- `iv_`    -- Variable index
-- `scl_re` -- Real part of 1st order variable value
-- `scl_im` -- Imaginary part of 1st order variable value
+- `t`       -- Complex TPSA
+- `v_re`    -- Real part of 0th order value
+- `v_im`    -- Imaginary part of 0th order value
+- `iv_`     -- (Optional) Variable index, optional if order of TPSA is 0 (behaves like mad_ctpsa_setval then)
+- `scl_re_` -- (Optional) Real part of 1st order variable value
+- `scl_im_` -- (Optional)Imaginary part of 1st order variable value
 """
-function mad_ctpsa_setvar_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re::Cdouble, scl_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re::Cdouble, scl_im::Cdouble)::Cvoid
+function mad_ctpsa_setvar_r!(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
+  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{CTPSA{Desc}}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
 end
 
 
@@ -441,10 +441,10 @@ end
 """ 
     mad_ctpsa_unit!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}})
 
-Interpreting TPSA as vector, gets the "unit vector", e.g. r = x/norm(x). May be useful for checking for convergence.
+Interpreting TPSA as vector, gets the "unit vector", e.g. r = t/norm(t). May be useful for checking for convergence.
 
 ### Input
-- `x` -- Source TPSA x
+- `t` -- Source TPSA x
 
 ### Output
 - `r` -- Destination TPSA r
@@ -1159,7 +1159,7 @@ Sets the destination TPSA c = a ^ v where v is of double precision. Without comp
 ### Output
 - `c`    -- Destination TPSA c = a ^ v
 """
-function mad_ctpsa_pown!(a::Ptr{CTPSA{Desc}},  v_re::Cdouble, v_im::Cdouble, c::Ptr{CTPSA{Desc}})
+function mad_ctpsa_pown_r!(a::Ptr{CTPSA{Desc}},  v_re::Cdouble, v_im::Cdouble, c::Ptr{CTPSA{Desc}})
   @ccall MAD_TPSA.mad_ctpsa_pown_r(a::Ptr{CTPSA{Desc}},  v_re::Cdouble, v_im::Cdouble, c::Ptr{CTPSA{Desc}})::Cvoid
 end
 
@@ -1361,7 +1361,7 @@ end
 
 
 """
-    mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}})::ComplexF64
+    mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}})::Cdouble
 
 Calculates the norm of of TPSA a.
 
@@ -1371,12 +1371,13 @@ Calculates the norm of of TPSA a.
 ### Output
 - `nrm` -- Norm of TPSA a
 """
-function mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}})::ComplexF64
-  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}}, tpsa_b_::Ptr{CTPSA{Desc}})::ComplexF64
+function mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA{Desc}}, tpsa_b_::Ptr{CTPSA{Desc}})::Cdouble
   return nrm
 end
 
 
+#= Old
 """
     mad_ctpsa_abs!(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})
 
@@ -1391,6 +1392,7 @@ Sets TPSA c to the absolute value of TPSA a.
 function mad_ctpsa_abs!(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})
   @ccall MAD_TPSA.mad_ctpsa_abs(a::Ptr{CTPSA{Desc}}, c::Ptr{CTPSA{Desc}})::Cvoid
 end
+=#
 
 
 """
@@ -2527,13 +2529,15 @@ end
 """
     mad_ctpsa_liebra!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Computes the Lie bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_ctpsa_liebra!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
   @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
@@ -2543,13 +2547,15 @@ end
 """
     mad_ctpsa_exppb!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Computes the exponential of the Poisson bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_ctpsa_exppb!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
   @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
@@ -2559,13 +2565,15 @@ end
 """
     mad_ctpsa_logpb!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Computes the log of the Poisson bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_ctpsa_logpb!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
   @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
@@ -2575,14 +2583,14 @@ end
 """
     mad_ctpsa_mnrm(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}})::Cdouble
 
-???
+Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
 ### Input
-- `na`
-- `ma`
+- `na`  -- Number of TPSAs in the map
+- `ma`  -- Map ma
 
 ### Output
-- `nrm`
+- `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
 function mad_ctpsa_mnrm(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}})::Cdouble
   nrm = @ccall MAD_TPSA.mad_ctpsa_mnrm(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}})::Cdouble
@@ -2593,12 +2601,14 @@ end
 """
     mad_ctpsa_minv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Inverts the map.
 
 ### Input
-- `na`
-- `ma`
-- `mc`
+- `na` -- Number of TPSAs in the map
+- `ma` -- Map ma
+
+### Output
+- `mc` -- Inversion of map ma
 """
 function mad_ctpsa_minv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
   @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
@@ -2608,13 +2618,15 @@ end
 """
     mad_ctpsa_pminv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}}, select::Ptr{Cint})
 
-???
+Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 
 ### Input
-- `na`
-- `ma`
-- `mc`
-- `select`
+- `na`     -- Number of TPSAs in ma
+- `ma`     -- Map ma
+- `select` -- Array of 0s or 1s defining which variables to do inverse on (atleast same size as na)
+
+### Output
+- `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
 function mad_ctpsa_pminv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}}, select::Ptr{Cint})
   @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}}, select::Ptr{Cint})::Cvoid
@@ -2624,14 +2636,16 @@ end
 """
     mad_ctpsa_compose!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Composes two maps.
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma
+- `ma` -- Map ma
+- `nb` -- Number of TPSAs in map mb
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Composition of maps ma and mb
 """
 function mad_ctpsa_compose!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})
   @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{CTPSA{Desc}}}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
@@ -2639,33 +2653,37 @@ end
 
 
 """
-    mad_ctpsa_translate!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{CTPSA{Desc}})
+    mad_ctpsa_translate!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{Ptr{CTPSA{Desc}}})
 
-???
+Translates the expansion point of the map by the amount tb.
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `tb`
-- `mc`
+- `na` -- Number of TPSAS in the map
+- `ma` -- Map ma
+- `nb` -- Length of tb
+- `tb` -- Vector of amount to translate for each varaible
+
+### Output
+- `mc` -- Map evaluated at the new point translated tb from the original evaluation point
 """
-function mad_ctpsa_translate!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{CTPSA{Desc}})
-  @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{CTPSA{Desc}})::Cvoid
+function mad_ctpsa_translate!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{Ptr{CTPSA{Desc}}})
+  @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{Ptr{CTPSA{Desc}}})::Cvoid
 end
 
 
 """
     mad_ctpsa_eval!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})
 
-???
+Evaluates the map at the point tb
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `tb`
-- `tc`
+- `na` -- Number of TPSAs in the map
+- `ma` -- Map ma
+- `nb` -- Length of tb
+- `tb` -- Point at which to evaluate the map
+
+### Output
+- `tc` -- Values for each TPSA in the map evaluated at the point tb
 """
 function mad_ctpsa_eval!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})
   @ccall MAD_TPSA.mad_ctpsa_eval(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})::Cvoid
@@ -2675,16 +2693,18 @@ end
 """
     mad_ctpsa_mconv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{CTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
 
-???
+Equivalent to mad_tpsa_convert, but applies the conversion to all TPSAs in the map ma.
 
 ### Input
-- `na`
-- `ma`
-- `nc`
-- `mc`
-- `n`
-- `t2r_`
-- `pb`
+- `na`   -- Number of TPSAs in the map
+- `ma`   -- Map ma
+- `nc`   -- Number of TPSAs in the output map mc
+- `n`    -- Length of vector (size of t2r_)
+- `t2r_` -- (Optional) Vector of index lookup
+- `pb`   -- Poisson bracket, 0,1:fwd,-1:bwd
+
+### Output
+- `mc`   -- Map mc with specified conversions 
 """
 function mad_ctpsa_mconv!(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{CTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_ctpsa_mconv(na::Cint, ma::Ptr{Ptr{CTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{CTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
@@ -2727,7 +2747,7 @@ end
 
 
 """
-    mad_ctpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+    mad_ctpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
 
 Read TPSA header. Returns descriptor for TPSA given the header. This is useful for external languages using 
 this library where the memory is managed NOT on the C side.
@@ -2740,8 +2760,8 @@ this library where the memory is managed NOT on the C side.
 ### Output
 - `ret`     -- Descriptor for the TPSA 
 """
-function mad_ctpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_ctpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+function mad_ctpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+  desc = @ccall MAD_TPSA.mad_ctpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
   return ret
 end
 

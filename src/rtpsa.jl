@@ -284,17 +284,12 @@ end
 """
     mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
 
-Sets the 0th and 1st order values for the variables 
-
-iv_ e.g. x = 1, y = 3
-scl_ = slope, used for first order derivative
-???
-Specify if you want special variables . TPSA first order slope in taylor series
+Sets the 0th and 1st order values for the variables.
 
 ### Input
 - `t`    -- Real TPSA
 - `v`    -- 0th order value (coefficient)
-- `iv_`  -- Variable index
+- `iv_`  -- Variable index, optional if order of TPSA is 0 (behaves like mad_tpsa_setval then)
 - `scl_` -- 1st order variable value (typically will be 1)
 """
 function mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
@@ -1369,19 +1364,19 @@ end
 
 
 """
-    mad_tpsa_atan2!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+    mad_tpsa_atan2!(y::Ptr{RTPSA{Desc}}, x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
 
-Sets TPSA r to atan2(x,y)
+Sets TPSA r to atan2(y,x)
 
 ### Input
-- `x` -- Source TPSA x
 - `y` -- Source TPSA y
+- `x` -- Source TPSA x
 
 ### Output
-- `r` -- Destination TPSA r = atan2(x,y)
+- `r` -- Destination TPSA r = atan2(y,x)
 """
-function  mad_tpsa_atan2!(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_atan2(x::Ptr{RTPSA{Desc}}, y::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
+function  mad_tpsa_atan2!(y::Ptr{RTPSA{Desc}}, x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})
+  @ccall MAD_TPSA.mad_tpsa_atan2(y::Ptr{RTPSA{Desc}}, x::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}})::Cvoid
 end
 
 """
@@ -1685,10 +1680,11 @@ end
 """
     mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA{Desc}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
+Writes the vector a in terms 
 mc is a map (m is map)
 Take vector a, write in terms of all variables in mc 
 scalar potential described as TPSA -> vector field
-
+???
 Map to hamiltonian
 
 ### Input
@@ -1719,7 +1715,12 @@ end
 """
     mad_tpsa_fgrad!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, b::Ptr{RTPSA{Desc}}, c::Ptr{RTPSA{Desc}})
 
+Derivating vs a variable,. multiply and add sum
+Deriving a map vs each variable by itself TPSA
 ???
+"Incomplete operator" used by the incomplete poisson bracket- computing PB with only 1 -- [A, . ]  (waiting to be completed)
+only positive part of PB
+Taking 1 TPSA, derive TPSA vs all variables, multiply result by variable in map and then sum
 
 ### Input
 - `na`
@@ -1735,13 +1736,15 @@ end
 """
     mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Computes the Lie bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
@@ -1751,13 +1754,15 @@ end
 """
     mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Computes the exponential of the Poisson bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
@@ -1767,13 +1772,15 @@ end
 """
     mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Computes the log of the Poisson bracket of the maps ma and mb.
 
 ### Input
-- `na`
-- `ma`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma and map mb
+- `ma` -- Map ma
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Destination map mc
 """
 function mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
@@ -1784,14 +1791,14 @@ end
 """
     mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}})::Cdouble
 
-???
+Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
 ### Input
-- `na`
-- `ma`
+- `na`  -- Number of TPSAs in the map
+- `ma`  -- Map ma
 
 ### Output
-- `nrm`
+- `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
 function mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}})::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}})::Cdouble
@@ -1802,12 +1809,14 @@ end
 """
     mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Inverts the map.
 
 ### Input
-- `na`
-- `ma`
-- `mc`
+- `na` -- Number of TPSAs in the map
+- `ma` -- Map ma
+
+### Output
+- `mc` -- Inversion of map ma
 """
 function mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
   @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
@@ -1817,13 +1826,15 @@ end
 """
     mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}}, select::Ptr{Cint})
 
-???
+Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 
 ### Input
-- `na`
-- `ma`
-- `mc`
-- `select`
+- `na`     -- Number of TPSAs in ma
+- `ma`     -- Map ma
+- `select` -- Array of 0s or 1s defining which variables to do inverse on (atleast same size as na)
+
+### Output
+- `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
 function mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}}, select::Ptr{Cint})
   @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}}, select::Ptr{Cint})::Cvoid
@@ -1833,14 +1844,16 @@ end
 """
     mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Composes two maps.
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `mb`
-- `mc`
+- `na` -- Number of TPSAs in map ma
+- `ma` -- Map ma
+- `nb` -- Number of TPSAs in map mb
+- `mb` -- Map mb
+
+### Output
+- `mc` -- Composition of maps ma and mb
 """
 function mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})
   @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, mb::Ptr{Ptr{RTPSA{Desc}}}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
@@ -1848,33 +1861,37 @@ end
 
 
 """
-    mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{RTPSA{Desc}})
+    mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA{Desc}}})
 
-???
+Translates the expansion point of the map by the amount tb.
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `tb`
-- `mc`
+- `na` -- Number of TPSAS in the map
+- `ma` -- Map ma
+- `nb` -- Length of tb
+- `tb` -- Vector of amount to translate for each varaible
+
+### Output
+- `mc` -- Map evaluated at the new point translated tb from the original evaluation point
 """
-function mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{RTPSA{Desc}})
-  @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{RTPSA{Desc}})::Cvoid
+function mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA{Desc}}})
+  @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA{Desc}}})::Cvoid
 end
 
 
 """
     mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})
 
-???
+Evaluates the map at the point tb
 
 ### Input
-- `na`
-- `ma`
-- `nb`
-- `tb`
-- `tc`
+- `na` -- Number of TPSAs in the map
+- `ma` -- Map ma
+- `nb` -- Length of tb
+- `tb` -- Point at which to evaluate the map
+
+### Output
+- `tc` -- Values for each TPSA in the map evaluated at the point tb
 """
 function mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})::Cvoid
@@ -1884,16 +1901,18 @@ end
 """
     mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{RTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
 
-???
+Equivalent to mad_tpsa_convert, but applies the conversion to all TPSAs in the map ma.
 
 ### Input
-- `na`
-- `ma`
-- `nc`
-- `mc`
-- `n`
-- `t2r_`
-- `pb`
+- `na`   -- Number of TPSAs in the map
+- `ma`   -- Map ma
+- `nc`   -- Number of TPSAs in the output map mc
+- `n`    -- Length of vector (size of t2r_)
+- `t2r_` -- (Optional) Vector of index lookup
+- `pb`   -- Poisson bracket, 0,1:fwd,-1:bwd
+
+### Output
+- `mc`   -- Map mc with specified conversions 
 """
 function mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{RTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{RTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
@@ -1936,7 +1955,7 @@ end
 
 
 """
-    mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+    mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
 
 Read TPSA header. Returns descriptor for TPSA given the header. This is useful for external languages using 
 this library where the memory is managed NOT on the C side.
@@ -1949,8 +1968,8 @@ this library where the memory is managed NOT on the C side.
 ### Output
 - `ret`     -- Descriptor for the TPSA 
 """
-function mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
-  desc = @ccall MAD_TPSA.mad_tpsa_scan_hdr(kind_::Cint, name_::Cstring, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+function mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
+  desc = @ccall MAD_TPSA.mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc{RTPSA,CTPSA}}
   return ret
 end
 
