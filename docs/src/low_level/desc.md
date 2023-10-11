@@ -4,7 +4,6 @@ mad_desc_newv
 mad_desc_newvp
 mad_desc_newvpo
 mad_desc_del!(::Ptr{Desc{RTPSA,CTPSA}})
-mad_desc_del!(::Ptr{Cvoid})
 mad_desc_getnv!
 mad_desc_maxord
 mad_desc_maxlen
