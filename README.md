@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/bmad-sim/TPSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/TPSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 ## Setup for Development
 First, the shared C library for MAD_TPSA must be compiled for Julia to call the C functions. Follow the corresponding instructions depending on your machine:
-### Linux C Library Compilation
+### Linux Shared C Library Compilation
 In any directory:
 ```
 git clone https://github.com/mattsignorelli/mad_tpsa.git
