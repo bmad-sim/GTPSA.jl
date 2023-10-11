@@ -3,9 +3,8 @@
 # https://github.com/MethodicalAcceleratorDesign/MAD
 #
 # Known accepted disagreements:
-# mad_desc_del: Extra multiply-dispatched implementation in Julia for C_NULL parameter
 # mad_ctpsa_equt: tol_ in TPSA.jl is correct vs tol in mad_ctpsa.H
-# mad_ctpsa_unit: C code has two equivalent function declarations with x and t. TPSA.jl correct
+# mad_ctpsa_unit: C code has two equivalent function declarations with x and t. TPSA.jl is correct
 # mad_tpsa_ordv: Splats in Julia have names, C they do not, so script will show disagreements
 # mad_ctpsa_ordv: Same as for mad_tpsa_ordv
 

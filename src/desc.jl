@@ -71,16 +71,6 @@ function mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
   @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
 end
 
-"""
-    mad_desc_del!(d_::Ptr{Cvoid})
-
-Calls the destructor for all existing descriptors. Defined to allow C_NULL pointers
-
-"""
-function mad_desc_del!(d_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Cvoid})::Cvoid
-end
-
 
 """
     mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar)::Cint

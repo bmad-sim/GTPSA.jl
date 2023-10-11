@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate("../../TPSA")
+Pkg.activate("../../TPSA.jl")
 Pkg.instantiate()
 using TPSA
 using Documenter, TPSA
