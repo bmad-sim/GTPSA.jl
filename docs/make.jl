@@ -1,6 +1,5 @@
 using Pkg
-include("../src/TPSA.jl")
-using Documenter, .TPSA
+using Documenter, TPSA
 
 makedocs(
   sitename="TPSA.jl",
