@@ -1,6 +1,6 @@
 # TPSA.jl
 
-A Julia interface to L. Deniau's Generalized Truncated Power Series Algebra module (MAD TPSA)
+Julia interface to the Generalised Truncated Power Series Algebra library MAD TPSA
 
 ```@contents
 Pages = 
