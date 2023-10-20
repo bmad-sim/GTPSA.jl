@@ -4,4 +4,4 @@ This package provides a full-featured Julia interface to the Generalised Truncat
 
 Currently, the first layer is complete, and development of the second layer is in progress.
 
-For instructions on using TPSA.jl in its present development stage, see *Setup for Development* at ["https://bmad-sim.github.io/TPSA.jl/"].
+For instructions on using TPSA.jl in its present development stage, see *Setup for Development* at https://bmad-sim.github.io/TPSA.jl/.
