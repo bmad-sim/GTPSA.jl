@@ -1,5 +1,5 @@
 using Pkg
-using Documenter, TPSA
+using Documenter, GTPSA
 
 makedocs(
   sitename="GTPSA.jl",
