@@ -1,4 +1,4 @@
-module TPSA
+module GTPSA
 
 import Base: *
 
@@ -348,72 +348,110 @@ const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 
+struct Desc{T,C}      
+  id::Cint                        # index in list of registered descriptors
+  nn::Cint                        # nn = nv+np <= 100000
+  nv::Cint                        # nv = number of variables
+  np::Cint                        # np = number of parameters
+  mo::Cuchar                      # max orders of vars
+  po::Cuchar                      # max orders of params
+  to::Cuchar                      # global order of truncation. Note ord_t in mad_tpsa is typedef for unsigned char (Cuchar)
+  no::Ptr{Cuchar}                 # orders of each vars and params, no[nn]. In C this is const
+
+  uno::Cint                       # user provided no
+  nth::Cint                       # max #threads or 1
+  nc::Cuint                       # number of coefs (max length of TPSA)
+
+  monos::Ptr{Cuchar}              # 'matrix' storing the monomials (sorted by var)
+  ords::Ptr{Cuchar}               # Order of each mono of To
+  To::Ptr{Ptr{Cuchar}}            # Table by orders -- pointers to monos, sorted by order
+  Tv::Ptr{Ptr{Cuchar}}            # Table by vars   -- pointers to monos, sorted by vars
+  ocs::Ptr{Ptr{Cuchar}}           # ocs[t,i] -> o; in mul, compute o on thread t; 3 <= o <= mo; terminated with 0
+
+  ord2idx::Ptr{Cint}              # order to polynomial start index in To (i.e. in TPSA coef[])
+  tv2to::Ptr{Cint}                # lookup tv->to
+  to2tv::Ptr{Cint}                # lookup to->tv
+  H::Ptr{Cint}                    # indexing matrix in Tv
+  L::Ptr{Ptr{Cint}}               # multiplication indexes L[oa,ob]->L_ord; L_ord[ia,ib]->ic
+  L_idx::Ptr{Ptr{Ptr{Cint}}}      # L_idx[oa,ob]->[start] [split] [end] idxs in L
+
+  size::Culonglong                # bytes used by desc. Unsigned Long Int, ikn 32 bit system is int32 but 64 bit int64. Using Culonglong assuming 64 bit
+
+  t::Ptr{Ptr{T}}                  # tmp for tpsa
+  ct::Ptr{Ptr{C}}                 # tmp for ctpsa
+  ti::Ptr{Cint}                   # idx of tmp ised
+  cti::Ptr{Cint}                  # idx of tmp used
+end
+
 mutable struct RTPSA{T}
-  d::Ptr{T}                      # Ptr to tpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
+  d::Ptr{T}                       # Ptr to tpsa descriptor
+  uid::Cint                       # Special user field for external use (and padding)
+  mo::Cuchar                      # max ord (allocated)
+  lo::Cuchar                      # lowest used ord
+  hi::Cuchar                      # highest used ord
+  nz::Culonglong                  # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
   nam::NTuple{NAMSZ,Cuchar}       # tpsa name max string length 16 NAMSZ
-  coef::Ptr{Cdouble}     # warning: must be identical to ctpsa up to coef excluded
+  coef::Ptr{Cdouble}              # warning: must be identical to ctpsa up to coef excluded
 end
 
 mutable struct CTPSA{T}
-  d::Ptr{T}                         # Ptr to ctpsa descriptor
-  uid::Cint                 # Special user field for external use (and padding)
-  mo::Cuchar                # max ord (allocated)
-  lo::Cuchar                # lowest used ord
-  hi::Cuchar                # highest used ord
-  nz::Culonglong            # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
+  d::Ptr{T}                       # Ptr to ctpsa descriptor
+  uid::Cint                       # Special user field for external use (and padding)
+  mo::Cuchar                      # max ord (allocated)
+  lo::Cuchar                      # lowest used ord
+  hi::Cuchar                      # highest used ord
+  nz::Culonglong                  # zero/nonzero homogenous polynomials. Int64 if 64 bit else 32 bit
   nam::NTuple{NAMSZ,Cuchar}       # tpsa name
-  coef::Ptr{ComplexF64}  # warning: must be identical to ctpsa up to coef excluded
-end
-
-struct Desc{T,C}
-  id::Cint                  # index in list of registered descriptors
-  nn::Cint                  # nn = nv+np <= 100000
-  nv::Cint                  # nv = number of variables
-  np::Cint                  # np = number of parameters
-  mo::Cuchar                # max orders of vars
-  po::Cuchar                # max orders of params
-  to::Cuchar                # global order of truncation. Note ord_t in mad_tpsa is typedef for unsigned char (Cuchar)
-  no::Ptr{Cuchar}           # orders of each vars and params, no[nn]. In C this is const
-
-  uno::Cint                 # user provided no
-  nth::Cint                 # max #threads or 1
-  nc::Cuint                 # number of coefs (max length of TPSA)
-
-  monos::Ptr{Cuchar}        # 'matrix' storing the monomials (sorted by var)
-  ords::Ptr{Cuchar}         # Order of each mono of To
-  To::Ptr{Ptr{Cuchar}}      # Table by orders -- pointers to monos, sorted by order
-  Tv::Ptr{Ptr{Cuchar}}      # Table by vars   -- pointers to monos, sorted by vars
-  ocs::Ptr{Ptr{Cuchar}}     # ocs[t,i] -> o; in mul, compute o on thread t; 3 <= o <= mo; terminated with 0
-
-  ord2idx::Ptr{Cint}      # order to polynomial start index in To (i.e. in TPSA coef[])
-  tv2to::Ptr{Cint}          # lookup tv->to
-  to2tv::Ptr{Cint}          # lookup to->tv
-  H::Ptr{Cint}              # indexing matrix in Tv
-  L::Ptr{Ptr{Cint}}         # multiplication indexes L[oa,ob]->L_ord; L_ord[ia,ib]->ic
-  L_idx::Ptr{Ptr{Ptr{Cint}}}  # L_idx[oa,ob]->[start] [split] [end] idxs in L
-
-  size::Culonglong          # bytes used by desc. Unsigned Long Int, ikn 32 bit system is int32 but 64 bit int64. Using Culonglong assuming 64 bit
-
-  t::Ptr{Ptr{T}}              # tmp for tpsa
-  ct::Ptr{Ptr{C}}             # tmp for ctpsa
-  ti::Ptr{Cint}          # idx of tmp ised
-  cti::Ptr{Cint}         # idx of tmp used
+  coef::Ptr{ComplexF64}           # warning: must be identical to ctpsa up to coef excluded
 end
 
 # High-Level Wrapper Structs
-struct Descriptor
+mutable struct Descriptor
   desc::Ptr{Desc{RTPSA,CTPSA}}
 
+  """
+    Descriptor(nv::Int, mo::Int)
+
+  Creates a TPSA Descriptor with nv variables of maximum order mo.
+  """
   function Descriptor(nv::Int, mo::Int)
-    new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+    d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+    f(t) = mad_desc_del!(t.desc)
+    finalizer(f,d)
+  end
+
+
+  """
+    Descriptor(nv::Int, mo::Int, np::Int, po::Int)
+
+  Creates a TPSA Descriptor with nv variables of maximum order mo, and np parameters
+  of maximum order po.
+  """
+  function Descriptor(nv::Int, mo::Int, np::Int, po::Int)
+    d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
+    f(t) = mad_desc_del!(t.desc)
+    finalizer(f,d)
+  end
+
+
+  """
+    Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
+  
+  Creates a TPSA Descriptor with nv variables of maximum order mo, np parameters of 
+  maximum order po (<= mo), and the individual variable/parameter orders specified 
+  in no. 
+  """
+  function Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
+    d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+    f(t) = mad_desc_del!(t.desc)
+    finalizer(f,d)
   end
 end
 
+mutable struct TPSAa
+  tpsa::Ptr{RTPSA{Desc}}
+
+end
 
 
 # Operators
@@ -422,7 +460,6 @@ function *(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}})::Ptr{RTPSA{Desc}}
   mad_tpsa_mul!(a, b, c)
   return c
 end
-
 
 
 include("mono.jl")

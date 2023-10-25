@@ -1,7 +1,7 @@
 using Pkg
-Pkg.activate("../../TPSA.jl")
+Pkg.activate("../../GTPSA.jl")
 Pkg.instantiate()
-using TPSA
+using GTPSA
 # descriptor for TPSA with 4 variables  of order 4 and
 #                          2 parameters of order 3
 d = mad_desc_newvp(Int32(4), 0x4, Int32(2), 0x3)

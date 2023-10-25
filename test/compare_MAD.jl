@@ -1,10 +1,10 @@
-# Julia script to compare current TPSA.jl with latest
+# Julia script to compare current GTPSA.jl with latest
 # MAD_TPSA code from the MAD Git repo:
 # https://github.com/MethodicalAcceleratorDesign/MAD
 #
 # Known accepted disagreements:
-# mad_ctpsa_equt: tol_ in TPSA.jl is correct vs tol in mad_ctpsa.H
-# mad_ctpsa_unit: C code has two equivalent function declarations with x and t. TPSA.jl is correct
+# mad_ctpsa_equt: tol_ in GTPSA.jl is correct vs tol in mad_ctpsa.H
+# mad_ctpsa_unit: C code has two equivalent function declarations with x and t. GTPSA.jl is correct
 # mad_tpsa_ordv: Splats in Julia have names, C they do not, so script will show disagreements
 # mad_ctpsa_ordv: Same as for mad_tpsa_ordv
 
@@ -43,7 +43,7 @@ function compare(fun_decs_c, fun_decs_jl)
   for fun_c in funs_c
     # println(io_out, "Checking $(fun_c.name)")
     if isempty(findall(x->x==fun_c.name, names_jl))
-      println(io_out, "$(fun_c.name) not found in TPSA.jl!")
+      println(io_out, "$(fun_c.name) not found in GTPSA.jl!")
       continue
     end
     idx_jl = findall(x->x==fun_c.name, names_jl)[1]
@@ -67,7 +67,7 @@ function compare(fun_decs_c, fun_decs_jl)
   idxs_leftover = findall(x->x==0, used)
   for leftover in idxs_leftover
     fun_c = funs_jl[leftover]
-    println(io_out, "$(fun_c.name) found in TPSA.jl, but not MAD_TPSA!")
+    println(io_out, "$(fun_c.name) found in GTPSA.jl, but not MAD_TPSA!")
   end
 end
 
@@ -239,7 +239,7 @@ function get_jl_function_declarations(str)
     line = lines[i]
 
     # Check if line contains a function declaration
-    if occursin("(", line) && !occursin("ccall", line)
+    if occursin("function ", line) # && !occursin("ccall", line)
       full_line = strip(line)
       line = line
       while (!occursin(")", full_line))
