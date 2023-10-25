@@ -10,6 +10,8 @@
 
 using Downloads
 
+const io_out = IOBuffer()
+
 struct FunctionInfo
   name::String
   ret::String
@@ -22,7 +24,7 @@ function compare(fun_decs_c, fun_decs_jl)
   funs_jl = []
 
   for fun in fun_decs_c
-    #println("Getting info for $(fun)")
+    #println(io_out, "Getting info for $(fun)")
     name, ret, vars, types = get_c_fun_info(fun)
     fun_info = FunctionInfo(name, ret, vars, types)
     push!(funs_c, fun_info)
@@ -39,9 +41,9 @@ function compare(fun_decs_c, fun_decs_jl)
   used = BitArray(undef, length(names_jl))
 
   for fun_c in funs_c
-    # println("Checking $(fun_c.name)")
+    # println(io_out, "Checking $(fun_c.name)")
     if isempty(findall(x->x==fun_c.name, names_jl))
-      println("$(fun_c.name) not found in TPSA.jl!")
+      println(io_out, "$(fun_c.name) not found in TPSA.jl!")
       continue
     end
     idx_jl = findall(x->x==fun_c.name, names_jl)[1]
@@ -49,14 +51,14 @@ function compare(fun_decs_c, fun_decs_jl)
     used[idx_jl] = 1
     types_c_to_jl = c_to_jl_type.(fun_c.types)
     if (c_to_jl_type(fun_c.ret) != fun_jl.ret)
-      println("$(fun_c.name): Different returns types! C: $(fun_c.ret) => $(c_to_jl_type(fun_c.ret)) not equal to Julia $(fun_jl.ret)")
+      println(io_out, "$(fun_c.name): Different returns types! C: $(fun_c.ret) => $(c_to_jl_type(fun_c.ret)) not equal to Julia $(fun_jl.ret)")
     end
     if (length(fun_c.types) != length(fun_jl.types))
-      println("$(fun_c.name): Number of C variables different from number of Julia variables! Skipping variable check...")
+      println(io_out, "$(fun_c.name): Number of C variables different from number of Julia variables! Skipping variable check...")
     else
       for i = 1:length(fun_c.types)
         if "$(fun_c.vars[i])::$(types_c_to_jl[i])" != "$(fun_jl.vars[i])::$(fun_jl.types[i])"
-          println("$(fun_c.name): Variable in C $(fun_c.types[i]) $(fun_c.vars[i]) => $(fun_c.vars[i])::$(types_c_to_jl[i]) not equal to Julia $(fun_jl.vars[i])::$(fun_jl.types[i])")
+          println(io_out, "$(fun_c.name): Variable in C $(fun_c.types[i]) $(fun_c.vars[i]) => $(fun_c.vars[i])::$(types_c_to_jl[i]) not equal to Julia $(fun_jl.vars[i])::$(fun_jl.types[i])")
         end
       end
     end
@@ -65,7 +67,7 @@ function compare(fun_decs_c, fun_decs_jl)
   idxs_leftover = findall(x->x==0, used)
   for leftover in idxs_leftover
     fun_c = funs_jl[leftover]
-    println("$(fun_c.name) found in TPSA.jl, but not MAD_TPSA!")
+    println(io_out, "$(fun_c.name) found in TPSA.jl, but not MAD_TPSA!")
   end
 end
 
@@ -106,7 +108,7 @@ function c_to_jl_type(type_c)
   elseif occursin("void", type_c)
     type_jl = type_jl * "Cvoid"
   else
-    println("ERROR TYPE NOT FOUND! type_c = $(type_c)")
+    println(io_out, "ERROR TYPE NOT FOUND! type_c = $(type_c)")
   end
   for i=1:dim
     type_jl = type_jl * "}"
@@ -313,75 +315,76 @@ function get_c_function_declarations(str)
   return fun_decs
 end
 
+function compare_MAD()
+  io = IOBuffer()
 
-io = IOBuffer()
+  try
+    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_mono.h", io)
+    println(io_out, "mad_mono.h downloaded.")
+  catch e
+    println(io_out, "Error downloading mad_mono.h")
+    showerror(stdout, e)
+  end
 
-try
-  Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_mono.h", io)
-  println("mad_mono.h downloaded.")
-catch e
-  println("Error downloading mad_mono.h")
-  showerror(stdout, e)
+  str = String(take!(io))
+  fun_decs_c  = get_c_function_declarations(str)
+
+  str = read("../src/mono.jl", String)
+  fun_decs_jl = get_jl_function_declarations(str)
+  println(io_out, "Comparing mad_mono.h to mono.jl...")
+  compare(fun_decs_c, fun_decs_jl)
+
+
+  try
+    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_desc.h", io)
+    println(io_out, "mad_desc.h downloaded.")
+  catch e
+    println(io_out, "Error downloading mad_desc.h")
+    showerror(stdout, e)
+  end
+
+  str = String(take!(io))
+  fun_decs_c  = get_c_function_declarations(str)
+
+  str = read("../src/desc.jl", String)
+  fun_decs_jl = get_jl_function_declarations(str)
+  println(io_out, "Comparing mad_desc.h to desc.jl...")
+  compare(fun_decs_c, fun_decs_jl)
+
+
+  try
+    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_tpsa.h", io)
+    println(io_out, "mad_tpsa.h downloaded.")
+  catch e
+    println(io_out, "Error downloading mad_tpsa.h")
+    showerror(stdout, e)
+  end
+
+  str = String(take!(io))
+  fun_decs_c  = get_c_function_declarations(str)
+
+  str = read("../src/rtpsa.jl", String)
+  fun_decs_jl = get_jl_function_declarations(str)
+  println(io_out, "Comparing mad_tpsa.h to rtpsa.jl...")
+  compare(fun_decs_c, fun_decs_jl)
+
+  try
+    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_ctpsa.h", io)
+    println(io_out, "mad_ctpsa.h downloaded.")
+  catch e
+    println(io_out, "Error downloading mad_ctpsa.h")
+    showerror(stdout, e)
+  end
+
+  str = String(take!(io))
+  fun_decs_c  = get_c_function_declarations(str)
+
+  str = read("../src/ctpsa.jl", String)
+  fun_decs_jl = get_jl_function_declarations(str)
+  println(io_out, "Comparing mad_ctpsa.h to ctpsa.jl...")
+  compare(fun_decs_c, fun_decs_jl)
+
+  return String(take!(io_out))
 end
-
-str = String(take!(io))
-fun_decs_c  = get_c_function_declarations(str)
-
-str = read("mono.jl", String)
-fun_decs_jl = get_jl_function_declarations(str)
-println("Comparing mad_mono.h to mono.jl...")
-compare(fun_decs_c, fun_decs_jl)
-
-
-try
-  Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_desc.h", io)
-  println("mad_desc.h downloaded.")
-catch e
-  println("Error downloading mad_desc.h")
-  showerror(stdout, e)
-end
-
-str = String(take!(io))
-fun_decs_c  = get_c_function_declarations(str)
-
-str = read("desc.jl", String)
-fun_decs_jl = get_jl_function_declarations(str)
-println("Comparing mad_desc.h to desc.jl...")
-compare(fun_decs_c, fun_decs_jl)
-
-
-try
-  Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_tpsa.h", io)
-  println("mad_tpsa.h downloaded.")
-catch e
-  println("Error downloading mad_tpsa.h")
-  showerror(stdout, e)
-end
-
-str = String(take!(io))
-fun_decs_c  = get_c_function_declarations(str)
-
-str = read("rtpsa.jl", String)
-fun_decs_jl = get_jl_function_declarations(str)
-println("Comparing mad_tpsa.h to rtpsa.jl...")
-compare(fun_decs_c, fun_decs_jl)
-
-try
-  Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_ctpsa.h", io)
-  println("mad_ctpsa.h downloaded.")
-catch e
-  println("Error downloading mad_ctpsa.h")
-  showerror(stdout, e)
-end
-
-str = String(take!(io))
-fun_decs_c  = get_c_function_declarations(str)
-
-str = read("ctpsa.jl", String)
-fun_decs_jl = get_jl_function_declarations(str)
-println("Comparing mad_ctpsa.h to ctpsa.jl...")
-compare(fun_decs_c, fun_decs_jl)
-
-
 
 #end=#
