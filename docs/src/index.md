@@ -1,4 +1,4 @@
-# TPSA.jl
+# GTPSA.jl
 
 Julia interface to the Generalised Truncated Power Series Algebra library MAD TPSA
 

@@ -1,8 +1,8 @@
 using Pkg
-using Documenter, TPSA
+using Documenter, GTPSA
 
 makedocs(
-  sitename="TPSA.jl",
+  sitename="GTPSA.jl",
   authors = "Matt Signorelli",
   format=Documenter.HTMLWriter.HTML(size_threshold = nothing),
   pages = 
@@ -19,4 +19,4 @@ makedocs(
   ]
 )
 
-deploydocs(; repo = "github.com/bmad-sim/TPSA.jl.git")
+deploydocs(; repo = "github.com/bmad-sim/GTPSA.jl.git")

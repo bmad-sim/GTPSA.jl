@@ -1,7 +1,7 @@
 using Pkg
-Pkg.activate("../../TPSA.jl")
+Pkg.activate("../../GTPSA.jl")
 Pkg.instantiate()
-using TPSA
+using GTPSA
 
 # descriptor for TPSA with 6 variables of order 3,3,2,2,1,1
 d = mad_desc_newvpo(Int32(6), 0x0, Int32(0), 0x0, Base.unsafe_convert(Ptr{UInt8}, [0x3, 0x3, 0x2, 0x2, 0x1, 0x1]))

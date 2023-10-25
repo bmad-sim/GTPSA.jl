@@ -1,7 +1,7 @@
 using Pkg
-Pkg.activate("../../TPSA.jl")
+Pkg.activate("../../GTPSA.jl")
 Pkg.instantiate()
-using TPSA
+using GTPSA
 
 d = mad_desc_newv(Int32(6), 0x4)
 

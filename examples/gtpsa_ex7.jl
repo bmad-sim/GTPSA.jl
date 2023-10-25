@@ -1,7 +1,7 @@
 using Pkg
-Pkg.activate("../../TPSA.jl")
+Pkg.activate("../../GTPSA.jl")
 Pkg.instantiate()
-using TPSA
+using GTPSA
 using Printf
 
 # descriptor for TPSA with 2 variables of order 63 (max) and 1 parameter order 1
