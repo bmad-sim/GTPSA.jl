@@ -1,6 +1,6 @@
 module GTPSA
 
-import Base: *
+import Base: *, print
 
 export
   # Constants:
@@ -8,6 +8,7 @@ export
   MAD_TPSA, 
   MAD_TPSA_DEFAULT, 
   MAD_TPSA_SAME,
+  MAD_DESC_CURR,
   
   # Julia Structs:
   RTPSA,
@@ -340,13 +341,16 @@ export
   mad_ctpsa_init!,
 
   Descriptor,
-  *
+  TPSA,
+  *,
+  print
 
 const NAMSZ::Int = 16
 
 const MAD_TPSA = :("libmad_tpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
+const MAD_DESC_CURR::Ptr{Nothing} = C_NULL
 
 struct Desc{T,C}      
   id::Cint                        # index in list of registered descriptors
@@ -416,7 +420,7 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int)
     d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
-    f(t) = mad_desc_del!(t.desc)
+    f(x) = mad_desc_del!(x.desc)
     finalizer(f,d)
   end
 
@@ -429,7 +433,7 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int, np::Int, po::Int)
     d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
-    f(t) = mad_desc_del!(t.desc)
+    f(x) = mad_desc_del!(x.desc)
     finalizer(f,d)
   end
 
@@ -443,21 +447,45 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
     d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
-    f(t) = mad_desc_del!(t.desc)
+    f(x) = mad_desc_del!(x.desc)
     finalizer(f,d)
   end
 end
 
-mutable struct TPSAa
+
+mutable struct TPSA
   tpsa::Ptr{RTPSA{Desc}}
 
+  function TPSA()
+    t = new(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+    f(x) = mad_tpsa_del!(x.tpsa)
+    finalizer(f,t)
+  end
+
+  function TPSA(d::Descriptor)
+    t = new(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+    f(x) = mad_tpsa_del!(x.tpsa)
+    finalizer(f,t)
+  end
+
+  function TPSA(t1::TPSA)
+    t = new(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+    f(x) = mad_tpsa_del!(x.tpsa)
+    finalizer(f,t)
+  end
+end
+
+function print(t::TPSA)
+  mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
 
-# Operators
-function *(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}})::Ptr{RTPSA{Desc}}
-  c = mad_tpsa_new(a, MAD_TPSA_SAME)
-  mad_tpsa_mul!(a, b, c)
+# Operators. Note in mad_tpsa.hpp, the output TPSA is created from TPSA a
+
+# Multiply
+function *(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_mul!(a.tpsa, b.tpsa, c.tpsa)
   return c
 end
 
