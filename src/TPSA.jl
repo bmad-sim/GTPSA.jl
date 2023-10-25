@@ -1,4 +1,7 @@
 module TPSA
+
+import Base: *
+
 export
   # Constants:
   NAMSZ,
@@ -334,7 +337,10 @@ export
   mad_ctpsa_scan_coef!,
   mad_ctpsa_debug,
   mad_ctpsa_isvalid,
-  mad_ctpsa_init!
+  mad_ctpsa_init!,
+
+  Descriptor,
+  *
 
 const NAMSZ::Int = 16
 
@@ -398,6 +404,25 @@ struct Desc{T,C}
   ti::Ptr{Cint}          # idx of tmp ised
   cti::Ptr{Cint}         # idx of tmp used
 end
+
+# High-Level Wrapper Structs
+struct Descriptor
+  desc::Ptr{Desc{RTPSA,CTPSA}}
+
+  function Descriptor(nv::Int, mo::Int)
+    new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+  end
+end
+
+
+
+# Operators
+function *(a::Ptr{RTPSA{Desc}}, b::Ptr{RTPSA{Desc}})::Ptr{RTPSA{Desc}}
+  c = mad_tpsa_new(a, MAD_TPSA_SAME)
+  mad_tpsa_mul!(a, b, c)
+  return c
+end
+
 
 
 include("mono.jl")
