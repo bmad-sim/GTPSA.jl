@@ -35,7 +35,9 @@ import Base:  *,
               # asinhc,
               # erf   ,
               # erfc  ,
-              print
+              print,
+              zero,
+              getproperty
 
 export
   # Constants:
@@ -455,8 +457,9 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int)
     d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
-    f(x) = mad_desc_del!(x.desc)
-    finalizer(f,d)
+    # f(x) = mad_desc_del!(x.desc)
+    # finalizer(f,d)
+    return d
   end
 
 
@@ -468,8 +471,9 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int, np::Int, po::Int)
     d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
-    f(x) = mad_desc_del!(x.desc)
-    finalizer(f,d)
+    # f(x) = mad_desc_del!(x.desc)
+    # finalizer(f,d)
+    return d
   end
 
 
@@ -482,8 +486,9 @@ mutable struct Descriptor
   """
   function Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
     d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
-    f(x) = mad_desc_del!(x.desc)
-    finalizer(f,d)
+    # f(x) = mad_desc_del!(x.desc)
+    # finalizer(f,d)
+    return d
   end
 end
 
@@ -493,20 +498,23 @@ mutable struct TPSA
 
   function TPSA()
     t = new(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
+    # f(x) = mad_tpsa_del!(x.tpsa)
+    # finalizer(f,t)
+    return t
   end
 
   function TPSA(d::Descriptor)
     t = new(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
+    # f(x) = mad_tpsa_del!(x.tpsa)
+    # finalizer(f,t)
+    return t
   end
 
   function TPSA(t1::TPSA)
     t = new(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
+    # f(x) = mad_tpsa_del!(x.tpsa)
+    # finalizer(f,t)
+    return t
   end
 end
 
@@ -514,7 +522,7 @@ function print(t::TPSA)
   mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
-#=
+
 # Allows one to access low level stuff in the TPSA
 function getproperty(t::TPSA, p::Symbol)
   if p == :d
@@ -537,7 +545,7 @@ function getproperty(t::TPSA, p::Symbol)
     return getfield(t, p)
   end
 end
-=#
+
 
 # Unary
 @inline function +(a::TPSA)::TPSA
@@ -1018,6 +1026,11 @@ inline T F (const T &a) { TRC("tmp") \
 @FUN("asinhc")
 @FUN("erf"  )
 @FUN("erfc"  )
+
+# For linear algebra these
+function zero(a::TPSA)
+  return TPSA()
+end
 
 
 include("mono.jl")
