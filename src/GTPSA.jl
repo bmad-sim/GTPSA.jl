@@ -1,6 +1,41 @@
 module GTPSA
 
-import Base: *, print
+import Base:  *, 
+              +,
+              -,
+              *,
+              /,
+              ^,
+              atan,
+              hypot,
+              abs   ,
+              # unit  ,
+              sqrt  ,
+              exp   ,
+              log   ,
+              sin   ,
+              cos   ,
+              tan   ,
+              cot   ,
+              sinc  ,
+              sinh  ,
+              cosh  ,
+              tanh  ,
+              coth  ,
+              # sinhc ,
+              asin  ,
+              acos  ,
+              atan  ,
+              acot  ,
+              # asinc ,
+              asinh ,
+              acosh ,
+              atanh ,
+              acoth ,
+              # asinhc,
+              # erf   ,
+              # erfc  ,
+              print
 
 export
   # Constants:
@@ -343,14 +378,9 @@ export
   Descriptor,
   TPSA,
   *,
-  print
-
-const NAMSZ::Int = 16
-
-const MAD_TPSA = :("libmad_tpsa")
-const MAD_TPSA_DEFAULT::Cuchar = 255
-const MAD_TPSA_SAME::Cuchar = 254
-const MAD_DESC_CURR::Ptr{Nothing} = C_NULL
+  print,
+  getproperty
+  const NAMSZ::Int = 16
 
 struct Desc{T,C}      
   id::Cint                        # index in list of registered descriptors
@@ -370,13 +400,13 @@ struct Desc{T,C}
   ords::Ptr{Cuchar}               # Order of each mono of To
   To::Ptr{Ptr{Cuchar}}            # Table by orders -- pointers to monos, sorted by order
   Tv::Ptr{Ptr{Cuchar}}            # Table by vars   -- pointers to monos, sorted by vars
-  ocs::Ptr{Ptr{Cuchar}}           # ocs[t,i] -> o; in mul, compute o on thread t; 3 <= o <= mo; terminated with 0
+  ocs::Ptr{Ptr{Cuchar}}           # ocs[t,i] -> o in mul, compute o on thread t 3 <= o <= mo terminated with 0
 
   ord2idx::Ptr{Cint}              # order to polynomial start index in To (i.e. in TPSA coef[])
   tv2to::Ptr{Cint}                # lookup tv->to
   to2tv::Ptr{Cint}                # lookup to->tv
   H::Ptr{Cint}                    # indexing matrix in Tv
-  L::Ptr{Ptr{Cint}}               # multiplication indexes L[oa,ob]->L_ord; L_ord[ia,ib]->ic
+  L::Ptr{Ptr{Cint}}               # multiplication indexes L[oa,ob]->L_ord L_ord[ia,ib]->ic
   L_idx::Ptr{Ptr{Ptr{Cint}}}      # L_idx[oa,ob]->[start] [split] [end] idxs in L
 
   size::Culonglong                # bytes used by desc. Unsigned Long Int, ikn 32 bit system is int32 but 64 bit int64. Using Culonglong assuming 64 bit
@@ -387,7 +417,7 @@ struct Desc{T,C}
   cti::Ptr{Cint}                  # idx of tmp used
 end
 
-mutable struct RTPSA{T}
+struct RTPSA{T}
   d::Ptr{T}                       # Ptr to tpsa descriptor
   uid::Cint                       # Special user field for external use (and padding)
   mo::Cuchar                      # max ord (allocated)
@@ -398,7 +428,7 @@ mutable struct RTPSA{T}
   coef::Ptr{Cdouble}              # warning: must be identical to ctpsa up to coef excluded
 end
 
-mutable struct CTPSA{T}
+struct CTPSA{T}
   d::Ptr{T}                       # Ptr to ctpsa descriptor
   uid::Cint                       # Special user field for external use (and padding)
   mo::Cuchar                      # max ord (allocated)
@@ -408,6 +438,11 @@ mutable struct CTPSA{T}
   nam::NTuple{NAMSZ,Cuchar}       # tpsa name
   coef::Ptr{ComplexF64}           # warning: must be identical to ctpsa up to coef excluded
 end
+
+const MAD_TPSA = :("libmad_tpsa")
+const MAD_TPSA_DEFAULT::Cuchar = 255
+const MAD_TPSA_SAME::Cuchar = 254
+const MAD_DESC_CURR::Ptr{Desc{RTPSA,CTPSA}} = C_NULL
 
 # High-Level Wrapper Structs
 mutable struct Descriptor
@@ -479,15 +514,510 @@ function print(t::TPSA)
   mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
+#=
+# Allows one to access low level stuff in the TPSA
+function getproperty(t::TPSA, p::Symbol)
+  if p == :d
+    return unsafe_load(t.tpsa).d
+  elseif p == :uid
+    return unsafe_load(t.tpsa).uid
+  elseif p == :mo
+    return unsafe_load(t.tpsa).mo
+  elseif p == :lo
+    return unsafe_load(t.tpsa).lo
+  elseif p == :hi
+    return unsafe_load(t.tpsa).hi
+  elseif p == :nz
+    return unsafe_load(t.tpsa).nz
+  elseif p == :nam
+    return unsafe_load(t.tpsa).nam
+  elseif p == :coef
+    return unsafe_load(t.tpsa).coef    # Needs modification
+  else
+    return getfield(t, p)
+  end
+end
+=#
 
-# Operators. Note in mad_tpsa.hpp, the output TPSA is created from TPSA a
-
-# Multiply
-function *(a::TPSA, b::TPSA)::TPSA
+# Unary
+@inline function +(a::TPSA)::TPSA
   c = TPSA(a)
-  mad_tpsa_mul!(a.tpsa, b.tpsa, c.tpsa)
   return c
 end
+
+@inline function -(a::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_scl!(a.tpsa, -1., c.tpsa)
+  return c
+end
+
+#=
+#if TPSA_USE_TMP
+
+@inline function + (const T &a) {  TRC("+tmp")
+  T c(a) return c
+}
+
+@inline function - (const T &a) {  TRC("-tmp")
+  T c(a) mad_tpsa_scl(c.tpsa, -1, c.tpsa) return c
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- add ---
+@inline function +(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_add!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+@inline function +(a::Float64, b::TPSA)::TPSA
+  c = TPSA(b)
+  mad_tpsa_copy!(b.tpsa, c.tpsa)
+  mad_tpsa_set0!(c.tpsa, 1., a)
+  return c
+end
+
+@inline function +(a::TPSA, b::Float64)::TPSA
+  return b+a
+end
+
+#=
+#if TPSA_USE_TMP
+
+
+@inline function + (a::TPSA, const T &b) {  TRC("baz+tmp")
+  T c(b) mad_tpsa_add(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+@inline function + (const T &a, b::TPSA) {  TRC("tmp+baz")
+  T c(a) mad_tpsa_add(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function + (const T &a, const T &b) {  TRC("tmp+tmp")
+  T c(a) mad_tpsa_add(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function + (num_t a, const T &b) {  TRC("num+tmp")
+  T c(b) mad_tpsa_set0(c.tpsa, 1, a) return c
+}
+
+@inline function + (const T &a, num_t b) {  TRC("tmp+num")
+  return b+a
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- sub ---
+@inline function -(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_sub!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+
+@inline function -(a::TPSA, b::Float64)::TPSA
+  c = TPSA(a)
+  mad_tpsa_copy!(a.tpsa, c.tpsa)
+  mad_tpsa_set0!(c.tpsa, 1., -b)
+  return c
+end
+
+
+@inline function -(a::Float64, b::TPSA)::TPSA
+  c = TPSA(b)
+  mad_tpsa_scl!(b.tpsa, -1., c.tpsa)
+  mad_tpsa_set0!(c.tpsa, 1., a)
+  return c
+end
+
+#=
+#if TPSA_USE_TMP
+
+
+@inline function - (a::TPSA, const T &b) {  TRC("baz-tmp")
+  T c(b) mad_tpsa_sub(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+@inline function - (const T &a, b::TPSA) {  TRC("tmp-baz")
+  T c(a) mad_tpsa_sub(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function - (const T &a, const T &b) {  TRC("tmp-tmp")
+  T c(a) mad_tpsa_sub(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function - (const T &a, num_t b) {  TRC("tmp-num")
+  T c(a) mad_tpsa_set0(c.tpsa, 1, -b) return c
+}
+
+@inline function - (num_t a, const T &b) {  TRC("num-tmp")
+  T c(b)
+  mad_tpsa_scl (c.tpsa,-1, c.tpsa)
+  mad_tpsa_set0(c.tpsa, 1, a)
+  return c
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- mul ---
+@inline function *(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_mul!(a.tpsa, b.tpsa, c.tpsa) 
+  return c
+end
+
+
+@inline function *(a::Float64, b::TPSA)::TPSA
+  c = TPSA(b)
+  mad_tpsa_scl!(b.tpsa, a, c.tpsa)
+  return c
+end
+
+
+@inline function *(a::TPSA, b::Float64)::TPSA
+  return b*a
+end
+
+#=
+
+#if TPSA_USE_TMP
+
+
+@inline function * (a::TPSA, const T &b) {  TRC("baz*tmp")
+  T c(b) mad_tpsa_mul(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+@inline function * (const T &a, b::TPSA) {  TRC("tmp*baz")
+  T c(a) mad_tpsa_mul(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function * (const T &a, const T &b) {  TRC("tmp*tmp")
+  T c(a) mad_tpsa_mul(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function *(num_t a, const T &b) { TRC("num*tmp")
+  T c(b) mad_tpsa_scl(c.tpsa, a, c.tpsa) return c
+}
+
+inline T
+operator* (const T &a, num_t b) {  TRC("tmp*num")
+  return b*a
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- div ---
+@inline function /(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_div!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+
+@inline function /(a::TPSA, b::Float64)::TPSA
+  c = TPSA(a)
+  mad_tpsa_scl!(a.tpsa, 1/b, c.tpsa)
+  return c
+end
+
+
+@inline function /(a::Float64, b::TPSA)::TPSA
+  c = TPSA(b)
+  mad_tpsa_inv!(b.tpsa, a, c.tpsa)
+  return c
+end
+
+#=
+#if TPSA_USE_TMP
+
+
+@inline function / (a::TPSA, const T &b) {  TRC("baz/tmp")
+  T c(b) mad_tpsa_div(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+@inline function / (const T &a, b::TPSA) {  TRC("tmp/baz")
+  T c(a) mad_tpsa_div(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function / (const T &a, const T &b) {  TRC("tmp/tmp")
+  T c(a) mad_tpsa_div(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+@inline function / (const T &a, num_t b) {  TRC("tmp/num")
+  T c(a) mad_tpsa_scl(c.tpsa, 1/b, c.tpsa) return c
+}
+
+@inline function / (num_t a, const T &b) {  TRC("num/tmp")
+  T c(b) mad_tpsa_inv(c.tpsa, a, c.tpsa) return c
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- pow ---
+@inline function ^(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_pow!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+
+@inline function ^(a::TPSA, b::Int64)::TPSA
+  c = TPSA(a) 
+  mad_tpsa_powi!(a.tpsa, convert(Cint, b), c.tpsa)
+  return c
+end
+
+
+@inline function ^(a::TPSA, b::Float64)::TPSA
+  c = TPSA(a)
+  mad_tpsa_pown!(a.tpsa, b, c.tpsa)
+  return c
+end
+
+
+@inline function ^(a::Float64, b::TPSA)::TPSA
+  c = TPSA(b)
+  mad_tpsa_scl!(b.tpsa, log(a), c.tpsa)
+  mad_tpsa_exp!(c.tpsa, c.tpsa)
+  return c
+end
+
+
+#=
+#if TPSA_USE_TMP
+
+
+inline T pow (a::TPSA, const T &b) {  TRC("baz^tmp")
+  T c(b) mad_tpsa_pow(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+inline T pow (const T &a, b::TPSA) {  TRC("tmp^baz")
+  T c(a) mad_tpsa_pow(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+inline T pow (const T &a, const T &b) {  TRC("tmp^tmp")
+  T c(a) mad_tpsa_pow(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+inline T pow (const T &a, int b) {  TRC("tmp^int")
+  T c(a) mad_tpsa_powi(c.tpsa, b, c.tpsa) return c
+}
+
+inline T pow (const T &a, num_t b) {  TRC("tmp^num")
+  T c(a) mad_tpsa_pown(c.tpsa, b, c.tpsa) return c
+}
+
+inline T pow (num_t a, const T &b) {  TRC("num^tmp")
+  T c(b)
+  mad_tpsa_scl(c.tpsa, log(a), c.tpsa)
+  mad_tpsa_exp(c.tpsa, c.tpsa)
+  return c
+}
+
+#endif // TPSA_USE_TMP
+
+=#
+
+# --- atan2, hypot ---
+@inline function atan(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_atan2!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+@inline function hypot(a::TPSA, b::TPSA)::TPSA
+  c = TPSA(a)
+  mad_tpsa_hypot!(a.tpsa, b.tpsa, c.tpsa)
+  return c
+end
+
+#=
+#if TPSA_USE_TMP
+
+
+inline T atan2 (a::TPSA, const T &b) {  TRC("baz,tmp")
+  T c(b) mad_tpsa_atan2(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+inline T atan2 (const T &a, b::TPSA) {  TRC("tmp,baz")
+  T c(a) mad_tpsa_atan2(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+inline T atan2 (const T &a, const T &b) {  TRC("tmp,tmp")
+  T c(a) mad_tpsa_atan2(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+
+inline T hypot (a::TPSA, const T &b) {  TRC("baz,tmp")
+  T c(b) mad_tpsa_hypot(a.tpsa, c.tpsa, c.tpsa) return c
+}
+
+
+inline T hypot (const T &a, b::TPSA) {  TRC("tmp,baz")
+  T c(a) mad_tpsa_hypot(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+inline T hypot (const T &a, const T &b) {  TRC("tmp,tmp")
+  T c(a) mad_tpsa_hypot(c.tpsa, b.tpsa, c.tpsa) return c
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+#=
+# --- I/O ---
+inline std::FILE* operator<< (std::FILE *out, a::TPSA) {
+  mad_tpsa_print(a.tpsa, 0,0,0, out) return out
+}
+
+inline std::FILE* operator<< (std::FILE *out, const tpsa_t &a) {
+  mad_tpsa_print(&a, 0,0,0, out) return out
+}
+
+inline std::FILE* operator>> (std::FILE *in, tpsa &a) {
+  T c(mad_tpsa_scan(in)) a = c return in
+}
+=#
+
+# --- swap --- (In Julia just do a, b = b, a)
+#=
+inline void swap (tpsa_ref &a, tpsa_ref &b) { TRC("ref") a.swp(b) }
+inline void swap (tpsa     &a, tpsa     &b) { TRC("tpa") a.swp(b) }
+inline void swap (num_t    &a, num_t    &b) { TRC("num") std::swap(a,b) }
+=#
+
+# --- functions ---
+#inline num_t fval   (num_t a           ) { TRC("num") return a }
+#inline num_t nrm    (num_t a           ) { TRC("num") return abs(a) }
+#inline num_t sqr    (num_t a           ) { TRC("num") return a*a }
+#inline num_t inv    (num_t a, num_t v=1) { TRC("num") return v/a }
+#inline num_t invsqrt(num_t a, num_t v=1) { TRC("num") return v/sqrt(a) }
+#inline num_t sinc   (num_t a           ) { TRC("num") return mad_num_sinc (a) }
+#inline num_t sinhc  (num_t a           ) { TRC("num") return mad_num_sinhc(a) }
+#inline num_t asinc  (num_t a           ) { TRC("num") return mad_num_asinc(a) }
+
+#=
+inline num_t fval(const tpsa_t *a) { TRC("tspa")
+  return mad_tpsa_get0(a)
+}
+
+
+inline num_t fval (a::TPSA) { TRC("baz")
+  return a[0]
+}
+
+inline num_t fabs (const tpsa_t *a) { TRC("tspa")
+  return abs(mad_tpsa_get0(a))
+}
+
+
+inline num_t fabs (a::TPSA) { TRC("baz")
+  return abs(a[0])
+}
+=#
+
+@inline function norm(a::TPSA)::Float64
+  return mad_tpsa_nrm(a.tpsa)
+end
+
+#=
+inline T sqr (a::TPSA) { TRC("baz")
+  T c(a) mad_tpsa_mul(a.tpsa, a.tpsa, c.tpsa) return c
+}
+
+
+inline T inv (a::TPSA, num_t v=1) { TRC("baz")
+  T c(a) mad_tpsa_inv(a.tpsa, v, c.tpsa) return c
+}
+
+
+inline T invsqrt (a::TPSA, num_t v=1) { TRC("baz")
+  T c(a) mad_tpsa_invsqrt(a.tpsa, v, c.tpsa) return c
+}
+
+
+
+#if TPSA_USE_TMP
+
+inline T sqr (const T &a) { TRC("tmp")
+  T c(a) mad_tpsa_mul(c.tpsa, c.tpsa, c.tpsa) return c
+}
+
+inline T inv (const T &a, num_t v=1) { TRC("tmp")
+  T c(a) mad_tpsa_inv(c.tpsa, v, c.tpsa) return c
+}
+
+inline T invsqrt (const T &a, num_t v=1) { TRC("tmp")
+  T c(a) mad_tpsa_invsqrt(c.tpsa, v, c.tpsa) return c
+}
+
+#endif // TPSA_USE_TMP
+=#
+
+# --- unary ---
+macro FUN(F)
+  fn = Symbol("mad_tpsa_" * F * "!")
+  quote
+      @inline function $(esc(Symbol(F)))(a::TPSA)::TPSA
+        c = TPSA(a)
+        $(esc(fn))(a.tpsa, c.tpsa)
+        return c
+      end
+  end
+end
+
+#=
+#if TPSA_USE_TMP
+
+#define FUN_TMP(F) \
+inline T F (const T &a) { TRC("tmp") \
+  T c(a) mad_tpsa_ ## F (c.tpsa, c.tpsa) return c \
+}
+
+#else
+#define FUN_TMP(F)
+#endif // TPSA_USE_TMP
+=#
+
+@FUN("abs"  )
+@FUN("unit"  )
+@FUN("sqrt"  )
+@FUN("exp"  )
+@FUN("log"  )
+@FUN("sin"  )
+@FUN("cos"  )
+@FUN("tan"  )
+@FUN("cot"  )
+@FUN("sinc"  )
+@FUN("sinh"  )
+@FUN("cosh"  )
+@FUN("tanh"  )
+@FUN("coth"  )
+@FUN("sinhc" )
+@FUN("asin"  )
+@FUN("acos"  )
+@FUN("atan"  )
+@FUN("acot"  )
+@FUN("asinc" )
+@FUN("asinh")
+@FUN("acosh" )
+@FUN("atanh" )
+@FUN("acoth" )
+@FUN("asinhc")
+@FUN("erf"  )
+@FUN("erfc"  )
 
 
 include("mono.jl")
