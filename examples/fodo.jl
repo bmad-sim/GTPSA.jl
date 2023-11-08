@@ -81,4 +81,4 @@ function benchmark_GTPSA()::Vector{TPSA}
   return map
 end
 
-m = @btime benchmark_GTPSA()
+benchmark_GTPSA()
