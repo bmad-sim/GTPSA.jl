@@ -519,37 +519,40 @@ mutable struct TPSA
   end
 end
 
-function print(t::TPSA)
-  mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
-end
-
 #=
-# Allows one to access low level stuff in the TPSA
-function getproperty(t::TPSA, p::Symbol)
-  if p == :d
-    return unsafe_load(t.tpsa).d
-  elseif p == :uid
-    return unsafe_load(t.tpsa).uid
-  elseif p == :mo
-    return unsafe_load(t.tpsa).mo
-  elseif p == :lo
-    return unsafe_load(t.tpsa).lo
-  elseif p == :hi
-    return unsafe_load(t.tpsa).hi
-  elseif p == :nz
-    return unsafe_load(t.tpsa).nz
-  elseif p == :nam
-    return unsafe_load(t.tpsa).nam
-  elseif p == :coef
-    return unsafe_load(t.tpsa).coef    # Needs modification
-  else
-    return getfield(t, p)
+mutable struct ComplexTPSA
+  ctpsa::Ptr{CTPSA{Desc}}
+
+  function ComplexTPSA()
+    t = new(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+    f(x) = mad_ctpsa_del!(x.ctpsa)
+    finalizer(f,t)
+    return t
+  end
+
+  function ComplexTPSA(d::Descriptor)
+    t = new(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+    f(x) = mad_ctpsa_del!(x.ctpsa)
+    finalizer(f,t)
+    return t
+  end
+
+  function ComplexTPSA(t1::TPSA)
+    t = new(mad_ctpsa_new(t1.ctpsa, MAD_TPSA_DEFAULT))
+    f(x) = mad_ctpsa_del!(x.ctpsa)
+    finalizer(f,t)
+    return t
   end
 end
 =#
 
 
-# Unary
+function print(t::TPSA)
+  mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
+end
+
+
+# --- unary ---
 @inline function +(a::TPSA)::TPSA
   c = TPSA(a)
   return c
@@ -1029,7 +1032,7 @@ inline T F (const T &a) { TRC("tmp") \
 @FUN("erf"  )
 @FUN("erfc"  )
 
-# For linear algebra these
+# For linear algebra overloading this must be defined
 function zero(a::TPSA)
   return TPSA()
 end
