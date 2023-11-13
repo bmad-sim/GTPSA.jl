@@ -38,7 +38,8 @@ import Base:  *,
               print,
               zero,
               real,
-              imag
+              imag,
+              setindex!
 
 export
   # Constants:
@@ -390,7 +391,7 @@ export
   erfc  ,
   getproperty
 
-const NAMSZ::Int = 16
+const NAMSZ::Integer = 16
 
 struct Desc{T,C}
   id::Cint                        # index in list of registered descriptors
@@ -459,11 +460,11 @@ struct Descriptor
   desc::Ptr{Desc{RTPSA,CTPSA}}
 
   """
-    Descriptor(nv::Int, mo::Int)
+    Descriptor(nv::Integer, mo::Integer)
 
   Creates a TPSA Descriptor with nv variables of maximum order mo.
   """
-  function Descriptor(nv::Int, mo::Int)
+  function Descriptor(nv::Integer, mo::Integer)
     d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
     #f(x) = mad_desc_del!(x.desc)
     #finalizer(f,d)
@@ -472,12 +473,12 @@ struct Descriptor
 
 
   """
-    Descriptor(nv::Int, mo::Int, np::Int, po::Int)
+    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
 
   Creates a TPSA Descriptor with nv variables of maximum order mo, and np parameters
   of maximum order po.
   """
-  function Descriptor(nv::Int, mo::Int, np::Int, po::Int)
+  function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
     d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
     #f(x) = mad_desc_del!(x.desc)
     #finalizer(f,d)
@@ -486,13 +487,13 @@ struct Descriptor
 
 
   """
-    Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
+    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
   
   Creates a TPSA Descriptor with nv variables of maximum order mo, np parameters of 
   maximum order po (<= mo), and the individual variable/parameter orders specified 
   in no. 
   """
-  function Descriptor(nv::Int, mo::Int, np::Int, po::Int, no::Vector{Int})
+  function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
     d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
     #f(x) = mad_desc_del!(x.desc)
     #finalizer(f,d)
@@ -519,6 +520,7 @@ mutable struct TPSA <: AbstractTPSA
     return t
   end
 
+  
   function TPSA(t1::TPSA)
     t = new(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
     f(x) = mad_tpsa_del!(x.tpsa)
@@ -567,6 +569,13 @@ mutable struct ComplexTPSA <: AbstractTPSA
   end
 end
 
+#=
+# Setters
+@inline function setindex!(t::TPSA, a::Float64, i::Int64)
+
+end
+=#
+
 
 # --- print ---
 function print(t::TPSA)
@@ -598,14 +607,14 @@ end
   return c
 end
 
-@inline function +(a::Float64, b::TPSA)::TPSA
+@inline function +(a::Real, b::TPSA)::TPSA
   c = TPSA(b)
   mad_tpsa_copy!(b.tpsa, c.tpsa)
-  mad_tpsa_set0!(c.tpsa, 1., a)
+  mad_tpsa_set0!(c.tpsa, 1., convert(Float64,a))
   return c
 end
 
-@inline function +(a::TPSA, b::Float64)::TPSA
+@inline function +(a::TPSA, b::Real)::TPSA
   return b+a
 end
 
@@ -618,17 +627,17 @@ end
 end
 
 
-@inline function -(a::TPSA, b::Float64)::TPSA
+@inline function -(a::TPSA, b::Real)::TPSA
   c = TPSA(a)
   mad_tpsa_copy!(a.tpsa, c.tpsa)
-  mad_tpsa_set0!(c.tpsa, 1., -b)
+  mad_tpsa_set0!(c.tpsa, 1., convert(Float64, -b))
   return c
 end
 
-@inline function -(a::Float64, b::TPSA)::TPSA
+@inline function -(a::Real, b::TPSA)::TPSA
   c = TPSA(b)
   mad_tpsa_scl!(b.tpsa, -1., c.tpsa)
-  mad_tpsa_set0!(c.tpsa, 1., a)
+  mad_tpsa_set0!(c.tpsa, 1., convert(Float64, a))
   return c
 end
 
@@ -640,13 +649,13 @@ end
   return c
 end
 
-@inline function *(a::Float64, b::TPSA)::TPSA
+@inline function *(a::Real, b::TPSA)::TPSA
   c = TPSA(b)
-  mad_tpsa_scl!(b.tpsa, a, c.tpsa)
+  mad_tpsa_scl!(b.tpsa, convert(Float64, a), c.tpsa)
   return c
 end
 
-@inline function *(a::TPSA, b::Float64)::TPSA
+@inline function *(a::TPSA, b::Real)::TPSA
   return b*a
 end
 
@@ -658,15 +667,15 @@ end
   return c
 end
 
-@inline function /(a::TPSA, b::Float64)::TPSA
+@inline function /(a::TPSA, b::Real)::TPSA
   c = TPSA(a)
-  mad_tpsa_scl!(a.tpsa, 1/b, c.tpsa)
+  mad_tpsa_scl!(a.tpsa, convert(Float64, 1/b), c.tpsa)
   return c
 end
 
-@inline function /(a::Float64, b::TPSA)::TPSA
+@inline function /(a::Real, b::TPSA)::TPSA
   c = TPSA(b)
-  mad_tpsa_inv!(b.tpsa, a, c.tpsa)
+  mad_tpsa_inv!(b.tpsa, convert(Float64,a), c.tpsa)
   return c
 end
 
@@ -679,21 +688,21 @@ end
 end
 
 
-@inline function ^(a::TPSA, b::Int64)::TPSA
+@inline function ^(a::TPSA, b::Integer)::TPSA
   c = TPSA(a) 
   mad_tpsa_powi!(a.tpsa, convert(Cint, b), c.tpsa)
   return c
 end
 
-@inline function ^(a::TPSA, b::Float64)::TPSA
+@inline function ^(a::TPSA, b::Real)::TPSA
   c = TPSA(a)
-  mad_tpsa_pown!(a.tpsa, b, c.tpsa)
+  mad_tpsa_pown!(a.tpsa, convert(Float64,b), c.tpsa)
   return c
 end
 
-@inline function ^(a::Float64, b::TPSA)::TPSA
+@inline function ^(a::Real, b::TPSA)::TPSA
   c = TPSA(b)
-  mad_tpsa_scl!(b.tpsa, log(a), c.tpsa)
+  mad_tpsa_scl!(b.tpsa, convert(Float64,log(a)), c.tpsa)
   mad_tpsa_exp!(c.tpsa, c.tpsa)
   return c
 end
@@ -835,25 +844,14 @@ end
   return c
 end
 
-@inline function +(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
+@inline function +(a::Number, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_copy!(b.tpsa, c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., a)
+  mad_ctpsa_set0!(c.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
   return c
 end
 
-@inline function +(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
-  return b+a
-end
-
-@inline function +(a::Float64, b::ComplexTPSA)::ComplexTPSA
-  c = ComplexTPSA(b)
-  mad_ctpsa_copy!(b.tpsa, c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64, a))
-  return c
-end
-
-@inline function +(a::ComplexTPSA, b::Float64)::ComplexTPSA
+@inline function +(a::ComplexTPSA, b::Number)::ComplexTPSA
   return b+a
 end
 
@@ -865,31 +863,17 @@ end
   return c
 end
 
-@inline function -(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
+@inline function -(a::ComplexTPSA, b::Number)::ComplexTPSA
   c = ComplexTPSA(a)
   mad_ctpsa_copy!(a.tpsa, c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., -b)
+  mad_ctpsa_set0!(c.tpsa, 1.0+0.0*im, convert(ComplexF64, -b))
   return c
 end
 
-@inline function -(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
+@inline function -(a::Number, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_scl!(b.tpsa,-1., c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., a)
-  return c
-end
-
-@inline function -(a::ComplexTPSA, b::Float64)::ComplexTPSA
-  c = ComplexTPSA(a)
-  mad_ctpsa_copy!(a.tpsa, c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64, -b))
-  return c
-end
-
-@inline function -(a::Float64, b::ComplexTPSA)::ComplexTPSA
-  c = ComplexTPSA(b)
-  mad_ctpsa_scl!(b.tpsa,-1., c.tpsa)
-  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64,a))
+  mad_ctpsa_set0!(c.tpsa, 1.0+0.0*im, convert(ComplexF64,a))
   return c
 end
 
@@ -901,23 +885,13 @@ end
   return c
 end
 
-@inline function *(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
-  c = ComplexTPSA(b)
-  mad_ctpsa_scl!(b.tpsa, a, c.tpsa)
-  return c
-end
-
-@inline function *(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
-  return b*a
-end
-
-@inline function *(a::Float64, b::ComplexTPSA)::ComplexTPSA
+@inline function *(a::Number, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_scl!(b.tpsa, convert(ComplexF64,a), c.tpsa)
   return c
 end
 
-@inline function *(a::ComplexTPSA, b::Float64)::ComplexTPSA
+@inline function *(a::ComplexTPSA, b::Number)::ComplexTPSA
   return b*a
 end
 
@@ -930,25 +904,13 @@ end
   return c
 end
 
-@inline function /(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
-  c = ComplexTPSA(a)
-  mad_ctpsa_scl!(a.tpsa, 1. /b, c.tpsa)
-  return c
-end
-
-@inline function /(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
-  c = ComplexTPSA(b)
-  mad_ctpsa_inv!(b.tpsa, a, c.tpsa)
-  return c
-end
-
-@inline function /(a::ComplexTPSA, b::Float64)::ComplexTPSA
+@inline function /(a::ComplexTPSA, b::Number)::ComplexTPSA
   c = ComplexTPSA(a)
   mad_ctpsa_scl!(a.tpsa, convert(ComplexF64, 1.0/b), c.tpsa)
   return c
 end
 
-@inline function /(a::Float64, b::ComplexTPSA)::ComplexTPSA
+@inline function /(a::Number, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_inv!(b.tpsa, convert(ComplexF64, a), c.tpsa)
   return c
@@ -962,32 +924,19 @@ end
   return c
 end
 
-@inline function ^(a::ComplexTPSA, b::Int64)::ComplexTPSA
+@inline function ^(a::ComplexTPSA, b::Integer)::ComplexTPSA
   c = ComplexTPSA(a)
   mad_ctpsa_powi!(a.tpsa, convert(Cint, b), c.tpsa)
   return c
 end
 
-@inline function ^(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
-  c = ComplexTPSA(a)
-  mad_ctpsa_pown!(a.tpsa, b, c.tpsa)
-  return c
-end
-
-@inline function ^(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
-  c = ComplexTPSA(b)
-  mad_ctpsa_scl!(b.tpsa, log(a), c.tpsa)
-  mad_ctpsa_exp!(c.tpsa, c.tpsa)
-  return c
-end
-
-@inline function ^(a::ComplexTPSA, b::Float64)::ComplexTPSA
+@inline function ^(a::ComplexTPSA, b::Number)::ComplexTPSA
   c = ComplexTPSA(a)
   mad_ctpsa_pown!(a.tpsa, convert(ComplexF64, b), c.tpsa)
   return c
 end
 
-@inline function ^(a::Float64, b::ComplexTPSA)::ComplexTPSA
+@inline function ^(a::Number, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_scl!(b.tpsa, convert(ComplexF64, log(a)), c.tpsa)
   mad_ctpsa_exp!(c.tpsa, c.tpsa)
@@ -1038,7 +987,7 @@ inline CPX fval (a::ComplexTPSA) { TRC("baz")
 end
 =#
 
-@inline function norm(a::ComplexTPSA):ComplexTPSA
+@inline function norm(a::ComplexTPSA)::Float64
   return mad_ctpsa_nrm(a.tpsa)
 end
 #=
