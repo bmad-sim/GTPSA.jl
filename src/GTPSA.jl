@@ -380,9 +380,14 @@ export
 
   Descriptor,
   TPSA,
-  ComplexTPSA
-  *,
+  ComplexTPSA,
   print,
+  unit  ,
+  sinhc ,
+  asinc ,
+  asinhc,
+  erf   ,
+  erfc  ,
   getproperty
 
 const NAMSZ::Int = 16
@@ -841,6 +846,17 @@ end
   return b+a
 end
 
+@inline function +(a::Float64, b::ComplexTPSA)::ComplexTPSA
+  c = ComplexTPSA(b)
+  mad_ctpsa_copy!(b.tpsa, c.tpsa)
+  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64, a))
+  return c
+end
+
+@inline function +(a::ComplexTPSA, b::Float64)::ComplexTPSA
+  return b+a
+end
+
 
 # --- sub ---
 @inline function -(a::ComplexTPSA, b::ComplexTPSA)::ComplexTPSA
@@ -863,6 +879,20 @@ end
   return c
 end
 
+@inline function -(a::ComplexTPSA, b::Float64)::ComplexTPSA
+  c = ComplexTPSA(a)
+  mad_ctpsa_copy!(a.tpsa, c.tpsa)
+  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64, -b))
+  return c
+end
+
+@inline function -(a::Float64, b::ComplexTPSA)::ComplexTPSA
+  c = ComplexTPSA(b)
+  mad_ctpsa_scl!(b.tpsa,-1., c.tpsa)
+  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64,a))
+  return c
+end
+
 
 # --- mul ---
 @inline function *(a::ComplexTPSA, b::ComplexTPSA)::ComplexTPSA
@@ -878,6 +908,16 @@ end
 end
 
 @inline function *(a::ComplexTPSA, b::ComplexF64)::ComplexTPSA
+  return b*a
+end
+
+@inline function *(a::Float64, b::ComplexTPSA)::ComplexTPSA
+  c = ComplexTPSA(b)
+  mad_ctpsa_scl!(b.tpsa, convert(ComplexF64,a), c.tpsa)
+  return c
+end
+
+@inline function *(a::ComplexTPSA, b::Float64)::ComplexTPSA
   return b*a
 end
 
@@ -899,6 +939,18 @@ end
 @inline function /(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_inv!(b.tpsa, a, c.tpsa)
+  return c
+end
+
+@inline function /(a::ComplexTPSA, b::Float64)::ComplexTPSA
+  c = ComplexTPSA(a)
+  mad_ctpsa_scl!(a.tpsa, convert(ComplexF64, 1.0/b), c.tpsa)
+  return c
+end
+
+@inline function /(a::Float64, b::ComplexTPSA)::ComplexTPSA
+  c = ComplexTPSA(b)
+  mad_ctpsa_inv!(b.tpsa, convert(ComplexF64, a), c.tpsa)
   return c
 end
 
@@ -925,6 +977,19 @@ end
 @inline function ^(a::ComplexF64, b::ComplexTPSA)::ComplexTPSA
   c = ComplexTPSA(b)
   mad_ctpsa_scl!(b.tpsa, log(a), c.tpsa)
+  mad_ctpsa_exp!(c.tpsa, c.tpsa)
+  return c
+end
+
+@inline function ^(a::ComplexTPSA, b::Float64)::ComplexTPSA
+  c = ComplexTPSA(a)
+  mad_ctpsa_pown!(a.tpsa, convert(ComplexF64, b), c.tpsa)
+  return c
+end
+
+@inline function ^(a::Float64, b::ComplexTPSA)::ComplexTPSA
+  c = ComplexTPSA(b)
+  mad_ctpsa_scl!(b.tpsa, convert(ComplexF64, log(a)), c.tpsa)
   mad_ctpsa_exp!(c.tpsa, c.tpsa)
   return c
 end
