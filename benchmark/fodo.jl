@@ -1,13 +1,13 @@
 include("../src/GTPSA.jl")
 using .GTPSA
 using ForwardDiff
+
 using BenchmarkTools
 
 
 # Comparison of ForwardDiff with GTPSA for 4 variables to 2nd order and 2 knobs to 2nd order
 # As of 11/08/2023, ForwardDiff gives ~19 ms and GTPSA ~7.5 ms
 
-# GTPSA tracking:
 function track_qf(z0, k1)
   L = 0.5
   M_qf  = [cos(sqrt(k1)*L)            1. /sqrt(k1)*sin(sqrt(k1)*L)    0.                           0.;                             
@@ -58,7 +58,7 @@ function track_ring(z0, k1, k2l)
 end
 
 function benchmark_GTPSA()
-  # Fifth order TPSA with 4 variables of order 2 and 2 knobs of order 2
+  # TPSA with 4 variables of order 3 and 2 knobs of order 3
   d = Descriptor(4, 2, 2, 2)
   x0 = TPSA(d)
   px0 = TPSA(d)
@@ -96,7 +96,7 @@ function benchmark_ForwardDiff()
 
   # For each thing, calculate
   map = [m1, m2, m3, m4]
-  order = 2
+  
   for i=1:4
       # First do each 
       m = map[i]
@@ -169,5 +169,5 @@ function benchmark_ForwardDiff()
   return coefs
 end
 
-m = @btime benchmark_ForwardDiff()
+#m = @btime benchmark_ForwardDiff()
 m = @btime benchmark_GTPSA()
