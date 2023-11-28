@@ -39,6 +39,9 @@ import Base:  *,
               zero,
               real,
               imag,
+              getindex,
+              firstindex,
+              lastindex,
               setindex!
 
 export
@@ -574,8 +577,15 @@ function getindex(t::TPSA, i::Integer)::Float64
   return i == 0 ? mad_tpsa_get0(t.tpsa) : mad_tpsa_geti(t.tpsa, convert(Cint, i))
 end
 
-function getindex(t::TPSA, ::AbstractString)::Float64
-  return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.cconvert(Cstring, s))
+function getindex(t::TPSA, I)
+  return [t[i] for i in I]
+end
+
+firstindex(t::TPSA) = 1
+lastindex(t::TPSA) = mad_tpsa_len(t.tpsa)-1
+
+function getindex(t::TPSA, s::AbstractString)::Float64
+  return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.unsafe_convert(Cstring, Base.cconvert(Cstring, s)))
 end
 #=
 num_t operator[](const std::string& s) const {
