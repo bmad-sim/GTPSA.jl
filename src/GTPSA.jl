@@ -450,7 +450,7 @@ struct CTPSA{T}
   coef::Ptr{ComplexF64}           # warning: must be identical to ctpsa up to coef excluded
 end
 
-const MAD_TPSA = :("libmad_tpsa")
+const MAD_TPSA = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc{RTPSA,CTPSA}} = C_NULL
@@ -569,6 +569,25 @@ mutable struct ComplexTPSA <: AbstractTPSA
   end
 end
 
+# --- Getters ---
+function getindex(t::TPSA, i::Integer)::Float64
+  return i == 0 ? mad_tpsa_get0(t.tpsa) : mad_tpsa_geti(t.tpsa, convert(Cint, i))
+end
+
+function getindex(t::TPSA, ::AbstractString)::Float64
+  return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.cconvert(Cstring, s))
+end
+#=
+num_t operator[](const std::string& s) const {
+  return mad_tpsa_gets(ptr(), s.size(), s.c_str());
+}
+num_t operator[](const std::vector<ord_t>& m) const {
+  return mad_tpsa_getm(ptr(), m.size(), m.data());
+}
+num_t operator[](const std::vector<idx_t>& m) const {
+  return mad_tpsa_getsm(ptr(), m.size(), m.data());
+}
+=#
 #=
 # Setters
 @inline function setindex!(t::TPSA, a::Float64, i::Int64)
