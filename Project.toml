@@ -4,6 +4,7 @@ authors = ["Matt Signorelli"]
 version = "1.0.0-DEV"
 
 [deps]
+GTPSA_jll = "a4739e29-4b97-5c0b-bbcf-46f08034c990"
 
 [compat]
 julia = "1"

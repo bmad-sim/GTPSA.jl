@@ -1,12 +1,11 @@
-include("../src/GTPSA.jl")
-using .GTPSA
+using GTPSA
 using ForwardDiff
 
 using BenchmarkTools
 
 
 # Comparison of ForwardDiff with GTPSA for 4 variables to 2nd order and 2 knobs to 2nd order
-# As of 11/08/2023, ForwardDiff gives ~19 ms and GTPSA ~7.5 ms
+# As of 12/14/2023, GTPSA: 4.381 ms (82115 allocations: 2.48 MiB), ForwardDiff: 19.093 ms (487498 allocations: 49.65 MiB)
 
 function track_qf(z0, k1)
   L = 0.5

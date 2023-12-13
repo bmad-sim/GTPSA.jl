@@ -44,6 +44,8 @@ import Base:  *,
               lastindex,
               setindex!
 
+using GTPSA_jll
+
 export
   # Constants:
   NAMSZ,
