@@ -1,7 +1,7 @@
 """
     mad_ctpsa_newd(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Ptr{CTPSA{Desc}}
 
-Creates a complex TPSA defined by the specified descriptor and maximum order. If mad_ctpsa_DEFAULT 
+Creates a complex TPSA defined by the specified descriptor and maximum order. If MAD_CTPSA_DEFAULT 
 is passed for `mo`, the `mo` defined in the descriptor is used. If `mo > d_mo`, then `mo = d_mo`.
 
 ### Input
@@ -136,7 +136,7 @@ function mad_ctpsa_ord(t::Ptr{CTPSA{Desc}})::Cuchar
 end
 
 """
-  mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
+    mad_ctpsa_ordv(t::Ptr{CTPSA{Desc}}, ts::Ptr{CTPSA{Desc}}...)::Cuchar
 
 Returns maximum order of all TPSAs provided.
 
@@ -241,7 +241,7 @@ function mad_ctpsa_cutord!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, ord::Cint)
 end
 
 """
-  mad_ctpsa_maxord(t::Ptr{CTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+    mad_ctpsa_maxord(t::Ptr{CTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
 
 Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n`. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 

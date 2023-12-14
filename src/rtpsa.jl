@@ -136,7 +136,7 @@ function mad_tpsa_ord(t::Ptr{RTPSA{Desc}})::Cuchar
 end
 
 """
-  mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
+    mad_tpsa_ordv(t::Ptr{RTPSA{Desc}}, ts::Ptr{RTPSA{Desc}}...)::Cuchar
 
 Returns maximum order of all TPSAs provided.
 
@@ -241,7 +241,7 @@ function mad_tpsa_cutord!(t::Ptr{RTPSA{Desc}}, r::Ptr{RTPSA{Desc}}, ord::Cint)
 end
 
 """
-  mad_tpsa_maxord!(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
+    mad_tpsa_maxord!(t::Ptr{RTPSA{Desc}}, n::Cint, idx_::Ptr{Cint})::Cint
 
 Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 
@@ -1915,7 +1915,7 @@ end
 """
     mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA{Desc}}}, nc::Cint, mc::Ptr{Ptr{RTPSA{Desc}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
 
-Equivalent to mad_tpsa_convert, but applies the conversion to all TPSAs in the map `ma`.
+Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the map `ma`.
 
 ### Input
 - `na`   -- Number of TPSAs in the map
