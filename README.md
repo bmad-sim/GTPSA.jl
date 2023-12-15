@@ -27,7 +27,7 @@ d = Descriptor(2, 12)
 x1 = TPSA(d)
 x2 = TPSA(d)
 
-# Set the TPSAs so they correspond to the variables x_1 and x_2 
+# Set the TPSAs so they correspond to the variables x1 and x2 
 x1[1] = 1
 x2[2] = 1
 
