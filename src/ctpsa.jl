@@ -189,20 +189,21 @@ end
 
 
 """
-    mad_ctpsa_sclord!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar)
+    mad_ctpsa_sclord!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar, prm::Cuchar)
 
 Scales all coefficients by order. If `inv == 0`, scales coefficients by order (derivation), else scales coefficients 
 by 1/order (integration).
 
 ### Input
-- `t`  -- Source complex TPSA
-- `inv`-- Put order up, divide, scale by `inv` of value of order
+- `t`   -- Source complex TPSA
+- `inv` -- Put order up, divide, scale by `inv` of value of order
+- `prm` -- Parameters flag. If set to 0x0, the scaling excludes the order of the parameters in the monomials. Else, scaling is with total order of monomial
 
 ### Output
-- `r`  -- Destination complex TPSA
+- `r`   -- Destination complex TPSA
 """
-function mad_ctpsa_sclord!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar)
-  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar)::Cvoid
+function mad_ctpsa_sclord!(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar, prm::Cuchar)
+  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ptr{CTPSA{Desc}}, r::Ptr{CTPSA{Desc}}, inv::Cuchar, prm::Cuchar)::Cvoid
 end
 
 
@@ -511,9 +512,10 @@ end
 
 
 """
-    mad_ctpsa_mono!(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+    mad_ctpsa_mono!(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
 
 Returns the order of the monomial at index `i` in the TPSA and optionally the monomial at that index is returned in `m_`
+and the order of parameters in the monomial in `p_`
 
 ### Input
 - `t`   -- TPSA
@@ -522,10 +524,11 @@ Returns the order of the monomial at index `i` in the TPSA and optionally the mo
 
 ### Output
 - `m_`  -- (Optional) Monomial at index `i` in TPSA
+- `p_`  -- (Optional) Order of parameters in monomial
 - `ret` -- Order of monomial in TPSA `a` index `i`
 """
-function mad_ctpsa_mono!(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_mono(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+function mad_ctpsa_mono!(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_mono(t::Ptr{CTPSA{Desc}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
 

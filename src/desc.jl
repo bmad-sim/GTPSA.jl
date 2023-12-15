@@ -303,10 +303,11 @@ end
 
 
 """
-    mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+    mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
 
 Returns the order of the monomial at index `i`, and if `n` and `m_` are provided, then will also fill `m_` 
-with the monomial at this index.
+with the monomial at this index. Also will optionally return the order of the parameters in the monomial 
+if `p_` is provided
 
 ### Input
 - `d`   -- Descriptor
@@ -316,9 +317,10 @@ with the monomial at this index.
 ### Output
 - `ret` -- Monomial order at slot index
 - `m_`  -- (Optional) Monomial to fill if provided
+- `p_`  -- (Optional) Order of parameters in monomial if provided
 """
-function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar})::Cuchar
+function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
 
