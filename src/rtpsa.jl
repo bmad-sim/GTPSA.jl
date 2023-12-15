@@ -285,7 +285,7 @@ end
 """
     mad_tpsa_setvar!(t::Ptr{RTPSA{Desc}}, v::Cdouble, iv_::Cint, scl_::Cdouble)
 
-Sets the 0th and 1st order values for the variables.
+Sets the 0th and 1st order values for the variables, and sets the rest of the variables to 0
 
 ### Input
 - `t`    -- TPSA

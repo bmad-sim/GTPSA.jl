@@ -1,7 +1,6 @@
 module GTPSA
 
-import Base:  *, 
-              +,
+import Base:  +,
               -,
               *,
               /,
@@ -42,7 +41,8 @@ import Base:  *,
               getindex,
               firstindex,
               lastindex,
-              setindex!
+              setindex!,
+              length
 
 using GTPSA_jll
 
@@ -576,20 +576,81 @@ mutable struct ComplexTPSA <: AbstractTPSA
 end
 
 # --- Getters ---
+# Index
+firstindex(t::TPSA) = 0
+lastindex(t::TPSA) = mad_tpsa_len(t.tpsa)-1
 function getindex(t::TPSA, i::Integer)::Float64
   return i == 0 ? mad_tpsa_get0(t.tpsa) : mad_tpsa_geti(t.tpsa, convert(Cint, i))
 end
 
-function getindex(t::TPSA, I)
+function getindex(t::ComplexTPSA, i::Integer)::ComplexF64
+  return i == 0 ? mad_ctpsa_get0(t.tpsa) : mad_ctpsa_geti(t.tpsa, convert(Cint, i))
+end
+
+function length(t::TPSA)
+  return mad_tpsa_len(t.tpsa)
+end
+
+function length(t::ComplexTPSA)
+  return mad_ctpsa_len(t.tpsa)
+end
+
+function getindex(t::AbstractTPSA, I)
   return [t[i] for i in I]
 end
 
-firstindex(t::TPSA) = 1
-lastindex(t::TPSA) = mad_tpsa_len(t.tpsa)-1
+function getindex(t::AbstractTPSA, I::UnitRange)
+  bytes = length(I)*sizeof(Cdouble)
+  vc = @ccall malloc(bytes::Cint)::Ptr{Float64}
+  mad_tpsa_getv!(t.tpsa,convert(Cint, I[begin]), convert(Cint,length(I)), vc)
+  v = Vector{Float64}(undef, length(I))
+  copyto!(v, unsafe_wrap(Vector{Float64}, vc, length(I)))
+  @ccall free(vc::Ptr{Float64})::Cvoid
+  return v
+end
 
+
+# String
 function getindex(t::TPSA, s::AbstractString)::Float64
   return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.unsafe_convert(Cstring, Base.cconvert(Cstring, s)))
 end
+
+# Sparse monomial
+function getindex(t::TPSA, m::Vector{Integer})
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(m)), Base.unsafe_convert(Ptr{Cint}, convert(Vector{Cint}, m)))
+end
+
+# --- Setters ---
+function setindex!(t::TPSA, v::Real, i::Integer)
+  mad_tpsa_setv!(t.tpsa, convert(Cint, i), convert(Cint, 1), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, [v])))
+end
+
+function setindex!(t::ComplexTPSA, v::Number, i::Integer)
+  mad_ctpsa_setv!(t.tpsa, convert(Cint, i), convert(Cint, 1), Base.unsafe_convert(Ptr{ComplexF64}, convert(Vector{ComplexF64}, [v])))
+end
+
+# This needs to be fixed...
+function setindex!(t::AbstractTPSA, V, I)
+  _setindex!(v,i) = setindex!(t, v, i)
+  _setindex!.(V, I)
+end
+
+function setindex!(t::TPSA, V::Array{Real}, I::UnitRange)
+  mad_tpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, V)))
+end
+
+function setindex!(t::ComplexTPSA, V::Array{Number}, I::UnitRange)
+  mad_ctpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, V)))
+end
+
+# Laurent does it like this:
+#tpsa x ( "X"); x .set( 0   , 1);  # mad_tpsa_setvar!(t.tpsa, convert(Cdouble, 0), convert(Cint, 1), convert(Cdouble, 0))  -> sets x to 1. We can think of a smart way to do this
+#tpsa px("PX"); px.set( 1e-7, 2);
+#tpsa y ( "Y"); y .set( 0   , 3);
+#tpsa py("PY"); py.set(-1e-7, 4);
+#tpsa t ( "T"); t .set( 0   , 5);
+#tpsa pt("PT"); pt.set( 0   , 6);
+
 #=
 num_t operator[](const std::string& s) const {
   return mad_tpsa_gets(ptr(), s.size(), s.c_str());
