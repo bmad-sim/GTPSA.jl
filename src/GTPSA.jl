@@ -414,6 +414,7 @@ struct Desc{T,C}
 
   monos::Ptr{Cuchar}              # 'matrix' storing the monomials (sorted by var)
   ords::Ptr{Cuchar}               # Order of each mono of To
+  prms::Ptr{Cuchar}               # order of parameters in each mono of To (zero = no prms)
   To::Ptr{Ptr{Cuchar}}            # Table by orders -- pointers to monos, sorted by order
   Tv::Ptr{Ptr{Cuchar}}            # Table by vars   -- pointers to monos, sorted by vars
   ocs::Ptr{Ptr{Cuchar}}           # ocs[t,i] -> o in mul, compute o on thread t 3 <= o <= mo terminated with 0
