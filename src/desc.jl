@@ -323,7 +323,7 @@ function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuc
 end
 
 """
-  mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
+    mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
 
 For debugging.
 

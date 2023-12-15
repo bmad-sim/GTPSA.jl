@@ -19,7 +19,7 @@ end
 
 
 """
-  mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
+    mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
 
 Writes the monomial defined by the byte array a (with orders stored as hexadecimal) into 
 a string s.
@@ -68,7 +68,7 @@ end
 
 
 """
-  mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
+    mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
 
 Returns the minimum order of the monomial.
 
@@ -86,7 +86,7 @@ end
 
 
 """
-  mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
+    mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
 
 Returns the maximum order of the monomial.
 
@@ -314,7 +314,7 @@ function mad_mono_cat!(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{
 end
 
 """
-  mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
+    mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
 
 Sets destination monomial r equal to the reverse of source monomial a.
 
