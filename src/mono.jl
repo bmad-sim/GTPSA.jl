@@ -1,8 +1,8 @@
 """
     mad_mono_str!(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
 
-Writes the monomial defined in the string s, which stores the orders in a human-readable format 
-(e.g. 10 is 10, not a), into the byte array a with the orders specified in hexadecimal.
+Writes the monomial defined in the string `s`, which stores the orders in a human-readable format 
+(e.g. 10 is 10, not 0xa), into the byte array `a` with the orders specified in hexadecimal.
 
 ### Input
 - `n` -- Monomial and string length
@@ -10,7 +10,7 @@ Writes the monomial defined in the string s, which stores the orders in a human-
 
 ### Output
 - `a` -- Monomial as a byte array converted from the input string
-- `i` -- Adjusted size n of byte array if '\0' found
+- `i` -- Adjusted size `n` of byte array if '\0' found
 """
 function mad_mono_str!(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
   i = @ccall MAD_TPSA.mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
@@ -21,8 +21,8 @@ end
 """
     mad_mono_prt(n::Cint, a::Ptr{Cuchar}, s::Ptr{Cuchar})::Cstring
 
-Writes the monomial defined by the byte array a (with orders stored as hexadecimal) into 
-a string s.
+Writes the monomial defined by the byte array `a` (with orders stored as hexadecimal) into 
+a string `s`.
 
 ### Input
 - `n` -- Monomial and string length
@@ -40,7 +40,7 @@ end
 """
     mad_mono_fill!(n::Cint, a::Ptr{Cuchar}, v::Cuchar)
 
-Fills the monomial a with the value v.
+Fills the monomial `a` with the value `v`.
 
 ### Input
 - `n` -- Monomial length
@@ -55,7 +55,7 @@ end
 """
     mad_mono_copy!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Copies monomial a to monomial r.  
+Copies monomial `a` to monomial `r`.  
 
 ### Input
 - `n` -- Length of monomials
@@ -77,7 +77,7 @@ Returns the minimum order of the monomial.
 - `a`  -- Monomial
 
 ### Output
-- `mo` -- Mininum order of monomial a
+- `mo` -- Mininum order of monomial `a`
 """
 function mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
   mo = @ccall MAD_TPSA.mad_mono_min(n::Cint, a::Ptr{Cuchar})::Cuchar
@@ -95,7 +95,7 @@ Returns the maximum order of the monomial.
   - `a`  -- Monomial
   
   ### Output
-  - `mo` -- Maximum order of monomial a
+  - `mo` -- Maximum order of monomial `a`
 """
 function mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
   mo = @ccall MAD_TPSA.mad_mono_max(n::Cint, a::Ptr{Cuchar})::Cuchar
@@ -106,7 +106,7 @@ end
 """
     mad_mono_ord(n::Cint, a::Ptr{Cuchar})::Cint
 
-Returns the sum of the orders of the monomial a.
+Returns the sum of the orders of the monomial `a`.
 
 ### Input
 - `n` -- Monomial length
@@ -124,8 +124,8 @@ end
 """
     mad_mono_ordp(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
 
-Returns the product of each "stp"-th order in monomial a. For example, stp = 2 collects every order
-in the monomial with a step of 2 between each. As a is a pointer, the product can be started at any 
+Returns the product of each `stp`-th order in monomial `a`. For example, `stp = 2` collects every order
+in the monomial with a step of 2 between each. As `a` is a pointer, the product can be started at any 
 element in the monomial.
 
 ### Input
@@ -134,7 +134,7 @@ element in the monomial.
 - `stp` -- Step over which orders to include in the product
 
 ### Output
-- `p`   -- Product of orders of monomial separated by stp.
+- `p`   -- Product of orders of monomial separated by `stp`.
 """
 function mad_mono_ordp(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
   p = @ccall MAD_TPSA.mad_mono_ordp(n::Cint, a::Ptr{Cuchar})::Cdouble
@@ -145,8 +145,8 @@ end
 """
     mad_mono_ordpf(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
 
-Returns the product of factorials each "stp"-th order in monomial a. For example, stp = 2 collects 
-every order in the monomial with a step of 2 between each. As a is a pointer, the product can be started 
+Returns the product of factorials each `stp`-th order in monomial a. For example, `stp = 2` collects 
+every order in the monomial with a step of 2 between each. As `a` is a pointer, the product can be started 
 at any element in the monomial.
 
 ### Input
@@ -155,7 +155,7 @@ at any element in the monomial.
 - `stp` -- Step over which orders to include in the product of factorials
 
 ### Output
-- `p`   -- Product of factorials of orders of monomial separated by stp
+- `p`   -- Product of factorials of orders of monomial separated by `stp`
 """
 function mad_mono_ordpf(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
   p = @ccall MAD_TPSA.mad_mono_ordpf(n::Cint, a::Ptr{Cuchar})::Cdouble
@@ -166,12 +166,12 @@ end
 """
     mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
 
-Checks if the monomial a is equal to the monomial b.
+Checks if the monomial `a` is equal to the monomial `b`.
 
 ### Input
 - `n`   -- Length of monomials
-- `a`   -- Monomial a
-- `b`   -- Monomial b
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
 
 ### Output
 - `ret` -- True if the monomials are equal, false if otherwise
@@ -185,15 +185,15 @@ end
 """
     mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
 
-Checks if monomial a is less than monomial b.
+Checks if monomial `a` is less than monomial `b`.
 
 ### Input
 - `n`  -- Length of monomials
-- `a`  -- Monomial a
-- `b`  -- Monomial b
+- `a`  -- Monomial `a`
+- `b`  -- Monomial `b`
 
 ### Output
-- `ret` -- True if a < b, false otherwise
+- `ret` -- True if `a < b`, false otherwise
 """
 function mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
@@ -204,15 +204,15 @@ end
 """
     mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
 
-Checks if monomial a is less than or equal to monomial b.
+Checks if monomial `a` is less than or equal to monomial `b`.
 
 ### Input
 - `n`   -- Length of monomials
-- `a`   -- Monomial a
-- `b`   -- Monomial b
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
 
 ### Output
-- `ret` -- True if a <= mono_b, false otherwise
+- `ret` -- True if `a <= mono_b`, false otherwise
 """
 function mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
@@ -223,15 +223,15 @@ end
 """
     mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
 
-Compares monomial a to monomial b, and returns the first difference in the lowest order variables.
+Compares monomial `a` to monomial `b`, and returns the first difference in the lowest order variables.
 
 ### Input
 - `n`   -- Length of monomials
-- `a`   -- Monomial a
-- `b`   -- Monomial b
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
 
 ### Output
-- `ret` -- First a[i]-b[i] != 0 
+- `ret` -- First `a[i]-b[i] != 0`
 """
 function mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_mono_cmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
@@ -242,16 +242,16 @@ end
 """
     mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
 
-Compares monomial a to monomial b starting from the right (when the monomials are ordered by variable, 
+Compares monomial `a` to monomial `b` starting from the right (when the monomials are ordered by variable, 
 which is almost never the case) and returns the first difference in the lowest order variables. 
 
 ### Input
 - `n`   -- Length of monomials
-- `a`   -- Monomial a
-- `b`   -- Monomial b
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
 
 ### Output
-- `ret` -- First a[i]-b[i] != 0 where i starts from the end.
+- `ret` -- First `a[i]-b[i] != 0` where `i` starts from the end.
 """
 function mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_mono_rcmp(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cint
@@ -262,15 +262,15 @@ end
 """
     mad_mono_add!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets monomial r = a + b.
+Sets monomial `r = a + b`.
 
 ### Input
 - `n` -- Length of monomials
-- `a` -- Source monomial a
-- `b` -- Source monomial b
+- `a` -- Source monomial `a`
+- `b` -- Source monomial `b`
 
 ### Output
-- `r` -- Destination monomial, r = a + b
+- `r` -- Destination monomial, `r = a + b`
 """
 function mad_mono_add!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
   @ccall MAD_TPSA.mad_mono_add(n::Cint, a::Ptr{Cuchar},b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
@@ -280,15 +280,15 @@ end
 """
     mad_mono_sub!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets monomial r = a - b.
+Sets monomial `r = a - b`.
 
 ### Input
 - `n` -- Length of monomials
-- `a` -- Source monomial a
-- `b` -- Source monomial b
+- `a` -- Source monomial `a`
+- `b` -- Source monomial `b`
 
 ### Output
-- `r` -- Destination monomial, r = a - b
+- `r` -- Destination monomial, `r = a - b`
 """
 function mad_mono_sub!(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})
   @ccall MAD_TPSA.mad_mono_sub(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
@@ -298,16 +298,16 @@ end
 """
     mad_mono_cat!(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets monomial r equal to the concatenation of the monomials a and b
+Sets monomial `r` equal to the concatenation of the monomials `a` and `b`
 
 ### Input
-- `n` -- Length of monomonial a
-- `a` -- Source monomial a
-- `m` -- Length of monomial b
-- `b` -- Source monomial b
+- `n` -- Length of monomonial `a`
+- `a` -- Source monomial `a`
+- `m` -- Length of monomial `b`
+- `b` -- Source monomial `b`
 
 ### Output
-- `r` -- Destination monomial of concatenation of a and b (length n+m)
+- `r` -- Destination monomial of concatenation of `a` and `b` (length `n+m`)
 """
 function mad_mono_cat!(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})
   @ccall MAD_TPSA.mad_mono_cat(n::Cint, a::Ptr{Cuchar}, m::Cint, b::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
@@ -316,14 +316,14 @@ end
 """
     mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
 
-Sets destination monomial r equal to the reverse of source monomial a.
+Sets destination monomial `r` equal to the reverse of source monomial `a`.
 
 ### Input
-- `n` -- Lengths of Monomials
-- `a` -- Source monomial a
+- `n` -- Lengths of monomials
+- `a` -- Source monomial `a`
 
 ### Output
-- `r` -- Destination monomial of reverse monomial a
+- `r` -- Destination monomial of reverse monomial `a`
 """
 function mad_mono_rev!(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})
   @ccall MAD_TPSA.mad_mono_rev(n::Cint, a::Ptr{Cuchar}, r::Ptr{Cuchar})::Cvoid
@@ -333,12 +333,12 @@ end
 """
     mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})
 
-Prints the monomial to stdout.
+Prints the monomial to `stdout`.
 
 ### Input
 - `n`  -- Length of monomial
-- `a`  -- Source monomial to print to stdout
-- `fp_` -- C FILE pointer, if null will print to stdout 
+- `a`  -- Source monomial to print to `stdout`
+- `fp_` -- C `FILE` pointer, if null will print to `stdout`
 """
 function mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})::Cvoid
