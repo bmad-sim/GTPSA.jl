@@ -186,6 +186,6 @@ function benchmark_TaylorSeries()
 end
 
 
-
-#m = @btime benchmark_ForwardDiff()
-#m = @btime benchmark_GTPSA()
+m_GTPSA = @btime benchmark_GTPSA()
+m_ForwardDiff = @btime benchmark_ForwardDiff()
+m_TaylorSeries = @btime benchmark_TaylorSeries()
