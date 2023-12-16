@@ -3,7 +3,7 @@
 
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions of real and complex multivariable functions to arbitrary orders in each of the variables and function parameters individually, chosen by the user. GTPSA also allows distinction between variables $x_i$ and parameters $k_j$ in the function such that $\partial x_i/\partial k_j \neq 0$ but $\partial k_j/\partial x_i = 0$. We refer advanced users to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
 
-These generalizations, paired with an efficient monomial indexing function, make GTPSA very fast and memory efficient. See the `benchmark/fodo.jl` example for comparison of GTPSA.jl with ForwardDiff.jl in computing a Taylor map 2nd order in 4 variables and 2 parameters.
+These generalizations, paired with an efficient monomial indexing function, make GTPSA very fast and memory efficient. See the `benchmark/fodo.jl` example for comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in computing all coefficients of a Taylor map 2nd order in 4 variables and 2 parameters. `TaylorDiff.jl` does not allow for trivial computation of all the individual coefficients in a multivariable Taylor series, and so a comparison with this package is not included.
 
 ## Installation
 To use GTPSA.jl, in the Julia REPL simply run
