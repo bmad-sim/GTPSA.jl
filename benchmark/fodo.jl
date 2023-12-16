@@ -1,11 +1,15 @@
 using GTPSA
 using ForwardDiff
+using TaylorSeries
 
 using BenchmarkTools
 
 
 # Comparison of ForwardDiff with GTPSA for 4 variables to 2nd order and 2 knobs to 2nd order
-# As of 12/14/2023, GTPSA: 4.381 ms (82115 allocations: 2.48 MiB), ForwardDiff: 19.093 ms (487498 allocations: 49.65 MiB)
+# As of 12/16/2023:
+# GTPSA.jl: 4.381 ms (82115 allocations: 2.48 MiB)
+# ForwardDiff.jl: 19.093 ms (487498 allocations: 49.65 MiB)
+# TaylorSeries.jl: 22.581 ms (573316 allocations: 56.52 MiB)
 
 function track_qf(z0, k1)
   L = 0.5
@@ -57,7 +61,7 @@ function track_ring(z0, k1, k2l)
 end
 
 function benchmark_GTPSA()
-  # TPSA with 4 variables of order 3 and 2 knobs of order 3
+  # TPSA with 4 variables of order 2 and 2 parameters of order 2
   d = Descriptor(4, 2, 2, 2)
   x0 = TPSA(d)
   px0 = TPSA(d)
@@ -71,12 +75,12 @@ function benchmark_GTPSA()
   dk2l = TPSA(d)
 
   # Set TPSAs
-  mad_tpsa_setv!(x0.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64},   [0.,1.,0.,0.,0.,0.,0.]))
-  mad_tpsa_setv!(px0.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64},  [0.,0.,1.,0.,0.,0.,0.]))
-  mad_tpsa_setv!(y0.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64},   [0.,0.,0.,1.,0.,0.,0.]))
-  mad_tpsa_setv!(py0.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64},  [0.,0.,0.,0.,1.,0.,0.]))
-  mad_tpsa_setv!(dk1.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64},  [0.,0.,0.,0.,0.,1.,0.]))
-  mad_tpsa_setv!(dk2l.tpsa, Int32(0), Int32(1+6), Base.unsafe_convert(Ptr{Float64}, [0.,0.,0.,0.,0.,0.,1.]))
+  x0[1] = 1
+  px0[2] = 1
+  y0[3] = 1
+  py0[4] = 1
+  dk1[5] = 1
+  dk2l[6] = 1
 
   k1 = k1_0 + dk1
   k2l = k2l_0 + dk2l
@@ -167,6 +171,21 @@ function benchmark_ForwardDiff()
 
   return coefs
 end
+
+
+function benchmark_TaylorSeries()
+  # TPSA with 4 variables of order 2 and 2 parameters of order 2
+  x0, px0, y0, py0, dk2l, dk1 = set_variables("x0 px0 y0 py0 dk2l dk1", order=2)
+  k2l_0  = 0.
+  k1_0 = 0.36
+
+  k1 = k1_0 + dk1
+  k2l = k2l_0 + dk2l
+  map = track_ring([x0, px0, y0, py0], k1, k2l)
+  return map
+end
+
+
 
 #m = @btime benchmark_ForwardDiff()
 #m = @btime benchmark_GTPSA()

@@ -609,7 +609,6 @@ function getindex(t::AbstractTPSA, I::UnitRange)
   return v
 end
 
-
 # String
 function getindex(t::TPSA, s::AbstractString)::Float64
   return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.unsafe_convert(Cstring, Base.cconvert(Cstring, s)))
@@ -630,17 +629,17 @@ function setindex!(t::ComplexTPSA, v::Number, i::Integer)
 end
 
 # This needs to be fixed...
-function setindex!(t::AbstractTPSA, V, I)
-  _setindex!(v,i) = setindex!(t, v, i)
-  _setindex!.(V, I)
-end
+#function setindex!(t::AbstractTPSA, V, I)
+#  _setindex!(v,i) = setindex!(t, v, i)
+#  _setindex!.(V, I)
+#end
 
-function setindex!(t::TPSA, V::Array{Real}, I::UnitRange)
+function setindex!(t::TPSA, V::AbstractVector{<:Real}, I::UnitRange)
   mad_tpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, V)))
 end
 
-function setindex!(t::ComplexTPSA, V::Array{Number}, I::UnitRange)
-  mad_ctpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, V)))
+function setindex!(t::ComplexTPSA, V::AbstractVector{<:Number}, I::UnitRange)
+  mad_ctpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{ComplexF64}, convert(Vector{ComplexF64}, V)))
 end
 
 # Laurent does it like this:
