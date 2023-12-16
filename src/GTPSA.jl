@@ -468,7 +468,7 @@ struct Descriptor
   """
     Descriptor(nv::Integer, mo::Integer)
 
-  Creates a TPSA Descriptor with nv variables of maximum order mo.
+  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
   """
   function Descriptor(nv::Integer, mo::Integer)
     d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
@@ -481,8 +481,8 @@ struct Descriptor
   """
     Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
 
-  Creates a TPSA Descriptor with nv variables of maximum order mo, and np parameters
-  of maximum order po.
+  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
+  of maximum order `po`.
   """
   function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
     d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
@@ -495,9 +495,9 @@ struct Descriptor
   """
     Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
   
-  Creates a TPSA Descriptor with nv variables of maximum order mo, np parameters of 
-  maximum order po (<= mo), and the individual variable/parameter orders specified 
-  in no. 
+  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, `np` parameters of 
+  maximum order `po` (`<= mo`), and the individual variable/parameter orders specified 
+  in the Vector `no`. 
   """
   function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
     d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
