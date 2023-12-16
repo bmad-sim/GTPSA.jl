@@ -22,8 +22,10 @@ For developers,
 First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA(s). A `TPSA` or `ComplexTPSA` can then be created based on the descriptor. TPSAs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and basic math functions (e.g. `abs`, `sqrt`, `sin`, `coth`, etc.). For example, to compute the power series of a function $f$ to 12th order in 2 variables,
 
 ```
-# Define the TPSAs
+# Define the Descriptor for the TPSAs
 d = Descriptor(2, 12)
+
+# Create new TPSAs from the Descriptor, with all monomials set to 0 initially
 x1 = TPSA(d)
 x2 = TPSA(d)
 
@@ -31,6 +33,7 @@ x2 = TPSA(d)
 x1[1] = 1
 x2[2] = 1
 
+# Manipulate the TPSAs as you would any other variables in Julia
 f = sin(x1)*cos(x2)
 ```
 
@@ -53,11 +56,9 @@ f = sin(x1)*cos(x2)
                   ...
 ```
 This print function will be rewritten.
-
-The monomials can be accessed with three methods:
-
-1. **Index:** The monomial at index `i` (sorted by order) in the TPSA `t`can be accessed with `t[i]`. WARNING: this is not the number printed under `I` in the `print` output;.
+Individual monomials can be accessed with three methods:
+1. **Index:** The monomial at index `i` (sorted by order) in the TPSA `t`can be accessed with `t[i]`. WARNING: this is not the number printed under `I` in the `print` output.
 2. **String:** The first monomial in `t` with order `o` can be accessed with `t["o"]`, where the order is written as a string. 
-3. **Sparse monomial:*** (in progress)
+3. **Sparse monomial:** (in progress)
 
 
