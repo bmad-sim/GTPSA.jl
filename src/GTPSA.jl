@@ -34,6 +34,7 @@ import Base:  +,
               # asinhc,
               # erf   ,
               # erfc  ,
+              #show,
               print,
               zero,
               real,
@@ -393,7 +394,8 @@ export
   asinc ,
   asinhc,
   erf   ,
-  erfc  
+  erfc ,
+  setname! 
 
 const NAMSZ::Integer = 16
 
@@ -497,7 +499,7 @@ end
 
 
 """
-    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
+    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{<:Integer})
 
 Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, `np` parameters of 
 maximum order `po` (`<= mo`), and the individual variable/parameter orders specified 
@@ -510,8 +512,8 @@ in the Vector `no`.
 - `po` -- Maximum order of the parameters (`<= mo`) in the TPSA
 - `no` -- Vector of the individual orders of each variable and parameter, with variables first `nv` entries and parameters last `np` entries
 """
-function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})::Descriptor
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{<:Integer})::Descriptor
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
 end
 
 
@@ -648,7 +650,35 @@ function setindex!(t::ComplexTPSA, v::ComplexF64, ords::Integer...)
   mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
+function setname!(t::TPSA, nam::String)
+  mad_tpsa_setnam!(t.tpsa, Base.unsafe_convert(Cstring, nam))
+end
+
 # --- print ---
+#=
+function show(io::IO, t::TPSA)
+  # Get nn (length of monomial)
+  tpsa = unsafe_load(t.tpsa)
+  name = Base.unsafe_convert(String, tpsa.nam)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc{RTPSA,CTPSA}}, tpsa))
+  nv = desc.nv
+  np = desc.np
+  nn = desc.nn
+
+  m = @ccall malloc(sizeof(Cuchar)*desc.n)
+  v = @ccall malloc(sizeof(Cdouble))
+  i = Cint(-2)
+  while i != Cint(-1)
+    i += Cint(1)
+    i = mad_tpsa_cycle!(tpsa, i, desc.nn, m, v)
+
+  end
+
+
+
+end=#
+
+
 function print(t::TPSA)
   mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
