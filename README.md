@@ -60,9 +60,6 @@ f = sin(5+x1)*cos(x2)
                   ...
 ```
 This print function will be rewritten.
-Individual monomials can be accessed with three methods:
-1. **Index:** The monomial at index `i` (sorted by order) in the TPSA `t`can be accessed with `t[i]`. WARNING: this is not the number printed under `I` in the `print` output.
-2. **String:** The first monomial in `t` with order `o` can be accessed with `t["o"]`, where the order is written as a string. 
-3. **Sparse monomial:** (in progress)
 
+For creating more detailed TPSAs, see [the documentation](https://bmad-sim.github.io/GTPSA.jl/).
 
