@@ -31,9 +31,12 @@ d = Descriptor(2, 12)
 x1 = TPSA(d)
 x2 = TPSA(d)
 
-# Set the TPSAs so they correspond to the variables x1 and x2 
-x1[1] = 1
-x2[2] = 1
+# Set the TPSAs so they correspond to the variables x1 and x2
+# Indexes are orders of corresponding variable (e.g. to set x^2 
+# term equal to 5, use x[2,0] = 5)
+x1[1,0] = 1
+x2[0,1] = 1
+
 
 # Manipulate the TPSAs as you would any other variables in Julia
 f = sin(5+x1)*cos(x2)
