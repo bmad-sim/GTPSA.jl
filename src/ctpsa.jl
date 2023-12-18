@@ -686,7 +686,7 @@ Gets the coefficient of the monomial `m` defined as a byte array. Generally shou
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
 function mad_ctpsa_getm(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::ComplexF64
-  val = @ccall MAD_TPSA.mad_ctpsa_getm(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::ComplexF64
+  ret = @ccall MAD_TPSA.mad_ctpsa_getm(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::ComplexF64
   return ret
 end
 
@@ -861,7 +861,7 @@ Gets the coefficient of the monomial `m` defined as a byte array in place. Gener
 - `r` -- Coefficient of monomial `m` in TPSA
 """
 function mad_ctpsa_getm_r!(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, r::Ptr{ComplexF64})
-  val = @ccall MAD_TPSA.mad_ctpsa_getm_r(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, r::Ptr{ComplexF64})::Cvoid
+  ret = @ccall MAD_TPSA.mad_ctpsa_getm_r(t::Ptr{CTPSA{Desc}}, n::Cint, m::Ptr{Cuchar}, r::Ptr{ComplexF64})::Cvoid
   return ret
 end
 

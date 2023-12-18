@@ -39,15 +39,17 @@ d = Descriptor(2, 12)
 x1 = TPSA(d)
 x2 = TPSA(d)
 
-# Set the TPSAs so they correspond to the variables x1 and x2 
-x1[1] = 1
-x2[2] = 1
+# Set the TPSAs so they correspond to the variables x1 and x2
+# Indexes are orders of corresponding variable (e.g. to set x^2 
+# term equal to 5, use x[2,0] = 5)
+x1[1,0] = 1
+x2[0,1] = 1
 
 # Manipulate the TPSAs as you would any other variables in Julia
 f = sin(5+x1)*cos(x2)
 ```
 
-`f` itself is a TPSA. Note that scalars do not need to be defined as a TPSA when writing expressions. Running `print(f)` then gives the output
+`f` itself is a TPSA. Note that scalars do not need to be defined as TPSAs when writing expressions. Running `print(f)` then gives the output
 
 ```
          :  R, NV =   2, MO = 12
@@ -66,11 +68,6 @@ f = sin(5+x1)*cos(x2)
                   ...
 ```
 This print function will be rewritten.
-
-Individual monomials can be accessed with three methods:
-1. **Index:** The monomial at index `i` (sorted by order) in the TPSA `t`can be accessed with `t[i]`. WARNING: this is not the number printed under `I` in the `print` output.
-2. **String:** The first monomial in `t` with order `o` can be accessed with `t["o"]`, where the order is written as a string. 
-3. **Sparse monomial:** (in progress)
 
 ## Low-Level Functions
 ```@contents

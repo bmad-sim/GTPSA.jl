@@ -528,7 +528,7 @@ Gets the coefficient of the monomial `m` defined as a byte array. Generally shou
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
 function mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
-  val = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{RTPSA{Desc}}, n::Cint, m::Ptr{Cuchar})::Cdouble
   return ret
 end
 
