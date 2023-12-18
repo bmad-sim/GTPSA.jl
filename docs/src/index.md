@@ -1,13 +1,13 @@
 # GTPSA.jl
 
-_ A Julia interface to the Generalised Truncated Power Series Algebra (GTPSA) library in MAD._
+__A Julia interface to the Generalised Truncated Power Series Algebra (GTPSA) library in MAD.__
 
 ```@contents
 Pages = 
 [
-  "constructors.md",
+  "structs.md",
 ]
-Depth = 2
+Depth = 1
 ```
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG) included in MAD, which computes Taylor expansions of real and complex multivariable functions to arbitrary orders in each of the variables and function parameters individually, chosen by the user. GTPSA also allows distinction between variables $x_i$ and parameters $k_j$ in the function such that $\partial x_i/\partial k_j \neq 0$ but $\partial k_j/\partial x_i = 0$. We refer advanced users to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
 
