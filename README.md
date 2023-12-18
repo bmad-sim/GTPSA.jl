@@ -36,24 +36,24 @@ x1[1] = 1
 x2[2] = 1
 
 # Manipulate the TPSAs as you would any other variables in Julia
-f = sin(x1)*cos(x2)
+f = sin(5+x1)*cos(x2)
 ```
 
-`f` itself is a TPSA. Running `print(f)` then gives the output
+`f` itself is a TPSA. Note that scalars do not need to be defined as a TPSA when writing expressions. Running `print(f)` then gives the output
 
 ```
          :  R, NV =   2, MO = 12
  *******************************************************
      I   COEFFICIENT             ORDER   EXPONENTS
-     1   1.0000000000000000E+00    1     1 0
-     2   0.0000000000000000E+00    1     0 1
-     3  -1.6666666666666666E-01    3     3 0
-     4   0.0000000000000000E+00    3     2 1
-     5  -5.0000000000000000E-01    3     1 2
-     6   0.0000000000000000E+00    3     0 3
-     7   8.3333333333333332E-03    5     5 0
-     8   0.0000000000000000E+00    5     4 1
-     9   8.3333333333333329E-02    5     3 2
+     1  -9.5892427466313845E-01    0     0 0
+     2   2.8366218546322625E-01    1     1 0
+     3   0.0000000000000000E+00    1     0 1
+     4   4.7946213733156923E-01    2     2 0
+     5   0.0000000000000000E+00    2     1 1
+     6   4.7946213733156923E-01    2     0 2
+     7  -4.7277030910537705E-02    3     3 0
+     8   0.0000000000000000E+00    3     2 1
+     9  -1.4183109273161312E-01    3     1 2
 
                   ...
 ```
