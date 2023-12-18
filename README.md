@@ -6,7 +6,7 @@ This package provides a full-featured Julia interface to the [Generalised Trunca
 These generalizations, paired with an efficient monomial indexing function, make GTPSA very fast and memory efficient. See the `benchmark/fodo.jl` example for comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in computing all coefficients of a Taylor map 2nd order in 4 variables and 2 parameters. `TaylorDiff.jl` does not allow for trivial computation of all the individual coefficients in a multivariable Taylor series, and so a comparison with this package is not included.
 
 ## Installation
-To use GTPSA.jl, in the Julia REPL simply run
+To use `GTPSA.jl`, in the Julia REPL simply run
 
 ```
 ] add https://github.com/bmad-sim/GTPSA.jl.git
