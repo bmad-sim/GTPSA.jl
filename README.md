@@ -39,7 +39,7 @@ x2[2] = 1
 f = sin(5+x1)*cos(x2)
 ```
 
-`f` itself is a TPSA. Note that scalars do not need to be defined as a TPSA when writing expressions. Running `print(f)` then gives the output
+`f` itself is a TPSA. Note that scalars do not need to be defined as TPSAs when writing expressions. Running `print(f)` then gives the output
 
 ```
          :  R, NV =   2, MO = 12
