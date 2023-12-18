@@ -461,18 +461,21 @@ const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc{RTPSA,CTPSA}} = C_NULL
 
 # High-Level Wrapper Structs
-"`Descriptor` for TPSA, specifying the number of variables, number of parameters, 
+"""
+`Descriptor` for TPSA, specifying the number of variables, number of parameters, 
 orders of each variable, and orders of each parameters.
 
 ### Fields
-- `desc` -- `Ptr` to C Struct of the descriptor (`Desc`)"
+- `desc` -- `Ptr` to C Struct of the descriptor (`Desc`)
+"""
 struct Descriptor
   desc::Ptr{Desc{RTPSA,CTPSA}}
 
-  "`Descriptor(nv::Integer, mo::Integer)`
+  """
+    Descriptor(nv::Integer, mo::Integer)
 
   Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
-  "
+  """
   function Descriptor(nv::Integer, mo::Integer)
     d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
     #f(x) = mad_desc_del!(x.desc)
