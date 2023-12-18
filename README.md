@@ -22,6 +22,8 @@ For developers,
 First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA(s). A `TPSA` or `ComplexTPSA` can then be created based on the descriptor. TPSAs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and basic math functions (e.g. `abs`, `sqrt`, `sin`, `coth`, etc.). For example, to compute the power series of a function $f$ to 12th order in 2 variables,
 
 ```
+using GTPSA
+
 # Define the Descriptor for the TPSAs
 d = Descriptor(2, 12)
 
