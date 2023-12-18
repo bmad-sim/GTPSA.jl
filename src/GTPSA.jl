@@ -633,6 +633,27 @@ mutable struct ComplexTPSA <: AbstractTPSA
 end
 
 # --- Getters ---
+function getindex(t::TPSA, ords::Integer...)::Float64
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+end
+
+function getindex(t::ComplexTPSA, ords::Integer...)::ComplexF64
+  return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+end
+
+# --- Setters ---
+function setindex!(t::TPSA, v::Real, ords::Integer...)
+  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(Cdouble, 0), convert(Cdouble, v))
+end
+
+function setindex!(t::ComplexTPSA, v::ComplexF64, ords::Integer...)
+  mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
+end
+
+#function setindex!(t::TPSA, V::AbstractVector{<:Real}, I::UnitRange)
+#  mad_tpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{Float64}, convert(Vector{Float64}, V)))
+#end
+#= GTPSA C Library native indexing methods:
 # Index
 firstindex(t::TPSA) = 0
 lastindex(t::TPSA) = mad_tpsa_len(t.tpsa)-1
@@ -670,7 +691,7 @@ end
 
 # String
 function getindex(t::TPSA, s::AbstractString)::Float64
-  return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.unsafe_convert(Cstring, Base.cconvert(Cstring, s)))
+  return mad_tpsa_gets(t.tpsa, convert(Cint, 0), Base.unsafe_convert(Cstring, s))
 end
 
 # Sparse monomial
@@ -700,7 +721,7 @@ end
 function setindex!(t::ComplexTPSA, V::AbstractVector{<:Number}, I::UnitRange)
   mad_ctpsa_setv!(t.tpsa, convert(Cint, I[begin]), convert(Cint, length(I)), Base.unsafe_convert(Ptr{ComplexF64}, convert(Vector{ComplexF64}, V)))
 end
-
+=#
 # Laurent does it like this:
 #tpsa x ( "X"); x .set( 0   , 1);  # mad_tpsa_setvar!(t.tpsa, convert(Cdouble, 0), convert(Cint, 1), convert(Cdouble, 0))  -> sets x to 1. We can think of a smart way to do this
 #tpsa px("PX"); px.set( 1e-7, 2);
