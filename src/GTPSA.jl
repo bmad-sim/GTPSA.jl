@@ -393,8 +393,7 @@ export
   asinc ,
   asinhc,
   erf   ,
-  erfc  ,
-  getproperty
+  erfc  
 
 const NAMSZ::Integer = 16
 
@@ -462,6 +461,13 @@ const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc{RTPSA,CTPSA}} = C_NULL
 
 # High-Level Wrapper Structs
+"""
+`Descriptor` for TPSA, specifying the number of variables, number of parameters, 
+orders of each variable, and orders of each parameters.
+
+### Fields
+- `desc` -- `Ptr` to C Struct of the descriptor (`Desc`)
+"""
 struct Descriptor
   desc::Ptr{Desc{RTPSA,CTPSA}}
 
@@ -509,9 +515,20 @@ end
 
 abstract type AbstractTPSA end
 
+"""
+TPSA containing only real coefficients
+
+### Fields
+- `tpsa` -- `Ptr` to C Struct of the real TPSA (`RTPSA`)
+"""
 mutable struct TPSA <: AbstractTPSA
   tpsa::Ptr{RTPSA{Desc}}
 
+  """
+    TPSA()
+
+  Creates a `TPSA` using the most recently-defined `Descriptor`
+  """
   function TPSA()
     t = new(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
     f(x) = mad_tpsa_del!(x.tpsa)
@@ -519,6 +536,11 @@ mutable struct TPSA <: AbstractTPSA
     return t
   end
 
+  """
+    TPSA(d::Descriptor)
+
+  Creates a `TPSA` based on the `d::Descriptor` 
+  """
   function TPSA(d::Descriptor)
     t = new(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
     f(x) = mad_tpsa_del!(x.tpsa)
@@ -526,7 +548,11 @@ mutable struct TPSA <: AbstractTPSA
     return t
   end
 
-  
+  """
+    TPSA(t1::TPSA)
+
+  Creates a `TPSA` with the same `Descriptor` as `t1::TPSA`
+  """
   function TPSA(t1::TPSA)
     t = new(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
     f(x) = mad_tpsa_del!(x.tpsa)
@@ -534,6 +560,11 @@ mutable struct TPSA <: AbstractTPSA
     return t
   end
 
+  """
+    TPSA(t1::AbstractTPSA)
+
+  Creates a `TPSA` with the same `Descriptor` as `t1::AbstractTPSA`
+  """
   function TPSA(t1::AbstractTPSA)
     t = new(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
     f(x) = mad_tpsa_del!(x.tpsa)
@@ -542,10 +573,20 @@ mutable struct TPSA <: AbstractTPSA
   end
 end
 
+"""
+TPSA containing complex coefficients
 
+### Fields
+- `tpsa` -- `Ptr` to C Struct of the complex TPSA (`CTPSA`)
+"""
 mutable struct ComplexTPSA <: AbstractTPSA
   tpsa::Ptr{CTPSA{Desc}}
 
+  """
+    ComplexTPSA()
+
+  Creates a `ComplexTPSA` using the most recently-defined `Descriptor`
+  """
   function ComplexTPSA()
     t = new(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
     f(x) = mad_ctpsa_del!(x.tpsa)
@@ -553,6 +594,12 @@ mutable struct ComplexTPSA <: AbstractTPSA
     return t
   end
 
+
+  """
+    ComplexTPSA(d::Descriptor)
+
+  Creates a `ComplexTPSA` based on the `d::Descriptor` 
+  """
   function ComplexTPSA(d::Descriptor)
     t = new(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
     f(x) = mad_ctpsa_del!(x.tpsa)
@@ -560,6 +607,11 @@ mutable struct ComplexTPSA <: AbstractTPSA
     return t
   end
 
+  """
+    ComplexTPSA(t1::ComplexTPSA)
+
+  Creates a `ComplexTPSA` with the same `Descriptor` as `t1::ComplexTPSA`
+  """
   function ComplexTPSA(t1::ComplexTPSA)
     t = new(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
     f(x) = mad_ctpsa_del!(x.tpsa)
@@ -567,6 +619,11 @@ mutable struct ComplexTPSA <: AbstractTPSA
     return t
   end
 
+  """
+    ComplexTPSA(t1::AbstractTPSA)
+
+  Creates a `ComplexTPSA` with the same `Descriptor` as `t1::AbstractTPSA`
+  """
   function ComplexTPSA(t1::AbstractTPSA)
     t = new(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
     f(x) = mad_ctpsa_del!(x.tpsa)
@@ -595,9 +652,11 @@ function length(t::ComplexTPSA)
   return mad_ctpsa_len(t.tpsa)
 end
 
+#=
 function getindex(t::AbstractTPSA, I)
   return [t[i] for i in I]
 end
+=#
 
 function getindex(t::AbstractTPSA, I::UnitRange)
   bytes = length(I)*sizeof(Cdouble)
