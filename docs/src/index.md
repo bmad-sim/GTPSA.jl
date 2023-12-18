@@ -61,7 +61,7 @@ f = sin(5+x1)*cos(x2)
 ```
 This print function will be rewritten.
 
-For more creating more detailed TPSAs, see:
+For creating more detailed TPSAs, see:
 
 ```@contents
 Pages = 
