@@ -63,3 +63,5 @@ This print function will be rewritten.
 
 For creating more detailed TPSAs, see [the documentation](https://bmad-sim.github.io/GTPSA.jl/).
 
+## Acknowledgements
+We'd like to thank Laurent Deniau, the creator of GTPSA, for very detailed and lengthy discussions on using his C library. 
