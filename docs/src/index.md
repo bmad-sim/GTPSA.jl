@@ -33,8 +33,7 @@ x1 = TPSA(d)
 x2 = TPSA(d)
 
 # Set the TPSAs so they correspond to the variables x1 and x2
-# Indexes are orders of corresponding variable (e.g. to set x^2 
-# term equal to 5, use x[2,0] = 5)
+# Indexes are orders of corresponding variable
 x1[1,0] = 1
 x2[0,1] = 1
 
@@ -62,7 +61,7 @@ f = sin(5+x1)*cos(x2)
 ```
 This print function will be rewritten.
 
-For more creating more detailed TPSAs, see:
+For creating more detailed TPSAs, see:
 
 ```@contents
 Pages = 
