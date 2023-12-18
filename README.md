@@ -32,7 +32,7 @@ x1 = TPSA(d)
 x2 = TPSA(d)
 
 # Set the TPSAs so they correspond to the variables x1 and x2
-# Indexes are orders of corresponding variable
+# Indices are orders of corresponding variable
 x1[1,0] = 1
 x2[0,1] = 1
 
