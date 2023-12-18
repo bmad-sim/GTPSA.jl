@@ -8,7 +8,7 @@ makedocs(
   pages = 
   [
     "Home" => "index.md",
-    "Constructors" => "constructors.md",
+    "GTPSA Structs" => "structs.md",
     "Low-Level Functions" => 
     Any[
       "Descriptor" => "low_level/desc.md",

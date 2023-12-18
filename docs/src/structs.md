@@ -1,16 +1,13 @@
-# Constructors
+# GTPSA Structs
 ## Descriptor
 ```@docs
 Descriptor
-Descriptor()
 ```
 ## TPSA
 ```@docs
 TPSA
-TPSA()
 ```
 ## ComplexTPSA 
-```@docs 
+```@docs
 ComplexTPSA
-ComplexTPSA()
 ```

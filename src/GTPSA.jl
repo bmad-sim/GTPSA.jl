@@ -460,177 +460,175 @@ const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc{RTPSA,CTPSA}} = C_NULL
 
-# High-Level Wrapper Structs
-"""
-`Descriptor` for TPSA, specifying the number of variables, number of parameters, 
-orders of each variable, and orders of each parameters.
-
-### Fields
-- `desc` -- `Ptr` to C Struct of the descriptor (`Desc`)
-"""
 struct Descriptor
   desc::Ptr{Desc{RTPSA,CTPSA}}
+end
 
-  """
+# Descriptor outer constructors
+"""
     Descriptor(nv::Integer, mo::Integer)
 
-  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
-  """
-  function Descriptor(nv::Integer, mo::Integer)
-    d = new(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
-    #f(x) = mad_desc_del!(x.desc)
-    #finalizer(f,d)
-    return d
-  end
+Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
+
+### Input
+- `nv` -- Number of variables in the TPSA
+- `mo` -- Maximum order of the variables in the TPSA
+"""
+function Descriptor(nv::Integer, mo::Integer)::Descriptor
+  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+end
 
 
-  """
+"""
     Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
 
-  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
-  of maximum order `po`.
-  """
-  function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
-    d = new(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
-    #f(x) = mad_desc_del!(x.desc)
-    #finalizer(f,d)
-    return d
-  end
+Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
+of maximum order `po` (`<= mo`).
 
-
-  """
-    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
-  
-  Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, `np` parameters of 
-  maximum order `po` (`<= mo`), and the individual variable/parameter orders specified 
-  in the Vector `no`. 
-  """
-  function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
-    d = new(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
-    #f(x) = mad_desc_del!(x.desc)
-    #finalizer(f,d)
-    return d
-  end
+### Input
+- `nv` -- Number of variables in the TPSA
+- `mo` -- Maximum order of the variables in the TPSA
+- `np` -- Number of parameters in the TPSA
+- `po` -- Maximum order of the parameters (`<= mo`) in the TPSA
+"""
+function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
+  return Descriptor(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
 end
+
+
+"""
+    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})
+
+Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, `np` parameters of 
+maximum order `po` (`<= mo`), and the individual variable/parameter orders specified 
+in the Vector `no`. 
+
+### Input
+- `nv` -- Number of variables in the TPSA
+- `mo` -- Maximum order of the variables in the TPSA
+- `np` -- Number of parameters in the TPSA
+- `po` -- Maximum order of the parameters (`<= mo`) in the TPSA
+- `no` -- Vector of the individual orders of each variable and parameter, with variables first `nv` entries and parameters last `np` entries
+"""
+function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer, no::Vector{Int})::Descriptor
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+end
+
 
 abstract type AbstractTPSA end
 
-"""
-TPSA containing only real coefficients
-
-### Fields
-- `tpsa` -- `Ptr` to C Struct of the real TPSA (`RTPSA`)
-"""
 mutable struct TPSA <: AbstractTPSA
   tpsa::Ptr{RTPSA{Desc}}
+  function TPSA(t::Ptr{RTPSA{Desc}})
+    t = new(t)
+    f(x) = mad_tpsa_del!(x.tpsa)
+    finalizer(f,t)
+    return t
+  end
+end
 
-  """
+"""
     TPSA()
 
-  Creates a `TPSA` using the most recently-defined `Descriptor`
-  """
-  function TPSA()
-    t = new(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
+Creates a `TPSA` using the most recently-defined `Descriptor`
+"""
+function TPSA()
+  return TPSA(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
-  """
+"""
     TPSA(d::Descriptor)
 
-  Creates a `TPSA` based on the `d::Descriptor` 
-  """
-  function TPSA(d::Descriptor)
-    t = new(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
+Creates a `TPSA` based on `d` 
 
-  """
+### Input
+- `d` -- `Descriptor`
+"""
+function TPSA(d::Descriptor)
+  return TPSA(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+end
+
+"""
     TPSA(t1::TPSA)
 
-  Creates a `TPSA` with the same `Descriptor` as `t1::TPSA`
-  """
-  function TPSA(t1::TPSA)
-    t = new(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
+Creates a `TPSA` with the same `Descriptor` as `t1`
 
-  """
+### Input
+- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+"""
+function TPSA(t1::TPSA)
+  return TPSA(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+end
+
+"""
     TPSA(t1::AbstractTPSA)
 
-  Creates a `TPSA` with the same `Descriptor` as `t1::AbstractTPSA`
-  """
-  function TPSA(t1::AbstractTPSA)
-    t = new(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
+Creates a `TPSA` with the same `Descriptor` as `t1`
+
+### Input
+- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+"""
+function TPSA(t1::AbstractTPSA)
+  return TPSA(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
 end
 
-"""
-TPSA containing complex coefficients
 
-### Fields
-- `tpsa` -- `Ptr` to C Struct of the complex TPSA (`CTPSA`)
-"""
 mutable struct ComplexTPSA <: AbstractTPSA
   tpsa::Ptr{CTPSA{Desc}}
-
-  """
-    ComplexTPSA()
-
-  Creates a `ComplexTPSA` using the most recently-defined `Descriptor`
-  """
-  function ComplexTPSA()
-    t = new(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-    f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
-
-
-  """
-    ComplexTPSA(d::Descriptor)
-
-  Creates a `ComplexTPSA` based on the `d::Descriptor` 
-  """
-  function ComplexTPSA(d::Descriptor)
-    t = new(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
-    f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
-
-  """
-    ComplexTPSA(t1::ComplexTPSA)
-
-  Creates a `ComplexTPSA` with the same `Descriptor` as `t1::ComplexTPSA`
-  """
-  function ComplexTPSA(t1::ComplexTPSA)
-    t = new(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
-    f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
-
-  """
-    ComplexTPSA(t1::AbstractTPSA)
-
-  Creates a `ComplexTPSA` with the same `Descriptor` as `t1::AbstractTPSA`
-  """
-  function ComplexTPSA(t1::AbstractTPSA)
-    t = new(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
+  function ComplexTPSA(t::Ptr{CTPSA{Desc}})
+    t = new(t)
     f(x) = mad_ctpsa_del!(x.tpsa)
     finalizer(f,t)
     return t
   end
 end
+
+"""
+    ComplexTPSA()
+
+Creates a `ComplexTPSA` using the most recently-defined `Descriptor`
+"""
+function ComplexTPSA()
+  return ComplexTPSA(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
+
+
+"""
+    ComplexTPSA(d::Descriptor)
+
+Creates a `ComplexTPSA` based on `d` 
+
+### Input
+- `d` -- `Descriptor`
+"""
+function ComplexTPSA(d::Descriptor)
+  return ComplexTPSA(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+end
+
+"""
+    ComplexTPSA(t1::ComplexTPSA)
+
+Creates a `ComplexTPSA` with the same `Descriptor` as `t1`
+
+### Input
+- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+"""
+function ComplexTPSA(t1::ComplexTPSA)
+  return ComplexTPSA(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+end
+
+"""
+    ComplexTPSA(t1::AbstractTPSA)
+
+Creates a `ComplexTPSA` with the same `Descriptor` as `t1`
+
+### Input
+- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+"""
+function ComplexTPSA(t1::AbstractTPSA)
+  return ComplexTPSA(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA{Desc}}, t1.tpsa), MAD_TPSA_DEFAULT))
+end
+
 
 # --- Getters ---
 function getindex(t::TPSA, ords::Integer...)::Float64
