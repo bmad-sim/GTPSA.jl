@@ -8,14 +8,8 @@ makedocs(
   pages = 
   [
     "Home" => "index.md",
-    "GTPSA Structs" => "structs.md",
-    "Low-Level Functions" => 
-    Any[
-      "Descriptor" => "low_level/desc.md",
-      "Monomial" => "low_level/mono.md",
-      "Real TPSA" => "low_level/rtpsa.md",
-      "Complex TPSA" => "low_level/ctpsa.md",
-    ]
+    "Usage" => "usage.md",
+    "For Developers" => "devel.md"
   ]
 )
 

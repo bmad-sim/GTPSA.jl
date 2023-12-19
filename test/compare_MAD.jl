@@ -98,11 +98,11 @@ function c_to_jl_type(type_c)
   elseif occursin("char", type_c)
     type_jl = type_jl * "Cuchar"
   elseif occursin("desc_t", type_c)
-    type_jl = type_jl * "Desc{RTPSA,CTPSA}"
+    type_jl = type_jl * "Desc"
   elseif occursin("ctpsa_t", type_c)
-    type_jl = type_jl * "CTPSA{Desc}"
+    type_jl = type_jl * "CTPSA"
   elseif occursin("tpsa_t", type_c)
-    type_jl = type_jl * "RTPSA{Desc}"
+    type_jl = type_jl * "RTPSA"
   elseif occursin("FILE", type_c)
     type_jl = type_jl * "Cvoid"
   elseif occursin("void", type_c)
