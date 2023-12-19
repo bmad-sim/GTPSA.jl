@@ -1,5 +1,78 @@
 """
-    mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+    `Desc`
+
+This is a 1-to-1 struct for the C definition `desc` (descriptor) in GTPSA. Descriptors include all 
+information about the TPSA, including the number of variables/parameters and their orders, lookup tables for 
+the monomials, monomial indexing function, and pre-allocated permanent temporaries for fast evaluation.
+
+### Fields
+- `id::Cint`                   -- Index in list of registered descriptors
+- `nn::Cint`                   -- Number of variables + number of parameters, `nn = nv+np <= 100000`
+- `nv::Cint`                   -- Number of variables
+- `np::Cint`                   -- Number of parameters
+- `mo::Cuchar`                 -- Max order of variables
+- `po::Cuchar`                 -- Max order of parameterss
+- `to::Cuchar`                 -- Global order of truncation. Note: `ord_t` in gtpsa is `typedef` for `unsigned char` (`Cuchar`)
+- `no::Ptr{Cuchar}`            -- Array of orders of each variable (first `nv` entries) and parameters (last `np` entries), length `nn`. Note: In C this is `const`
+- `uno::Cint`                  -- User provided array of orders of each variable/parameter (with `mad_desc_newvpo`)
+- `nth::Cint`                  -- Max number of threads or 1
+- `nc::Cuint`                  -- Number of coefficients (max length of TPSA)
+- `monos::Ptr{Cuchar}`         -- 'Matrix' storing the monomials (sorted by variable)
+- `ords::Ptr{Cuchar}`          -- Order of each monomial of `To`
+- `prms::Ptr{Cuchar}`          -- Order of parameters in each monomial of `To` (zero = no parameters)
+- `To::Ptr{Ptr{Cuchar}}`       -- Table by orders - pointers to monomials, sorted by order
+- `Tv::Ptr{Ptr{Cuchar}}`       -- Table by vars - pointers to monomials, sorted by variable
+- `ocs::Ptr{Ptr{Cuchar}}`      -- `ocs[t,i]` -> `o` in mul, compute `o` on thread `t 3 <= o <= mo` aterminated with 0
+- `ord2idx::Ptr{Cint}`         -- Order to polynomial start index in `To`` (i.e. in TPSA `coef``)
+- `tv2to::Ptr{Cint}`           -- Lookup `tv`->`to`
+- `to2tv::Ptr{Cint}`           -- Lookup `to`->`tv`
+- `H::Ptr{Cint}`               -- Indexing matrix in `Tv`
+- `L::Ptr{Ptr{Cint}}`          -- Multiplication indexes `L[oa,ob]`->`L_ord` `L_ord[ia,ib]`->`ic`
+- `L_idx::Ptr{Ptr{Ptr{Cint}}}` -- `L_idx[oa,ob]`->`[start] [split] [end]` idxs in `L`
+- `size::Culonglong`           -- Bytes used by `desc`. `Unsigned Long Int`: In 32 bit system is `Int32` but 64 bit is `Int64`. Using `Culonglong` assuming 64 bit
+- `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `RTPSA`s already initialized
+- `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `CTPSA`s already initialized
+- `ti::Ptr{Cint}`              -- idx of tmp used
+- `cti::Ptr{Cint}`             -- idx of tmp used                                                                                                      
+"""
+struct Desc
+  id::Cint                   
+  nn::Cint                   
+  nv::Cint                   
+  np::Cint                   
+  mo::Cuchar                 
+  po::Cuchar                 
+  to::Cuchar                 
+  no::Ptr{Cuchar}            
+
+  uno::Cint                  
+  nth::Cint                  
+  nc::Cuint                  
+
+  monos::Ptr{Cuchar}         
+  ords::Ptr{Cuchar}          
+  prms::Ptr{Cuchar}          
+  To::Ptr{Ptr{Cuchar}}       
+  Tv::Ptr{Ptr{Cuchar}}       
+  ocs::Ptr{Ptr{Cuchar}}      
+
+  ord2idx::Ptr{Cint}         
+  tv2to::Ptr{Cint}           
+  to2tv::Ptr{Cint}           
+  H::Ptr{Cint}               
+  L::Ptr{Ptr{Cint}}          
+  L_idx::Ptr{Ptr{Ptr{Cint}}} 
+
+  size::Culonglong           
+
+  t::Ptr{Ptr{Cvoid}}         
+  ct::Ptr{Ptr{Cvoid}}        
+  ti::Ptr{Cint}              
+  cti::Ptr{Cint}             
+end
+
+"""
+    mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc}
 
 Creates a TPSA descriptor with the specified number of variables and maximum order. 
 The number of parameters is set to 0.
@@ -11,14 +84,14 @@ The number of parameters is set to 0.
 ### Output
 - `ret` -- Descriptor with the specified number of variables and maximum order
 """
-function mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  ret = @ccall MAD_TPSA.mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+function mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc}
+  ret = @ccall MAD_TPSA.mad_desc_newv(nv::Cint, mo::Cuchar)::Ptr{Desc}
   return ret
 end
 
 
 """
-    mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+    mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order, number of 
 parameters, and parameter order.
@@ -32,14 +105,14 @@ parameters, and parameter order.
 ### Output
 - `ret` -- Descriptor with the specified `nv`, `mo`, `np`, and `po`
 """
-function mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
-  ret = @ccall MAD_TPSA.mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc{RTPSA,CTPSA}}
+function mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc}
+  ret = @ccall MAD_TPSA.mad_desc_newvp(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar)::Ptr{Desc}
   return ret
 end
 
 
 """
-    mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
+    mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc}
 
 Creates a TPSA descriptor with the specifed number of variables, maximum order, number of parameters, 
 parameter order, and individual variable/parameter orders specified in `no`. The first `nv` entries in `no` 
@@ -55,25 +128,25 @@ correspond to the variables' orders and the next `np` entries correspond the par
 ### Output
 - `ret` -- Descriptor with the specified `nv`, `mo`, `np`, `po`, `no`.
 """
-function mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
-  ret = @ccall MAD_TPSA.mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc{RTPSA,CTPSA}}
+function mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc}
+  ret = @ccall MAD_TPSA.mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Ptr{Cuchar})::Ptr{Desc}
   return ret
 end
 
 
 """
-    mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
+    mad_desc_del!(d_::Ptr{Desc})
 
 Calls the destructor for the passed descriptor.
 
 """
-function mad_desc_del!(d_::Ptr{Desc{RTPSA,CTPSA}})
-  @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc{RTPSA,CTPSA}})::Cvoid
+function mad_desc_del!(d_::Ptr{Desc})
+  @ccall MAD_TPSA.mad_desc_del(d_::Ptr{Desc})::Cvoid
 end
 
 
 """
-    mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar)::Cint
+    mad_desc_getnv!(d::Ptr{Desc}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar)::Cint
 
 Returns the number of variables in the descriptor, and sets the passed `mo_`, `np_`, and `po_` to the maximum 
 order, number of parameters, and parameter order respectively.
@@ -87,14 +160,14 @@ order, number of parameters, and parameter order respectively.
 - `po_` -- (Optional) Parameter order of the descriptor
 - `ret` -- Number of variables in TPSA
 """
-function mad_desc_getnv!(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_desc_getnv(d::Ptr{Desc{RTPSA,CTPSA}}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
+function mad_desc_getnv!(d::Ptr{Desc}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_getnv(d::Ptr{Desc}, mo_::Cuchar, np_::Cint, po_::Cuchar)::Cint
   return ret
 end
 
 
 """
-    mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+    mad_desc_maxord(d::Ptr{Desc}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
 
 Sets the order of the variables and parameters of the TPSA to those specified in `no_` and 
 returns the maximum order of the TPSA.
@@ -107,14 +180,14 @@ returns the maximum order of the TPSA.
 ### Output
 - `ret`  -- Maximum order of TPSA
 """
-function mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_maxord(d::Ptr{Desc{RTPSA,CTPSA}}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+function mad_desc_maxord(d::Ptr{Desc}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_maxord(d::Ptr{Desc}, nn::Cint, no_::Ptr{Cuchar})::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
+    mad_desc_maxlen(d::Ptr{Desc}, mo::Cuchar)::Cint
 
 Gets the maximum length of the TPSA given an order. 
 
@@ -125,14 +198,14 @@ Gets the maximum length of the TPSA given an order.
 ### Output
 - `ret` -- monomials in `0..order`
 """
-function mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
-  ret = @ccall MAD_TPSA.mad_desc_maxlen(d::Ptr{Desc{RTPSA,CTPSA}}, mo::Cuchar)::Cint
+function mad_desc_maxlen(d::Ptr{Desc}, mo::Cuchar)::Cint
+  ret = @ccall MAD_TPSA.mad_desc_maxlen(d::Ptr{Desc}, mo::Cuchar)::Cint
   return ret
 end
 
 
 """
-    mad_desc_gtrunc!(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
+    mad_desc_gtrunc!(d::Ptr{Desc}, to::Cuchar)::Cuchar
 
 Sets the global truncation order `to` of the TPSA, and returns the old global truncation order.
 
@@ -143,14 +216,14 @@ Sets the global truncation order `to` of the TPSA, and returns the old global tr
 ### Output
 - `oldto` -- Old global truncation order
 """
-function mad_desc_gtrunc!(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
-  oldto = @ccall MAD_TPSA.mad_desc_gtrunc(d::Ptr{Desc{RTPSA,CTPSA}}, to::Cuchar)::Cuchar
+function mad_desc_gtrunc!(d::Ptr{Desc}, to::Cuchar)::Cuchar
+  oldto = @ccall MAD_TPSA.mad_desc_gtrunc(d::Ptr{Desc}, to::Cuchar)::Cuchar
   return oldto
 end
 
 
 """
-    mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
+    mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
 
 Checks if monomial as string `s` is valid given maximum order of descriptor.
 
@@ -162,14 +235,14 @@ Checks if monomial as string `s` is valid given maximum order of descriptor.
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cuchar
+function mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+    mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cuchar
 
 Checks if monomial as byte array `m` is valid given maximum order of descriptor.
 
@@ -181,14 +254,14 @@ Checks if monomial as byte array `m` is valid given maximum order of descriptor.
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cuchar
+function mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
+    mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cuchar
 
 Checks the monomial as sparse monomial `m` (monomial stored as sequence of integers with each pair 
 `[(i,o)]` such that `i` = index, `o` = order) is valid given the maximum order of the descriptor.
@@ -201,14 +274,14 @@ Checks the monomial as sparse monomial `m` (monomial stored as sequence of integ
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cuchar
+function mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cuchar
   return ret
 end
 
 
 """
-    mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
+    mad_desc_idxs(d::Ptr{Desc}, n::Cint, s::Cstring)::Cint
 
 Returns the index of the monomial as string `s` in the descriptor, or -1 if the monomial is invalid.
 
@@ -220,14 +293,14 @@ Returns the index of the monomial as string `s` in the descriptor, or -1 if the 
 ### Output
 - `ret` -- Monomial index or -1 if invalid monomial
 """
-function mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
-  ret = @ccall MAD_TPSA.mad_desc_idxs(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, s::Cstring)::Cint
+function mad_desc_idxs(d::Ptr{Desc}, n::Cint, s::Cstring)::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxs(d::Ptr{Desc}, n::Cint, s::Cstring)::Cint
   return ret
 end
 
 
 """
-    mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_idxm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
 
 Returns the index of the monomial as byte array `m` in the descriptor, or -1 if the monomial is invalid.
 
@@ -239,14 +312,14 @@ Returns the index of the monomial as byte array `m` in the descriptor, or -1 if 
 ### Output
 - `ret`  -- Monomial index or -1 if invalid
 """
-function mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_desc_idxm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_desc_idxm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
+    mad_desc_idxsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cint
 
 Returns the index of the monomial as sparse monomial `m`, indexed as `[(i,o)]`, in the descriptor, or -1 if the monomial is invalid.
 
@@ -258,14 +331,14 @@ Returns the index of the monomial as sparse monomial `m`, indexed as `[(i,o)]`, 
 ### Output
 - `ret` -- Monomial index or -1 if invalid
 """
-function mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
-  ret = @ccall MAD_TPSA.mad_desc_idxsm(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cint})::Cint
+function mad_desc_idxsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cint
+  ret = @ccall MAD_TPSA.mad_desc_idxsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cint
   return ret
 end
 
 
 """
-    mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_nxtbyvar(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
 
 Returns the next monomial after monomial `m` in the TPSA when sorted by variable.
 
@@ -277,14 +350,14 @@ Returns the next monomial after monomial `m` in the TPSA when sorted by variable
 ### Output
 - `idx` -- Monomial index or -1 if no valid next monomial
 """
-function mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_nxtbyvar(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_desc_nxtbyvar(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
+  idx = @ccall MAD_TPSA.mad_desc_nxtbyvar(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
   return idx
 end
 
 
 """
-    mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_desc_nxtbyord(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
 
 Returns the next monomial after monomial `m` in the TPSA when sorted by order.
 
@@ -296,14 +369,14 @@ Returns the next monomial after monomial `m` in the TPSA when sorted by order.
 ### Output
 - `idx` -- Monomial index or -1 if no valid next monomial
 """
-function mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
-  idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc{RTPSA,CTPSA}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_desc_nxtbyord(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
+  idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cint
   return idx
 end
 
 
 """
-    mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+    mad_desc_mono!(d::Ptr{Desc}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
 
 Returns the order of the monomial at index `i`, and if `n` and `m_` are provided, then will also fill `m_` 
 with the monomial at this index. Also will optionally return the order of the parameters in the monomial 
@@ -319,13 +392,13 @@ if `p_` is provided
 - `m_`  -- (Optional) Monomial to fill if provided
 - `p_`  -- (Optional) Order of parameters in monomial if provided
 """
-function mad_desc_mono!(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc{RTPSA,CTPSA}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+function mad_desc_mono!(d::Ptr{Desc}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+  ret = @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
 
 """
-    mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp::Ptr{Cvoid})
+    mad_desc_info(d::Ptr{Desc}, fp::Ptr{Cvoid})
 
 For debugging.
 
@@ -333,6 +406,6 @@ For debugging.
 - `d`  -- Descriptor to debug
 - `fp` -- File to write to. If null, will write to `stdout`
 """
-function mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc{RTPSA,CTPSA}}, fp_::Ptr{Cvoid})::Cvoid
+function mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})::Cvoid
 end
