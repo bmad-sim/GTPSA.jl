@@ -1,9 +1,8 @@
 # Usage
-
-GTPSA distinguishes between **variables** $x_i$ and **parameters** $k_j$ in a TPSA, such that the parameters are strictly unaffected by the variables, however the variables do depend on the parameters. Explicitly, $\partial x_i/\partial k_j \neq 0$ but $\partial k_j/\partial x_i = 0$. This generalization allows for a significant speed-up in computation time.
+In some use cases, the TPS may define the evolution of some state $x$ of a dynamical system, e.g. $x_f = \mathcal{M}(x_i,k_1)$, where $k_1$ is some defined external parameter. When $\mathcal{M}$ is expanded in powers of $x_i$, this is referred to as a *Taylor map*. $x$ is referred to as a map variable or *variable*, as its evolution is defined by the TPS. $k_1$ which does not evolve with $\mathcal{M}$, is referred to as a *parameter*. GTPSA allows distinction between map variables and parameters, as well as the individual orders for each, to speed up computations.
 
 ## Custom Variable/Parameter Orders
-The `Descriptor` defines all information about the TPSAs, including the number of variables, order for each variable, number of parameters, and order for each parameter. There are three constructors for a `Descriptor`:
+The `Descriptor` defines all information about the TPSA, including the number of variables, order for each variable, number of parameters, and order for each parameter. There are three constructors for a `Descriptor`:
 
 ```
 # Descriptor for 2 variables with max order 10 for each, and no parameters
@@ -20,26 +19,26 @@ The constructor for `Descriptor` definitions are:
 Descriptor
 ```
 ## Monomial Indexing
-A TPSA is, roughly-speaking, a structure containing the Taylor coefficients for all of the monomials in the Taylor series. The monomial coefficients can be accessed with indexing by *order* in each of the variables and parameters. A particular monomial in a TPSA `t` is indexed by `t[<x1 order>, ..., <x_nv order>, <k1 order>, ..., <k_np order>]`. For example, suppose we have a TPSA 3rd order in the variables $x_1,x_2$ and 2nd order in the parameter $k_1$. The $x_1^3x_2^1k_1^2$ term is accessed with `t[3,1,2]`. The 0th order part (the *scalar* part) of the TPSA is set with `t[0,0,0]`.
+A TPS contains the Taylor coefficients for all of the monomials in the Taylor series up to the specified truncation order. The monomial coefficients can be accessed with indexing by *order* in each of the variables and parameters. A particular monomial in a TPS `t` is indexed by `t[<x1 order>, ..., <x_nv order>, <k1 order>, ..., <k_np order>]`. For example, suppose we have a TPS 3rd order in the variables $x_1,x_2$ and 2nd order in the parameter $k_1$. The $x_1^3x_2^1k_1^2$ term is accessed with `t[3,1,2]`. The 0th order part (the *scalar* part) of the TPS is set with `t[0,0,0]`.
 
 As another example, let's calculate the Taylor expansion for $g(x_1,x_2,k_1)= \cos{(x_1)}+\sin{(k_1)}\sqrt{1+x_2}$ up to 3rd order in the two variables and 2nd order in the one parameter. Explicitly, this would be:
 
 ```
-# Define the Descriptor for these TPSAs with 2 variables of 3rd order and 1 parameter of 2nd order
+# Define the Descriptor for the TPSA with 2 variables of 3rd order and 1 parameter of 2nd order
 d = Descriptor(2, 3, 1, 2)
 
-# Create TPSAs which we will set to equal each of the variables and parameter
-x1 = TPSA(d)
-x2 = TPSA(d)
-k1 = TPSA(d)
+# Create TPSs which we will set to equal each of the variables and parameter
+x1 = TPS(d)
+x2 = TPS(d)
+k1 = TPS(d)
 
-# Set the first TPSA to correspond to the first variable
+# Set the first TPS to correspond to the first variable
 x1[1, 0, 0] = 1
 
-# Set the second TPSA to correspond to the second variable
+# Set the second TPS to correspond to the second variable
 x2[0, 1, 0] = 1
 
-# Set the third TPSA to correspond to the first parameter
+# Set the third TPS to correspond to the first parameter
 k1[0, 0, 1] = 1
 
 # Calculate g
@@ -73,19 +72,18 @@ print(g)
 =#
 ```
 
-## Using Complex TPSAs
+## Using Complex TPSs
 
-The usage for `ComplexTPSA`s is the same as with regular `TPSA`s, other than some extra functions including `real` and `imag`.
+The usage for `ComplexTPS`s is the same as with regular `TPS`s, other than some extra functions including `real` and `imag`.
 
 
-
-## TPSA Constructors
-The general user will want to use the `TPSA(::Descriptor)` or `ComplexTPSA(::Descriptor)` to construct a TPSA. However, other methods, which are used by the operators for TPSAs, are shown below for completeness.
-### TPSA
+## TPS Constructors
+The general user will want to use the `TPS(::Descriptor)` or `ComplexTPS(::Descriptor)` to construct a TPS. However, other methods, which are used by the operators for TPSs, are shown below for completeness.
+### TPS
 ```@docs
-TPSA
+TPS
 ```
-### ComplexTPSA 
+### ComplexTPS 
 ```@docs
-ComplexTPSA
+ComplexTPS
 ```

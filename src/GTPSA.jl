@@ -388,8 +388,8 @@ export
 
   # Layer 2 structs + functions NOT in Base:
   Descriptor,
-  TPSA,
-  ComplexTPSA,
+  TPS,
+  ComplexTPS,
   print,
   unit  ,
   sinhc ,
@@ -472,11 +472,11 @@ end
 
 
 # Wrapper struct for Ptr{RTPSA}
-abstract type AbstractTPSA end
+abstract type AbstractTPS end
 
-mutable struct TPSA <: AbstractTPSA
+mutable struct TPS <: AbstractTPS
   tpsa::Ptr{RTPSA}
-  function TPSA(t1::Ptr{RTPSA})
+  function TPS(t1::Ptr{RTPSA})
     #t = new(mad_tpsa_new(t1, MAD_TPSA_DEFAULT))
     #mad_tpsa_copy!(t1, t.tpsa)
     #mad_tpsa_clear!(t1)
@@ -489,55 +489,55 @@ end
 
 # RTPSA outer constructors
 """
-    TPSA()
+    TPS()
 
-Creates a `TPSA` using the most recently-defined `Descriptor`
+Creates a Truncated Power Series `TPS` using the most recently-defined `Descriptor`
 """
-function TPSA()
-  return TPSA(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+function TPS()
+  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 end
 
 """
-    TPSA(d::Descriptor)
+    TPS(d::Descriptor)
 
-Creates a `TPSA` based on `d` 
+Creates a Truncated Power Series `TPS` based on `d` 
 
 ### Input
 - `d` -- `Descriptor`
 """
-function TPSA(d::Descriptor)
-  return TPSA(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+function TPS(d::Descriptor)
+  return TPS(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
 end
 
 """
-    TPSA(t1::TPSA)
+    TPS(t1::TPS)
 
-Creates a `TPSA` with the same `Descriptor` as `t1`
+Creates a Truncated Power Series `TPS` with the same `Descriptor` as `t1`
 
 ### Input
-- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+- `t1` -- TPS to create new TPS from with same `Descriptor`
 """
-function TPSA(t1::TPSA)
-  return TPSA(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+function TPS(t1::TPS)
+  return TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
 end
 
 """
-    TPSA(t1::AbstractTPSA)
+    TPS(t1::AbstractTPS)
 
-Creates a `TPSA` with the same `Descriptor` as `t1`
+Creates a Truncated Power Series `TPS` with the same `Descriptor` as `t1`
 
 ### Input
-- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+- `t1` -- TPS to create new TPS from with same `Descriptor`
 """
-function TPSA(t1::AbstractTPSA)
-  return TPSA(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
+function TPS(t1::AbstractTPS)
+  return TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
 end
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPSA <: AbstractTPSA
+mutable struct ComplexTPS <: AbstractTPS
   tpsa::Ptr{CTPSA}
-  function ComplexTPSA(t1::Ptr{CTPSA})
+  function ComplexTPS(t1::Ptr{CTPSA})
     t = new(t1)
     f(x) = mad_ctpsa_del!(x.tpsa)
     finalizer(f,t)
@@ -545,80 +545,80 @@ mutable struct ComplexTPSA <: AbstractTPSA
   end
 end
 
-# ComplexTPSA outer constructors
+# ComplexTPS outer constructors
 """
-    ComplexTPSA()
+    ComplexTPS()
 
-Creates a `ComplexTPSA` using the most recently-defined `Descriptor`
+Creates a Complex Truncated Power Series `ComplexTPS` using the most recently-defined `Descriptor`
 """
-function ComplexTPSA()
-  return ComplexTPSA(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+function ComplexTPS()
+  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 end
 
 
 """
-    ComplexTPSA(d::Descriptor)
+    ComplexTPS(d::Descriptor)
 
-Creates a `ComplexTPSA` based on `d` 
+Creates a Complex Truncated Power Series `ComplexTPS` based on `d` 
 
 ### Input
 - `d` -- `Descriptor`
 """
-function ComplexTPSA(d::Descriptor)
-  return ComplexTPSA(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+function ComplexTPS(d::Descriptor)
+  return ComplexTPS(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
 end
 
 """
-    ComplexTPSA(t1::ComplexTPSA)
+    ComplexTPS(t1::ComplexTPS)
 
-Creates a `ComplexTPSA` with the same `Descriptor` as `t1`
+Creates a Complex Truncated Power Series `ComplexTPS` with the same `Descriptor` as `t1`
 
 ### Input
-- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+- `t1` -- TPS to create new TPS from with same `Descriptor`
 """
-function ComplexTPSA(t1::ComplexTPSA)
-  return ComplexTPSA(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+function ComplexTPS(t1::ComplexTPS)
+  return ComplexTPS(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
 end
 
 """
-    ComplexTPSA(t1::AbstractTPSA)
+    ComplexTPS(t1::AbstractTPS)
 
-Creates a `ComplexTPSA` with the same `Descriptor` as `t1`
+Creates a Complex Truncated Power Series `ComplexTPS` with the same `Descriptor` as `t1`
 
 ### Input
-- `t1` -- TPSA to create new TPSA from with same `Descriptor`
+- `t1` -- TPS to create new TPS from with same `Descriptor`
 """
-function ComplexTPSA(t1::AbstractTPSA)
-  return ComplexTPSA(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
+function ComplexTPS(t1::AbstractTPS)
+  return ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
 end
 
 
 
 # --- Getters ---
-function getindex(t::TPSA, ords::Integer...)::Float64
+function getindex(t::TPS, ords::Integer...)::Float64
   return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
 end
 
-function getindex(t::ComplexTPSA, ords::Integer...)::ComplexF64
+function getindex(t::ComplexTPS, ords::Integer...)::ComplexF64
   return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
 end
 
 # --- Setters ---
-function setindex!(t::TPSA, v::Real, ords::Integer...)
+function setindex!(t::TPS, v::Real, ords::Integer...)
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(Cdouble, 0), convert(Cdouble, v))
 end
 
-function setindex!(t::ComplexTPSA, v::ComplexF64, ords::Integer...)
+function setindex!(t::ComplexTPS, v::ComplexF64, ords::Integer...)
   mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-function setname!(t::TPSA, nam::String)
+function setname!(t::TPS, nam::String)
   mad_tpsa_setnam!(t.tpsa, Base.unsafe_convert(Cstring, nam))
 end
 
 # --- print ---
 #=
-function show(io::IO, t::TPSA)
+function show(io::IO, t::TPS)
   # Get nn (length of monomial)
   tpsa = unsafe_load(t.tpsa)
   name = Base.unsafe_convert(String, tpsa.nam)
@@ -641,23 +641,23 @@ function show(io::IO, t::TPSA)
 end=#
 
 
-function print(t::TPSA)
+function print(t::TPS)
   mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
-function print(t::ComplexTPSA)
+function print(t::ComplexTPS)
   mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
 
 
 # -- zero -- (For LinearAlgebra overloading)
-function zero(a::TPSA)
-  return TPSA()
+function zero(a::TPS)
+  return TPS()
 end
 
-function zero(a::ComplexTPSA)
-  return ComplexTPSA()
+function zero(a::ComplexTPS)
+  return ComplexTPS()
 end
 
 include("operators.jl")
