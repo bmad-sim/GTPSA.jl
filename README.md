@@ -35,7 +35,7 @@ d = Descriptor(1, 15)
 x1 = TPSA(d)
 
 # Set the first-order coefficient of the TPSA (index by order) so it equals 1*x1
-x1[1] = 1
+x1[1,1] = 1
 
 # Manipulate the TPSAs as you would any other mathematical variable in Julia
 f = x1^2*sin(2+x1)/exp((1+x1)^-1)
