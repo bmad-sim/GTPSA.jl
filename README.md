@@ -1,5 +1,5 @@
 # GTPSA.jl
-
+[![Build Status](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 *A Julia interface to the Generalised Truncated Power Series Algebra (GTPSA) library in MAD.*
 
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG) included in MAD, which computes Taylor expansions of real and complex multivariable functions to arbitrary orders in each of the variables and function parameters individually, chosen by the user. GTPSA also allows distinction between variables $x_i$ and parameters $k_j$ in the function such that $\partial x_i/\partial k_j \neq 0$ but $\partial k_j/\partial x_i = 0$. We refer advanced users to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
@@ -22,7 +22,7 @@ For developers,
 ## Basic Usage
 First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA(s). The `Descriptor` stores all of the monomial indexing/lookup information for TPSAs, based on these values. A `TPSA` or `ComplexTPSA` can then be created based on the `Descriptor`. TPSAs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and basic math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `coth`, etc.).
 
-TPSAs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. Therefore, for a TPSA to represent some variable in the function, the first-order coefficient for that variable in the Taylor expansiion must be set to 1. For example, to compute the power series of a function $f(x_1) = x_1^2\frac{\sin{(2+x_1)}}{\exp{[(1+x_1)^{-1}]}}$ up to 15th order:
+TPSAs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. Therefore, for a TPSA to represent some variable in the function, the first-order coefficient for that variable in the Taylor expansion must be set to 1. For example, to compute the power series of a function $f(x_1) = x_1^2\frac{\sin{(2+x_1)}}{\exp{[(1+x_1)^{-1}]}}$ up to 15th order:
 
 ```
 using GTPSA
