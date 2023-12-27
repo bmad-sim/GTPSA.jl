@@ -1,13 +1,13 @@
 using GTPSA
 using ForwardDiff
 using TaylorSeries
-using BenchmarkTools
+using BenchmarkTools: @btime, @benchmark
 
-# Comparison of ForwardDiff and TaylorDiff with GTPSA for 4 variables to 2nd order and 2 knobs to 2nd order
+# Comparison with GTPSA for 4 variables to 2nd order and 2 parameters to 2nd order
 # As of 12/27/2023 (Julia v1.10)
-# GTPSA:         1.137 ms (12921 allocations: 240.30 KiB)
-# ForwardDiff:   2.946 ms (65018 allocations: 11.00 MiB)
-# TaylorSeries: 12.125 ms (268516 allocations: 26.95 MiB)
+# GTPSA:          1.147 ms (12919 allocations: 239.98 KiB)
+# ForwardDiff:    2.966 ms (65018 allocations: 11.00 MiB)
+# TaylorSeries:  12.333 ms (268516 allocations: 26.95 MiB)
 
 function track_qf(z0, k1)
   L = 0.5
@@ -54,28 +54,15 @@ end
 function benchmark_GTPSA()
   # TPSA with 4 variables of order 2 and 2 parameters of order 2
   d = Descriptor(4, 2, 2, 2)
-  x0 = TPS(d)
-  px0 = TPS(d)
-  y0 = TPS(d)
-  py0 = TPS(d)
+  x = vars(d)
+  k = params(d)
 
   k2l_0  = 0.
   k1_0 = 0.36
 
-  dk1 = TPS(d)
-  dk2l = TPS(d)
-
-  # Set TPSAs
-  x0[1,0,0,0,0,0] = 1
-  px0[0,1,0,0,0,0] = 1
-  y0[0,0,1,0,0,0] = 1
-  py0[0,0,0,1,0,0] = 1
-  dk1[0,0,0,0,1,0] = 1
-  dk2l[0,0,0,0,0,1] = 1
-
-  k1 = k1_0 + dk1
-  k2l = k2l_0 + dk2l
-  map = track_ring([x0, px0, y0, py0], k1, k2l)
+  k[1] = k1_0 + k[1]
+  k[2] = k2l_0 + k[2]
+  map = track_ring([x[1], x[2], x[3], x[4]], k[1], k[2])
   return map
 end
 
