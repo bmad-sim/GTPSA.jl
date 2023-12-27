@@ -239,7 +239,7 @@ end
 Extract one homogeneous polynomial of the given order
 
 ### Input
-- `t``  -- Sourcecomplex TPSA
+- `t`  -- Sourcecomplex TPSA
 - `ord` -- Order to retrieve
 
 ### Output

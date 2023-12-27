@@ -3,7 +3,7 @@ The package consists of two layers: a low-level layer written in Julia that is 1
 
 The C code consists of three C structs: `desc`, `tpsa`, and `ctpsa`. The low-level Julia-equivalent, 1-to-1 structs are respectively `Desc`, `RTPSA`, and `CTPSA`. C pointers `Ptr` to these structs are wrapped by the high-level structs `Descriptor`, `TPSA`, and `ComplexTPSA` respectively.
 
-The low-level structs `Desc`, `RTPSA`, and `CTPSA` contain fields with `Ptr{Cvoid}`; these are pointers to any of the other structs, specified in the documentation. For example, the `d` field in `RTPSA` is a `Ptr{Desc}`. We could not explicity define `Ptr{Desc}`, because `Desc` likewise has a `Ptr{RTPSA}`, and Julia does not allow for cyclic implicit struct definitions. Therefore, the `Ptr` must be converted to the appropriate low-level Julia struct before safe accessing (documented next to each of the fields).
+The low-level structs `Desc`, `RTPSA`, and `CTPSA` contain fields with `Ptr{Cvoid}`; these are pointers to any of the other structs, specified in the documentation. For example, the `d` field in `RTPSA` is a `Ptr{Desc}`. We could not explicitly define `Ptr{Desc}`, because `Desc` likewise has a `Ptr{RTPSA}`, and Julia does not allow for cyclic implicit struct definitions. Therefore, the `Ptr` must be converted to the appropriate low-level Julia struct before safe accessing (documented next to each of the fields).
 
 For example, to access the `t` array of `RTPSA`s in `Desc` defined by a high-level struct `Descriptor`:
 

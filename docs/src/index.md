@@ -9,7 +9,7 @@ GTPSA, which uses the Truncated Power Series Algebra method for performing autom
 1. **Speed and Accuracy**: Because the TPSA method does not take any symbolic derivatives, nor use finite differencing, derivatives are calculated with high efficiency and accuracy
 2. **Arbitrary Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 5th order in $x_1$ and 1st order in $x_2$ is done trivially in GTPSA
 3. **All Taylor Coefficients Stored**: GTPSA implements an efficient monomial coefficient indexing function for high speed even with TPSs having large number of variables to high orders
-4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two allows for substantial computational benefits
+4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two proves advantageous for analyses of Taylor maps, such as normal form
 
 
 **GTPSA is fast!** See the `benchmark/fodo.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
@@ -38,14 +38,11 @@ using GTPSA
 # Define the Descriptor for the TPSA
 d = Descriptor(1, 15)
 
-# Create a TPS based on the Descriptor
-x1 = TPS(d)
-
-# Set the first-order coefficient of the TPS (index by order) so it equals 1*x1
-x1[1] = 1
+# Get the TPS(s) corresponding to each variable based on the Descriptor
+x = vars(d)
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
-f = x1^2*sin(2+x1)/exp((1+x1)^-1)
+f = x[1]^2*sin(2+x[1])/exp((1+x[1])^-1)
 ```
 
 `f` itself is a TPS. Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` then gives the output

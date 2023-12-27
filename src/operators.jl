@@ -41,6 +41,38 @@ end
   return c
 end
 
+# --- Compare ---
+
+@inline function ==(a::TPS, b::TPS)::Bool
+  return convert(Bool, mad_tpsa_equ(a.tpsa, b.tpsa, convert(Cdouble, 0.)))
+end
+
+@inline function ==(a::Real, b::TPS)::Bool
+  c = TPS(b)
+  mad_tpsa_set0!(c.tpsa, 1., convert(Float64,a))
+  return a == c
+end
+
+@inline function ==(a::TPS, b::Real)::Bool
+  return b == a
+end
+
+@inline function ==(a::ComplexTPS, b::ComplexTPS)::Bool
+  return convert(Bool, mad_ctpsa_equ(a.tpsa, b.tpsa, convert(Cdouble, 0.)))
+end
+
+@inline function ==(a::Number, b::ComplexTPS)::Bool
+  c = TPS(b)
+  mad_ctpsa_set0!(c.tpsa, 1., convert(ComplexF64,a))
+  return a == c
+end
+
+@inline function ==(a::TPS, b::Number)::Bool
+  return b == a
+end
+
+
+# ---------------
 
 
 #=
