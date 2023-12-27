@@ -9,7 +9,7 @@ makedocs(
   [
     "Home" => "index.md",
     "Usage" => "usage.md",
-    "Constructors" => "constructors.md"
+    "Constructors" => "constructors.md",
     "For Developers" => "devel.md"
   ]
 )
