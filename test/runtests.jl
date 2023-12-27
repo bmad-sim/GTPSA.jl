@@ -1,4 +1,5 @@
 using Test
+using GTPSA
 
 @testset "Compare with MAD" begin
   include("compare_MAD.jl")
