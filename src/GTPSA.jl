@@ -44,8 +44,16 @@ import Base:  +,
               firstindex,
               lastindex,
               setindex!,
-              length
-
+              length,
+              convert
+#=
+import MutableArithmetics:  mutability,
+                            promote_operation,
+                            operate!,
+                            operate_to!,
+                            IsMutable,
+                            mutable_copy
+=#
 using GTPSA_jll
 
 export
@@ -431,6 +439,23 @@ function Descriptor(nv::Integer, mo::Integer)::Descriptor
   return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
 end
 
+"""
+    Descriptor(mos::Vector{<:Integer})
+
+Creates a TPSA Descriptor with `length(mos)` variables with individual max 
+orders specified in the Vector `mos`. 
+
+### Input
+- `mos` -- Vector of the individual max orders of each variable
+"""
+function Descriptor(mos::Vector{<:Integer})::Descriptor
+  nv = length(mos)
+  np = 0
+  mo = maximum(mos)
+  po = 0
+  no = mos
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
+end
 
 """
     Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
@@ -450,23 +475,22 @@ end
 
 
 """
-    Descriptor(nv::Integer, np::Integer,no::Vector{<:Integer})
+    Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})
 
-Creates a TPSA Descriptor with `nv` variables and `np` parameters of with individual 
-variable/parameter orders specified in the Vector `no`. 
+Creates a TPSA Descriptor with `length(mos)` variables with individual max 
+orders specified in `mos`, and `length(pos)` parameters with individual max 
+orders specified in `pos`.
 
 ### Input
-- `nv` -- Number of variables in the TPSA
-- `np` -- Number of parameters in the TPSA
-- `no` -- Vector of the individual orders of each variable and parameter, with variables first `nv` entries and parameters last `np` entries
+- `mos` -- Vector of the individual max orders of each variable
+- `pos` -- Vector of the individual max orders of each parameter
 """
-function Descriptor(nv::Integer, np::Integer, no::Vector{<:Integer})::Descriptor
-  if length(no) != nv+np
-    println("Invalid length for no (must be nv + np). Descriptor not constructed.")
-    return
-  end
-  mo = maximum(no[1:nv])
-  po = maximum(no[end-np+1:end])
+function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})
+  nv = length(mos)
+  np = length(pos)
+  mo = maximum(mos)
+  po = maximum(pos)
+  no = vcat(mos,pos)
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
 end
 
@@ -592,6 +616,26 @@ function ComplexTPS(t1::AbstractTPS)
   return ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
 end
 
+# --- Variable/parameter generators ---
+
+"""
+    vars(d::Descriptor)::Vector{TPS}
+
+Returns TPSs corresponding to the variables for the `Descriptor`
+
+
+
+"""
+function vars(d::Descriptor)::Vector{TPS}
+  desc = unsafe_load(d.desc)
+  nv = desc.nv
+
+
+
+
+end
+
+
 
 
 # --- Getters ---
@@ -599,23 +643,75 @@ function getindex(t::TPS, ords::Integer...)::Float64
   return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
 end
 
+function getindex(t::TPS, vpos::Pair{<:Integer, <:Integer}...)::Float64
+  # Need to create array of orders with length nv + np
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  ords = zeros(Int, nv+np)
+  for vpo in vpos
+    ords[vpo.first] = convert(Int, vpo.second)
+  end
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+end
+
 function getindex(t::ComplexTPS, ords::Integer...)::ComplexF64
   return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
 end
+
+function getindex(t::ComplexTPS, vpos::Pair{<:Integer, <:Integer}...)::ComplexF64
+  # Need to create array of orders with length nv + np
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  ords = zeros(Int, nv+np)
+  for vpo in vpos
+    ords[vpo.first] = convert(Int, vpo.second)
+  end
+  return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+end
+
+
 
 # --- Setters ---
 function setindex!(t::TPS, v::Real, ords::Integer...)
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(Cdouble, 0), convert(Cdouble, v))
 end
 
-function setindex!(t::ComplexTPS, v::ComplexF64, ords::Integer...)
+function setindex!(t::TPS, v::Real, vpos::Pair{<:Integer, <:Integer}...)
+  # Need to create array of orders with length nv + np
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  ords = zeros(Int, nv+np)
+  for vpo in vpos
+    ords[vpo.first] = convert(Int, vpo.second)
+  end
+  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, v))
+end
+
+function setindex!(t::ComplexTPS, v::Number, ords::Integer...)
   mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
+
+function setindex!(t::ComplexTPS, v::Number, vpos::Pair{<:Integer, <:Integer}...)
+  # Need to create array of orders with length nv + np
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  ords = zeros(Int, nv+np)
+  for vpo in vpos
+    ords[vpo.first] = convert(Int, vpo.second)
+  end
+  mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
+end
+
+#=
 
 function setname!(t::TPS, nam::String)
   mad_tpsa_setnam!(t.tpsa, Base.unsafe_convert(Cstring, nam))
 end
-
+=#
 # --- print ---
 #=
 function show(io::IO, t::TPS)
@@ -649,14 +745,33 @@ function print(t::ComplexTPS)
   mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
+# --- convert ---
+function convert(::Type{TPS}, v::Real)::TPS
+  t = TPS()
+  mad_tpsa_setval!(t.tpsa, convert(Cdouble, v))
+  return t
+end
 
+function convert(::Type{ComplexTPS}, v::Number)::TPS
+  t = TPS()
+  mad_ctpsa_setval!(t.tpsa, convert(ComplexF64, v))
+  return t
+end
 
 # -- zero -- (For LinearAlgebra overloading)
-function zero(a::TPS)
+@inline function zero(a::TPS)::TPS
   return TPS()
 end
 
-function zero(a::ComplexTPS)
+@inline function zero(::Type{TPS})::TPS
+  return TPS()
+end
+
+@inline function zero(a::ComplexTPS)::ComplexTPS
+  return ComplexTPS()
+end
+
+@inline function zero(::Type{ComplexTPS})::ComplexTPS
   return ComplexTPS()
 end
 

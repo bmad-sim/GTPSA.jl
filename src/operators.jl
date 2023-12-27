@@ -42,13 +42,69 @@ end
 end
 
 
-# --- add ---
 
+#=
+mutability(::Type{TPS}) = IsMutable()
+
+function promote_operation(::typeof(+), ::Type{TPS}, ::Type{TPS}) 
+  return TPS
+end
+
+function operate!(::typeof(+), a::TPS, b::TPS)
+  mad_tpsa_add!(a.tpsa, b.tpsa, a.tpsa)
+  return a
+end
+
+function operate_to!(output::TPS, ::typeof(+), a::TPS, b::TPS)
+  mad_tpsa_add!(a.tpsa, b.tpsa, output.tpsa)
+  return output
+end
+
+function promote_operation(::typeof(sin), ::Type{TPS}, ::Type{TPS}) 
+  return TPS
+end
+
+function operate!(::typeof(sin), a::TPS)
+  mad_tpsa_sin!(a.tpsa, a.tpsa)
+  return a
+end
+
+function operate_to!(output::TPS, ::typeof(sin), a::TPS)
+  mad_tpsa_sin!(a.tpsa, output.tpsa)
+  return output
+end
+
+function promote_operation(::typeof(cos), ::Type{TPS}, ::Type{TPS}) 
+  return TPS
+end
+
+function operate!(::typeof(cos), a::TPS)
+  mad_tpsa_cos!(a.tpsa, a.tpsa)
+  return a
+end
+
+function operate_to!(output::TPS, ::typeof(cos), a::TPS)
+  mad_tpsa_cos!(a.tpsa, output.tpsa)
+  return output
+end
+
+
+function mutable_copy(a::TPS)
+  b = TPS(a)
+  mad_tpsa_copy!(a.tpsa,b.tpsa)
+  return b
+end
+=#
+
+# -----
+
+# --- add ---
 @inline function +(a::TPS, b::TPS)::TPS
   c = TPS(a)
   mad_tpsa_add!(a.tpsa, b.tpsa, c.tpsa)
   return c
 end
+
 
 @inline function +(a::Real, b::TPS)::TPS
   c = TPS(b)

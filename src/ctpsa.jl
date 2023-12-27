@@ -175,7 +175,7 @@ Returns maximum order of all TPSAs provided.
 """
 function mad_ctpsa_ordv(t::Ptr{CTPSA}, ts::Ptr{CTPSA}...)::Cuchar
   # mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{CTPSA}, ts::Ptr{CTPSA}..., 0::Cint)::Cuchar # null pointer after args for safe use
-  ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (Ptr{CTPSA}, Ptr{CTPSA}...), t, ts...)
+  ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (Ptr{CTPSA}, Ptr{CTPSA}...), (t, ts...))
   return mo
 end
 
