@@ -23,7 +23,7 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `To::Ptr{Ptr{Cuchar}}`       -- Table by orders - pointers to monomials, sorted by order
 - `Tv::Ptr{Ptr{Cuchar}}`       -- Table by vars - pointers to monomials, sorted by variable
 - `ocs::Ptr{Ptr{Cuchar}}`      -- `ocs[t,i]` -> `o` in mul, compute `o` on thread `t 3 <= o <= mo` aterminated with 0
-- `ord2idx::Ptr{Cint}`         -- Order to polynomial start index in `To`` (i.e. in TPSA `coef``)
+- `ord2idx::Ptr{Cint}`         -- Order to polynomial start index in `To` (i.e. in TPSA `coef`)
 - `tv2to::Ptr{Cint}`           -- Lookup `tv`->`to`
 - `to2tv::Ptr{Cint}`           -- Lookup `to`->`tv`
 - `H::Ptr{Cint}`               -- Indexing matrix in `Tv`
