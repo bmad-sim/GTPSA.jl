@@ -1,6 +1,6 @@
 # Usage
 ## Definitions
-In some use cases, the TPS may define the evolution of some state $x$ of a dynamical system, e.g. $x_f = \mathcal{M}(x_i,k)$, where $k$ is some defined external parameter. When $\mathcal{M}$ is expanded in powers of $x_i$ and $\Delta k$, this is referred to as a *Taylor map*. $x$ is referred to as a map variable or *variable*, as its evolution is defined by the TPS. $k$ which does not evolve with $\mathcal{M}$, is referred to as a *parameter*. GTPSA allows distinction between map variables and parameters, as well as the individual orders for each, to speed up Taylor map analyses.
+In some use cases, the TPS may define the evolution of some state $x$ of a dynamical system, e.g. $x_f = \mathcal{M}(x_i,k)$, where $k$ is some defined external parameter. When $\mathcal{M}$ is expanded in powers of $\Delta x_i$ and $\Delta k$, this is referred to as a *Taylor map*. $x$ is referred to as a map variable or *variable*, as its evolution is defined by the TPS. $k$, which does not evolve with $\mathcal{M}$, is referred to as a *parameter*. GTPSA allows distinction between map variables and parameters, as well as the individual orders for each, to speed up Taylor map analyses.
 
 ## Defining the TPSA
 The `Descriptor` defines all information about the TPSA, including the number of variables, order for each variable, number of parameters, and order for each parameter. The constructors for a `Descriptor` are:
