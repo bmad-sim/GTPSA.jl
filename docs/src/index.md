@@ -28,47 +28,47 @@ For developers,
 ```
 
 ## Basic Usage
-First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA. The `Descriptor` stores all of the monomial indexing/lookup information for TPSs in the TPSA, based on these values. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and basic math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `coth`, etc.).
+First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA. The `Descriptor` stores all of the monomial indexing/lookup information for TPSs in the TPSA, based on these values. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `coth`, etc.).
 
-TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. Therefore, for a TPS to represent some variable in the function, the first-order coefficient for that variable in the Taylor expansion must be set to 1. For example, to compute the power series of a function $f(x_1) = x_1^2\frac{\sin{(2+x_1)}}{\exp{[(1+x_1)^{-1}]}}$ up to 15th order:
-
+TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the truncated power series of a function $f(x_1,x_2) = x_1^2\frac{\sin{(2+x_1x_2)}}{\exp{(x_1+x_2)}}$ to 15th order in $x_1$ and $x_2$:
 ```
 using GTPSA
 
 # Define the Descriptor for the TPSA
-d = Descriptor(1, 15)
+d = Descriptor(2, 15)
 
-# Get the TPS(s) corresponding to each variable based on the Descriptor
+# Get the TPSs corresponding to each variable based on the Descriptor
 x = vars(d)
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
-f = x[1]^2*sin(2+x[1])/exp((1+x[1])^-1)
+f = x[1]^2*sin(2+x[1]*x[2])/exp(x[1]+x[2])
 ```
 
 `f` itself is a TPS. Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` then gives the output
 
 ```
-         :  R, NV =   1, MO = 15
+         :  R, NV =   2, MO = 15
  *******************************************************
      I   COEFFICIENT             ORDER   EXPONENTS
-     1   3.3451182923926226E-01    2     2
-     2   1.8141996356503595E-01    3     3
-     3  -4.8760369491348854E-01    4     4
-     4  -9.4426992969365992E-03    5     5
-     5   1.1150394307975423E-01    6     6
-     6  -8.7314614604415114E-02    7     7
-     7   8.2968303215296232E-02    8     8
-     8  -7.4445976247838025E-02    9     9
-     9   5.9713679541442431E-02   10     10
-    10  -4.2660311388393345E-02   11     11
-    11   2.5430250837118938E-02   12     12
-    12  -9.3821808135966887E-03   13     13
-    13  -4.6081926391356139E-03   14     14
-    14   1.6049422765485353E-02   15     15
+     1   9.0929742682568171E-01    2     2 0
+     2   0.0000000000000000E+00    2     1 1
+     3   0.0000000000000000E+00    2     0 2
+     4  -9.0929742682568171E-01    3     3 0
+     5  -9.0929742682568171E-01    3     2 1
+     6   0.0000000000000000E+00    3     1 2
+     7   0.0000000000000000E+00    3     0 3
+     8   4.5464871341284085E-01    4     4 0
+     9   4.9315059027853930E-01    4     3 1
+    10   4.5464871341284085E-01    4     2 2
+    11   0.0000000000000000E+00    4     1 3
+    12   0.0000000000000000E+00    4     0 4
+    13  -1.5154957113761358E-01    5     5 0
+    14  -3.8501876865698448E-02    5     4 1
+                    ...
 ```
 This print function will be rewritten.
 
-For multivariable TPSs including variables/parameters with different orders, and complex TPSs, see [Usage](@ref).
+For multivariable TPSs including variables/parameters with different individual orders, and complex TPSs, see [Usage](@ref).
 
 Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
 
