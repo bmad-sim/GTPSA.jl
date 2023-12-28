@@ -67,7 +67,7 @@ f = x[1]^2*sin(2+x[1]*x[2])/exp(x[1]+x[2])
 ```
 This print function will be rewritten.
 
-For multivariable TPSs including variables/parameters with different individual orders, and complex TPSs, see [Usage](@ref).
+For multivariable TPSs including variables/parameters with different individual orders, and complex TPSs, see [the documentation](https://bmad-sim.github.io/GTPSA.jl/).
 
 Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
 
