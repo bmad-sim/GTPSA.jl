@@ -432,7 +432,7 @@ end
 
 # Descriptor outer constructors
 """
-    Descriptor(nv::Integer, mo::Integer)
+    Descriptor(nv::Integer, mo::Integer)::Descriptor
 
 Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
 
@@ -445,7 +445,7 @@ function Descriptor(nv::Integer, mo::Integer)::Descriptor
 end
 
 """
-    Descriptor(mos::Vector{<:Integer})
+    Descriptor(mos::Vector{<:Integer})::Descriptor
 
 Creates a TPSA Descriptor with `length(mos)` variables with individual max 
 orders specified in the Vector `mos`. 
@@ -463,7 +463,7 @@ function Descriptor(mos::Vector{<:Integer})::Descriptor
 end
 
 """
-    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)
+    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
 
 Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
 of maximum order `po` (`<= mo`).
@@ -480,7 +480,7 @@ end
 
 
 """
-    Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})
+    Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 
 Creates a TPSA Descriptor with `length(mos)` variables with individual max 
 orders specified in `mos`, and `length(pos)` parameters with individual max 
@@ -490,7 +490,7 @@ orders specified in `pos`.
 - `mos` -- Vector of the individual max orders of each variable
 - `pos` -- Vector of the individual max orders of each parameter
 """
-function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})
+function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
   nv = length(mos)
   np = length(pos)
   mo = maximum(mos)
@@ -499,16 +499,10 @@ function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
 end
 
-
 # Wrapper struct for Ptr{RTPSA}
-abstract type AbstractTPS end
-
-mutable struct TPS <: AbstractTPS
+mutable struct TPS
   tpsa::Ptr{RTPSA}
-  function TPS(t1::Ptr{RTPSA})
-    #t = new(mad_tpsa_new(t1, MAD_TPSA_DEFAULT))
-    #mad_tpsa_copy!(t1, t.tpsa)
-    #mad_tpsa_clear!(t1)
+  function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
     f(x) = mad_tpsa_del!(x.tpsa)
     finalizer(f,t)
@@ -518,107 +512,201 @@ end
 
 # RTPSA outer constructors
 """
-    TPS()
+    TPS()::TPS
 
-Creates a Truncated Power Series `TPS` using the most recently-defined `Descriptor`
+Creates a new Truncated Power Series `TPS` using the most 
+recently-defined `Descriptor`
 """
-function TPS()
+function TPS()::TPS
   return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 end
 
 """
-    TPS(d::Descriptor)
+    TPS(d::Descriptor)::TPS
 
-Creates a Truncated Power Series `TPS` based on `d` 
+Creates a new Truncated Power Series `TPS` based on `d` 
 
 ### Input
 - `d` -- `Descriptor`
 """
-function TPS(d::Descriptor)
+function TPS(d::Descriptor)::TPS
   return TPS(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
 end
 
 """
-    TPS(t1::TPS)
+    TPS(t1::TPS)::TPS
 
-Creates a Truncated Power Series `TPS` with the same `Descriptor` as `t1`
+Copy constructor for `TPS`
 
 ### Input
-- `t1` -- TPS to create new TPS from with same `Descriptor`
+- `t1` -- `TPS` to create new copy of
 """
-function TPS(t1::TPS)
-  return TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+function TPS(t1::TPS)::TPS
+  t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
+  mad_tpsa_copy!(t1.tpsa, t.tpsa)
+  return t
 end
 
 """
-    TPS(t1::AbstractTPS)
+    TPS(a::Real)::TPS
 
-Creates a Truncated Power Series `TPS` with the same `Descriptor` as `t1`
+Promotes the scalar `a` to a new `TPS` using the most 
+recently-defined `Descriptor`.
 
 ### Input
-- `t1` -- TPS to create new TPS from with same `Descriptor`
+- `a` -- Scalar to create new `TPS` with
 """
-function TPS(t1::AbstractTPS)
-  return TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
+function TPS(a::Real)::TPS
+  t = TPS()
+  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
+  return t
 end
+
+"""
+    TPS(a::Real, t1::TPS)::TPS
+
+Promotes the scalar `a` to a new `TPS` using the same 
+`Descriptor` as `t1`
+
+
+### Input
+- `a`  -- Scalar to create new `TPS` with
+- `t1` -- `TPS` to use same `Descriptor` as
+"""
+function TPS(a::Real, t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
+  return t
+end
+
+#=
+"""
+    TPS(a::Real, ct1::ComplexTPS)::TPS
+
+Promotes the scalar `a` to a new `TPS` using the same 
+`Descriptor` as `ct1`
+
+
+### Input
+- `a`   -- Scalar to create new `TPS` with
+- `ct1` -- `ComplexTPS` to use same `Descriptor` as
+"""
+function TPS(a::Real, ct1::ComplexTPS)::TPS
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  mad_tpsa_set0!(t.tpsa, 1., convert(Float64, a))
+  return t
+end
+=#
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS <: AbstractTPS
+mutable struct ComplexTPS
   tpsa::Ptr{CTPSA}
-  function ComplexTPS(t1::Ptr{CTPSA})
-    t = new(t1)
+  function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
+    ct = new(ct1)
     f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
+    finalizer(f,ct)
+    return ct
   end
 end
 
 # ComplexTPS outer constructors
 """
-    ComplexTPS()
+    ComplexTPS()::ComplexTPS
 
-Creates a Complex Truncated Power Series `ComplexTPS` using the most recently-defined `Descriptor`
+Creates a new Complex Truncated Power Series `ComplexTPS` using 
+the most recently-defined `Descriptor`
 """
-function ComplexTPS()
+function ComplexTPS()::ComplexTPS
   return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 end
 
 
 """
-    ComplexTPS(d::Descriptor)
+    ComplexTPS(d::Descriptor)::ComplexTPS
 
-Creates a Complex Truncated Power Series `ComplexTPS` based on `d` 
+Creates a new Complex Truncated Power Series `ComplexTPS` based on `d` 
 
 ### Input
 - `d` -- `Descriptor`
 """
-function ComplexTPS(d::Descriptor)
+function ComplexTPS(d::Descriptor)::ComplexTPS
   return ComplexTPS(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
 end
 
 """
-    ComplexTPS(t1::ComplexTPS)
+    ComplexTPS(ct1::ComplexTPS)::ComplexTPS
 
-Creates a Complex Truncated Power Series `ComplexTPS` with the same `Descriptor` as `t1`
+Copy constructor for `ComplexTPS`
 
 ### Input
-- `t1` -- TPS to create new TPS from with same `Descriptor`
+- `ct1` -- `ComplexTPS` to create new copy of
 """
-function ComplexTPS(t1::ComplexTPS)
-  return ComplexTPS(mad_ctpsa_new(t1.tpsa, MAD_TPSA_DEFAULT))
+function ComplexTPS(ct1::ComplexTPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+  mad_ctpsa_copy!(ct1.tpsa, ct.tpsa)
+  return ct
 end
 
 """
-    ComplexTPS(t1::AbstractTPS)
+    ComplexTPS(t1::TPS)::ComplexTPS
 
-Creates a Complex Truncated Power Series `ComplexTPS` with the same `Descriptor` as `t1`
+Creates a new copy of `TPS` promoted to a `ComplexTPS`
 
 ### Input
-- `t1` -- TPS to create new TPS from with same `Descriptor`
+- `t1` -- `TPS` to create new `ComplexTPS` from
 """
-function ComplexTPS(t1::AbstractTPS)
-  return ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_DEFAULT))
+function ComplexTPS(t1::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cplx!(ct1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
+  return ct
+end
+
+"""
+    ComplexTPS(a::Number)::ComplexTPS
+
+Promotes the scalar `a` to a new `ComplexTPS` using the most 
+recently-defined `Descriptor`
+
+### Input
+- `a` -- Scalar to create new `ComplexTPS` with
+"""
+function TPS(a::Number)::ComplexTPS
+  ct = ComplexTPS()
+  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+  return ct
+end
+
+"""
+    ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
+
+Promotes the scalar `a` to a new `ComplexTPS` using the same
+`Descriptor` as `ct1`
+
+### Input
+- `a`    -- Scalar to create new `ComplexTPS` with
+- `ct1`  -- `ComplexTPS` to use same `Descriptor` as
+"""
+function ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64, a))
+  return ct
+end
+
+"""
+    ComplexTPS(a::Number, t1::TPS)::ComplexTPS
+
+Promotes the scalar `a` to a new `ComplexTPS` using the same
+`Descriptor` as `t1`
+
+### Input
+- `a`   -- Scalar to create new `ComplexTPS` with
+- `t1`  -- `TPS` to use same `Descriptor` as
+"""
+function ComplexTPS(a::Number, t1::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+  return ct
 end
 
 # --- Variable/parameter generators ---
@@ -676,6 +764,7 @@ function params(d::Descriptor)::Vector{TPS}
   return k
 end
 
+#= No longer needed:
 """
     complexvars(d::Descriptor)::Vector{ComplexTPS}
 
@@ -728,7 +817,7 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   end
   return k
 end
-
+=#
 
 
 
@@ -753,13 +842,13 @@ function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Var
 end
 
 
-function getindex(t::ComplexTPS, ords::Integer...)::ComplexF64
-  return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
+  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
 end
 
-function getindex(t::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
+function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   nv = desc.nv
   np = desc.np
   ords = zeros(Int, nv+np)
@@ -769,7 +858,7 @@ function getindex(t::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tu
   for param in params
     ords[nv + param.first] = convert(Int, param.second)
   end
-  return mad_ctpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
 end
 
 
@@ -793,13 +882,13 @@ function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params:
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, v))
 end
 
-function setindex!(t::ComplexTPS, v::Number, ords::Integer...)
-  mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
+function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
+  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-function getindex(t::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
+function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   nv = desc.nv
   np = desc.np
   ords = zeros(Int, nv+np)
@@ -809,7 +898,7 @@ function getindex(t::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...;
   for param in params
     ords[nv + param.first] = convert(Int, param.second)
   end
-  mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 #=
@@ -864,17 +953,17 @@ function convert(::Type{ComplexTPS}, v::Number)::TPS
   return t
 end
 
-# -- zero -- (For LinearAlgebra overloading)
-@inline function zero(a::TPS)::TPS
-  return TPS()
+# -- zero -- 
+@inline function zero(t::TPS)::TPS
+  return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
 end
 
 @inline function zero(::Type{TPS})::TPS
   return TPS()
 end
 
-@inline function zero(a::ComplexTPS)::ComplexTPS
-  return ComplexTPS()
+@inline function zero(ct::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
 end
 
 @inline function zero(::Type{ComplexTPS})::ComplexTPS

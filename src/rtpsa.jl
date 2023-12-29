@@ -46,16 +46,16 @@ end
 """
     mad_tpsa_new(t::Ptr{RTPSA}, mo::Cuchar)::Ptr{RTPSA}
 
-Creates a TPSA `c`opy of the inputted TPSA, with maximum order specified by `mo`.
-If `MAD_TPSA_SAME` is passed for `mo`, the `mo` currently in `t` is used for the created TPSA.
-Ok with `t=(tpsa_t*)ctpsa`
+Creates a blank TPSA with same number of variables/parameters of the inputted TPSA, 
+with maximum order specified by `mo`. If `MAD_TPSA_SAME` is passed for `mo`, the `mo` 
+currently in `t` is used for the created TPSA. Ok with `t=(tpsa_t*)ctpsa`
 
 ### Input
-- `t`   -- TPSA to copy
+- `t`   -- TPSA
 - `mo`  -- Maximum order of new TPSA
 
 ### Output
-- `ret` -- New TPSA with maximum order `mo`
+- `ret` -- New blank TPSA with maximum order `mo`
 """
 function mad_tpsa_new(t::Ptr{RTPSA}, mo::Cuchar)::Ptr{RTPSA}
   ret = @ccall MAD_TPSA.mad_tpsa_new(t::Ptr{RTPSA}, mo::Cuchar)::Ptr{RTPSA}
@@ -239,7 +239,7 @@ end
 Extract one homogeneous polynomial of the given order
 
 ### Input
-- `t``  -- Source TPSA
+- `t`  -- Source TPSA
 - `ord` -- Order to retrieve
 
 ### Output
@@ -1382,7 +1382,7 @@ Sets TPSA `c` to `v/sqrt(a)`.
 - `v` -- Scalar with double precision
 
 ### Output
-- `c` -- Destination TPSA `c = v/sqrt(a)``
+- `c` -- Destination TPSA `c = v/sqrt(a)`
 """
 function mad_tpsa_invsqrt!(a::Ptr{RTPSA}, v::Cdouble, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_invsqrt(a::Ptr{RTPSA}, v::Cdouble, c::Ptr{RTPSA})::Cvoid
