@@ -674,7 +674,7 @@ recently-defined `Descriptor`
 ### Input
 - `a` -- Scalar to create new `ComplexTPS` with
 """
-function TPS(a::Number)::ComplexTPS
+function ComplexTPS(a::Number)::ComplexTPS
   ct = ComplexTPS()
   mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
   return ct
@@ -711,6 +711,10 @@ function ComplexTPS(a::Number, t1::TPS)::ComplexTPS
   mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
   return ct
 end
+
+
+
+
 
 # --- Variable/parameter generators ---
 
@@ -767,7 +771,7 @@ function params(d::Descriptor)::Vector{TPS}
   return k
 end
 
-#= No longer needed:
+
 """
     complexvars(d::Descriptor)::Vector{ComplexTPS}
 
@@ -820,7 +824,7 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   end
   return k
 end
-=#
+
 
 
 
@@ -996,7 +1000,7 @@ end
   ct = zero(ct1)
   mad_ctpsa_dif!(ct1.tpsa, ct2.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1006,7 +1010,7 @@ end
   ct = ComplexTPS(a, ct1)
   mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1015,7 +1019,7 @@ end
   ct = ComplexTPS(a, ct1)
   mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1025,7 +1029,7 @@ end
   ct = ComplexTPS(t1)
   mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1035,7 +1039,7 @@ end
   ct = ComplexTPS(t1)
   mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1046,7 +1050,7 @@ end
   ct = ComplexTPS(a, ct1)
   mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end
@@ -1056,7 +1060,7 @@ end
   ct = ComplexTPS(a, ct1)
   mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
   if ct == zero(ct)
-    return TPS(zero(ct))
+    return real(zero(ct))
   else
     return abs(ct)
   end

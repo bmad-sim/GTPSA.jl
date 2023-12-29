@@ -215,9 +215,10 @@ end
 end
 
 @inline function -(a::Complex, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_scl!(ct1.tpsa, -1.0+0.0*im, ct.tpsa)
+  ct = ComplexTPS(t1)
+  mad_ctpsa_scl!(ct.tpsa, -1.0+0.0*im, ct.tpsa)
   mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64,a))
+  return ct
 end
 
 
@@ -404,7 +405,7 @@ end
 
 @inline function inv(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(Cdouble, 1), ct.tpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
   return ct
 end
 
@@ -415,6 +416,12 @@ end
   return ct
 end
 
+@inline function ^(t1::TPS, ct1::ComplexTPS)::ComplexTPS
+  ct = ComplexTPS(t1)
+  mad_ctpsa_pow!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  return ct
+end
+
 @inline function ^(t1::TPS, a::Complex)::ComplexTPS
   ct = ComplexTPS(t1)
   mad_ctpsa_pown!(ct.tpsa, convert(ComplexF64, a), ct.tpsa)
@@ -422,7 +429,7 @@ end
 end
 
 @inline function ^(a::Complex, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  ct = ComplexTPS(t1)
   mad_ctpsa_scl!(ct.tpsa, convert(ComplexF64, log(a)), ct.tpsa)
   mad_ctpsa_exp!(ct.tpsa, ct.tpsa)
   return ct

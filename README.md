@@ -11,7 +11,7 @@ GTPSA, which uses the Truncated Power Series Algebra method for performing autom
 4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two allows for substantial computational benefits
 
 
-**GTPSA is fast!** See the `benchmark/fodo.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
+**GTPSA is fast!** See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run

@@ -79,7 +79,7 @@ end
   ct3 = zero(ct1)
   ct3[0] = 3 + 3im
 
-  tol = 1e-10
+  tol = 1e-13
 
   # TPS:
   @test TPS_error(t1 + t2 , t3)[0] < tol
@@ -103,8 +103,8 @@ end
   @test TPS_error(t2 ^ t3 , 8)[0] < tol
   @test TPS_error(t3 ^ t2 , 9)[0] < tol
   @test TPS_error(t2 ^ 3 , 8)[0] < tol
-  @test TPS_error(t2 ^ 1/2 , sqrt(2))[0] < tol
-  @test TPS_error(t2 ^ 1/2 , sqrt(t2))[0] < tol
+  @test TPS_error(t2 ^ (1/2) , sqrt(2))[0] < tol
+  @test TPS_error(t2 ^ (1/2) , sqrt(t2))[0] < tol
   @test TPS_error(2 ^ t3 , 8)[0] < tol
   @test TPS_error(inv(t3) , 1/t3)[0] < tol
   @test TPS_error(inv(t3) , 1/3)[0] < tol
@@ -118,28 +118,29 @@ end
   # ComplexTPS:
   @test TPS_error(ct1 + ct2 , ct3)[0] < tol
   @test TPS_error(ct2 + ct1 , ct3)[0] < tol
-  @test TPS_error(ct1 + 2+im , ct3)[0] < tol
-  @test TPS_error(2+2im + ct1 , ct3)[0] < tol
+  @test TPS_error(ct1 + (2+2im) , ct3)[0] < tol
+  @test TPS_error((2+2im) + ct1 , ct3)[0] < tol
   @test TPS_error(ct3 - ct2 , ct1)[0] < tol
   @test TPS_error(ct2 - ct3 , -ct1)[0] < tol
   @test TPS_error(ct3 - (2+2im) , ct1)[0] < tol
   @test TPS_error((2+2im) - ct3 , -ct1)[0] < tol
-  @test TPS_error(ct2 * ct3 , 6+6im)[0] < tol
-  @test TPS_error(ct3 * ct2 , 6+6im)[0] < tol
+  @test TPS_error(ct2 * ct3 , (2+2im)*(3+3im))[0] < tol
+  @test TPS_error(ct3 * ct2 , (2+2im)*(3+3im))[0] < tol
   @test TPS_error(ct2 * 5 , 10+10im)[0] < tol
-  @test TPS_error(5 * ct2 , (10+10im) * ct1)[0] < tol
+  @test TPS_error(5 * ct2 , 10 * ct1)[0] < tol
   @test TPS_error(ct1 / ct2 , (1+im)/(2+2im))[0] < tol
   @test TPS_error(ct2 / ct1 , 2)[0] < tol
   @test TPS_error(1 / ct2 , 1/(2+2im))[0] < tol
   @test TPS_error(ct2 / 3 , (2+2im)/3)[0] < tol
-  @test TPS_error(ct2 / ct2 , ct1 , 1)[0] < tol
+  @test TPS_error(ct2 / ct2 , 1)[0] < tol
   @test TPS_error(ct2 ^ ct3 , (2+2im)^(3+3im))[0] < tol
   @test TPS_error(ct3 ^ ct2 , (3+3im)^(2+2im))[0] < tol
-  @test TPS_error(ct2 ^ 3 , (2+2im)^8)[0] < tol
-  @test TPS_error(ct2 ^ 1/2 , sqrt(2+2im))[0] < tol
-  @test TPS_error(ct2 ^ 1/2 , sqrt(ct2))[0] < tol
+  @test TPS_error(ct2 ^ 3 , (2+2im)^3)[0] < tol
+  @test TPS_error(ct2 ^ (1/2) , sqrt(2+2im))[0] < tol
+  @test TPS_error(ct2 ^ (1/2) , sqrt(ct2))[0] < tol
   @test TPS_error(2 ^ ct3 , 2^(3+3im))[0] < tol
-  @test TPS_error(inv(ct3) , 1/ct3 , 1/(3+3im))[0] < tol
+  @test TPS_error(inv(ct3) , 1/ct3)[0] < tol
+  @test TPS_error(inv(ct3) , 1/(3+3im))[0] < tol
   #@test TPS_error(hypot(ct2,ct3) , hypot(2,3)*(1+im))[0] < tol
   #@test TPS_error(hypot(2,ct3) , hypot(2,3)*(1+im))[0] < tol
   #@test TPS_error(hypot(ct2,3) , hypot(2,3)*(1+im))[0] < tol
@@ -152,7 +153,7 @@ end
   @test TPS_error(t1 + ct2 , 1 + (2+2im))[0] < tol
   @test TPS_error(ct2 + t1 , 1 + (2+2im))[0] < tol
   @test TPS_error(t1 + (2+2im) , 1 + (2+2im))[0] < tol
-  @test TPS_error((2+2im) + t2 , 1 + (2+2im))[0] < tol
+  @test TPS_error((2+2im) + t1 , 1 + (2+2im))[0] < tol
   @test TPS_error(t3 - ct2 , 3 - (2+2im))[0] < tol
   @test TPS_error(ct2 - t3 , (2+2im) - 3)[0] < tol
   @test TPS_error(t3 - (2+2im) , 3 - (2+2im))[0] < tol
@@ -173,4 +174,66 @@ end
   #@test TPS_error(hypot(ct3, t2) , hypot(3,2)+3im)[0] < tol
   #@test TPS_error(hypot(t2, 3+3im) , hypot(2,3)+3im)[0] < tol
   #@test TPS_error(hypot(3+3im, t2) , hypot(3,2)+3im)[0] < tol
+end
+
+@testset "Taylor map benchmark against ForwardDiff" begin
+  include("../benchmark/taylormap.jl")
+  m_GTPSA = benchmark_GTPSA()
+  coefs_FD = benchmark_ForwardDiff()
+  tol = 1e-13
+
+  # Create Taylor map to compare with GTPSA from ForwardDiff
+  x_FD = zero(m_GTPSA[1])
+  px_FD = zero(m_GTPSA[2])
+  y_FD = zero(m_GTPSA[3])
+  py_FD = zero(m_GTPSA[4])
+
+  m_FD = [x_FD, px_FD, y_FD, py_FD]
+
+  for i=1:length(m_FD)
+    t = m_FD[i]
+    t[1=>1] = coefs_FD[1 ,i]
+    t[2=>1] = coefs_FD[2 ,i]
+    t[3=>1] = coefs_FD[3 ,i]
+    t[4=>1] = coefs_FD[4 ,i]
+    t[params=(1=>1,)] = coefs_FD[5 ,i]
+    t[params=(2=>1,)] = coefs_FD[6 ,i]
+
+    t[1=>2] = coefs_FD[7 ,i]
+    t[2=>2] = coefs_FD[8 ,i]
+    t[3=>2] = coefs_FD[9 ,i]
+    t[4=>2] = coefs_FD[10,i]
+    t[params=(1=>2,)] = coefs_FD[11,i]
+    t[params=(2=>2,)] = coefs_FD[12,i]
+
+    t[1=>1,2=>1] = coefs_FD[13,i]
+    t[1=>1,3=>1] = coefs_FD[14,i]
+    t[1=>1,4=>1] = coefs_FD[15,i]
+    t[1=>1,params=(1=>1,)] = coefs_FD[16,i]
+    t[1=>1,params=(2=>1,)] = coefs_FD[17,i]
+
+    t[2=>1,3=>1] = coefs_FD[18,i]
+    t[2=>1,4=>1] = coefs_FD[19,i]
+    t[2=>1,params=(1=>1,)] = coefs_FD[20,i]
+    t[2=>1,params=(2=>1,)] = coefs_FD[21,i]
+
+    t[3=>1,4=>1] = coefs_FD[22,i]
+    t[3=>1,params=(1=>1,)] = coefs_FD[23,i]
+    t[3=>1,params=(2=>1,)] = coefs_FD[24,i]
+
+    t[4=>1,params=(1=>1,)] = coefs_FD[25,i]
+    t[4=>1,params=(2=>1,)] = coefs_FD[26,i]
+
+    t[params=(1=>1,2=>1)] = coefs_FD[27,i]
+  end
+
+  @test GTPSA.norm(TPS_error(m_FD[1], m_GTPSA[1])) < tol
+  @test GTPSA.norm(TPS_error(m_FD[2], m_GTPSA[2])) < tol
+  @test GTPSA.norm(TPS_error(m_FD[3], m_GTPSA[3])) < tol
+  @test GTPSA.norm(TPS_error(m_FD[4], m_GTPSA[4])) < tol
+
+  
+
+
+
 end

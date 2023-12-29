@@ -867,7 +867,7 @@ Calculates the norm of TPSA `a`.
 - `nrm` -- Norm of TPSA
 """
 function mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
-  nrm = @ccall MAD_TPSA.mad_tpsa_nrm(a::Ptr{RTPSA}, tpsa_b_::Ptr{RTPSA})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
   return nrm
 end
 
