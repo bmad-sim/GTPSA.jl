@@ -47,6 +47,7 @@ import Base:  +,
               length,
               convert,
               ==
+
 #=
 import MutableArithmetics:  mutability,
                             promote_operation,
@@ -406,11 +407,13 @@ export
   asinhc,
   erf   ,
   erfc ,
+  norm,
   setname!,
   vars,
   params,
   complexvars,
-  complexparams
+  complexparams,
+  TPS_error
 
 
 # Low-level functions/structs and constants
@@ -658,7 +661,7 @@ Creates a new copy of `TPS` promoted to a `ComplexTPS`
 """
 function ComplexTPS(t1::TPS)::ComplexTPS
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cplx!(ct1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
   return ct
 end
 
@@ -689,7 +692,7 @@ Promotes the scalar `a` to a new `ComplexTPS` using the same
 """
 function ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
   return ct
 end
 
@@ -969,6 +972,97 @@ end
 @inline function zero(::Type{ComplexTPS})::ComplexTPS
   return ComplexTPS()
 end
+
+# --- diff for comparing ---
+@inline function TPS_error(t1::TPS, t2::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_dif!(t1.tpsa, t2.tpsa, t.tpsa)
+  return t
+end
+
+@inline function TPS_error(t1::TPS, a::Real)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_dif!(t1.tpsa, t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function TPS_error(a::Real, t1::TPS)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_dif!(t.tpsa, t1.tpsa, t.tpsa)
+  return t
+end
+
+@inline function TPS_error(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+  ct = zero(ct1)
+  mad_ctpsa_dif!(ct1.tpsa, ct2.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+
+@inline function TPS_error(ct1::ComplexTPS, a::Number)::TPS
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+@inline function TPS_error(a::Number, ct1::ComplexTPS)::TPS
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+
+@inline function TPS_error(ct1::ComplexTPS, t1::TPS)::TPS
+  ct = ComplexTPS(t1)
+  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+
+@inline function TPS_error(t1::TPS, ct1::ComplexTPS)::TPS
+  ct = ComplexTPS(t1)
+  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+
+@inline function TPS_error(t1::TPS, a::Complex)::TPS
+  ct1 = ComplexTPS(t1)
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+@inline function TPS_error(a::Complex, t1::TPS)::TPS
+  ct1 = ComplexTPS(t1)
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  if ct == zero(ct)
+    return TPS(zero(ct))
+  else
+    return abs(ct)
+  end
+end
+
+
 
 include("operators.jl")
 

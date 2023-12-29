@@ -24,15 +24,23 @@ end
 end
 
 @inline function real(ct1::ComplexTPS)::TPS
-  t = TPS(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct1).d))
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_real!(ct1.tpsa, t.tpsa)
   return t
 end
 
 @inline function imag(ct1::ComplexTPS)::TPS
-  t = TPS(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct1).d))
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_imag!(ct1.tpsa, t.tpsa)
   return t
+end
+
+@inline function real(t1::TPS)::TPS
+  return TPS(t1)
+end
+
+@inline function imag(t1::TPS)::TPS
+  return zero(t1)
 end
 
 
@@ -262,7 +270,7 @@ end
 @inline function *(t1::TPS, a::Complex)::ComplexTPS
   ct = ComplexTPS(t1)
   mad_ctpsa_scl!(ct.tpsa, convert(ComplexF64,a), ct.tpsa)
-  return ct1
+  return ct
 end
 
 @inline function *(a::Complex, t1::TPS)::ComplexTPS
@@ -429,9 +437,33 @@ end
   return t
 end
 
+@inline function atan(t1::TPS, a::Real)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_atan2!(t1.tpsa, t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function atan(a::Real, t1::TPS,)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_atan2!(t.tpsa, t1.tpsa, t.tpsa)
+  return t
+end
+
 @inline function hypot(t1::TPS, t2::TPS)::TPS
   t = zero(t1)
   mad_tpsa_hypot!(t1.tpsa, t2.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(t1::TPS, a::Real)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(a::Real, t1::TPS)::TPS
+  t = TPS(a, t1)
+  mad_tpsa_hypot!(t.tpsa, t1.tpsa, t.tpsa)
   return t
 end
 
@@ -446,11 +478,23 @@ end
   return ct
 end
 
+@inline function hypot(ct1::ComplexTPS, a::Number)::ComplexTPS
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function hypot(a::Number, ct1::ComplexTPS)::ComplexTPS
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  return ct
+end
+
 @inline function norm(ct1::ComplexTPS)::Float64
   return mad_ctpsa_nrm(ct1.tpsa)
 end
 
-# TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
+# TPS to ComplexTPS promotion, only creating necessary temp ComplexTPS:
 @inline function hypot(ct1::ComplexTPS, t1::TPS)::ComplexTPS
   ct = ComplexTPS(t1)
   mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
@@ -459,6 +503,19 @@ end
 
 @inline function hypot(t1::TPS, ct1::ComplexTPS)::ComplexTPS
   ct = ComplexTPS(t1)
+  mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function hypot(t1::TPS, a::Complex)::ComplexTPS
+  ct1 = ComplexTPS(t1)
+  ct = ComplexTPS(a, ct1)
+  mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  return ct
+end
+@inline function hypot(a::Complex, t1::TPS)::ComplexTPS
+  ct1 = ComplexTPS(t1)
+  ct = ComplexTPS(a, ct1)
   mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
   return ct
 end
@@ -512,6 +569,12 @@ macro FUNC(F)
         return ct
       end
   end
+end
+
+@inline function abs(ct1::ComplexTPS)::TPS
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cabs!(ct1.tpsa, t.tpsa)
+  return t
 end
 
 @FUNC("unit"  )

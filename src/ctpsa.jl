@@ -1953,14 +1953,14 @@ end
 """
     mad_ctpsa_hypot!(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})
 
-Sets TPSA `r` to `sqrt(x^2+y^2)`
+Sets TPSA `r` to `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 
 ### Input
 - `x` -- Source TPSA `x`
 - `y` -- Source TPSA `y`
 
 ### Output
-- `r` -- Destination TPSA `r = sqrt(x^2+y^2)`
+- `r` -- Destination TPSA `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 """
 function  mad_ctpsa_hypot!(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_hypot(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})::Cvoid
