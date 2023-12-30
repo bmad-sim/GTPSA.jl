@@ -858,13 +858,13 @@ end
 """
     mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
 
-Calculates the norm of TPSA `a`.
+Calculates the 1-norm of TPSA `a`.
 
 ### Input
 - `a`   -- TPSA
 
 ### Output
-- `nrm` -- Norm of TPSA
+- `nrm` -- 1-Norm of TPSA
 """
 function mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
@@ -875,7 +875,8 @@ end
 """
     mad_tpsa_abs!(a::Ptr{RTPSA}, c::Ptr{RTPSA})
 
-Sets TPSA `c` to the absolute value of TPSA `a`.
+Sets TPSA `c` to the absolute value of TPSA `a`. Specifically, the 
+result contains a TPSA with the `abs` of all coefficients.
 
 ### Input
 - `a` -- Source TPSA `a`
@@ -1197,13 +1198,13 @@ end
 """
     mad_tpsa_asinc!(a::Ptr{RTPSA}, c::Ptr{RTPSA})
 
-Sets TPSA `c` to the `asinc` of TPSA `a`.
+Sets TPSA `c` to the `asinc(a) = asin(a)/a`
 
 ### Input
 - `a` -- Source TPSA `a`
 
 ### Output
-- `c` -- Destination TPSA `c = asinc(a)'
+- `c` -- Destination TPSA `c = asinc(a) = asin(a)/a`
 """
 function mad_tpsa_asinc!(a::Ptr{RTPSA}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_asinc(a::Ptr{RTPSA}, c::Ptr{RTPSA})::Cvoid
