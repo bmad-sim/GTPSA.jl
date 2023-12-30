@@ -450,7 +450,7 @@ end
   return t
 end
 
-@inline function atan(a::Real, t1::TPS,)::TPS
+@inline function atan(a::Real, t1::TPS)::TPS
   t = TPS(a, t1)
   mad_tpsa_atan2!(t.tpsa, t1.tpsa, t.tpsa)
   return t
@@ -462,72 +462,222 @@ end
   return t
 end
 
-@inline function hypot(t1::TPS, a::Real)::TPS
-  t = TPS(a, t1)
+@inline function hypot(t1::TPS, a::Number)::TPS
+  t = TPS(abs(a), t1)
   mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
 
-@inline function hypot(a::Real, t1::TPS)::TPS
-  t = TPS(a, t1)
-  mad_tpsa_hypot!(t.tpsa, t1.tpsa, t.tpsa)
+@inline function hypot(a::Number, t1::TPS)::TPS
+  return hypot(t1, a)
+end
+
+@inline function hypot(t1::TPS, t2::TPS, t3::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
   return t
 end
 
+@inline function hypot(t1::TPS, t2::TPS, a::Number)::TPS
+  t3 = TPS(abs(a), t1)
+  return hypot(t1, t2, t3)
+end
+
+@inline function hypot(t1::TPS, a::Number, t2::TPS)::TPS
+  return hypot(t1, t2, a)
+end
+
+@inline function hypot(a::Number, t1::TPS, t2::TPS)::TPS
+  return hypot(t1, t2, a)
+end
+
+@inline function hypot(t1::TPS, a::Number, b::Number)::TPS
+  t2 = TPS(abs(a), t1)
+  return hypot(t1, t2, b)
+end
+
+@inline function hypot(a::Number, t1::TPS, b::Number)::TPS
+  return hypot(t1, a, b)
+end
+
+@inline function hypot(a::Number, b::Number, t1::TPS)::TPS
+  return hypot(t1, a, b)
+end
+
+"""
+    norm(t1::TPS)::Float64
+
+Calculates the 1-norm of the `TPS`, which is the sum of 
+the `abs` of all coefficients.
+"""
 @inline function norm(t1::TPS)::Float64
   return mad_tpsa_nrm(t1.tpsa)
 end
 
+
 # ComplexTPS:
-@inline function hypot(ct1::ComplexTPS, ct2::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_hypot!(ct1.tpsa, ct2.tpsa, ct.tpsa)
-  return ct
+@inline function hypot(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+  t1 = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
+  mad_ctpsa_cabs!(ct2.tpsa, t.tpsa)
+  mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
+  return t
 end
 
-@inline function hypot(ct1::ComplexTPS, a::Number)::ComplexTPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  return ct
+@inline function hypot(ct1::ComplexTPS, a::Number)::TPS
+  t1 = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME)) 
+  t = zero(t1)
+  t[0] = abs(a)
+  mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
+  mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
+  return t
 end
 
-@inline function hypot(a::Number, ct1::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  return ct
+@inline function hypot(a::Number, ct1::ComplexTPS)::TPS
+  return hypot(ct1, a)
 end
 
+@inline function hypot(ct1::ComplexTPS, ct2::ComplexTPS, ct3::ComplexTPS)::TPS
+  t1 = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  t2 = zero(t1)
+  t3 = zero(t1)
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
+  mad_ctpsa_cabs!(ct2.tpsa, t2.tpsa)
+  mad_ctpsa_cabs!(ct3.tpsa, t3.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(ct1::ComplexTPS, ct2::ComplexTPS, a::Number)::TPS
+  t1 = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  t2 = zero(t1)
+  t3 = zero(t1)
+  t3[0] = abs(a)
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
+  mad_ctpsa_cabs!(ct2.tpsa, t2.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(ct1::ComplexTPS, a::Number, ct2::ComplexTPS)::TPS
+  return hypot(ct1, ct2, a)
+end
+
+@inline function hypot(a::Number, ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+  return hypot(ct1, ct2, a)
+end
+
+@inline function hypot(ct1::ComplexTPS, a::Number, b::Number)::TPS
+  t1 = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  t2 = zero(t1)
+  t3 = zero(t1)
+  t = zero(t1)
+  t2[0] = abs(a)
+  t3[0] = abs(b)
+  mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(a::Number, ct1::ComplexTPS, b::Number)::TPS
+  return hypot(ct1, a, b)
+end
+
+@inline function hypot(a::Number, b::Number, ct1::ComplexTPS)::TPS
+  return hypot(ct1, a, b)
+end
+
+"""
+    norm(t1::ComplexTPS)::Float64
+
+Calculates the 1-norm of the `ComplexTPS`, which is the sum of 
+the `abs` of all coefficients.
+"""
 @inline function norm(ct1::ComplexTPS)::Float64
   return mad_ctpsa_nrm(ct1.tpsa)
 end
 
-# TPS to ComplexTPS promotion, only creating necessary temp ComplexTPS:
-@inline function hypot(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  return ct
+# Hypot mixing ComplexTPS and TPS w/o unnecessary temporaries
+@inline function hypot(ct1::ComplexTPS, t1::TPS)::TPS
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t.tpsa)
+  mad_ctpsa_hypot!(t.tpsa, t1.tpsa, t.tpsa)
+  return t
 end
 
-@inline function hypot(t1::TPS, ct1::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  return ct
+@inline function hypot(t1::TPS, ct1::ComplexTPS)::TPS
+  return hypot(ct1, t1)
 end
 
-@inline function hypot(t1::TPS, a::Complex)::ComplexTPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_hypot!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  return ct
+@inline function hypot(ct1::ComplexTPS, ct2::ComplexTPS, t1::TPS)::TPS
+  t2 = zero(t1)
+  t3 = zero(t1)
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t2.tpsa)
+  mad_ctpsa_cabs!(ct2.tpsa, t3.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
 end
-@inline function hypot(a::Complex, t1::TPS)::ComplexTPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_hypot!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  return ct
+
+@inline function hypot(ct1::ComplexTPS, t1::TPS, ct2::ComplexTPS)::TPS
+  return hypot(ct1, ct2, t1)
+end
+
+@inline function hypot(t1::TPS, ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+  return hypot(ct1, ct2, t1)
+end
+
+@inline function hypot(ct1::ComplexTPS, t1::TPS, t2::TPS)::TPS
+  t3 = zero(t1)
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t3.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(t1::TPS, ct1::ComplexTPS, t2::TPS)::TPS
+  return hypot(ct1, t1, t2)
+end
+
+@inline function hypot(t1::TPS, t2::TPS, ct1::ComplexTPS)::TPS
+  return hypot(ct1, t1, t2)
+end
+
+@inline function hypot(ct1::ComplexTPS, t1::TPS, a::Number)::TPS
+  t2 = zero(t1)
+  t3 = zero(t1)
+  t3[0] = abs(a)
+  t = zero(t1)
+  mad_ctpsa_cabs!(ct1.tpsa, t2.tpsa)
+  mad_tpsa_hypot3!(t1.tpsa, t2.tpsa, t3.tpsa, t.tpsa)
+  return t
+end
+
+@inline function hypot(t1::TPS, ct1::ComplexTPS, a::Number)::TPS
+  return hypot(ct1, t1, a)
+end
+
+@inline function hypot(ct1::ComplexTPS, a::Number, t1::TPS)::TPS
+  return hypot(ct1, t1, a)
+end
+
+@inline function hypot(t1::TPS, a::Number, ct1::ComplexTPS)::TPS
+  return hypot(ct1, t1, a)
+end
+
+@inline function hypot(a::Number, ct1::ComplexTPS, t1::TPS)::TPS
+  return hypot(ct1, t1, a)
+end
+
+@inline function hypot(a::Number, t1::TPS, ct1::ComplexTPS)::TPS
+  return hypot(ct1, t1, a)
 end
 
 # --- rest of unary functions ---
+# TPS:
 macro FUN(F)
   fn = Symbol("mad_tpsa_" * F * "!")
   quote
@@ -548,25 +698,117 @@ end
 @FUN("cos"  )
 @FUN("tan"  )
 @FUN("cot"  )
-@FUN("sinc"  )
 @FUN("sinh"  )
 @FUN("cosh"  )
 @FUN("tanh"  )
 @FUN("coth"  )
-@FUN("sinhc" )
 @FUN("asin"  )
 @FUN("acos"  )
 @FUN("atan"  )
 @FUN("acot"  )
-@FUN("asinc" )
 @FUN("asinh")
 @FUN("acosh" )
 @FUN("atanh" )
 @FUN("acoth" )
-@FUN("asinhc")
 @FUN("erf"  )
 @FUN("erfc"  )
 
+# sinc in Julia has different definition than GTPSA
+# In Julia: sinc(x) = sin(pi*x)/(pi*x)
+# in C GTPSA: sinc(x) = sin(x)/x
+# To make sinc agree:
+@inline function sinc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), t.tpsa)
+  mad_tpsa_sinc!(t.tpsa, t.tpsa)
+  return t
+end
+
+# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
+# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
+@inline function asinc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), t.tpsa)
+  mad_tpsa_asinc!(t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function sinhc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), t.tpsa)
+  mad_tpsa_sinhc!(t.tpsa, t.tpsa)
+  return t
+end
+
+# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
+# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
+@inline function asinhc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), t.tpsa)
+  mad_tpsa_asinhc!(t.tpsa, t.tpsa)
+  return t
+end
+
+# These functions are not implemented in the GTPSA C library, so they 
+# are implemented below without creating unnecessary temporaries
+@inline function csc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_sin!(t1.tpsa, t.tpsa)
+  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
+  return t
+end
+
+@inline function sec(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_cos!(t1.tpsa, t.tpsa)
+  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
+  return t
+end
+
+@inline function csch(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_sinh!(t1.tpsa, t.tpsa)
+  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
+  return t
+end
+
+@inline function sech(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_cosh!(t1.tpsa, t.tpsa)
+  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
+  return t
+end
+
+@inline function acsc(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
+  mad_tpsa_asin!(t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function asec(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
+  mad_tpsa_acos!(t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function acsch(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
+  mad_tpsa_asinh!(t.tpsa, t.tpsa)
+  return t
+end
+
+@inline function asech(t1::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
+  mad_tpsa_acosh!(t.tpsa, t.tpsa)
+  return t
+end
+
+
+# ComplexTPS:
 macro FUNC(F)
   fn = Symbol("mad_ctpsa_" * F * "!")
   quote
@@ -584,6 +826,16 @@ end
   return t
 end
 
+@inline function conj(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_conj!(ct1.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function conj(t1::TPS)::TPS
+  return TPS(t1)
+end
+
 @FUNC("unit"  )
 @FUNC("sqrt"  )
 @FUNC("exp"  )
@@ -592,21 +844,111 @@ end
 @FUNC("cos"  )
 @FUNC("tan"  )
 @FUNC("cot"  )
-@FUNC("sinc"  )
 @FUNC("sinh"  )
 @FUNC("cosh"  )
 @FUNC("tanh"  )
 @FUNC("coth"  )
-@FUNC("sinhc" )
 @FUNC("asin"  )
 @FUNC("acos"  )
 @FUNC("atan"  )
 @FUNC("acot"  )
-@FUNC("asinc" )
 @FUNC("asinh" )
 @FUNC("acosh" )
 @FUNC("atanh" )
 @FUNC("acoth" )
-@FUNC("asinhc")
 @FUNC("erf"  )
 @FUNC("erfc"  )
+
+# sinc in Julia has different definition than GTPSA
+# In Julia: sinc(x) = sin(pi*x)/(pi*x)
+# in C GTPSA: sinc(x) = sin(x)/x
+# To make sinc agree:
+@inline function sinc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
+  mad_ctpsa_sinc!(ct.tpsa, ct.tpsa)
+  return ct
+end
+
+# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
+# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
+@inline function asinc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
+  mad_ctpsa_asinc!(ct.tpsa, ct.tpsa)
+  return t
+end
+
+@inline function sinhc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
+  mad_ctpsa_sinhc!(ct.tpsa, ct.tpsa)
+  return ct
+end
+
+# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
+# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
+@inline function asinhc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
+  mad_ctpsa_asinhc!(ct.tpsa, ct.tpsa)
+  return t
+end
+
+# These functions are not implemented in the GTPSA C library, so they 
+# are implemented below without creating unnecessary temporaries
+@inline function csc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_sin!(ct1.tpsa, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  return ct
+end
+
+@inline function sec(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_cos!(ct1.tpsa, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  return ct
+end
+
+@inline function csch(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_sinh!(ct1.tpsa, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  return ct
+end
+
+@inline function sech(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_cosh!(ct1.tpsa, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  return ct
+end
+
+@inline function acsc(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_asin!(ct.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function asec(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_acos!(ct.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function acsch(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_asinh!(ct.tpsa, ct.tpsa)
+  return ct
+end
+
+@inline function asech(ct1::ComplexTPS)::ComplexTPS
+  ct = zero(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_acosh!(ct.tpsa, ct.tpsa)
+  return ct
+end

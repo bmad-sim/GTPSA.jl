@@ -464,7 +464,8 @@ end
 """ 
     mad_ctpsa_cabs!(t::Ptr{CTPSA}, r::Ptr{RTPSA})
 
-Sets the RTPSA `r` equal to the aboslute value of CTPSA `t`
+Sets the RTPSA `r` equal to the aboslute value of CTPSA `t`. Specifically, the 
+result contains a TPSA with the `abs` of all coefficients.
 
 ### Input
 - `t` -- Source CTPSA
@@ -1420,13 +1421,13 @@ end
 """
     mad_ctpsa_nrm(a::Ptr{CTPSA})::Cdouble
 
-Calculates the norm of TPSA `a`.
+Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 
 ### Input
 - `a`   -- TPSA
 
 ### Output
-- `nrm` -- Norm of TPSA `a`
+- `nrm` -- 1-Norm of TPSA `a`
 """
 function mad_ctpsa_nrm(a::Ptr{CTPSA})::Cdouble
   nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA})::Cdouble
@@ -1757,13 +1758,13 @@ end
 """
     mad_ctpsa_asinc!(a::Ptr{CTPSA}, c::Ptr{CTPSA})
 
-Sets TPSA `c` to the `asinc` of TPSA `a`
+Sets TPSA `c` to the `asinc(a) = asin(a)/a`
 
 ### Input
 - `a` -- Source TPSA `a`
 
 ### Output
-- `c` -- Destination TPSA `c = asinc(a)`
+- `c` -- Destination TPSA `c = asinc(a) = asin(a)/a`
 """
 function mad_ctpsa_asinc!(a::Ptr{CTPSA}, c::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_asinc(a::Ptr{CTPSA}, c::Ptr{CTPSA})::Cvoid
@@ -1969,7 +1970,7 @@ end
 """
     mad_ctpsa_hypot3!(x::Ptr{CTPSA}, y::Ptr{CTPSA}, z::Ptr{CTPSA}, r::Ptr{CTPSA})
 
-Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`
+Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`.  Does NOT allow for r = x, y, z !!!
 
 ### Input
 - `x` -- Source TPSA `x`
