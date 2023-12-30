@@ -79,7 +79,7 @@ end
   ct3 = zero(ct1)
   ct3[0] = 3 + 3im
 
-  tol = 1e-12
+  tol = 1e-14
 
   # TPS:
   @test TPS_error(t1 + t2 , t3)[0] < tol
@@ -180,7 +180,7 @@ end
   include("../benchmark/taylormap.jl")
   m_GTPSA = benchmark_GTPSA()
   coefs_FD = benchmark_ForwardDiff()
-  tol = 1e-12
+  tol = 1e-14
 
   # Create Taylor map to compare with GTPSA from ForwardDiff
   x_FD = zero(m_GTPSA[1])
