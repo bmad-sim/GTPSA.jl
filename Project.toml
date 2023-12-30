@@ -12,7 +12,10 @@ julia = "1.8"
 
 [extras]
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+TaylorSeries = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Downloads"]
+test = ["Test", "Downloads", "ForwardDiff", "TaylorSeries", "BenchmarkTools"]

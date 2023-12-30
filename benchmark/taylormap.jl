@@ -116,24 +116,29 @@ function benchmark_ForwardDiff()
     coefs[4 ,i] = mpy(0,0,0,0,k1_0,0)
     coefs[5 ,i] = mk1(0,0,0,0,k1_0,0)
     coefs[6 ,i] = mk2l(0,0,0,0,k1_0,0)
+
     coefs[7 ,i] = mxx(0,0,0,0,k1_0,0)
     coefs[8 ,i] = mpxpx(0,0,0,0,k1_0,0)
     coefs[9 ,i] = myy(0,0,0,0,k1_0,0)   
     coefs[10,i] = mpypy(0,0,0,0,k1_0,0) 
     coefs[11,i] = mk1k1(0,0,0,0,k1_0,0) 
     coefs[12,i] = mk2lk2l(0,0,0,0,k1_0,0)
+
     coefs[13,i] = mxpx(0,0,0,0,k1_0,0)  
     coefs[14,i] = mxy(0,0,0,0,k1_0,0)   
     coefs[15,i] = mxpy(0,0,0,0,k1_0,0)  
     coefs[16,i] = mxk1(0,0,0,0,k1_0,0)  
     coefs[17,i] = mxk2l(0,0,0,0,k1_0,0) 
+
     coefs[18,i] = mpxy(0,0,0,0,k1_0,0)  
     coefs[19,i] = mpxpy(0,0,0,0,k1_0,0) 
     coefs[20,i] = mpxk1(0,0,0,0,k1_0,0) 
     coefs[21,i] = mpxk2l(0,0,0,0,k1_0,0)
+
     coefs[22,i] = mypy(0,0,0,0,k1_0,0)  
     coefs[23,i] = myk1(0,0,0,0,k1_0,0)  
-    coefs[24,i] = myk2l(0,0,0,0,k1_0,0) 
+    coefs[24,i] = myk2l(0,0,0,0,k1_0,0)
+     
     coefs[25,i] = mpyk1(0,0,0,0,k1_0,0) 
     coefs[26,i] = mpyk2l(0,0,0,0,k1_0,0)
     coefs[27,i] = mk1k2l(0,0,0,0,k1_0,0)
@@ -155,6 +160,6 @@ function benchmark_TaylorSeries()
 end
 
 
-m_GTPSA = @btime benchmark_GTPSA()
-m_ForwardDiff = @btime benchmark_ForwardDiff()
-m_TaylorSeries = @btime benchmark_TaylorSeries()
+#m_GTPSA = @btime benchmark_GTPSA()
+#m_ForwardDiff = @btime benchmark_ForwardDiff()
+#m_TaylorSeries = @btime benchmark_TaylorSeries()

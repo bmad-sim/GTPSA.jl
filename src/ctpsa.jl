@@ -46,16 +46,16 @@ end
 """
     mad_ctpsa_new(t::Ptr{CTPSA}, mo::Cuchar)::Ptr{CTPSA}
 
-Creates a complex TPSA copy of the inputted TPSA, with maximum order specified by mo.
-If `MAD_TPSA_SAME` is passed for `mo`, the `mo` currently in `t` is used for the created TPSA.
-Ok with `t=(tpsa_t*)ctpsa`
+Creates a blank TPSA with same number of variables/parameters of the inputted TPSA, 
+with maximum order specified by `mo`. If `MAD_TPSA_SAME` is passed for `mo`, the `mo` 
+currently in `t` is used for the created TPSA. Ok with `t=(tpsa_t*)ctpsa`
 
 ### Input
-- `t`   -- Complex TPSA to copy
+- `t`   -- TPSA
 - `mo`  -- Maximum order of new TPSA
 
 ### Output
-- `ret` -- New complex TPSA with maximum order `mo`
+- `ret` -- New blank TPSA with maximum order `mo`
 """
 function mad_ctpsa_new(t::Ptr{CTPSA}, mo::Cuchar)::Ptr{CTPSA}
   ret = @ccall MAD_TPSA.mad_ctpsa_new(t::Ptr{CTPSA}, mo::Cuchar)::Ptr{CTPSA}
@@ -1429,7 +1429,7 @@ Calculates the norm of TPSA `a`.
 - `nrm` -- Norm of TPSA `a`
 """
 function mad_ctpsa_nrm(a::Ptr{CTPSA})::Cdouble
-  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA}, tpsa_b_::Ptr{CTPSA})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{CTPSA})::Cdouble
   return nrm
 end
 
@@ -1953,14 +1953,14 @@ end
 """
     mad_ctpsa_hypot!(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})
 
-Sets TPSA `r` to `sqrt(x^2+y^2)`
+Sets TPSA `r` to `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 
 ### Input
 - `x` -- Source TPSA `x`
 - `y` -- Source TPSA `y`
 
 ### Output
-- `r` -- Destination TPSA `r = sqrt(x^2+y^2)`
+- `r` -- Destination TPSA `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 """
 function  mad_ctpsa_hypot!(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_hypot(x::Ptr{CTPSA}, y::Ptr{CTPSA}, r::Ptr{CTPSA})::Cvoid

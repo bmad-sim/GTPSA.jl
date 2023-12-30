@@ -77,8 +77,8 @@ z2[params=(2=>1,)] = 1  # Set first-order part for second parameter equal to 1
 z2 == k2                # Is true
 ```
 
-## Using Complex TPSs
+## Promotion of TPS to ComplexTPS
 
-Mixing `ComplexTPS`s with `TPS`s is currently not allowed, however this may be added in the future. The usage for `ComplexTPS`s is the same as with regular `TPS`s, with the addition of some extra functions including `real` and `imag`.
+`TPS`s and `ComplexTPS`s can be mixed freely without concern. Any time an operation with a `TPS` and a `ComplexTPS` or a `Complex` number occurs, the result will be a `ComplexTPS`. A `ComplexTPS` can be converted back to a `TPS` using the `real` and `imag` operators.
 
 
