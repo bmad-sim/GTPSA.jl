@@ -1,24 +1,6 @@
 using Test
 using GTPSA
 
-@testset "Compare with MAD" begin
-  include("compare_MAD.jl")
-  expected_out = """mad_mono.h downloaded.
-  Comparing mad_mono.h to mono.jl...
-  mad_desc.h downloaded.
-  Comparing mad_desc.h to desc.jl...
-  mad_tpsa.h downloaded.
-  Comparing mad_tpsa.h to rtpsa.jl...
-  mad_tpsa_ordv: Variable in C tpsa_t* ... => ...::Ptr{RTPSA} not equal to Julia ts::Ptr{RTPSA}...
-  mad_ctpsa.h downloaded.
-  Comparing mad_ctpsa.h to ctpsa.jl...
-  mad_ctpsa_ordv: Variable in C ctpsa_t* ... => ...::Ptr{CTPSA} not equal to Julia ts::Ptr{CTPSA}...
-  mad_ctpsa_equt: Variable in C num_t tol => tol::Cdouble not equal to Julia tol_::Cdouble
-  mad_ctpsa_unit: Variable in C ctpsa_t* x => x::Ptr{CTPSA} not equal to Julia t::Ptr{CTPSA}
-  """
-  @test compare_MAD() == expected_out
-end
-
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = TPS(d)
@@ -166,10 +148,6 @@ end
   @test norm(ct3 ^ t2 - (3+3im)^2) < tol
   @test norm(t2 ^ (3+3im) - 2^(3+3im)) < tol
   @test norm((3+3im)^t2 - (3+3im)^2) < tol
-  #@test norm(hypot(t2, ct3) - hypot(2, 3)+3im) < tol
-  #@test norm(hypot(ct3, t2) - hypot(3,2)+3im) < tol
-  #@test norm(hypot(t2, 3+3im) - hypot(2,3)+3im) < tol
-  #@test norm(hypot(3+3im, t2) - hypot(3,2)+3im) < tol
 end
 
 @testset "Functions: scalar TPSs vs. Julia scalars" begin
@@ -179,7 +157,7 @@ end
   t = TPS(d)
   v = 0.5
   t[0] = v
-  tol = 1e-12
+  tol = 1e-14
   t1 = TPS(t)
   t1[0] = 1
   t2 = zero(t1)
@@ -240,6 +218,9 @@ end
   @test norm(hypot(1, 2, t3) - hypot(1,2,3)) < tol
   @test norm(hypot(1, t2, 3) - hypot(1,2,3)) < tol
   @test norm(hypot(t1, 2, 3) - hypot(1,2,3)) < tol
+  @test norm(angle(t2) - angle(2)) < tol
+  @test norm(complex(t3) - complex(3)) < tol
+  @test norm(complex(t2,t3) - complex(2,3)) < tol
   
   v = 0.5+0.5im
   t = ComplexTPS(t)
@@ -291,11 +272,6 @@ end
   @test norm(GTPSA.erf(t) - SF.erf(v)) < tol
   @test norm(GTPSA.erfc(t) - SF.erfc(v)) < tol
   @test norm(-im*GTPSA.erf(t*im) - SF.erfi(v)) < tol
-  #= Uncomment these with atan2 implementation for ComplexTPS, also mixing TPS with Complex cases below
-  @test norm(atan(ct3,ct2) - atan(3+3im,2+2im)) < tol
-  @test norm(atan(ct3,2) - atan(3+3im,2+2im)) < tol
-  @test norm(atan(3,ct2) - atan(3+3im,2+2im)) < tol
-  =#
   @test norm(hypot(ct2,ct3) - hypot(2+2im,3+3im)) < tol
   @test norm(hypot(2+2im,ct3) - hypot(2+2im,3+3im)) < tol
   @test norm(hypot(ct2,3+3im) - hypot(2+2im,3+3im)) < tol
@@ -306,6 +282,8 @@ end
   @test norm(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
   @test norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
   @test norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  @test norm(angle(ct2) - angle(2+2im)) < tol
+  @test norm(complex(ct3) - complex(3+3im)) < tol
 
   # Hypot, mixing TPS with ComplexTPS
   @test norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
@@ -383,6 +361,9 @@ end
   @test norm(asinhc(t/pi) - asinh(t)/t) < tol
   @test norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)) < tol
   @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
+  @test norm(angle(t)) < tol
+  @test norm(complex(t) - t) < tol
+  @test norm(complex(t,t) - (t+im*t)) < tol
 
   t = ComplexTPS(t)
   t[0] = 0.5+0.5im; t[1] = 2+2im; t[2] = 3+3im; t[3] = 4+4im; t[4] = 5+5im; t[5] = 6+6im
@@ -434,6 +415,8 @@ end
   =#
   @test norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)) < tol
   @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
+  @test norm(angle(t) - atan(imag(t),real(t))) < tol
+  @test norm(complex(t) - t) < tol
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
@@ -492,4 +475,22 @@ end
   @test GTPSA.norm(m_FD[3] - m_GTPSA[3]) < tol
   @test GTPSA.norm(m_FD[4] - m_GTPSA[4]) < tol
 
+end
+
+@testset "Compare with MAD" begin
+  include("compare_MAD.jl")
+  expected_out = """mad_mono.h downloaded.
+  Comparing mad_mono.h to mono.jl...
+  mad_desc.h downloaded.
+  Comparing mad_desc.h to desc.jl...
+  mad_tpsa.h downloaded.
+  Comparing mad_tpsa.h to rtpsa.jl...
+  mad_tpsa_ordv: Variable in C tpsa_t* ... => ...::Ptr{RTPSA} not equal to Julia ts::Ptr{RTPSA}...
+  mad_ctpsa.h downloaded.
+  Comparing mad_ctpsa.h to ctpsa.jl...
+  mad_ctpsa_ordv: Variable in C ctpsa_t* ... => ...::Ptr{CTPSA} not equal to Julia ts::Ptr{CTPSA}...
+  mad_ctpsa_equt: Variable in C num_t tol => tol::Cdouble not equal to Julia tol_::Cdouble
+  mad_ctpsa_unit: Variable in C ctpsa_t* x => x::Ptr{CTPSA} not equal to Julia t::Ptr{CTPSA}
+  """
+  @test compare_MAD() == expected_out
 end

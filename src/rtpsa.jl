@@ -384,7 +384,7 @@ end
 """
     mad_tpsa_mono!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
 
-Returns the order of the monomial at index `i` in the TPSA `a`nd optionally the monomial at that index is returned in `m_` 
+Returns the order of the monomial at index `i` in the TPSA and optionally the monomial at that index is returned in `m_` 
 and the order of parameters in the monomial in `p_`
 
 ### Input
@@ -858,7 +858,7 @@ end
 """
     mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
 
-Calculates the 1-norm of TPSA `a`.
+Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 
 ### Input
 - `a`   -- TPSA
@@ -1442,7 +1442,7 @@ end
 """
     mad_tpsa_hypot3!(x::Ptr{RTPSA}, y::Ptr{RTPSA}, z::Ptr{RTPSA}, r::Ptr{RTPSA})
 
-Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`
+Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`. Does NOT allow for r = x, y, z !!!
 
 ### Input
 - `x` -- Source TPSA `x`

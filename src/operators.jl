@@ -836,6 +836,24 @@ end
   return TPS(t1)
 end
 
+@inline function angle(ct1::ComplexTPS)::TPS
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_carg!(ct1.tpsa, t.tpsa)
+  return t
+end
+
+@inline function angle(t1::TPS)::TPS
+  return zero(t1)
+end
+
+@inline function complex(tct1::Union{TPS,ComplexTPS})::ComplexTPS
+  return ComplexTPS(tct1)
+end
+
+@inline function complex(t1::TPS, t2::TPS)::ComplexTPS
+  return ComplexTPS(t1, t2)
+end
+
 @FUNC("unit"  )
 @FUNC("sqrt"  )
 @FUNC("exp"  )

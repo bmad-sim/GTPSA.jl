@@ -41,12 +41,14 @@ import Base:  +,
               real  ,
               imag  ,
               conj  ,
+              angle ,
+              complex, 
               getindex,
               firstindex,
               lastindex,
               setindex!,
               length,
-              convert,
+              #convert,
               ==,
               print
 
@@ -415,7 +417,8 @@ export
   params,
   complexvars,
   complexparams,
-  TPS_error
+  TPS_error,
+  add!
 
 
 # Low-level functions/structs and constants
@@ -517,16 +520,6 @@ end
 
 # RTPSA outer constructors
 """
-    TPS()::TPS
-
-Creates a new Truncated Power Series `TPS` using the most 
-recently-defined `Descriptor`
-"""
-function TPS()::TPS
-  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-end
-
-"""
     TPS(d::Descriptor)::TPS
 
 Creates a new Truncated Power Series `TPS` based on `d` 
@@ -553,21 +546,6 @@ function TPS(t1::TPS)::TPS
 end
 
 """
-    TPS(a::Real)::TPS
-
-Promotes the scalar `a` to a new `TPS` using the most 
-recently-defined `Descriptor`.
-
-### Input
-- `a` -- Scalar to create new `TPS` with
-"""
-function TPS(a::Real)::TPS
-  t = TPS()
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
-  return t
-end
-
-"""
     TPS(a::Real, t1::TPS)::TPS
 
 Promotes the scalar `a` to a new `TPS` using the same 
@@ -584,24 +562,33 @@ function TPS(a::Real, t1::TPS)::TPS
   return t
 end
 
-#=
+# Unsafe constructors using most recently-defined Descriptor:
 """
-    TPS(a::Real, ct1::ComplexTPS)::TPS
+    unsafe_TPS()::TPS
 
-Promotes the scalar `a` to a new `TPS` using the same 
-`Descriptor` as `ct1`
+Creates a new Truncated Power Series `TPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+"""
+function unsafe_TPS()::TPS
+  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
+"""
+    unsafe_TPS(a::Real)::TPS
+
+Promotes the scalar `a` to a new `TPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
 
 ### Input
-- `a`   -- Scalar to create new `TPS` with
-- `ct1` -- `ComplexTPS` to use same `Descriptor` as
+- `a` -- Scalar to create new `TPS` with
 """
-function TPS(a::Real, ct1::ComplexTPS)::TPS
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64, a))
+function unsafe_TPS(a::Real)::TPS
+  t = unsafe_TPS()
+  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
   return t
 end
-=#
 
 
 # Wrapper struct for Ptr{CTPSA}
@@ -616,17 +603,6 @@ mutable struct ComplexTPS
 end
 
 # ComplexTPS outer constructors
-"""
-    ComplexTPS()::ComplexTPS
-
-Creates a new Complex Truncated Power Series `ComplexTPS` using 
-the most recently-defined `Descriptor`
-"""
-function ComplexTPS()::ComplexTPS
-  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-end
-
-
 """
     ComplexTPS(d::Descriptor)::ComplexTPS
 
@@ -668,17 +644,17 @@ function ComplexTPS(t1::TPS)::ComplexTPS
 end
 
 """
-    ComplexTPS(a::Number)::ComplexTPS
+    ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
 
-Promotes the scalar `a` to a new `ComplexTPS` using the most 
-recently-defined `Descriptor`
+Creates a new `ComplexTPS` equal to `t1 + im*t2`
 
 ### Input
-- `a` -- Scalar to create new `ComplexTPS` with
+- `t1` -- Real part of `ComplexTPS` as a `TPS` 
+- `t2` -- Imaginary part of `ComplexTPS` as a `TPS` 
 """
-function ComplexTPS(a::Number)::ComplexTPS
-  ct = ComplexTPS()
-  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+function ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cplx!(t1.tpsa, t2.tpsa, ct.tpsa)
   return ct
 end
 
@@ -714,8 +690,33 @@ function ComplexTPS(a::Number, t1::TPS)::ComplexTPS
   return ct
 end
 
+# Unsafe constructors using most recently-defined Descriptor:
+"""
+    unsafe_ComplexTPS()::ComplexTPS
 
+Creates a new Complex Truncated Power Series `ComplexTPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+"""
+function unsafe_ComplexTPS()::ComplexTPS
+  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
+"""
+    unsafe_ComplexTPS(a::Number)::ComplexTPS
+
+Promotes the scalar `a` to a new `ComplexTPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+
+### Input
+- `a` -- Scalar to create new `ComplexTPS` with
+"""
+function unsafe_ComplexTPS(a::Number)::ComplexTPS
+  ct = unsafe_ComplexTPS()
+  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+  return ct
+end
 
 
 # --- Variable/parameter generators ---
@@ -910,12 +911,6 @@ function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...
   mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-#=
-
-function setname!(t::TPS, nam::String)
-  mad_tpsa_setnam!(t.tpsa, Base.unsafe_convert(Cstring, nam))
-end
-=#
 # --- print ---
 #=
 function show(io::IO, t::TPS)
@@ -950,25 +945,26 @@ function print(t::ComplexTPS)
 end
 
 # --- convert ---
+#=
 function convert(::Type{TPS}, v::Real)::TPS
-  t = TPS()
+  t = unsafe_TPS()
   mad_tpsa_setval!(t.tpsa, convert(Cdouble, v))
   return t
 end
 
 function convert(::Type{ComplexTPS}, v::Number)::TPS
-  t = TPS()
+  t = unsafe_TPS()
   mad_ctpsa_setval!(t.tpsa, convert(ComplexF64, v))
   return t
 end
-
+=#
 # -- zero -- 
 @inline function zero(t::TPS)::TPS
   return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
 end
 
 @inline function zero(::Type{TPS})::TPS
-  return TPS()
+  return unsafe_TPS()
 end
 
 @inline function zero(ct::ComplexTPS)::ComplexTPS
@@ -976,7 +972,7 @@ end
 end
 
 @inline function zero(::Type{ComplexTPS})::ComplexTPS
-  return ComplexTPS()
+  return unsafe_ComplexTPS()
 end
 
 # --- diff for comparing ---
@@ -1067,8 +1063,6 @@ end
     return abs(ct)
   end
 end
-
-
 
 include("operators.jl")
 
