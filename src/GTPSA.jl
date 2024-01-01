@@ -463,7 +463,7 @@ function Descriptor(mos::Vector{<:Integer})::Descriptor
   mo = maximum(mos)
   po = 0
   no = mos
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 """
@@ -500,7 +500,7 @@ function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
   mo = maximum(mos)
   po = maximum(pos)
   no = vcat(mos,pos)
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 # Wrapper struct for Ptr{RTPSA}
@@ -732,13 +732,13 @@ function vars(d::Descriptor)::Vector{TPS}
   desc = unsafe_load(d.desc)
   nv = desc.nv
   x = Vector{TPS}(undef, nv)
-  ords = zeros(Int, nv)
+  ords = zeros(Cuchar, nv)
   for i=1:nv
-    ords[i] = 1
+    ords[i] = 0x1
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, 1))
+    mad_tpsa_setm!(t.tpsa, nv, ords, 0.0, 1.0)
     x[i] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return x
 end
@@ -759,13 +759,13 @@ function params(d::Descriptor)::Vector{TPS}
   nv = desc.nv
   np = desc.np
   k = Vector{TPS}(undef, np)
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for i=nv+1:nv+np
-    ords[i] = 1
+    ords[i] = 0x1
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, 1))
+    mad_tpsa_setm!(t.tpsa, nv+np, ords, 0.0, 1.0)
     k[i-nv] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return k
 end
@@ -786,13 +786,13 @@ function complexvars(d::Descriptor)::Vector{ComplexTPS}
   desc = unsafe_load(d.desc)
   nv = desc.nv
   x = Vector{ComplexTPS}(undef, nv)
-  ords = zeros(Int, nv)
+  ords = zeros(Cuchar, nv)
   for i=1:nv
-    ords[i] = 1
+    ords[i] = 0x1
     t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, 1))
+    mad_ctpsa_setm!(t.tpsa, nv, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
     x[i] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return x
 end
@@ -813,13 +813,13 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   nv = desc.nv
   np = desc.np
   k = Vector{ComplexTPS}(undef, np)
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for i=nv+1:nv+np
-    ords[i] = 1
+    ords[i] = 0x1
     t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, 1))
+    mad_ctpsa_setm!(t.tpsa, nv+np, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
     k[i-nv] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return k
 end
@@ -827,7 +827,7 @@ end
 
 # --- Getters ---
 function getindex(t::TPS, ords::Integer...)::Float64
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
 function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
@@ -835,19 +835,19 @@ function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Var
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for var in vars
-    ords[var.first] = convert(Int, var.second)
+    ords[var.first] = convert(Cuchar, var.second)
   end
   for param in params
-    ords[nv + param.first] = convert(Int, param.second)
+    ords[nv + param.first] = convert(Cuchar, param.second)
   end
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+  return mad_tpsa_getm(t.tpsa, nv+np, ords)
 end
 
 
 function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
-  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
@@ -855,20 +855,20 @@ function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::T
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   nv = desc.nv
   np = desc.np
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for var in vars
-    ords[var.first] = convert(Int, var.second)
+    ords[var.first] = convert(Cuchar, var.second)
   end
   for param in params
-    ords[nv + param.first] = convert(Int, param.second)
+    ords[nv + param.first] = convert(Cuchar, param.second)
   end
-  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+  return mad_ctpsa_getm(ct.tpsa, nv+np, ords)
 end
 
 
 # --- Setters ---
 function setindex!(t::TPS, v::Real, ords::Integer...)
-  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(Cdouble, 0), convert(Cdouble, v))
+  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
 end
 
 function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
@@ -876,18 +876,18 @@ function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params:
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for var in vars
-    ords[var.first] = convert(Int, var.second)
+    ords[var.first] = convert(Cuchar, var.second)
   end
   for param in params
-    ords[nv + param.first] = convert(Int, param.second)
+    ords[nv + param.first] = convert(Cuchar, param.second)
   end
-  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, v))
+  mad_tpsa_setm!(t.tpsa, nv+np, ords, 0.0, convert(Cdouble, v))
 end
 
 function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
-  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
@@ -895,14 +895,14 @@ function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   nv = desc.nv
   np = desc.np
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for var in vars
-    ords[var.first] = convert(Int, var.second)
+    ords[var.first] = convert(Cuchar, var.second)
   end
   for param in params
-    ords[nv + param.first] = convert(Int, param.second)
+    ords[nv + param.first] = convert(Cuchar, param.second)
   end
-  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setm!(ct.tpsa, nv+np, ords, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 # --- gradient, jacobian, hessian getters ---
