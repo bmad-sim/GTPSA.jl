@@ -417,8 +417,8 @@ export
   params,
   complexvars,
   complexparams,
-  TPS_error,
-  add!
+  polar,
+  rect
 
 
 # Low-level functions/structs and constants

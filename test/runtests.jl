@@ -208,6 +208,15 @@ end
   @test norm(atan(t3,t2) - atan(3,2)) < tol
   @test norm(atan(t3,2) - atan(3,2)) < tol
   @test norm(atan(3,t2) - atan(3,2)) < tol
+  @test norm(atan(t3,-t2) - atan(3,-2)) < tol
+  @test norm(atan(t3,-2) - atan(3,-2)) < tol
+  @test norm(atan(3,-t2) - atan(3,-2)) < tol
+  @test norm(atan(-t3,-t2) - atan(-3,-2)) < tol
+  @test norm(atan(-t3,-2) - atan(-3,-2)) < tol
+  @test norm(atan(-3,-t2) - atan(-3,-2)) < tol
+  @test norm(atan(-t3,t2) - atan(-3,2)) < tol
+  @test norm(atan(-t3,2) - atan(-3,2)) < tol
+  @test norm(atan(-3,t2) - atan(-3,2)) < tol
   @test norm(hypot(t2,t3) - hypot(2,3)) < tol
   @test norm(hypot(2,t3) - hypot(2,3)) < tol
   @test norm(hypot(t2,3) - hypot(2,3)) < tol
@@ -219,9 +228,15 @@ end
   @test norm(hypot(1, t2, 3) - hypot(1,2,3)) < tol
   @test norm(hypot(t1, 2, 3) - hypot(1,2,3)) < tol
   @test norm(angle(t2) - angle(2)) < tol
+  @test norm(angle(-t2) - angle(-2)) < tol
   @test norm(complex(t3) - complex(3)) < tol
   @test norm(complex(t2,t3) - complex(2,3)) < tol
-  
+  @test norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
+  @test norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
+  @test norm(rect(t2) - (2*cos(0) + 2*sin(0))) < tol
+  @test norm(rect(-t1) - (-1*cos(0) + -1*sin(0))) < tol
+
+
   v = 0.5+0.5im
   t = ComplexTPS(t)
   t[0] = v
@@ -282,8 +297,17 @@ end
   @test norm(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
   @test norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
   @test norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  @test norm(angle(t2+im*t3) - angle(2+3im)) < tol
+  @test norm(angle(t2-im*t3) - angle(2-3im)) < tol
+  @test norm(angle(-t2-im*t3) - angle(-2-3im)) < tol
+  @test norm(angle(-t2+im*t3) - angle(-2+3im)) < tol
   @test norm(angle(ct2) - angle(2+2im)) < tol
+  @test norm(angle(-ct2) - angle(-2-2im)) < tol
   @test norm(complex(ct3) - complex(3+3im)) < tol
+  @test norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
+  @test norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
+  @test norm(rect(ct2) - (2*cos(2) + 2*sin(2))) < tol
+  @test norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1))) < tol
 
   # Hypot, mixing TPS with ComplexTPS
   @test norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
