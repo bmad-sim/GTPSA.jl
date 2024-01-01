@@ -849,8 +849,12 @@ function angle(t1::TPS)::TPS
   return t
 end
 
-function complex(tct1::Union{TPS,ComplexTPS})::ComplexTPS
-  return ComplexTPS(tct1)
+function complex(t1::TPS)::ComplexTPS
+  return ComplexTPS(t1)
+end
+
+function complex(ct1::ComplexTPS)
+  return ComplexTPS(ct1)
 end
 
 function complex(t1::TPS, t2::TPS)::ComplexTPS

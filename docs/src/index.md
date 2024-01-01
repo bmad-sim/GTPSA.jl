@@ -2,14 +2,14 @@
 
 *A Julia interface to the Generalised Truncated Power Series Algebra (GTPSA) library in MAD.*
 
-This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders in the variables. 
+This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to individual arbitrary orders in the variables (up to 63). 
 
-GTPSA, which uses the Truncated Power Series Algebra method for performing automatic differentation (AD), has several advantages over current Julia AD packages:
+GTPSA, which uses the Truncated Power Series Algebra method for calculating Taylor expansions, has several advantages over current similar Julia packages:
 
-1. **Speed and Accuracy**: Because the TPSA method does not take any symbolic derivatives, nor use finite differencing, derivatives are calculated with high efficiency and accuracy
+1. **Speed and Accuracy**: Because the TPSA method does not take any symbolic derivatives, nor use finite differencing, Taylor expansions are calculated with high efficiency, speed, and accuracy
 2. **Arbitrary Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 5th order in $x_1$ and 1st order in $x_2$ is done trivially in GTPSA
-3. **All Taylor Coefficients Stored**: GTPSA implements an efficient monomial coefficient indexing function for high speed even with TPSs having large number of variables to high orders
-4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two proves advantageous for analyses of Taylor maps, such as normal form
+3. **All Taylor Coefficients Stored**: All monomial coefficients are stored and propagated according to the algebra. GTPSA also implements an efficient coefficient indexing function for high speed even with TPSs having large number of variables to high orders
+4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two is highly advantageous in analyses of Taylor maps (e.g. normal form)
 
 
 **GTPSA is fast!** See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
@@ -30,7 +30,7 @@ For developers,
 ## Basic Usage
 First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA. The `Descriptor` stores all of the monomial indexing/lookup information for TPSs in the TPSA, based on these values. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `coth`, etc.).
 
-TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the truncated power series of a function $f(x_1,x_2) = x_1^2\frac{\sin{(2+x_1x_2)}}{\exp{(x_1+x_2)}}$ to 15th order in $x_1$ and $x_2$:
+TPSs can be viewed as structures containing the coefficients of all the monomials in a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the TPS of a function $f(x_1,x_2) = x_1^2\frac{\sin{(2+x_1x_2)}}{\exp{(x_1+x_2)}}$ to 15th order in $x_1$ and $x_2$:
 ```
 using GTPSA
 

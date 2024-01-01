@@ -47,19 +47,9 @@ import Base:  +,
               firstindex,
               lastindex,
               setindex!,
-              length,
-              #convert,
               ==,
               print
 
-#=
-import MutableArithmetics:  mutability,
-                            promote_operation,
-                            operate!,
-                            operate_to!,
-                            IsMutable,
-                            mutable_copy
-=#
 using GTPSA_jll
 
 export
@@ -418,7 +408,13 @@ export
   complexvars,
   complexparams,
   polar,
-  rect
+  rect, 
+
+  # Methods:
+  evaluate,
+  gradient,
+  jacobian,
+  hessian
 
 
 # Low-level functions/structs and constants
@@ -829,8 +825,6 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
 end
 
 
-
-
 # --- Getters ---
 function getindex(t::TPS, ords::Integer...)::Float64
   return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
@@ -911,6 +905,73 @@ function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...
   mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
+# --- gradient, jacobian, hessian getters ---
+#=
+function gradient(t::TPS)::Vector{Float64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  gradc = Base.unsafe_convert(Ptr{Cdouble}, Vector{Float64}(undef, nv))
+  mad_tpsa_getv!(t.tpsa, Cint(1), nv, gradc)
+  grad = copy(unsafe_wrap(Vector{Float64}, gradc, nv))
+  return grad
+end
+=#
+
+function gradient(t::TPS)::Vector{Float64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  grad = Vector{Float64}(undef, nv)
+  @ccall MAD_TPSA.mad_tpsa_getv(t.tpsa::Ptr{RTPSA}, 1::Cint, nv::Cint, grad::Ptr{Cdouble})::Cvoid
+  return grad
+end
+
+function jacobian(m::Vector{TPS})::Matrix{Float64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  nv = desc.nv
+  J = Matrix{Float64}(undef, length(m), nv)
+  for i=1:length(m)
+    grad = Vector{Float64}(undef, nv)
+    @ccall MAD_TPSA.mad_tpsa_getv(m[i].tpsa::Ptr{RTPSA}, 1::Cint, nv::Cint, grad::Ptr{Cdouble})::Cvoid
+    J[i,:] = grad
+  end
+  return J
+end
+
+function hessian(t::TPS)::Matrix{Float64}
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  nv = desc.nv
+  np = desc.np
+  nn = nv+np
+  H = zeros(nv,nv)
+  idx = Cint(nv+np+1) # First second order mono
+  mono =zeros(UInt8, nv)
+  mono[1] = 0x2
+  while idx > 0
+    i = j = findfirst(x->x==0x2,mono)
+    if isnothing(i)
+      i = findfirst(x->x==0x1, mono)
+      j = findlast(x->x==0x1, mono)
+    end
+    H[i,j] = mad_tpsa_geti(t.tpsa, idx)
+    H[j,i] = H[i,j]
+    idx = @ccall MAD_TPSA.mad_tpsa_cycle(t.tpsa::Ptr{RTPSA}, idx::Cint, nn::Cint, mono::Ptr{Cuchar}, C_NULL::Ptr{Cvoid})::Cint
+  end
+  #=
+  for i=1:nv
+    for j=i:nv
+      println(idx)
+      @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc}, idx::Cint, nn::Cint, mono::Ptr{Cuchar}, C_NULL::Ptr{Cvoid})::Cuchar
+      H[i,j] = mad_tpsa_geti(t.tpsa, idx)
+      H[j,i] = H[i,j]
+      idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc}, nn::Cint, mono::Ptr{Cuchar})::Cint
+    end
+  end
+  =#
+  return H
+end
+
+
 # --- print ---
 #=
 function show(io::IO, t::TPS)
@@ -944,126 +1005,16 @@ function print(t::ComplexTPS)
   mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
-# --- convert ---
-#=
-function convert(::Type{TPS}, v::Real)::TPS
-  t = unsafe_TPS()
-  mad_tpsa_setval!(t.tpsa, convert(Cdouble, v))
-  return t
-end
-
-function convert(::Type{ComplexTPS}, v::Number)::TPS
-  t = unsafe_TPS()
-  mad_ctpsa_setval!(t.tpsa, convert(ComplexF64, v))
-  return t
-end
-=#
 # -- zero -- 
 @inline function zero(t::TPS)::TPS
   return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
-end
-
-@inline function zero(::Type{TPS})::TPS
-  return unsafe_TPS()
 end
 
 @inline function zero(ct::ComplexTPS)::ComplexTPS
   return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
 end
 
-@inline function zero(::Type{ComplexTPS})::ComplexTPS
-  return unsafe_ComplexTPS()
-end
-
-# --- diff for comparing ---
-@inline function TPS_error(t1::TPS, t2::TPS)::TPS
-  t = zero(t1)
-  mad_tpsa_dif!(t1.tpsa, t2.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(t1::TPS, a::Real)::TPS
-  t = TPS(a, t1)
-  mad_tpsa_dif!(t1.tpsa, t.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(a::Real, t1::TPS)::TPS
-  t = TPS(a, t1)
-  mad_tpsa_dif!(t.tpsa, t1.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
-  ct = zero(ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct2.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(ct1::ComplexTPS, a::Number)::TPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-@inline function TPS_error(a::Number, ct1::ComplexTPS)::TPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(ct1::ComplexTPS, t1::TPS)::TPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(t1::TPS, ct1::ComplexTPS)::TPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(t1::TPS, a::Complex)::TPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-@inline function TPS_error(a::Complex, t1::TPS)::TPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
 include("operators.jl")
+include("methods.jl")
 
 end
