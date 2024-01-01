@@ -831,18 +831,19 @@ function getindex(t::TPS, ords::Integer...)::Float64
 end
 
 function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Cuchar, nv+np)
-  for var in vars
-    ords[var.first] = convert(Cuchar, var.second)
+  # use sparse monomial getter
+  nv = Cint(length(vars))
+  np = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(nv+np))
+  for i=1:nv
+    sm[2*i-1] = convert(Cint, vars[i].first)
+    sm[2*i] = convert(Cint, vars[i].second)
   end
-  for param in params
-    ords[nv + param.first] = convert(Cuchar, param.second)
+  for i=nv+1:nv+np
+    sm[2*i-1] = convert(Cint, params[i].first+nv)
+    sm[2*i] = convert(Cint, params[i].second)
   end
-  return mad_tpsa_getm(t.tpsa, nv+np, ords)
+  return mad_tpsa_getsm(t.tpsa, nv+np, sm)
 end
 
 
@@ -851,18 +852,19 @@ function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
 end
 
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Cuchar, nv+np)
-  for var in vars
-    ords[var.first] = convert(Cuchar, var.second)
+  # use sparse monomial getter
+  nv = Cint(length(vars))
+  np = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(nv+np))
+  for i=1:nv
+    sm[2*i-1] = convert(Cint, vars[i].first)
+    sm[2*i] = convert(Cint, vars[i].second)
   end
-  for param in params
-    ords[nv + param.first] = convert(Cuchar, param.second)
+  for i=nv+1:nv+np
+    sm[2*i-1] = convert(Cint, params[i].first+nv)
+    sm[2*i] = convert(Cint, params[i].second)
   end
-  return mad_ctpsa_getm(ct.tpsa, nv+np, ords)
+  return mad_ctpsa_getsm(t.tpsa, nv+np, sm)
 end
 
 
@@ -872,18 +874,19 @@ function setindex!(t::TPS, v::Real, ords::Integer...)
 end
 
 function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Cuchar, nv+np)
-  for var in vars
-    ords[var.first] = convert(Cuchar, var.second)
+  # use sparse monomial getter
+  nv = Cint(length(vars))
+  np = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(nv+np))
+  for i=1:nv
+    sm[2*i-1] = convert(Cint, vars[i].first)
+    sm[2*i] = convert(Cint, vars[i].second)
   end
-  for param in params
-    ords[nv + param.first] = convert(Cuchar, param.second)
+  for i=nv+1:nv+np
+    sm[2*i-1] = convert(Cint, params[i].first+nv)
+    sm[2*i] = convert(Cint, params[i].second)
   end
-  mad_tpsa_setm!(t.tpsa, nv+np, ords, 0.0, convert(Cdouble, v))
+  mad_tpsa_setsm!(t.tpsa, nv+np, sm, 0.0, convert(Cdouble, v))
 end
 
 function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
@@ -891,18 +894,19 @@ function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
 end
 
 function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Cuchar, nv+np)
-  for var in vars
-    ords[var.first] = convert(Cuchar, var.second)
+  # use sparse monomial getter
+  nv = Cint(length(vars))
+  np = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(nv+np))
+  for i=1:nv
+    sm[2*i-1] = convert(Cint, vars[i].first)
+    sm[2*i] = convert(Cint, vars[i].second)
   end
-  for param in params
-    ords[nv + param.first] = convert(Cuchar, param.second)
+  for i=nv+1:nv+np
+    sm[2*i-1] = convert(Cint, params[i].first+nv)
+    sm[2*i] = convert(Cint, params[i].second)
   end
-  mad_ctpsa_setm!(ct.tpsa, nv+np, ords, convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setsm!(t.tpsa, nv+np, sm, 0.0, convert(ComplexF64, v))
 end
 
 # --- gradient, jacobian, hessian getters ---
