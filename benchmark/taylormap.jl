@@ -9,7 +9,7 @@ using BenchmarkTools: @btime, @benchmark
 # ForwardDiff: 1.235 ms (3051 allocations: 3.95 MiB)
 # TaylorSeries: 12.193 ms (268516 allocations: 26.95 MiB)
 
-@inline function track_qf(z0, k1)
+function track_qf(z0, k1)
   L = 0.5
   return [cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2] ,
           -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2]              ,
@@ -17,7 +17,7 @@ using BenchmarkTools: @btime, @benchmark
           sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]]
 end
 
-@inline function track_qd(z0, k1)
+function track_qd(z0, k1)
   L = 0.5
   return [cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2],
           sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2],
@@ -25,16 +25,16 @@ end
           -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4]]  
 end
 
-@inline function track_drift(z0)
+function track_drift(z0)
   L = 0.75
   return  [z0[1]+z0[2]*L, z0[2], z0[3]+z0[4]*L, z0[4]]
 end
 
-@inline function track_sextupole(z0, k2l)
+function track_sextupole(z0, k2l)
   return  [z0[1], z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2), z0[3]+k2l/2.0*z0[1]*z0[3], z0[4]]
 end
 
-@inline function track_fodo(z0, k1, k2l)
+function track_fodo(z0, k1, k2l)
   z1 = track_qf(z0, k1)
   z2 = track_sextupole(z1, k2l)
   z3 = track_drift(z2)
@@ -44,7 +44,7 @@ end
   return z6
 end
 
-@inline function track_ring(z0, k1, k2l)
+function track_ring(z0, k1, k2l)
   for i=1:100
     z0 = track_fodo(z0, k1, k2l)
   end
@@ -52,27 +52,27 @@ end
 end
 
 function benchmark_GTPSA()
-  m(z) = @inline track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6])
-  d = Descriptor(6,1)
+  m(z) =track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6])
+  d = Descriptor(6,2)
   z = vars(d)
   map = m(z)
-  j = jacobian(map)
+  #j = jacobian(map)
   #h1 = hessian(map[1])
   #h2 = hessian(map[2])
   #h3 = hessian(map[3])
   #h4 = hessian(map[4])
-  return j#, h1, h2, h3, h4
+  return map #j, h1, h2, h3, h4
 end
 
 
 function benchmark_ForwardDiff()
   m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6])
   j = ForwardDiff.jacobian(m, [0,0,0,0,0,0])
-  h1 = ForwardDiff.hessian(z->m(z)[1], [0,0,0,0,0,0])
-  h2 = ForwardDiff.hessian(z->m(z)[2], [0,0,0,0,0,0])
-  h3 = ForwardDiff.hessian(z->m(z)[3], [0,0,0,0,0,0])
-  h4 = ForwardDiff.hessian(z->m(z)[4], [0,0,0,0,0,0])
-  return j#, h1, h2, h3, h4
+  #h1 = ForwardDiff.hessian(z->m(z)[1], [0,0,0,0,0,0])
+  #h2 = ForwardDiff.hessian(z->m(z)[2], [0,0,0,0,0,0])
+  #h3 = ForwardDiff.hessian(z->m(z)[3], [0,0,0,0,0,0])
+  #h4 = ForwardDiff.hessian(z->m(z)[4], [0,0,0,0,0,0])
+  return j, h1, h2, h3, h4
 end
 
 

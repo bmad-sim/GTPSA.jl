@@ -824,14 +824,8 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   return k
 end
 
-
-# --- Getters ---
-function getindex(t::TPS, ords::Integer...)::Float64
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
-end
-
-function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
-  # use sparse monomial getter
+# Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
+function pairs_to_sm(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
   nv = Cint(length(vars))
   np = Cint(length(params))
   sm = Vector{Cint}(undef, 2*(nv+np))
@@ -843,7 +837,36 @@ function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Var
     sm[2*i-1] = convert(Cint, params[i].first+nv)
     sm[2*i] = convert(Cint, params[i].second)
   end
-  return mad_tpsa_getsm(t.tpsa, nv+np, sm)
+  return sm, nv+np
+end
+
+# Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
+function pairs_to_m(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{UInt8}, Cint}
+  n = Cint(0)
+  if isempty(params)
+    n = Cint(maximum(map(x->x.first, vars)))
+  else
+    n = Cint(maximum(map(x->x.first, params)))
+  end
+  ords = zeros(Cuchar, n)
+  for var in vars
+    ords[var.first] = convert(Cuchar, var.second)
+  end
+  for param in params
+    ords[nv + param.first] = convert(Cuchar, param.second)
+  end
+  return ords, n
+end
+
+# --- Getters ---
+function getindex(t::TPS, ords::Integer...)::Float64
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
+end
+
+function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
+  # use sparse monomial getter
+  sm, n = pairs_to_sm(vars..., params=params)
+  return mad_tpsa_getsm(t.tpsa, n, sm)
 end
 
 
@@ -853,18 +876,8 @@ end
 
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # use sparse monomial getter
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
-    sm[2*i-1] = convert(Cint, vars[i].first)
-    sm[2*i] = convert(Cint, vars[i].second)
-  end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
-    sm[2*i] = convert(Cint, params[i].second)
-  end
-  return mad_ctpsa_getsm(t.tpsa, nv+np, sm)
+  sm, n = pairs_to_sm(vars..., params=params)
+  return mad_ctpsa_getsm(t.tpsa, n, sm)
 end
 
 
@@ -875,18 +888,8 @@ end
 
 function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
   # use sparse monomial getter
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
-    sm[2*i-1] = convert(Cint, vars[i].first)
-    sm[2*i] = convert(Cint, vars[i].second)
-  end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
-    sm[2*i] = convert(Cint, params[i].second)
-  end
-  mad_tpsa_setsm!(t.tpsa, nv+np, sm, 0.0, convert(Cdouble, v))
+  sm, n = pairs_to_sm(vars..., params=params)
+  mad_tpsa_setsm!(t.tpsa, n, sm, 0.0, convert(Cdouble, v))
 end
 
 function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
@@ -895,83 +898,113 @@ end
 
 function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # use sparse monomial getter
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
-    sm[2*i-1] = convert(Cint, vars[i].first)
-    sm[2*i] = convert(Cint, vars[i].second)
-  end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
-    sm[2*i] = convert(Cint, params[i].second)
-  end
-  mad_ctpsa_setsm!(t.tpsa, nv+np, sm, 0.0, convert(ComplexF64, v))
+  sm, n = pairs_to_sm(vars..., params=params)
+  mad_ctpsa_setsm!(t.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 # --- gradient, jacobian, hessian getters ---
-#=
-function gradient(t::TPS)::Vector{Float64}
+function gradient(t::TPS; include_params=false)::Vector{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  gradc = Base.unsafe_convert(Ptr{Cdouble}, Vector{Float64}(undef, nv))
-  mad_tpsa_getv!(t.tpsa, Cint(1), nv, gradc)
-  grad = copy(unsafe_wrap(Vector{Float64}, gradc, nv))
-  return grad
-end
-=#
-
-function gradient(t::TPS)::Vector{Float64}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  grad = Vector{Float64}(undef, nv)
-  @ccall MAD_TPSA.mad_tpsa_getv(t.tpsa::Ptr{RTPSA}, 1::Cint, nv::Cint, grad::Ptr{Cdouble})::Cvoid
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  grad = Vector{Float64}(undef, n)
+  mad_tpsa_getv!(t.tpsa, Cint(1), n, grad)
   return grad
 end
 
-function jacobian(m::Vector{TPS})::Matrix{Float64}
+function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  grad = Vector{ComplexF64}(undef, n)
+  mad_ctpsa_getv!(t.tpsa, Cint(1), n, grad)
+  return grad
+end
+
+function jacobian(m::Vector{TPS}; include_params=false)::Matrix{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
-  nv = desc.nv
-  J = Matrix{Float64}(undef, length(m), nv)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  J = Vector{Float64}(undef, length(m)*n)
+  Matrix{Float64}(undef, length(m), n)
+  grad = Vector{Float64}(undef, n)
   for i=1:length(m)
-    grad = Vector{Float64}(undef, nv)
-    @ccall MAD_TPSA.mad_tpsa_getv(m[i].tpsa::Ptr{RTPSA}, 1::Cint, nv::Cint, grad::Ptr{Cdouble})::Cvoid
+    mad_tpsa_getv!(m[i].tpsa, Cint(1), n, grad)
     J[i,:] = grad
   end
   return J
 end
 
-function hessian(t::TPS)::Matrix{Float64}
+function jacobian(m::Vector{ComplexTPS}; include_params=false)::Matrix{ComplexF64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  J = Matrix{ComplexF64}(undef, length(m), n)
+  grad = Vector{ComplexF64}(undef, n)
+  for i=1:length(m)
+    mad_ctpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    J[i,:] = grad
+  end
+  return J
+end
+
+function hessian(t::TPS; include_params=false)::Matrix{Float64}
   d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
   desc = unsafe_load(d)
-  nv = desc.nv
-  np = desc.np
-  nn = nv+np
-  H = zeros(nv,nv)
-  idx = Cint(nv+np+1) # First second order mono
-  mono =zeros(UInt8, nv)
-  mono[1] = 0x2
-  while idx > 0
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  H = zeros(Float64, n, n)
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{Cdouble}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
     i = j = findfirst(x->x==0x2,mono)
     if isnothing(i)
       i = findfirst(x->x==0x1, mono)
       j = findlast(x->x==0x1, mono)
     end
-    H[i,j] = mad_tpsa_geti(t.tpsa, idx)
-    H[j,i] = H[i,j]
-    idx = @ccall MAD_TPSA.mad_tpsa_cycle(t.tpsa::Ptr{RTPSA}, idx::Cint, nn::Cint, mono::Ptr{Cuchar}, C_NULL::Ptr{Cvoid})::Cint
+    H[i,j] = v[]
+    H[j,i] = v[]
+    idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
-  #=
-  for i=1:nv
-    for j=i:nv
-      println(idx)
-      @ccall MAD_TPSA.mad_desc_mono(d::Ptr{Desc}, idx::Cint, nn::Cint, mono::Ptr{Cuchar}, C_NULL::Ptr{Cvoid})::Cuchar
-      H[i,j] = mad_tpsa_geti(t.tpsa, idx)
-      H[j,i] = H[i,j]
-      idx = @ccall MAD_TPSA.mad_desc_nxtbyord(d::Ptr{Desc}, nn::Cint, mono::Ptr{Cuchar})::Cint
+  return H
+end
+
+function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  H = zeros(ComplexF64, n, n)
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{ComplexF64}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
+    i = j = findfirst(x->x==0x2,mono)
+    if isnothing(i)
+      i = findfirst(x->x==0x1, mono)
+      j = findlast(x->x==0x1, mono)
     end
+    H[i,j] = v[]
+    H[j,i] = v[]
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
-  =#
   return H
 end
 

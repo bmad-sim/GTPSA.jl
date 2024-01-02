@@ -181,7 +181,7 @@ end
 
 
 """
-    mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
+    mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
 
 Returns the max order of all TPSAs in `t`.
 
@@ -192,7 +192,7 @@ Returns the max order of all TPSAs in `t`.
 ### Output
 - `mo` -- Maximum order of all TPSAs
 """
-function mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
+function mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
   mo = @ccall MAD_TPSA.mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
   return mo
 end
@@ -1722,7 +1722,7 @@ end
 
 
 """
-    mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
 
 Writes the vector a in terms 
 mc is a map (m is map)
@@ -1736,13 +1736,13 @@ Map to hamiltonian
 - `a`   
 - `mc`
 """
-function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fld2vec!(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})
+    mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
 
 ???
 
@@ -1751,13 +1751,13 @@ end
 - `ma`
 - `c`
 """
-function mad_tpsa_fld2vec!(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})
+function mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})::Cvoid
 end
 
 
 """
-    mad_tpsa_fgrad!(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
+    mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
 
 Derivating vs a variable,. multiply and add sum
 Deriving a map vs each variable by itself TPSA
@@ -1772,13 +1772,13 @@ Taking 1 TPSA, derive TPSA vs all variables, multiply result by variable in map 
 - `b`
 - `c`
 """
-function mad_tpsa_fgrad!(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
+function mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})::Cvoid
 end
 
 
 """
-    mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the Lie bracket of the maps `ma` and `mb`.
 
@@ -1790,13 +1790,13 @@ Computes the Lie bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
 
@@ -1808,13 +1808,13 @@ Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the log of the Poisson bracket of the maps `ma` and `mb`.
 
@@ -1826,14 +1826,14 @@ Computes the log of the Poisson bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 
 """
-    mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
+    mad_tpsa_mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Cdouble
 
 Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
@@ -1844,14 +1844,14 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 ### Output
 - `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
-function mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
+function mad_tpsa_mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
   return nrm
 end
 
 
 """
-    mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Inverts the map.
 
@@ -1862,13 +1862,13 @@ Inverts the map.
 ### Output
 - `mc` -- Inversion of map `ma`
 """
-function mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Vector{Cint})
+    mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 
@@ -1880,13 +1880,13 @@ Computes the partial inverse of the map with only the selected variables, specif
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Vector{Cint})
+function mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
   @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})::Cvoid
 end
 
 
 """
-    mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Composes two maps.
 
@@ -1899,13 +1899,13 @@ Composes two maps.
 ### Output
 - `mc` -- Composition of maps `ma` and `mb`
 """
-function mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{Ptr{RTPSA}})
 
 Translates the expansion point of the map by the amount `tb`.
 
@@ -1918,13 +1918,13 @@ Translates the expansion point of the map by the amount `tb`.
 ### Output
 - `mc` -- Map evaluated at the new point translated `tb` from the original evaluation point
 """
-function mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
+    mad_tpsa_eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
 
 Evaluates the map at the point `tb`
 
@@ -1937,13 +1937,13 @@ Evaluates the map at the point `tb`
 ### Output
 - `tc` -- Values for each TPSA in the map evaluated at the point `tb`
 """
-function mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
+function mad_tpsa_eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})::Cvoid
 end
 
 
 """
-    mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+    mad_tpsa_mconv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nc::Cint, mc::Vector{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
 
 Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the map `ma`.
 
@@ -1958,7 +1958,7 @@ Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the
 ### Output
 - `mc`   -- map `mc` with specified conversions 
 """
-function mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+function mad_tpsa_mconv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nc::Cint, mc::Vector{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
