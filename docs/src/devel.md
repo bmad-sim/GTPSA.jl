@@ -19,7 +19,12 @@ desc = unsafe_load(d.desc)
 t_jl = unsafe_wrap(Vector{Ptr{RTPSA}}, Base.unsafe_convert(Ptr{Ptr{RTPSA}}, desc.t), 8)
 ```
 
-First the `Ptr{Ptr{Cvoid}}` is converted to a `Ptr{Ptr{RTPSA}}`, which can then be wrapped in a `Vector{Ptr{RTPSA}}`.
+First the `Ptr{Ptr{Cvoid}}` is converted to a `Ptr{Ptr{RTPSA}}`, which can then be wrapped in a `Vector{Ptr{RTPSA}}`. Note that calling `unsafe_wrap` uses memory allocation, so it is preferred to use `unsafe_load` for speed-critical applications.To get the first temporary in the array without using `unsafe_wrap`, use:
+
+```
+t1_jl = unsafe_load(Base.unsafe_convert(Ptr{Ptr{RTPSA}}, desc.t), 1)
+```
+
 ## Monomial
 ```@docs
 mad_mono_str!

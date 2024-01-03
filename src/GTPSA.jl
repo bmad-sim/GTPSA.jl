@@ -414,11 +414,25 @@ export
   evaluate,
   gradient,
   jacobian,
-  hessian
+  hessian,
+
+  # Temporaries:
+  @usetemps,
+  ±,
+  ∓,
+  ⨰,
+  ⨱,
+  ⤊,
+  get_rtemp!,
+  __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
+          __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
+          __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
+          __t_polar, __t_rect
+
 
 
 # Low-level functions/structs and constants
-const NAMSZ::Integer = 16 
+const NAMSZ = 16 
 include("mono.jl")
 include("desc.jl")
 include("rtpsa.jl")
@@ -428,6 +442,7 @@ const MAD_TPSA = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc} = C_NULL
+const DESC_MAX_TMP = 8
 
 # Wrapper struct for Ptr{Desc}
 struct Descriptor
@@ -666,7 +681,7 @@ Promotes the scalar `a` to a new `ComplexTPS` using the same
 """
 function ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
@@ -877,7 +892,7 @@ end
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # use sparse monomial getter
   sm, n = pairs_to_sm(vars..., params=params)
-  return mad_ctpsa_getsm(t.tpsa, n, sm)
+  return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 
 
@@ -899,7 +914,7 @@ end
 function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # use sparse monomial getter
   sm, n = pairs_to_sm(vars..., params=params)
-  mad_ctpsa_setsm!(t.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setsm!(ct.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 # --- gradient, jacobian, hessian getters ---
@@ -1053,5 +1068,6 @@ end
 
 include("operators.jl")
 include("methods.jl")
+include("usetemps.jl")
 
 end

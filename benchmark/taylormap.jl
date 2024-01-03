@@ -11,27 +11,33 @@ using BenchmarkTools: @btime, @benchmark
 
 function track_qf(z0, k1)
   L = 0.5
-  return [cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2] ,
-          -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2]              ,
-          cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4],
-          sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]]
+  z1 =  cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
+  z2 =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] 
+  z3 =  cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
+  z4 =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
+  return [z1,z2,z3,z4]
 end
 
 function track_qd(z0, k1)
   L = 0.5
-  return [cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2],
-          sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2],
-          cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4],
-          -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4]]  
+  z1 =  cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
+  z2 =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
+  z3 =  cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
+  z4 =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4]
+  return [z1,z2,z3,z4] 
 end
 
 function track_drift(z0)
   L = 0.75
-  return  [z0[1]+z0[2]*L, z0[2], z0[3]+z0[4]*L, z0[4]]
+  z1 =  z0[1]+z0[2]*L
+  z3 =  z0[3]+z0[4]*L
+  return [z1,z0[2],z3 , z0[4]]
 end
 
 function track_sextupole(z0, k2l)
-  return  [z0[1], z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2), z0[3]+k2l/2.0*z0[1]*z0[3], z0[4]]
+  z2 =  z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
+  z4 =  z0[4]+k2l/2.0*z0[1]*z0[3]
+  return  [z0[1], z2, z0[3], z4]
 end
 
 function track_fodo(z0, k1, k2l)
@@ -68,10 +74,10 @@ end
 function benchmark_ForwardDiff()
   m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6])
   j = ForwardDiff.jacobian(m, [0,0,0,0,0,0])
-  #h1 = ForwardDiff.hessian(z->m(z)[1], [0,0,0,0,0,0])
-  #h2 = ForwardDiff.hessian(z->m(z)[2], [0,0,0,0,0,0])
-  #h3 = ForwardDiff.hessian(z->m(z)[3], [0,0,0,0,0,0])
-  #h4 = ForwardDiff.hessian(z->m(z)[4], [0,0,0,0,0,0])
+  h1 = ForwardDiff.hessian(z->m(z)[1], [0,0,0,0,0,0])
+  h2 = ForwardDiff.hessian(z->m(z)[2], [0,0,0,0,0,0])
+  h3 = ForwardDiff.hessian(z->m(z)[3], [0,0,0,0,0,0])
+  h4 = ForwardDiff.hessian(z->m(z)[4], [0,0,0,0,0,0])
   return j, h1, h2, h3, h4
 end
 

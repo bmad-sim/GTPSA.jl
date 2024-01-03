@@ -19,7 +19,7 @@ end
 
 function -(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, -1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, -1), ct.tpsa)
   return ct
 end
 
@@ -123,7 +123,7 @@ end
 
 function +(ct1::ComplexTPS, a::Number)::ComplexTPS
   ct = ComplexTPS(ct1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
@@ -144,7 +144,7 @@ end
 
 function +(t1::TPS, a::Complex)::ComplexTPS
   ct = ComplexTPS(t1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
@@ -184,14 +184,14 @@ end
 
 function -(ct1::ComplexTPS, a::Number)::ComplexTPS
   ct = ComplexTPS(ct1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, -a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
   return ct
 end
 
 function -(a::Number, ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, -1.0+0.0*im, ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64,a))
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, -1), ct.tpsa)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
   return ct
 end
 
@@ -210,14 +210,14 @@ end
 
 function -(t1::TPS, a::Complex)::ComplexTPS
   ct = ComplexTPS(t1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, -a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
   return ct
 end
 
 function -(a::Complex, t1::TPS)::ComplexTPS
   ct = ComplexTPS(t1)
-  mad_ctpsa_scl!(ct.tpsa, -1.0+0.0*im, ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64,a))
+  mad_ctpsa_scl!(ct.tpsa, convert(ComplexF64, -1), ct.tpsa)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
   return ct
 end
 
@@ -949,55 +949,55 @@ end
 function csc(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_sin!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
   return ct
 end
 
 function sec(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_cos!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
   return ct
 end
 
 function csch(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_sinh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
   return ct
 end
 
 function sech(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_cosh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
   return ct
 end
 
 function acsc(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
   mad_ctpsa_asin!(ct.tpsa, ct.tpsa)
   return ct
 end
 
 function asec(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
   mad_ctpsa_acos!(ct.tpsa, ct.tpsa)
   return ct
 end
 
 function acsch(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
   mad_ctpsa_asinh!(ct.tpsa, ct.tpsa)
   return ct
 end
 
 function asech(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, 1.0+0.0*im, ct.tpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
   mad_ctpsa_acosh!(ct.tpsa, ct.tpsa)
   return ct
 end

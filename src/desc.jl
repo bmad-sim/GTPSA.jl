@@ -32,8 +32,8 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `size::Culonglong`           -- Bytes used by `desc`. `Unsigned Long Int`: In 32 bit system is `Int32` but 64 bit is `Int64`. Using `Culonglong` assuming 64 bit
 - `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `RTPSA`s already initialized
 - `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `CTPSA`s already initialized
-- `ti::Ptr{Cint}`              -- idx of tmp used
-- `cti::Ptr{Cint}`             -- idx of tmp used                                                                                                      
+- `ti::Ptr{Cint}`              -- idx of tmp used by each thread (length = # threads)
+- `cti::Ptr{Cint}`             -- idx of tmp used by each thread (length = # threads)                                                                                              
 """
 struct Desc
   id::Cint                   
