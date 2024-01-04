@@ -978,6 +978,12 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
   if include_params
     n += desc.np
   end
+  # Check that all vars/params are >= 2nd orders
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
+  end
   H = zeros(Float64, n, n)
   idx = Cint(desc.nv+desc.np)
   maxidx = Cint(floor(n*(n+1)/2))+n
@@ -985,9 +991,10 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
   mono = Vector{UInt8}(undef, n)
   idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   while idx > 0 && idx <= maxidx
-    i = j = findfirst(x->x==0x2,mono)
+    i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = findfirst(x->x==0x1, mono)
+      i = j = findfirst(x->x==0x1, mono)
+    else 
       j = findlast(x->x==0x1, mono)
     end
     H[i,j] = v[]
@@ -1003,6 +1010,11 @@ function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
   n = desc.nv
   if include_params
     n += desc.np
+  end
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
   end
   H = zeros(ComplexF64, n, n)
   idx = Cint(desc.nv+desc.np)

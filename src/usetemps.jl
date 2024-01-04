@@ -16,7 +16,8 @@ function to_TPS(ctpsa::Ptr{CTPSA})::ComplexTPS
   return ct
 end
 
-to_TPS(a) = a
+# Fallback for non-TPSA types
+to_TPS(a) = (@inline; a)
 
 function to_temp_form(expr)
   fcns = [:inv, :atan, :abs, :sqrt, :exp, :log, :sin, :cos, :tan, :csc, :sec, :cot, :sinc, :sinh, :cosh,
@@ -27,9 +28,9 @@ function to_temp_form(expr)
     if expr.args[i] isa Expr
       to_temp_form(expr.args[i])
     elseif expr.args[i] == :+
-      expr.args[i] = :±  # \pm  
+      expr.args[i] = :±  # \pm  (also allowed as unary operator)
     elseif expr.args[i] == :-
-      expr.args[i] = :∓  # \mp
+      expr.args[i] = :∓  # \mp  (also allowed as unary operator)
     elseif expr.args[i] == :*
       expr.args[i] = :⨰  # \dottimes
     elseif expr.args[i] == :/
@@ -53,8 +54,9 @@ function get_rtemp_low!(tpsa::Ptr{<:Union{RTPSA,CTPSA}})::Ptr{RTPSA}
   tmpidx = unsafe_load(desc.ti)
   if tmpidx == DESC_MAX_TMP
     # Run out of temporaries... no choice but to throw error (this must return temporary Ptr{RTPSA} for type stability)
+    # First release all temporaries
+    unsafe_store!(desc.cti, Cint(0))
     error("Permanent temporaries buffer out of memory (max 8). Please divide expression into subexpressions to use @usetemps.")
-    return Base.unsafe_convert(Ptr{RTPSA}, C_NULL)
   end
   t = unsafe_load(Base.unsafe_convert(Ptr{Ptr{RTPSA}}, desc.t), tmpidx+1)
   # Increment tmp idx in Descriptor
@@ -71,8 +73,9 @@ function get_ctemp_low!(ctpsa::Ptr{<:Union{RTPSA,CTPSA}})::Ptr{CTPSA}
   tmpidx = unsafe_load(desc.cti)
   if tmpidx == DESC_MAX_TMP
     # Run out of temporaries... no choice but to throw error (this must return temporary Ptr{CTPSA} for type stability)
+    # First release all temporaries
+    unsafe_store!(desc.cti, Cint(0))
     error("Permanent temporaries buffer out of memory (max 8). Please divide expression into subexpressions to use @usetemps.")
-    return Base.unsafe_convert(Ptr{CTPSA}, C_NULL)
   end
   ct = unsafe_load(Base.unsafe_convert(Ptr{Ptr{CTPSA}}, desc.ct), tmpidx+1)
   # Increment tmp idx in Descriptor
@@ -314,7 +317,7 @@ function ±(ctpsa1::Ptr{RTPSA}, tpsa1::Ptr{CTPSA})::Ptr{CTPSA}
 =#
 
 # All other types should just be +
-±(a, b) = a + b
+±(a, b) =(@inline; +(a,b))
 ±(a, b, c, xs...) = (@inline; Base.afoldl(±, (±)((±)(a,b),c), xs...))
 
 
@@ -416,7 +419,7 @@ function ∓(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
 end
 
 # All other types should just be -
-∓(a, b) = a - b
+∓(a, b) = (@inline; -(a,b))
 # afoldl only for +,*
 
 # --- mul ---
@@ -504,7 +507,7 @@ end
 
 # Fallbacks
 # All other types should just be *
-⨰(a, b) = a * b
+⨰(a, b) = (@inline; *(a,b))
 ⨰(a, b, c, xs...) = (@inline; Base.afoldl(⨰, (⨰)((⨰)(a,b),c), xs...))
 
 # --- div ---
@@ -601,7 +604,7 @@ end
 
 # Fallbacks
 # All other types should just be /
-⨱(a, b) = a / b
+⨱(a, b) = (@inline; /(a,b))
 
 # --- pow ---
 # TPS:
@@ -742,7 +745,7 @@ function ⤊(ctpsa1::Ptr{CTPSA},ct1::ComplexTPS)::Ptr{CTPSA}
   return ctpsa1
 end
 
-⤊(a,b) = ^(a,b)
+⤊(a,b) = (@inline; ^(a,b))
 
 # --- atan, norm ---
 # TPS:

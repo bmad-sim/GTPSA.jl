@@ -137,7 +137,7 @@ element in the monomial.
 - `p`   -- Product of orders of monomial separated by `stp`.
 """
 function mad_mono_ordp(n::Cint, a::Vector{Cuchar}, stp::Cint)::Cdouble
-  p = @ccall MAD_TPSA.mad_mono_ordp(n::Cint, a::Ptr{Cuchar})::Cdouble
+  p = @ccall MAD_TPSA.mad_mono_ordp(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
   return p
 end
 
@@ -158,7 +158,7 @@ at any element in the monomial.
 - `p`   -- Product of factorials of orders of monomial separated by `stp`
 """
 function mad_mono_ordpf(n::Cint, a::Vector{Cuchar}, stp::Cint)::Cdouble
-  p = @ccall MAD_TPSA.mad_mono_ordpf(n::Cint, a::Ptr{Cuchar})::Cdouble
+  p = @ccall MAD_TPSA.mad_mono_ordpf(n::Cint, a::Ptr{Cuchar}, stp::Cint)::Cdouble
   return p
 end
 
