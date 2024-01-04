@@ -1,6 +1,5 @@
 using GTPSA
 using ForwardDiff
-using ReverseDiff
 using BenchmarkTools: @btime, @benchmark
 
 # Comparison with GTPSA for 4 variables to 2nd order and 50 parameters to 2nd order
@@ -91,21 +90,5 @@ function benchmark_ForwardDiff()
   return j, h1, h2, h3, h4
 end
 
-function benchmark_ReverseDiff()
-  m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6], z[7:end])
-  j = Array{Float64}(undef,4,56)
-  h1 = Array{Float64}(undef,56,56)
-  h2 = Array{Float64}(undef,56,56)
-  h3 = Array{Float64}(undef,56,56)
-  h4 = Array{Float64}(undef,56,56)
-  ReverseDiff.jacobian!(j, m, zeros(56))
-  ReverseDiff.hessian!(h1, z->m(z)[1], zeros(56))
-  ReverseDiff.hessian!(h2, z->m(z)[2], zeros(56))
-  ReverseDiff.hessian!(h3, z->m(z)[3], zeros(56))
-  ReverseDiff.hessian!(h4, z->m(z)[4], zeros(56))
-  return j, h1, h2, h3, h4
-end
-
 #m_GTPSA = @btime benchmark_GTPSA()
 #m_ForwardDiff = @btime benchmark_ForwardDiff()
-#m_TaylorSeries = @btime benchmark_TaylorSeries()
