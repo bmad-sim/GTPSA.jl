@@ -449,62 +449,16 @@ end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
   include("../benchmark/taylormap.jl")
-  m_GTPSA = benchmark_GTPSA()
-  j, h1, h2, h3, h4 = benchmark_ForwardDiff()
+  j, h1, h2, h3, h4 = benchmark_GTPSA()
+  jFD, h1FD, h2FD, h3FD, h4FD = benchmark_ForwardDiff()
   tol = 1e-12
-  
-  # Create Taylor map to compare with GTPSA from ForwardDiff
-  x_FD = zero(m_GTPSA[1])
-  px_FD = zero(m_GTPSA[2])
-  y_FD = zero(m_GTPSA[3])
-  py_FD = zero(m_GTPSA[4])
 
-  m_FD = [x_FD, px_FD, y_FD, py_FD]
-  H = [h1, h2, h3, h4]
 
-  for i=1:length(m_FD)
-    t = m_FD[i]
-    h = H[i]
-    t[1=>1] = j[i,1]
-    t[2=>1] = j[i,2]
-    t[3=>1] = j[i,3]
-    t[4=>1] = j[i,4]
-    t[params=(1=>1,)] = j[i,5]
-    t[params=(2=>1,)] = j[i,6]
-
-    t[1=>2] = h[1,1]
-    t[1=>1,2=>1] = h[1,2]
-    t[1=>1,3=>1] = h[1,3]
-    t[1=>1,4=>1] = h[1,4]
-    t[1=>1,params=(1=>1,)] = h[1,5]
-    t[1=>1,params=(2=>1,)] = h[1,6]
-
-    t[2=>2] = h[2,2]
-    t[2=>1,3=>1] = h[2,3]
-    t[2=>1,4=>1] = h[2,4]
-    t[2=>1,params=(1=>1,)] = h[2,5]
-    t[2=>1,params=(2=>1,)] = h[2,6]
-
-    t[3=>2] = h[3,3]
-    t[3=>1,4=>1] = h[3,4]
-    t[3=>1,params=(1=>1,)] = h[3,5]
-    t[3=>1,params=(2=>1,)] = h[3,6]
-
-    t[4=>2] = h[4,4]
-    t[4=>1,params=(1=>1,)] = h[4,5]
-    t[4=>1,params=(2=>1,)] = h[4,6]
-
-    t[params=(1=>2,)] = h[5,5]
-    t[params=(1=>1,2=>1)] = h[5,6]
-
-    t[params=(2=>2,)] = h[6,6]
-  end
-
-  @test GTPSA.norm(m_FD[1] - m_GTPSA[1]) < tol
-  @test GTPSA.norm(m_FD[2] - m_GTPSA[2]) < tol
-  @test GTPSA.norm(m_FD[3] - m_GTPSA[3]) < tol
-  @test GTPSA.norm(m_FD[4] - m_GTPSA[4]) < tol
-
+  @test all(j - jFD .< tol)
+  @test all(h1 - h1FD .< tol)
+  @test all(h2 - h2FD .< tol)
+  @test all(h3 - h3FD .< tol)
+  @test all(h4 - h4FD .< tol)
 end
 
 @testset "Compare with MAD" begin
