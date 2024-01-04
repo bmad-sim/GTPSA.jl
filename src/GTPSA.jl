@@ -413,8 +413,11 @@ export
   # Methods:
   evaluate,
   gradient,
+  gradient!,
   jacobian,
+  jacobian!,
   hessian,
+  hessian!,
 
   # Temporaries:
   @usetemps,
@@ -918,6 +921,18 @@ function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...
 end
 
 # --- gradient, jacobian, hessian getters ---
+function gradient!(result::Vector{Float64}, t::TPS; include_params=false)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if length(result) != n
+    error("Incorrect size for result")
+  end
+  mad_tpsa_getv!(t.tpsa, Cint(1), n, result)
+end
+
 function gradient(t::TPS; include_params=false)::Vector{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   n = desc.nv
@@ -927,6 +942,18 @@ function gradient(t::TPS; include_params=false)::Vector{Float64}
   grad = Vector{Float64}(undef, n)
   mad_tpsa_getv!(t.tpsa, Cint(1), n, grad)
   return grad
+end
+
+function gradient!(result::Vector{Float64}, t::ComplexTPS; include_params=false)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if length(result) != n
+    error("Incorrect size for result")
+  end
+  mad_tpsa_getv!(t.tpsa, Cint(1), n, result)
 end
 
 function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
@@ -940,20 +967,57 @@ function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
   return grad
 end
 
+function jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if size(result)[2] != n
+    error("Incorrect size for result")
+  end
+  grad = Vector{Float64}(undef, n)
+  # This is not fully in-place technically, bc Julia is column-major and 
+  # filling each row in place without allocating temp would require row-major
+  # So there are allocations for the array grad
+  for i=1:length(m)
+    mad_tpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    result[i,:] = grad
+  end
+end
+
 function jacobian(m::Vector{TPS}; include_params=false)::Matrix{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   n = desc.nv
   if include_params
     n += desc.np
   end
-  J = Vector{Float64}(undef, length(m)*n)
-  Matrix{Float64}(undef, length(m), n)
+  J = Matrix{Float64}(undef, length(m), n)
   grad = Vector{Float64}(undef, n)
   for i=1:length(m)
     mad_tpsa_getv!(m[i].tpsa, Cint(1), n, grad)
     J[i,:] = grad
   end
   return J
+end
+
+function jacobian!(result::Matrix{ComplexF64}, m::Vector{ComplexTPS}; include_params=false)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if size(result)[2] != n
+    error("Incorrect size for result")
+  end
+  grad = Vector{ComplexF64}(undef, n)
+  # This is not fully in-place technically, bc Julia is column-major and 
+  # filling each row in place without allocating temp would require row-major
+  # So there are allocations for the array grad
+  for i=1:length(m)
+    mad_ctpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    result[i,:] = grad
+  end
 end
 
 function jacobian(m::Vector{ComplexTPS}; include_params=false)::Matrix{ComplexF64}
@@ -969,6 +1033,41 @@ function jacobian(m::Vector{ComplexTPS}; include_params=false)::Matrix{ComplexF6
     J[i,:] = grad
   end
   return J
+end
+
+function hessian!(result::Matrix{Float64},t::TPS; include_params=false)
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if size(result) != (n,n)
+    error("Incorrect size for result")
+  end
+  # Check that all vars/params are >= 2nd orders
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
+  end
+  result[:] .= 0.
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{Cdouble}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
+    i = findfirst(x->x==0x1, mono)
+    if isnothing(i)
+      i = j = findfirst(x->x==0x1, mono)
+    else 
+      j = findlast(x->x==0x1, mono)
+    end
+    result[i,j] = v[]
+    result[j,i] = v[]
+    idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
+  end
 end
 
 function hessian(t::TPS; include_params=false)::Matrix{Float64}
@@ -1002,6 +1101,41 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
+end
+
+function hessian!(result::Matrix{ComplexF64},t::ComplexTPS; include_params=false)
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  if size(result) != (n,n)
+    error("Incorrect size for result")
+  end
+  # Check that all vars/params are >= 2nd orders
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
+  end
+  result[:] .= 0.
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{ComplexF64}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
+    i = findfirst(x->x==0x1, mono)
+    if isnothing(i)
+      i = j = findfirst(x->x==0x1, mono)
+    else 
+      j = findlast(x->x==0x1, mono)
+    end
+    result[i,j] = v[]
+    result[j,i] = v[]
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
+  end
 end
 
 function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}

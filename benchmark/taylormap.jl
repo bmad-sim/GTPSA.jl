@@ -11,32 +11,32 @@ using BenchmarkTools: @btime, @benchmark
 
 function track_qf(z0, k1, hkick)
   L = 0.5
-  z1 =   cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
-  z2 =   -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
-  z3 =   cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
-  z4 =   sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
+  z1 =  @usetemps cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
+  z2 =  @usetemps -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
+  z3 =  @usetemps cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
+  z4 =  @usetemps sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
   return [z1,z2,z3,z4]
 end
 
 function track_qd(z0, k1, vkick)
   L = 0.5
-  z1 =   cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
-  z2 =   sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
-  z3 =   cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
-  z4 =   -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
+  z1 =  @usetemps cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
+  z2 =  @usetemps sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
+  z3 =  @usetemps cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
+  z4 =  @usetemps -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
   return [z1,z2,z3,z4] 
 end
 
 function track_drift(z0)
   L = 0.75
-  z1 =   z0[1]+z0[2]*L
-  z3 =   z0[3]+z0[4]*L
+  z1 =  @usetemps z0[1]+z0[2]*L
+  z3 =  @usetemps z0[3]+z0[4]*L
   return [z1,z0[2],z3 , z0[4]]
 end
 
 function track_sextupole(z0, k2l)
-  z2 =   z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
-  z4 =   z0[4]+k2l/2.0*z0[1]*z0[3]
+  z2 =  @usetemps z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
+  z4 =  @usetemps z0[4]+k2l/2.0*z0[1]*z0[3]
   return  [z0[1], z2, z0[3], z4]
 end
 
@@ -63,11 +63,11 @@ function benchmark_GTPSA()
   z = vars(d)
   k = params(d)
   map = m(z,k)
-  #j = jacobian(map)
-  #h1 = hessian(map[1])
-  #h2 = hessian(map[2])
-  #h3 = hessian(map[3])
-  #h4 = hessian(map[4])
+  j = jacobian(map)
+  h1 = hessian(map[1])
+  h2 = hessian(map[2])
+  h3 = hessian(map[3])
+  h4 = hessian(map[4])
   return map #j, h1, h2, h3, h4
 end
 
@@ -84,7 +84,7 @@ function benchmark_ForwardDiff()
   ForwardDiff.hessian!(h2, z->m(z)[2], zeros(56))
   ForwardDiff.hessian!(h3, z->m(z)[3], zeros(56))
   ForwardDiff.hessian!(h4, z->m(z)[4], zeros(56))
-  return j, h1, h2, h3, h4
+  return j #, h1, h2, h3, h4
 end
 
 function benchmark_ReverseDiff()
