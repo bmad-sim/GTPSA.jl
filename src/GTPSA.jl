@@ -41,23 +41,15 @@ import Base:  +,
               real  ,
               imag  ,
               conj  ,
+              angle ,
+              complex, 
               getindex,
               firstindex,
               lastindex,
               setindex!,
-              length,
-              convert,
               ==,
               print
 
-#=
-import MutableArithmetics:  mutability,
-                            promote_operation,
-                            operate!,
-                            operate_to!,
-                            IsMutable,
-                            mutable_copy
-=#
 using GTPSA_jll
 
 export
@@ -415,11 +407,32 @@ export
   params,
   complexvars,
   complexparams,
-  TPS_error
+  polar,
+  rect, 
+
+  # Methods:
+  evaluate,
+  gradient,
+  jacobian,
+  hessian,
+
+  # Temporaries:
+  @usetemps,
+  ±,
+  ∓,
+  ⨰,
+  ⨱,
+  ⤊,
+  get_rtemp!,
+  __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
+          __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
+          __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
+          __t_polar, __t_rect
+
 
 
 # Low-level functions/structs and constants
-const NAMSZ::Integer = 16 
+const NAMSZ = 16 
 include("mono.jl")
 include("desc.jl")
 include("rtpsa.jl")
@@ -429,6 +442,7 @@ const MAD_TPSA = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc} = C_NULL
+const DESC_MAX_TMP = 8
 
 # Wrapper struct for Ptr{Desc}
 struct Descriptor
@@ -464,7 +478,7 @@ function Descriptor(mos::Vector{<:Integer})::Descriptor
   mo = maximum(mos)
   po = 0
   no = mos
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 """
@@ -501,7 +515,7 @@ function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
   mo = maximum(mos)
   po = maximum(pos)
   no = vcat(mos,pos)
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, no))))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 # Wrapper struct for Ptr{RTPSA}
@@ -516,16 +530,6 @@ mutable struct TPS
 end
 
 # RTPSA outer constructors
-"""
-    TPS()::TPS
-
-Creates a new Truncated Power Series `TPS` using the most 
-recently-defined `Descriptor`
-"""
-function TPS()::TPS
-  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-end
-
 """
     TPS(d::Descriptor)::TPS
 
@@ -553,21 +557,6 @@ function TPS(t1::TPS)::TPS
 end
 
 """
-    TPS(a::Real)::TPS
-
-Promotes the scalar `a` to a new `TPS` using the most 
-recently-defined `Descriptor`.
-
-### Input
-- `a` -- Scalar to create new `TPS` with
-"""
-function TPS(a::Real)::TPS
-  t = TPS()
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
-  return t
-end
-
-"""
     TPS(a::Real, t1::TPS)::TPS
 
 Promotes the scalar `a` to a new `TPS` using the same 
@@ -584,24 +573,33 @@ function TPS(a::Real, t1::TPS)::TPS
   return t
 end
 
-#=
+# Unsafe constructors using most recently-defined Descriptor:
 """
-    TPS(a::Real, ct1::ComplexTPS)::TPS
+    unsafe_TPS()::TPS
 
-Promotes the scalar `a` to a new `TPS` using the same 
-`Descriptor` as `ct1`
+Creates a new Truncated Power Series `TPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+"""
+function unsafe_TPS()::TPS
+  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
+"""
+    unsafe_TPS(a::Real)::TPS
+
+Promotes the scalar `a` to a new `TPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
 
 ### Input
-- `a`   -- Scalar to create new `TPS` with
-- `ct1` -- `ComplexTPS` to use same `Descriptor` as
+- `a` -- Scalar to create new `TPS` with
 """
-function TPS(a::Real, ct1::ComplexTPS)::TPS
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64, a))
+function unsafe_TPS(a::Real)::TPS
+  t = unsafe_TPS()
+  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
   return t
 end
-=#
 
 
 # Wrapper struct for Ptr{CTPSA}
@@ -616,17 +614,6 @@ mutable struct ComplexTPS
 end
 
 # ComplexTPS outer constructors
-"""
-    ComplexTPS()::ComplexTPS
-
-Creates a new Complex Truncated Power Series `ComplexTPS` using 
-the most recently-defined `Descriptor`
-"""
-function ComplexTPS()::ComplexTPS
-  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-end
-
-
 """
     ComplexTPS(d::Descriptor)::ComplexTPS
 
@@ -668,17 +655,17 @@ function ComplexTPS(t1::TPS)::ComplexTPS
 end
 
 """
-    ComplexTPS(a::Number)::ComplexTPS
+    ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
 
-Promotes the scalar `a` to a new `ComplexTPS` using the most 
-recently-defined `Descriptor`
+Creates a new `ComplexTPS` equal to `t1 + im*t2`
 
 ### Input
-- `a` -- Scalar to create new `ComplexTPS` with
+- `t1` -- Real part of `ComplexTPS` as a `TPS` 
+- `t2` -- Imaginary part of `ComplexTPS` as a `TPS` 
 """
-function ComplexTPS(a::Number)::ComplexTPS
-  ct = ComplexTPS()
-  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+function ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cplx!(t1.tpsa, t2.tpsa, ct.tpsa)
   return ct
 end
 
@@ -694,7 +681,7 @@ Promotes the scalar `a` to a new `ComplexTPS` using the same
 """
 function ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_set0!(ct.tpsa, 1.0+0.0*im, convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
@@ -714,8 +701,33 @@ function ComplexTPS(a::Number, t1::TPS)::ComplexTPS
   return ct
 end
 
+# Unsafe constructors using most recently-defined Descriptor:
+"""
+    unsafe_ComplexTPS()::ComplexTPS
 
+Creates a new Complex Truncated Power Series `ComplexTPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+"""
+function unsafe_ComplexTPS()::ComplexTPS
+  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
+"""
+    unsafe_ComplexTPS(a::Number)::ComplexTPS
+
+Promotes the scalar `a` to a new `ComplexTPS`, however only 
+uses the most recently-defined `Descriptor`. Therefore, this can 
+be unsafe if more than one `Descriptor` is defined.
+
+### Input
+- `a` -- Scalar to create new `ComplexTPS` with
+"""
+function unsafe_ComplexTPS(a::Number)::ComplexTPS
+  ct = unsafe_ComplexTPS()
+  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+  return ct
+end
 
 
 # --- Variable/parameter generators ---
@@ -735,13 +747,13 @@ function vars(d::Descriptor)::Vector{TPS}
   desc = unsafe_load(d.desc)
   nv = desc.nv
   x = Vector{TPS}(undef, nv)
-  ords = zeros(Int, nv)
+  ords = zeros(Cuchar, nv)
   for i=1:nv
-    ords[i] = 1
+    ords[i] = 0x1
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, 1))
+    mad_tpsa_setm!(t.tpsa, nv, ords, 0.0, 1.0)
     x[i] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return x
 end
@@ -762,13 +774,13 @@ function params(d::Descriptor)::Vector{TPS}
   nv = desc.nv
   np = desc.np
   k = Vector{TPS}(undef, np)
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for i=nv+1:nv+np
-    ords[i] = 1
+    ords[i] = 0x1
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, 1))
+    mad_tpsa_setm!(t.tpsa, nv+np, ords, 0.0, 1.0)
     k[i-nv] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return k
 end
@@ -789,13 +801,13 @@ function complexvars(d::Descriptor)::Vector{ComplexTPS}
   desc = unsafe_load(d.desc)
   nv = desc.nv
   x = Vector{ComplexTPS}(undef, nv)
-  ords = zeros(Int, nv)
+  ords = zeros(Cuchar, nv)
   for i=1:nv
-    ords[i] = 1
+    ords[i] = 0x1
     t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, 1))
+    mad_ctpsa_setm!(t.tpsa, nv, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
     x[i] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return x
 end
@@ -816,106 +828,214 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   nv = desc.nv
   np = desc.np
   k = Vector{ComplexTPS}(undef, np)
-  ords = zeros(Int, nv+np)
+  ords = zeros(Cuchar, nv+np)
   for i=nv+1:nv+np
-    ords[i] = 1
+    ords[i] = 0x1
     t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, 1))
+    mad_ctpsa_setm!(t.tpsa, nv+np, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
     k[i-nv] = t
-    ords[i] = 0
+    ords[i] = 0x0
   end
   return k
 end
 
+# Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
+function pairs_to_sm(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
+  nv = Cint(length(vars))
+  np = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(nv+np))
+  for i=1:nv
+    sm[2*i-1] = convert(Cint, vars[i].first)
+    sm[2*i] = convert(Cint, vars[i].second)
+  end
+  for i=nv+1:nv+np
+    sm[2*i-1] = convert(Cint, params[i].first+nv)
+    sm[2*i] = convert(Cint, params[i].second)
+  end
+  return sm, nv+np
+end
 
-
+# Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
+function pairs_to_m(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{UInt8}, Cint}
+  n = Cint(0)
+  if isempty(params)
+    n = Cint(maximum(map(x->x.first, vars)))
+  else
+    n = Cint(maximum(map(x->x.first, params)))
+  end
+  ords = zeros(Cuchar, n)
+  for var in vars
+    ords[var.first] = convert(Cuchar, var.second)
+  end
+  for param in params
+    ords[nv + param.first] = convert(Cuchar, param.second)
+  end
+  return ords, n
+end
 
 # --- Getters ---
 function getindex(t::TPS, ords::Integer...)::Float64
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
 function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Int, nv+np)
-  for var in vars
-    ords[var.first] = convert(Int, var.second)
-  end
-  for param in params
-    ords[nv + param.first] = convert(Int, param.second)
-  end
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+  # use sparse monomial getter
+  sm, n = pairs_to_sm(vars..., params=params)
+  return mad_tpsa_getsm(t.tpsa, n, sm)
 end
 
 
 function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
-  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])))
+  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Int, nv+np)
-  for var in vars
-    ords[var.first] = convert(Int, var.second)
-  end
-  for param in params
-    ords[nv + param.first] = convert(Int, param.second)
-  end
-  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)))
+  # use sparse monomial getter
+  sm, n = pairs_to_sm(vars..., params=params)
+  return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 
 
 # --- Setters ---
 function setindex!(t::TPS, v::Real, ords::Integer...)
-  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(Cdouble, 0), convert(Cdouble, v))
+  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
 end
 
 function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Int, nv+np)
-  for var in vars
-    ords[var.first] = convert(Int, var.second)
-  end
-  for param in params
-    ords[nv + param.first] = convert(Int, param.second)
-  end
-  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(Cdouble, 0), convert(Cdouble, v))
+  # use sparse monomial getter
+  sm, n = pairs_to_sm(vars..., params=params)
+  mad_tpsa_setsm!(t.tpsa, n, sm, 0.0, convert(Cdouble, v))
 end
 
 function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
-  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, [ords...])), convert(ComplexF64, 0), convert(ComplexF64, v))
+  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
 function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
-  # Need to create array of orders with length nv + np
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  ords = zeros(Int, nv+np)
-  for var in vars
-    ords[var.first] = convert(Int, var.second)
-  end
-  for param in params
-    ords[nv + param.first] = convert(Int, param.second)
-  end
-  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), Base.unsafe_convert(Ptr{Cuchar}, convert(Vector{Cuchar}, ords)), convert(ComplexF64, 0), convert(ComplexF64, v))
+  # use sparse monomial getter
+  sm, n = pairs_to_sm(vars..., params=params)
+  mad_ctpsa_setsm!(ct.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-#=
-
-function setname!(t::TPS, nam::String)
-  mad_tpsa_setnam!(t.tpsa, Base.unsafe_convert(Cstring, nam))
+# --- gradient, jacobian, hessian getters ---
+function gradient(t::TPS; include_params=false)::Vector{Float64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  grad = Vector{Float64}(undef, n)
+  mad_tpsa_getv!(t.tpsa, Cint(1), n, grad)
+  return grad
 end
-=#
+
+function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  grad = Vector{ComplexF64}(undef, n)
+  mad_ctpsa_getv!(t.tpsa, Cint(1), n, grad)
+  return grad
+end
+
+function jacobian(m::Vector{TPS}; include_params=false)::Matrix{Float64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  J = Vector{Float64}(undef, length(m)*n)
+  Matrix{Float64}(undef, length(m), n)
+  grad = Vector{Float64}(undef, n)
+  for i=1:length(m)
+    mad_tpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    J[i,:] = grad
+  end
+  return J
+end
+
+function jacobian(m::Vector{ComplexTPS}; include_params=false)::Matrix{ComplexF64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  J = Matrix{ComplexF64}(undef, length(m), n)
+  grad = Vector{ComplexF64}(undef, n)
+  for i=1:length(m)
+    mad_ctpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    J[i,:] = grad
+  end
+  return J
+end
+
+function hessian(t::TPS; include_params=false)::Matrix{Float64}
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  # Check that all vars/params are >= 2nd orders
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
+  end
+  H = zeros(Float64, n, n)
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{Cdouble}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
+    i = findfirst(x->x==0x1, mono)
+    if isnothing(i)
+      i = j = findfirst(x->x==0x1, mono)
+    else 
+      j = findlast(x->x==0x1, mono)
+    end
+    H[i,j] = v[]
+    H[j,i] = v[]
+    idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
+  end
+  return H
+end
+
+function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
+  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  desc = unsafe_load(d)
+  n = desc.nv
+  if include_params
+    n += desc.np
+  end
+  for i=1:n
+    if unsafe_load(desc.no, i) < 0x2
+      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
+    end
+  end
+  H = zeros(ComplexF64, n, n)
+  idx = Cint(desc.nv+desc.np)
+  maxidx = Cint(floor(n*(n+1)/2))+n
+  v = Ref{ComplexF64}()
+  mono = Vector{UInt8}(undef, n)
+  idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
+  while idx > 0 && idx <= maxidx
+    i = j = findfirst(x->x==0x2,mono)
+    if isnothing(i)
+      i = findfirst(x->x==0x1, mono)
+      j = findlast(x->x==0x1, mono)
+    end
+    H[i,j] = v[]
+    H[j,i] = v[]
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
+  end
+  return H
+end
+
+
 # --- print ---
 #=
 function show(io::IO, t::TPS)
@@ -949,127 +1069,17 @@ function print(t::ComplexTPS)
   mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
 end
 
-# --- convert ---
-function convert(::Type{TPS}, v::Real)::TPS
-  t = TPS()
-  mad_tpsa_setval!(t.tpsa, convert(Cdouble, v))
-  return t
-end
-
-function convert(::Type{ComplexTPS}, v::Number)::TPS
-  t = TPS()
-  mad_ctpsa_setval!(t.tpsa, convert(ComplexF64, v))
-  return t
-end
-
 # -- zero -- 
 @inline function zero(t::TPS)::TPS
   return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
-end
-
-@inline function zero(::Type{TPS})::TPS
-  return TPS()
 end
 
 @inline function zero(ct::ComplexTPS)::ComplexTPS
   return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
 end
 
-@inline function zero(::Type{ComplexTPS})::ComplexTPS
-  return ComplexTPS()
-end
-
-# --- diff for comparing ---
-@inline function TPS_error(t1::TPS, t2::TPS)::TPS
-  t = zero(t1)
-  mad_tpsa_dif!(t1.tpsa, t2.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(t1::TPS, a::Real)::TPS
-  t = TPS(a, t1)
-  mad_tpsa_dif!(t1.tpsa, t.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(a::Real, t1::TPS)::TPS
-  t = TPS(a, t1)
-  mad_tpsa_dif!(t.tpsa, t1.tpsa, t.tpsa)
-  return t
-end
-
-@inline function TPS_error(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
-  ct = zero(ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct2.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(ct1::ComplexTPS, a::Number)::TPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-@inline function TPS_error(a::Number, ct1::ComplexTPS)::TPS
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(ct1::ComplexTPS, t1::TPS)::TPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(t1::TPS, ct1::ComplexTPS)::TPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-@inline function TPS_error(t1::TPS, a::Complex)::TPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct1.tpsa, ct.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-@inline function TPS_error(a::Complex, t1::TPS)::TPS
-  ct1 = ComplexTPS(t1)
-  ct = ComplexTPS(a, ct1)
-  mad_ctpsa_dif!(ct.tpsa, ct1.tpsa, ct.tpsa)
-  if ct == zero(ct)
-    return real(zero(ct))
-  else
-    return abs(ct)
-  end
-end
-
-
-
 include("operators.jl")
+include("methods.jl")
+include("usetemps.jl")
 
 end

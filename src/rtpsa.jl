@@ -181,7 +181,7 @@ end
 
 
 """
-    mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
+    mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
 
 Returns the max order of all TPSAs in `t`.
 
@@ -192,7 +192,7 @@ Returns the max order of all TPSAs in `t`.
 ### Output
 - `mo` -- Maximum order of all TPSAs
 """
-function mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
+function mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
   mo = @ccall MAD_TPSA.mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
   return mo
 end
@@ -268,7 +268,7 @@ function mad_tpsa_cutord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, ord::Cint)
 end
 
 """
-    mad_tpsa_maxord!(t::Ptr{RTPSA}, n::Cint, idx_::Ptr{Cint})::Cint
+    mad_tpsa_maxord!(t::Ptr{RTPSA}, n::Cint, idx_::Vector{Cint})::Cint
 
 Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 
@@ -281,13 +281,13 @@ is provided, it is filled with the indices for the maximum abs(coefficient) mono
 - `idx_` -- (Optional) If provided, is filled with indices to the monomial for each order up to `n` with maximum abs(coefficient)
 - `mi`   -- Index to the monomial in the TPSA with maximum abs(coefficient)
 """
-function mad_tpsa_maxord!(t::Ptr{RTPSA}, n::Cint, idx_::Ptr{Cint})::Cint
+function mad_tpsa_maxord!(t::Ptr{RTPSA}, n::Cint, idx_::Vector{Cint})::Cint
   mi = @ccall MAD_TPSA.mad_tpsa_maxord(t::Ptr{RTPSA}, n::Cint, idx_::Ptr{Cint})::Cint
   return mi
 end
 
 """
-    mad_tpsa_convert!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+    mad_tpsa_convert!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
 
 General function to convert TPSAs to different orders and reshuffle canonical coordinates. The destination TPSA will 
 be of order `n`, and optionally have the variable reshuffling defined by `t2r_` and poisson bracket sign. e.g. if 
@@ -303,7 +303,7 @@ will be negated. Useful for comparing with different differential algebra packag
 ### Output
 - `r`    -- Destination TPSA with specified order and canonical coordinate reshuffling.
 """
-function mad_tpsa_convert!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+function mad_tpsa_convert!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_convert(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
@@ -382,9 +382,9 @@ end
 
 
 """
-    mad_tpsa_mono!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+    mad_tpsa_mono!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
 
-Returns the order of the monomial at index `i` in the TPSA `a`nd optionally the monomial at that index is returned in `m_` 
+Returns the order of the monomial at index `i` in the TPSA and optionally the monomial at that index is returned in `m_` 
 and the order of parameters in the monomial in `p_`
 
 ### Input
@@ -397,7 +397,7 @@ and the order of parameters in the monomial in `p_`
 - `p_`  -- (Optional) Order of parameters in monomial
 - `ret` -- Order of monomial in TPSA `a`t index `i`
 """
-function mad_tpsa_mono!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+function mad_tpsa_mono!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mono(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
@@ -425,7 +425,7 @@ end
 
 
 """
-    mad_tpsa_idxm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cint
+    mad_tpsa_idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})::Cint
 
 Returns index of monomial in the TPSA given the monomial as a byte array
 
@@ -437,14 +437,14 @@ Returns index of monomial in the TPSA given the monomial as a byte array
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_tpsa_idxm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_tpsa_idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_idxsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cint
+    mad_tpsa_idxsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})::Cint
 
 Returns index of monomial in the TPSA given the monomial as a sparse monomial. This generally should not be used, as there 
 are no assumptions about which monomial is attached to which index.
@@ -457,14 +457,14 @@ are no assumptions about which monomial is attached to which index.
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_tpsa_idxsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cint
+function mad_tpsa_idxsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+    mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble})::Cint
 
 Used for scanning through each nonzero monomial in the TPSA. Given a starting index (-1 if starting at 0), will 
 optionally fill monomial `m_` with the monomial at index `i` and the value at `v_` with the monomials coefficient, and 
@@ -480,7 +480,7 @@ return the next NONZERO monomial index in the TPSA. This is useful for building 
 ### Output
 - `i`  -- Index of next nonzero monomial in the TPSA, or -1 if reached the end
 """
-function mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
+function mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble})::Cint
   i = @ccall MAD_TPSA.mad_tpsa_cycle(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
   return i
 end
@@ -541,7 +541,7 @@ end
 
 
 """
-    mad_tpsa_getm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cdouble
+    mad_tpsa_getm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})::Cdouble
 
 Gets the coefficient of the monomial `m` defined as a byte array. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -553,14 +553,14 @@ Gets the coefficient of the monomial `m` defined as a byte array. Generally shou
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_tpsa_getm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cdouble
+function mad_tpsa_getm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cdouble
   return ret
 end
 
 
 """
-    mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cdouble
+    mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})::Cdouble
 
 Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -572,7 +572,7 @@ Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cdouble
+function mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cdouble
   return ret
 end
@@ -627,7 +627,7 @@ end
 
 
 """
-    mad_tpsa_setm!(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
+    mad_tpsa_setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -638,13 +638,13 @@ Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_setm!(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)
+function mad_tpsa_setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
+    mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -655,13 +655,13 @@ Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coe
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)
+function mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})
+    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
 a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`). 
@@ -674,14 +674,14 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})
+function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
 
 
 
 """
-    mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})
+    mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
 
 Vectorized setter of the coefficients for monomials with indices `i..i+n`. Useful for putting a matrix into a map.
 
@@ -691,7 +691,7 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})
+function mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
 
@@ -858,7 +858,7 @@ end
 """
     mad_tpsa_nrm(a::Ptr{RTPSA})::Cdouble
 
-Calculates the 1-norm of TPSA `a`.
+Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 
 ### Input
 - `a`   -- TPSA
@@ -1442,7 +1442,7 @@ end
 """
     mad_tpsa_hypot3!(x::Ptr{RTPSA}, y::Ptr{RTPSA}, z::Ptr{RTPSA}, r::Ptr{RTPSA})
 
-Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`
+Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`. Does NOT allow for r = x, y, z !!!
 
 ### Input
 - `x` -- Source TPSA `x`
@@ -1493,7 +1493,7 @@ end
 
 
 """
-    mad_tpsa_derivm!(a::Ptr{RTPSA}, c::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})
+    mad_tpsa_derivm!(a::Ptr{RTPSA}, c::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
 
 Differentiates TPSA with respect to the monomial defined by byte array `m`.
 
@@ -1505,7 +1505,7 @@ Differentiates TPSA with respect to the monomial defined by byte array `m`.
 ### Output
 - `c` -- Destination TPSA
 """
-function mad_tpsa_derivm!(a::Ptr{RTPSA}, c::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})
+function mad_tpsa_derivm!(a::Ptr{RTPSA}, c::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
   @ccall MAD_TPSA.mad_tpsa_derivm(a::Ptr{RTPSA}, c::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
@@ -1529,7 +1529,7 @@ end
 
 
 """
-    mad_tpsa_taylor!(a::Ptr{RTPSA}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA})
+    mad_tpsa_taylor!(a::Ptr{RTPSA}, n::Cint, coef::Vector{Cdouble}, c::Ptr{RTPSA})
 
 Computes the result of the Taylor series up to order `n-1` with Taylor coefficients coef for the scalar value in `a`. That is,
 `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` is the scalar part of TPSA `a`.
@@ -1540,7 +1540,7 @@ Computes the result of the Taylor series up to order `n-1` with Taylor coefficie
 - `coef` -- Array of coefficients in Taylor `s`
 - `c`    -- Result
 """
-function mad_tpsa_taylor!(a::Ptr{RTPSA}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA})
+function mad_tpsa_taylor!(a::Ptr{RTPSA}, n::Cint, coef::Vector{Cdouble}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_taylor(a::Ptr{RTPSA}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{RTPSA})::Cvoid
 end
 
@@ -1722,7 +1722,7 @@ end
 
 
 """
-    mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
 
 Writes the vector a in terms 
 mc is a map (m is map)
@@ -1736,13 +1736,13 @@ Map to hamiltonian
 - `a`   
 - `mc`
 """
-function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fld2vec!(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})
+    mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
 
 ???
 
@@ -1751,13 +1751,13 @@ end
 - `ma`
 - `c`
 """
-function mad_tpsa_fld2vec!(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})
+function mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})::Cvoid
 end
 
 
 """
-    mad_tpsa_fgrad!(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
+    mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
 
 Derivating vs a variable,. multiply and add sum
 Deriving a map vs each variable by itself TPSA
@@ -1772,13 +1772,13 @@ Taking 1 TPSA, derive TPSA vs all variables, multiply result by variable in map 
 - `b`
 - `c`
 """
-function mad_tpsa_fgrad!(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
+function mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})::Cvoid
 end
 
 
 """
-    mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the Lie bracket of the maps `ma` and `mb`.
 
@@ -1790,13 +1790,13 @@ Computes the Lie bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_liebra!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
 
@@ -1808,13 +1808,13 @@ Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_exppb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Computes the log of the Poisson bracket of the maps `ma` and `mb`.
 
@@ -1826,14 +1826,14 @@ Computes the log of the Poisson bracket of the maps `ma` and `mb`.
 ### Output
 - `mc` -- Destination map `mc`
 """
-function mad_tpsa_logpb!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 
 """
-    mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
+    mad_tpsa_mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Cdouble
 
 Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
@@ -1844,14 +1844,14 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 ### Output
 - `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
-function mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
+function mad_tpsa_mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, ma::Ptr{Ptr{RTPSA}})::Cdouble
   return nrm
 end
 
 
 """
-    mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Inverts the map.
 
@@ -1862,13 +1862,13 @@ Inverts the map.
 ### Output
 - `mc` -- Inversion of map `ma`
 """
-function mad_tpsa_minv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})
+    mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 
@@ -1880,13 +1880,13 @@ Computes the partial inverse of the map with only the selected variables, specif
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_tpsa_pminv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})
+function mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
   @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})::Cvoid
 end
 
 
 """
-    mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
 Composes two maps.
 
@@ -1899,13 +1899,13 @@ Composes two maps.
 ### Output
 - `mc` -- Composition of maps `ma` and `mb`
 """
-function mad_tpsa_compose!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA}})
+    mad_tpsa_translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{Ptr{RTPSA}})
 
 Translates the expansion point of the map by the amount `tb`.
 
@@ -1918,13 +1918,13 @@ Translates the expansion point of the map by the amount `tb`.
 ### Output
 - `mc` -- Map evaluated at the new point translated `tb` from the original evaluation point
 """
-function mad_tpsa_translate!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA}})
+function mad_tpsa_translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})
+    mad_tpsa_eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
 
 Evaluates the map at the point `tb`
 
@@ -1937,13 +1937,13 @@ Evaluates the map at the point `tb`
 ### Output
 - `tc` -- Values for each TPSA in the map evaluated at the point `tb`
 """
-function mad_tpsa_eval!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})
+function mad_tpsa_eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})::Cvoid
 end
 
 
 """
-    mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+    mad_tpsa_mconv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nc::Cint, mc::Vector{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
 
 Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the map `ma`.
 
@@ -1958,7 +1958,7 @@ Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the
 ### Output
 - `mc`   -- map `mc` with specified conversions 
 """
-function mad_tpsa_mconv!(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)
+function mad_tpsa_mconv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nc::Cint, mc::Vector{Ptr{RTPSA}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, ma::Ptr{Ptr{RTPSA}}, nc::Cint, mc::Ptr{Ptr{RTPSA}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
@@ -1999,7 +1999,7 @@ end
 
 
 """
-    mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc}
+    mad_tpsa_scan_hdr(kind_::Ref{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc}
 
 Read TPSA header. Returns descriptor for TPSA given the header. This is useful for external languages using 
 this library where the memory is managed NOT on the C side.
@@ -2012,7 +2012,7 @@ this library where the memory is managed NOT on the C side.
 ### Output
 - `ret`     -- Descriptor for the TPSA 
 """
-function mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc}
+function mad_tpsa_scan_hdr(kind_::Ref{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc}
   desc = @ccall MAD_TPSA.mad_tpsa_scan_hdr(kind_::Ptr{Cint}, name_::Ptr{Cuchar}, stream_::Ptr{Cvoid})::Ptr{Desc}
   return ret
 end

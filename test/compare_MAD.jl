@@ -238,8 +238,8 @@ function get_jl_function_declarations(str)
   while i < length(lines)
     line = lines[i]
 
-    # Check if line contains a function declaration
-    if occursin("function ", line) # && !occursin("ccall", line)
+    # Check if line contains a ccall declaration
+    if occursin("MAD_TPSA.", line) # && !occursin("ccall", line)
       full_line = strip(line)
       line = line
       while (!occursin(")", full_line))
@@ -251,8 +251,9 @@ function get_jl_function_declarations(str)
     i += 1
   end
 
-  # Remove "function" because unnecessary
-  fun_decs = replace.(fun_decs, "function " => "" )
+  # Remove everything up to ccall
+  fun_decs = map(x->x[1+findfirst("MAD_TPSA.",x)[end]:end], fun_decs)
+  #fun_decs = replace.(fun_decs, " " => "" )
 
   return fun_decs
 end
