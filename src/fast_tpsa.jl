@@ -332,7 +332,14 @@ function ±(tpsa1::Ptr{RTPSA},ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return tpsa1 ± ctpsa1
 end
 
-#function ±(ctpsa)
+function ±(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
+  mad_ctpsa_addt!(ctpsa1, t1.tpsa, ctpsa1)
+  return ctpsa1
+end
+
+function ±(t1::TPS,ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  return  ctpsa1 ± t1
+end
 
 # All other types should just be +
 ±(a, b) =(@inline; +(a,b))
@@ -431,8 +438,8 @@ function ∓(ctpsa1::Ptr{CTPSA}, a::Number)::Ptr{CTPSA}
 end
 
 function ∓(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
-  mad_ctpsa_scl!(tpsa1, convert(ComplexF64, -1.), tpsa1)
-  mad_ctpsa_set0!(tpsa1, convert(ComplexF64, 1.), convert(ComplexF64, a))
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, -1.), ctpsa1)
+  mad_ctpsa_set0!(ctpsa1, convert(ComplexF64, 1.), convert(ComplexF64, a))
   return ctpsa1
 end
 
@@ -491,6 +498,15 @@ function ∓(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   mad_ctpsa_scl!(ctpsa, convert(ComplexF64, -1), ctpsa)
   mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
   return ctpsa
+end
+function ∓(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
+  mad_ctpsa_subt!(ctpsa1, t1.tpsa, ctpsa1)
+  return ctpsa1
+end
+
+function ∓(t1::TPS, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tsub!(t1.tpsa, ctpsa1, ctpsa1)
+  return ctpsa1
 end
 
 # All other types should just be -
@@ -622,6 +638,15 @@ end
 
 function ⨰(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   return tpsa1 ⨰ a
+end
+
+function ⨰(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
+  mad_ctpsa_mult!(ctpsa1, t1.tpsa, ctpsa1)
+  return ctpsa1
+end
+
+function ⨰(t1::TPS, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  return ctpsa1 ⨰ t1
 end
 
 # Fallbacks
@@ -774,6 +799,16 @@ function ⨱(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   rel_temp!(tpsa1)
   mad_ctpsa_inv!(ctpsa, convert(ComplexF64, a), ctpsa)
   return ctpsa
+end
+
+function ⨱(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
+  mad_ctpsa_divt!(ctpsa1, t1.tpsa, ctpsa1)
+  return ctpsa1
+end
+
+function ⨱(t1::TPS, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tdiv!(t1.tpsa, ctpsa1, ctpsa1)
+  return ctpsa1
 end
 
 
@@ -975,6 +1010,16 @@ function ⤊(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   mad_ctpsa_scl!(ctpsa, convert(ComplexF64, log(a)), ctpsa)
   mad_ctpsa_exp!(ctpsa, ctpsa)
   return ctpsa
+end
+
+function ⤊(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
+  mad_ctpsa_powt!(ctpsa1, t1.tpsa, ctpsa1)
+  return ctpsa1
+end
+
+function ⤊(t1::TPS, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tpow!(t1.tpsa, ctpsa1, ctpsa1)
+  return ctpsa1
 end
 
 ⤊(a,b) = (@inline; ^(a,b))

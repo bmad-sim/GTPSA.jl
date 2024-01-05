@@ -447,20 +447,6 @@ end
   @test norm(complex(t) - t) < tol
 end
 
-@testset "Taylor map benchmark against ForwardDiff" begin
-  include("../benchmark/taylormap.jl")
-  j, h1, h2, h3, h4 = benchmark_GTPSA()
-  jFD, h1FD, h2FD, h3FD, h4FD = benchmark_ForwardDiff()
-  tol = 1e-12
-
-
-  @test all(j - jFD .< tol)
-  @test all(h1 - h1FD .< tol)
-  @test all(h2 - h2FD .< tol)
-  @test all(h3 - h3FD .< tol)
-  @test all(h4 - h4FD .< tol)
-end
-
 @testset "@FastTPSA - Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = TPS(d)
@@ -858,6 +844,20 @@ end
   @test @FastTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t))) < tol
   @test @FastTPSA(norm(angle(t) - atan(imag(t),real(t)))) < tol
   @test @FastTPSA(norm(complex(t) - t)) < tol
+end
+
+@testset "Taylor map benchmark against ForwardDiff" begin
+  include("../benchmark/taylormap.jl")
+  j, h1, h2, h3, h4 = benchmark_GTPSA()
+  jFD, h1FD, h2FD, h3FD, h4FD = benchmark_ForwardDiff()
+  tol = 1e-12
+
+
+  @test all(j - jFD .< tol)
+  @test all(h1 - h1FD .< tol)
+  @test all(h2 - h2FD .< tol)
+  @test all(h3 - h3FD .< tol)
+  @test all(h4 - h4FD .< tol)
 end
 
 @testset "Compare with MAD" begin
