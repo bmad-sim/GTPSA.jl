@@ -420,7 +420,7 @@ export
   hessian!,
 
   # Temporaries:
-  @usetemps,
+  @FastTPSA,
   ±,
   ∓,
   ⨰,
@@ -430,7 +430,7 @@ export
   __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
           __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
           __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
-          __t_polar, __t_rect
+          __t_polar, __t_rect, __t_hypot
 
 
 
@@ -1214,6 +1214,6 @@ end
 
 include("operators.jl")
 include("methods.jl")
-include("usetemps.jl")
+include("fast_tpsa.jl")
 
 end

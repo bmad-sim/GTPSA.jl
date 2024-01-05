@@ -1,4 +1,4 @@
-macro usetemps(expr)
+macro FastTPSA(expr)
   return :(to_TPS($(to_temp_form(esc(expr)))))
 end 
 
@@ -24,13 +24,21 @@ function to_temp_form(expr)
           :tanh, :csch, :sech, :coth, :asin, :acos, :atan, :acsc, :asec, :acot, :asinh, :acosh, :atanh, :acsch, 
           :asech, :acoth, :real, :imag, :conj, :angle, :complex, :sinhc, :asinc, :asinhc, :erf, :erfc, :norm,
           :polar, :rect] # hypot not included bc appears does not support in-place input = output
+  if expr.head == :.
+    pkg = expr.args[1]
+    if pkg == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
+      str = "__t_" * string(expr.args[end].value)
+      expr.args[end] = QuoteNode(Symbol(str))
+    end
+    return expr
+  end
   for i in eachindex(expr.args)
     if expr.args[i] isa Expr
       to_temp_form(expr.args[i])
     elseif expr.args[i] == :+
-      expr.args[i] = :±  # \pm  (also allowed as unary operator)
+      expr.args[i] = :±  # \pm  (allowed as unary operator)
     elseif expr.args[i] == :-
-      expr.args[i] = :∓  # \mp  (also allowed as unary operator)
+      expr.args[i] = :∓  # \mp  (allowed as unary operator)
     elseif expr.args[i] == :*
       expr.args[i] = :⨰  # \dottimes
     elseif expr.args[i] == :/
@@ -149,7 +157,7 @@ end
 function __t_imag(ct1::ComplexTPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(ct1)
   mad_ctpsa_imag!(ct1.tpsa, tpsa)
-  return t
+  return tpsa
 end
 
 function __t_real(t1::TPS)::TPS
@@ -163,28 +171,30 @@ function __t_imag(t1::TPS)::Ptr{RTPSA}
 end
 
 # Temps:
+
 function __t_real(ctpsa::Ptr{CTPSA})::Ptr{RTPSA}
-  tpsa = get_rtemp!(ct1)
+  tpsa = get_rtemp_low!(ctpsa)
   mad_ctpsa_real!(ctpsa, tpsa)
-  rel_ctemp!(ctpsa)
+  rel_temp!(ctpsa)
   return tpsa
 end
 
 function __t_imag(ctpsa::Ptr{CTPSA})::Ptr{RTPSA}
-  tpsa = get_rtemp!(ct1)
+  tpsa = get_rtemp_low!(ctpsa)
   mad_ctpsa_imag!(ctpsa, tpsa)
   rel_temp!(ctpsa)
-  return t
+  return tpsa
 end
 
-function __t_real(tpsa::Ptr{RTPSA})::TPS
-  return t1
+function __t_real(tpsa::Ptr{RTPSA})::Ptr{RTPSA}
+  return tpsa
 end
 
 function __t_imag(tpsa::Ptr{RTPSA})::Ptr{RTPSA}
   mad_tpsa_setval!(tpsa, 0.0)
   return tpsa
 end
+
 
 # Fallbacks for regular types
 ±(a) = +a
@@ -238,12 +248,12 @@ end
 # ComplexTPS:
 function ±(ct1::ComplexTPS, ct2::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
-  mad_ctpsa_add!(ct1.ctpsa, ct2.ctpsa, ctpsa)
+  mad_ctpsa_add!(ct1.tpsa, ct2.tpsa, ctpsa)
   return ctpsa
 end
 
 function ±(ct1::ComplexTPS, a::Number)::Ptr{CTPSA}
-  ctpsa = get_ctemp!(t1)
+  ctpsa = get_ctemp!(ct1)
   mad_ctpsa_copy!(ct1.tpsa, ctpsa)
   mad_ctpsa_set0!(ctpsa, convert(ComplexF64,1), convert(ComplexF64,a))
   return ctpsa
@@ -277,12 +287,11 @@ function ±(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return ctpsa1 ± a
 end
 
-#= MIXING ComplexTPS with TPS NOT CURRENTLY IMPLEMENTED FOR @usetemps
+
 # TPS to ComplexTPS promotion:
 function ±(ct1::ComplexTPS, t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
-  mad_ctpsa_cplx!(t1.tpsa , Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
-  mad_ctpsa_add!(ct1.tpsa, ctpsa, ctpsa)
+  mad_ctpsa_addt!(ct1.tpsa, t1.tpsa, ctpsa)
   return ctpsa
 end
 
@@ -291,7 +300,7 @@ function ±(t1::TPS, ct1::ComplexTPS)::Ptr{CTPSA}
 end
 
 function ±(t1::TPS, a::Complex)::Ptr{CTPSA}
-  ctpsa = get_ctemp!(ct1)
+  ctpsa = get_ctemp!(t1)
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ctpsa
@@ -302,7 +311,7 @@ function ±(a::Complex, t1::TPS)::Ptr{CTPSA}
 end
 
 function ±(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
-  ctpsa = get_ctemp!(ct1)
+  ctpsa = get_ctemp_low!(tpsa1)
   mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   rel_rtemp!(tpsa1)
@@ -313,8 +322,17 @@ function ±(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   return tpsa1 ± a
 end
 
-function ±(ctpsa1::Ptr{RTPSA}, tpsa1::Ptr{CTPSA})::Ptr{CTPSA}
-=#
+function ±(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  mad_ctpsa_addt!(ctpsa1, tpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ±(tpsa1::Ptr{RTPSA},ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  return tpsa1 ± ctpsa1
+end
+
+#function ±(ctpsa)
 
 # All other types should just be +
 ±(a, b) =(@inline; +(a,b))
@@ -418,6 +436,63 @@ function ∓(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return ctpsa1
 end
 
+# TPS to ComplexTPS promotion:
+function ∓(ct1::ComplexTPS, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_subt!(ct1.tpsa, t1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ∓(t1::TPS, ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_tsub!(t1.tpsa, ct1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ∓(t1::TPS, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
+  return ctpsa
+end
+
+function ∓(a::Complex, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, -1), ctpsa)
+  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
+  return ctpsa
+end
+
+function ∓(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  mad_ctpsa_subt!(ctpsa1, tpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ∓(tpsa1::Ptr{RTPSA}, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tsub!(tpsa1, ctpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ∓(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
+  return ctpsa
+end
+
+function ∓(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, -1), ctpsa)
+  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
+  return ctpsa
+end
+
 # All other types should just be -
 ∓(a, b) = (@inline; -(a,b))
 # afoldl only for +,*
@@ -497,12 +572,56 @@ function ⨰(ctpsa1::Ptr{CTPSA}, ct1::ComplexTPS)::Ptr{CTPSA}
 end
 
 function ⨰(ctpsa1::Ptr{CTPSA}, a::Number)::Ptr{CTPSA}
-  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, a), ctpsa)
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, a), ctpsa1)
   return ctpsa1
 end
 
 function ⨰(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return ctpsa1 ⨰ a
+end
+
+# TPS to ComplexTPS promotion:
+function ⨰(ct1::ComplexTPS, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_mult!(ct1.tpsa, t1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ⨰(t1::TPS, ct1::ComplexTPS)::Ptr{CTPSA}
+  return ct1 ⨰ t1
+end
+
+function ⨰(t1::TPS, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64,a), ctpsa)
+  return ctpsa
+end
+
+function ⨰(a::Complex, t1::TPS)::Ptr{CTPSA}
+  return t1 ⨰ a
+end
+
+function ⨰(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  mad_ctpsa_mult!(ctpsa1, tpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ⨰(tpsa1::Ptr{RTPSA}, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  return ctpsa1 ⨰ tpsa1
+end
+
+function ⨰(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64,a), ctpsa)
+  return ctpsa
+end
+
+function ⨰(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  return tpsa1 ⨰ a
 end
 
 # Fallbacks
@@ -561,7 +680,7 @@ end
 function ⨱(ct1::ComplexTPS, ct2::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
   mad_ctpsa_div!(ct1.tpsa, ct2.tpsa, ctpsa)
-  return cvtpsa
+  return ctpsa
 end
 
 function ⨱(ct1::ComplexTPS, a::Number)::Ptr{CTPSA}
@@ -601,6 +720,62 @@ function ⨱(ct1::ComplexTPS,ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   mad_ctpsa_div!(ct1.tpsa, ctpsa1, ctpsa1)
   return ctpsa1
 end
+
+# TPS to ComplexTPS promotion:
+function ⨱(ct1::ComplexTPS, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_divt!(ct1.tpsa, t1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ⨱(t1::TPS, ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_tdiv!(t1.tpsa, ct1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ⨱(t1::TPS, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, 1/a), ctpsa)
+  return ctpsa
+end
+
+function ⨱(a::Complex, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, a), ctpsa)
+  return ctpsa
+end
+
+function ⨱(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  mad_ctpsa_divt!(ctpsa1, tpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ⨱(tpsa1::Ptr{RTPSA}, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tdiv!(tpsa1, ctpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ⨱(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, 1/a), ctpsa)
+  return ctpsa
+end
+
+function ⨱(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, a), ctpsa)
+  return ctpsa
+end
+
 
 # Fallbacks
 # All other types should just be /
@@ -690,21 +865,21 @@ function ⤊(ct1::ComplexTPS, i::Integer)::Ptr{CTPSA}
 end
 
 function ⤊(ct1::ComplexTPS, a::Number)::Ptr{CTPSA}
-  tpsa = get_ctemp!(ct1)
+  ctpsa = get_ctemp!(ct1)
   mad_ctpsa_pown!(ct1.tpsa, convert(ComplexF64, a), ctpsa)
-  return tpsa
+  return ctpsa
 end
 
 function ⤊(a::Number, ct1::ComplexTPS)::Ptr{CTPSA}
-  tpsa = get_ctemp!(ct1)
+  ctpsa = get_ctemp!(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, log(a)),  ctpsa)
-  mad_ctpsa_exp!(tpsa, tpsa)
-  return tpsa
+  mad_ctpsa_exp!(ctpsa, ctpsa)
+  return ctpsa
 end
 
 function __t_inv(ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(Cdouble, 1), ctpsa)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ctpsa)
   return ctpsa
 end
 
@@ -731,7 +906,7 @@ function ⤊(a::Number,ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
 end
 
 function __t_inv(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
-  mad_ctpsa_inv!(ctpsa1, convert(Cdouble, 1), ctpsa1)
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1), ctpsa1)
   return ctpsa1
 end
 
@@ -743,6 +918,63 @@ end
 function ⤊(ctpsa1::Ptr{CTPSA},ct1::ComplexTPS)::Ptr{CTPSA}
   mad_ctpsa_pow!(ctpsa1, ct1.tpsa, ctpsa1)
   return ctpsa1
+end
+
+# TPS to ComplexTPS promotion:
+function ⤊(ct1::ComplexTPS, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_powt!(ct1.tpsa, t1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ⤊(t1::TPS, ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_tpow!(t1.tpsa, ct1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function ⤊(t1::TPS, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_pown!(ctpsa, convert(ComplexF64, a), ctpsa)
+  return ctpsa
+end
+
+function ⤊(a::Complex, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, log(a)), ctpsa)
+  mad_ctpsa_exp!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function ⤊(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  mad_ctpsa_powt!(ctpsa1, tpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ⤊(tpsa1::Ptr{RTPSA}, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_tpow!(tpsa1, ctpsa1, ctpsa1)
+  rel_temp!(tpsa1)
+  return ctpsa1
+end
+
+function ⤊(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_pown!(ctpsa, convert(ComplexF64, a), ctpsa)
+  return ctpsa
+end
+
+function ⤊(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_scl!(ctpsa, convert(ComplexF64, log(a)), ctpsa)
+  mad_ctpsa_exp!(ctpsa, ctpsa)
+  return ctpsa
 end
 
 ⤊(a,b) = (@inline; ^(a,b))
@@ -805,7 +1037,7 @@ function __t_norm(ctpsa1::Ptr{CTPSA})::Float64
 end
 
 
-# ∓∓∓ rest of unary functions ∓∓∓
+# --- rest of unary functions ---
 # TPS:
 macro FUNT(F)
   F1 = Symbol("__t_" * F)
@@ -823,7 +1055,7 @@ macro FUNT(F)
       end
 
       # Fallback
-      $(esc(F1))(a) = $(esc(Symbol(F)))(a)
+      $(esc(F1))(a) = (@inline; $(esc(Symbol(F)))(a))
   end
 end
 
@@ -850,7 +1082,7 @@ end
 @FUNT("acoth" )
 @FUNT("erf"  )
 @FUNT("erfc"  )
-#=
+
 # sinc in Julia has different definition than GTPSA
 # In Julia: sinc(x) = sin(pi*x)/(pi*x)
 # in C GTPSA: sinc(x) = sin(x)/x
@@ -868,9 +1100,10 @@ function __t_sinc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+__t_sinc(a) = (@inline; sinc(a))
 
-# asinc is not in Julia, but in C is asinc(x) = asin(x)⨱x
-# To give similiar behavior, define asinc(x) = asin(pi⨰x)⨱(pi⨰x)
+# asinc is not in Julia, but in C is asinc(x) = asin(x)*x
+# To give similiar behavior, define asinc(x) = asin(pi*x)*(pi⨰x)
 function __t_asinc(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
   mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), tpsa)
@@ -883,6 +1116,8 @@ function __t_asinc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   mad_tpsa_asinc!(tpsa1, tpsa1)
   return tpsa1
 end
+
+# asinc undefined for not TPSA types (not in Base)
 
 function __t_sinhc(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
@@ -897,8 +1132,10 @@ function __t_sinhc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
-# asinc is not in Julia, but in C is asinc(x) = asin(x)⨱x
-# To give similiar behavior, define asinc(x) = asin(pi⨰x)⨱(pi⨰x)
+# sinhc undefined for not TPSA types (not in Base)
+
+# asinhc is not in Julia, but in C is asinc(x) = asin(x)*x
+# To give similiar behavior, define asinc(x) = asin(pi*x)*(pi*x)
 function __t_asinhc(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
   mad_tpsa_scl!(t1.tpsa, convert(Cdouble, pi), tpsa)
@@ -912,256 +1149,553 @@ function __t_asinhc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+# asinhc undefined for not TPSA types (not in Base)
+
 # These functions are not implemented in the GTPSA C library, so they 
-# are implemented below without creating unnecessary temporaries
+# are implemented below
 function __t_csc(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_sin!(t1.tpsa, t.tpsa)
-  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
-  return t
+  mad_tpsa_sin!(t1.tpsa, tpsa)
+  mad_tpsa_inv!(tpsa, 1.0, tpsa)
+  return tpsa
 end
+
+function __t_csc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_sin!(tpsa1, tpsa1)
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  return tpsa1
+end
+
+__t_csc(a) = (@inline; csc(a))
 
 function __t_sec(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_cos!(t1.tpsa, t.tpsa)
-  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
-  return t
+  mad_tpsa_cos!(t1.tpsa, tpsa)
+  mad_tpsa_inv!(tpsa, 1.0, tpsa)
+  return tpsa
 end
+
+function __t_sec(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_cos!(tpsa1, tpsa1)
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  return tpsa1
+end
+
+__t_sec(a) = (@inline; sec(a))
 
 function __t_csch(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_sinh!(t1.tpsa, t.tpsa)
-  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
-  return t
+  mad_tpsa_sinh!(t1.tpsa, tpsa)
+  mad_tpsa_inv!(tpsa, 1.0, tpsa)
+  return tpsa
 end
+
+function __t_csch(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_sinh!(tpsa1, tpsa1)
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  return tpsa1
+end
+
+__t_csch(a) = (@inline; csch(a))
 
 function __t_sech(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_cosh!(t1.tpsa, t.tpsa)
-  mad_tpsa_inv!(t.tpsa, 1.0, t.tpsa)
-  return t
+  mad_tpsa_cosh!(t1.tpsa, tpsa)
+  mad_tpsa_inv!(tpsa, 1.0, tpsa)
+  return tpsa
 end
+
+function __t_sech(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_cosh!(tpsa1, tpsa1)
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  return tpsa1
+end
+
+__t_sech(a) = (@inline; sech(a))
 
 function __t_acsc(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
-  mad_tpsa_asin!(t.tpsa, t.tpsa)
-  return t
+  mad_tpsa_inv!(t1.tpsa, 1.0, tpsa)
+  mad_tpsa_asin!(tpsa, tpsa)
+  return tpsa
 end
+
+function __t_acsc(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  mad_tpsa_asin!(tpsa1, tpsa1)
+  return tpsa1
+end
+
+__t_acsc(a) = (@inline; acsc(a))
 
 function __t_asec(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
-  mad_tpsa_acos!(t.tpsa, t.tpsa)
-  return t
+  mad_tpsa_inv!(t1.tpsa, 1.0, tpsa)
+  mad_tpsa_acos!(tpsa, tpsa)
+  return tpsa
 end
+
+function __t_asec(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  mad_tpsa_acos!(tpsa1, tpsa1)
+  return tpsa1
+end
+
+__t_asec(a) = (@inline; asec(a))
 
 function __t_acsch(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
-  mad_tpsa_asinh!(t.tpsa, t.tpsa)
-  return t
+  mad_tpsa_inv!(t1.tpsa, 1.0, tpsa)
+  mad_tpsa_asinh!(tpsa, tpsa)
+  return tpsa
 end
+
+function __t_acsch(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  mad_tpsa_asinh!(tpsa1, tpsa1)
+  return tpsa1
+end
+
+__t_acsch(a) = (@inline; acsch(a))
 
 function __t_asech(t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
-  mad_tpsa_inv!(t1.tpsa, 1.0, t.tpsa)
-  mad_tpsa_acosh!(t.tpsa, t.tpsa)
-  return t
+  mad_tpsa_inv!(t1.tpsa, 1.0, tpsa)
+  mad_tpsa_acosh!(tpsa, tpsa)
+  return tpsa
 end
 
+function __t_asech(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_inv!(tpsa1, 1.0, tpsa1)
+  mad_tpsa_acosh!(tpsa1, tpsa1)
+  return tpsa1
+end
+
+__t_asech(a) = (@inline; asech(a))
 
 # ComplexTPS:
-macro FUNC(F)
-  fn = Symbol("mad_ctpsa_" ⨰ F ⨰ "!")
+# --- rest of unary functions ---
+macro FUNCT(F)
+  F1 = Symbol("__t_" * F)
+  fn = Symbol("mad_ctpsa_" * F * "!")
   quote
-      function $(esc(Symbol(F)))(ct1::ComplexTPS)::ComplexTPS
-        ct = zero(ct1)
-        $(esc(fn))(ct1.tpsa, ct.tpsa)
-        return ct
+      function $(esc(F1))(ct1::ComplexTPS)::Ptr{CTPSA}
+        ctpsa = get_ctemp!(ct1)
+        $(esc(fn))(ct1.tpsa, ctpsa)
+        return ctpsa
       end
+
+      function $(esc(F1))(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+        $(esc(fn))(ctpsa1, ctpsa1)
+        return ctpsa1
+      end
+
+      # Fallback already defined in previous macro so not needed here
+      # (esc(F1))(a) = $(esc(Symbol(F)))(a)
   end
 end
 
-function abs(ct1::ComplexTPS)::TPS
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cabs!(ct1.tpsa, t.tpsa)
-  return t
+function __t_abs(ct1::ComplexTPS)::Ptr{RTPSA}
+  tpsa = get_rtemp!(ct1)
+  mad_ctpsa_cabs!(ct1.tpsa, tpsa)
+  return tpsa
 end
 
-function conj(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_conj!(ct1.tpsa, ct.tpsa)
-  return ct
+function __t_abs(ctpsa1::Ptr{CTPSA})::Ptr{RTPSA}
+  tpsa = get_rtemp_low!(ctpsa1)
+  mad_ctpsa_cabs!(ctpsa1, tpsa)
+  rel_temp!(ctpsa1)
+  return tpsa
 end
 
-function conj(t1::TPS)::TPS
-  return TPS(t1)
+function __t_conj(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_conj!(ct1.tpsa, ctpsa)
+  return ctpsa
 end
 
-function angle(ct1::ComplexTPS)::TPS
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, ct1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_carg!(ct1.tpsa, t.tpsa)
-  return t
+function __t_conj(t1::TPS)::TPS
+  return t1
 end
 
-function angle(t1::TPS)::TPS
-  ct = ComplexTPS(t1)
-  t = zero(t1)
-  mad_ctpsa_carg!(ct.tpsa, t.tpsa)
-  return t
+function __t_conj(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  return tpsa1
 end
 
-function complex(t1::TPS)::ComplexTPS
-  return ComplexTPS(t1)
+__t_conj(a) = (@inline; conj(a))
+
+function __t_angle(ct1::ComplexTPS)::Ptr{RTPSA}
+  tpsa = get_rtemp!(ct1)
+  mad_ctpsa_carg!(ct1.tpsa, tpsa)
+  return tpsa
 end
 
-function complex(ct1::ComplexTPS)
-  return ComplexTPS(ct1)
+function __t_angle(ctpsa1::Ptr{CTPSA})::Ptr{RTPSA}
+  tpsa = get_rtemp_low!(ctpsa1)
+  mad_ctpsa_carg!(ctpsa1, tpsa)
+  rel_temp!(ctpsa1)
+  return tpsa
 end
 
-function complex(t1::TPS, t2::TPS)::ComplexTPS
-  return ComplexTPS(t1, t2)
+function __t_angle(t1::TPS)::Ptr{RTPSA}
+  ctpsa = get_ctemp!(t1)
+  tpsa = get_rtemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_carg!(ctpsa, tpsa)
+  rel_temp!(ctpsa)
+  return tpsa
 end
 
-function polar(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_polar!(ct1.tpsa, ct.tpsa)
-  return ct
+function __t_angle(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_carg!(ctpsa, tpsa1)
+  rel_temp!(ctpsa)
+  return tpsa1
 end
 
-function polar(t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_polar!(ct.tpsa, ct.tpsa)
-  return ct
+__t_angle(a) = (@inline, angle(a))
+
+function __t_complex(t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  return ctpsa
 end
 
-function rect(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_rect!(ct1.tpsa, ct.tpsa)
-  return ct
+function __t_complex(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  return ctpsa
 end
 
-function rect(t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_rect!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_complex(ct1::ComplexTPS)::ComplexTPS
+  return ct1
 end
 
-@FUNC("unit"  )
-@FUNC("sqrt"  )
-@FUNC("exp"  )
-@FUNC("log"  )
-@FUNC("sin"  )
-@FUNC("cos"  )
-@FUNC("tan"  )
-@FUNC("cot"  )
-@FUNC("sinh"  )
-@FUNC("cosh"  )
-@FUNC("tanh"  )
-@FUNC("coth"  )
-@FUNC("asin"  )
-@FUNC("acos"  )
-@FUNC("atan"  )
-@FUNC("acot"  )
-@FUNC("asinh" )
-@FUNC("acosh" )
-@FUNC("atanh" )
-@FUNC("acoth" )
-@FUNC("erf"  )
-@FUNC("erfc"  )
+function __t_complex(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  return ctpsa1
+end
+
+__t_complex(a) = (@inline, complex(a))
+
+function __t_complex(t1::TPS, t2::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, t2.tpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_complex(tpsa1::Ptr{RTPSA}, t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(tpsa1, t1.tpsa, ctpsa)
+  rel_temp!(tpsa1)
+  return ctpsa
+end
+
+function __t_complex(t1::TPS, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_ctpsa_cplx!(t1.tpsa, tpsa1, ctpsa)
+  rel_temp!(tpsa1)
+  return ctpsa
+end
+
+function __t_complex(tpsa1::Ptr{RTPSA}, tpsa2::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, tpsa2, ctpsa)
+  rel_temp!(tpsa2)
+  rel_temp!(tpsa1)
+  return ctpsa
+end
+
+function __t_complex(t1::TPS, a::Real)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_setval!(tpsa, convert(Float64, a))
+  mad_ctpsa_cplx!(t1.tpsa, tpsa, ctpsa)
+  rel_temp!(tpsa)
+  return ctpsa
+end
+
+function __t_complex(tpsa1::Ptr{RTPSA}, a::Real)::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  tpsa2 = get_rtemp_low!(tpsa1)
+  mad_tpsa_setval!(tpsa2, convert(Float64, a))
+  mad_ctpsa_cplx!(tpsa1, tpsa2, ctpsa)
+  rel_temp!(tpsa2)
+  return ctpsa
+end
+
+function __t_complex(a::Real,t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_setval!(tpsa, convert(Float64, a))
+  mad_ctpsa_cplx!(tpsa, t1.tpsa, ctpsa)
+  rel_temp!(tpsa)
+  return ctpsa
+end
+
+function __t_complex(a::Real, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  tpsa2 = get_rtemp_low!(tpsa1)
+  mad_tpsa_setval!(tpsa2, convert(Float64, a))
+  mad_ctpsa_cplx!(tpsa2, tpsa1, ctpsa)
+  rel_temp!(tpsa2)
+  return ctpsa
+end
+
+__t_complex(a,b) = (@inline, complex(a,b))
+
+function __t_polar(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_polar!(ct1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_polar(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_polar!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+function __t_polar(t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_tpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_polar!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_polar(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_polar!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+__t_polar(a) = (@inline, polar(a))
+
+function __t_rect(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_rect!(ct1.tpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_rect(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_rect!(ctpsa1, ctpsa1)
+  return ctpsa
+end
+
+function __t_rect(t1::TPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_rect!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_rect(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
+  ctpsa = get_ctemp!(t1)
+  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  rel_temp!(tpsa1)
+  mad_ctpsa_rect!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+__t_rect(a) = (@inline; rect(a))
+
+
+@FUNCT("unit"  )
+@FUNCT("sqrt"  )
+@FUNCT("exp"  )
+@FUNCT("log"  )
+@FUNCT("sin"  )
+@FUNCT("cos"  )
+@FUNCT("tan"  )
+@FUNCT("cot"  )
+@FUNCT("sinh"  )
+@FUNCT("cosh"  )
+@FUNCT("tanh"  )
+@FUNCT("coth"  )
+@FUNCT("asin"  )
+@FUNCT("acos"  )
+@FUNCT("atan"  )
+@FUNCT("acot"  )
+@FUNCT("asinh" )
+@FUNCT("acosh" )
+@FUNCT("atanh" )
+@FUNCT("acoth" )
+@FUNCT("erf"  )
+@FUNCT("erfc"  )
 
 # sinc in Julia has different definition than GTPSA
-# In Julia: sinc(x) = sin(pi⨰x)⨱(pi⨰x)
-# in C GTPSA: sinc(x) = sin(x)⨱x
+# In Julia: sinc(x) = sin(pi*x)/(pi*x)
+# in C GTPSA: sinc(x) = sin(x)/x
 # To make sinc agree:
-function sinc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_sinc!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_sinc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
+  mad_ctpsa_sinc!(ctpsa, ctpsa)
+  return ctpsa
 end
 
-# asinc is not in Julia, but in C is asinc(x) = asin(x)⨱x
-# To give similiar behavior, define asinc(x) = asin(pi⨰x)⨱(pi⨰x)
-function asinc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_asinc!(ct.tpsa, ct.tpsa)
-  return t
+function __t_sinc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, pi), ctpsa1)
+  mad_ctpsa_sinc!(ctpsa1, ctpsa1)
+  return ctpsa1
 end
 
-function sinhc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_sinhc!(ct.tpsa, ct.tpsa)
-  return ct
+# asinc is not in Julia, but in C is asinc(x) = asin(x)*x
+# To give similiar behavior, define asinc(x) = asin(pi*x)*(pi⨰x)
+function __t_asinc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
+  mad_ctpsa_asinc!(ctpsa, ctpsa)
+  return ctpsa
 end
 
-# asinc is not in Julia, but in C is asinc(x) = asin(x)⨱x
-# To give similiar behavior, define asinc(x) = asin(pi⨰x)⨱(pi⨰x)
-function asinhc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_asinhc!(ct.tpsa, ct.tpsa)
-  return t
+function __t_asinc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, pi), ctpsa1)
+  mad_ctpsa_asinc!(ctpsa1, ctpsa1)
+  return ctpsa1
 end
+
+# asinc undefined for not TPSA types (not in Base)
+
+function __t_sinhc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
+  mad_ctpsa_sinhc!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_sinhc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, pi), ctpsa1)
+  mad_ctpsa_sinhc!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+# sinhc undefined for not TPSA types (not in Base)
+
+# asinhc is not in Julia, but in C is asinc(x) = asin(x)*x
+# To give similiar behavior, define asinc(x) = asin(pi*x)*(pi*x)
+function __t_asinhc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_rtemp!(ct1)
+  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
+  mad_ctpsa_asinhc!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_asinhc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, pi), ctpsa1)
+  mad_ctpsa_asinhc!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+# asinhc undefined for not TPSA types (not in Base)
 
 # These functions are not implemented in the GTPSA C library, so they 
-# are implemented below without creating unnecessary temporaries
-function csc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_sin!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
+# are implemented below
+function __t_csc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_sin!(ct1.tpsa, ctpsa)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, 1.0), ctpsa)
+  return ctpsa
 end
 
-function sec(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_cos!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
+function __t_csc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_sin!(ctpsa1, ctpsa1)
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  return ctpsa1
 end
 
-function csch(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_sinh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
+function __t_sec(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_cos!(ct1.tpsa, ctpsa)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, 1.0), ctpsa)
+  return ctpsa
 end
 
-function sech(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_cosh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
+function __t_sec(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_cos!(ctpsa1, ctpsa1)
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  return ctpsa1
 end
 
-function acsc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_asin!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_csch(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_sinh!(ct1.tpsa, ctpsa)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, 1.0), ctpsa)
+  return ctpsa
 end
 
-function asec(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_acos!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_csch(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_sinh!(ctpsa1, ctpsa1)
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  return ctpsa1
 end
 
-function acsch(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_asinh!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_sech(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_cosh!(ct1.tpsa, ctpsa)
+  mad_ctpsa_inv!(ctpsa, convert(ComplexF64, 1.0), ctpsa)
+  return ctpsa
 end
 
-function asech(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_acosh!(ct.tpsa, ct.tpsa)
-  return ct
+function __t_sech(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_cosh!(ctpsa1, ctpsa1)
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  return ctpsa1
 end
-=#
+
+function __t_acsc(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1.0), ctpsa)
+  mad_ctpsa_asin!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_acsc(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  mad_ctpsa_asin!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+function __t_asec(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1.0), ctpsa)
+  mad_ctpsa_acos!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_asec(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  mad_ctpsa_acos!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+function __t_acsch(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1.0), ctpsa)
+  mad_ctpsa_asinh!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_acsch(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  mad_ctpsa_asinh!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+function __t_asech(ct1::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1.0), ctpsa)
+  mad_ctpsa_acosh!(ctpsa, ctpsa)
+  return ctpsa
+end
+
+function __t_asech(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
+  mad_ctpsa_inv!(ctpsa1, convert(ComplexF64, 1.0), ctpsa1)
+  mad_ctpsa_acosh!(ctpsa1, ctpsa1)
+  return ctpsa1
+end
+
+__t_hypot(a,b) = (@inline; hypot(a,b))
+__t_hypot(a,b,c) = (@inline; hypot(a,b,c))
