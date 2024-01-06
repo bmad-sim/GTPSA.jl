@@ -547,6 +547,13 @@ end
   @test @FastTPSA(norm(ct3 ^ t2 - (3+3im)^2)) < tol
   @test @FastTPSA(norm(t2 ^ (3+3im) - 2^(3+3im))) < tol
   @test @FastTPSA(norm((3+3im)^t2 - (3+3im)^2)) < tol
+
+  # Make sure stack is 0:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  tmpidx = unsafe_load(desc.ti)
+  ctmpidx = unsafe_load(desc.cti)
+  @test ctmpidx == 0
+  @test tmpidx == 0
 end
 
 @testset "@FastTPSA - Functions: scalar TPSs vs. Julia scalars" begin
@@ -731,6 +738,13 @@ end
   @test @FastTPSA(norm(hypot(t1,2,3+3im) - hypot(1,2,3+3im))) < tol
   @test @FastTPSA(norm(hypot(1,t2,3+3im) - hypot(1,2,3+3im))) < tol
   @test @FastTPSA(norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
+
+  # Make sure stack is 0:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  tmpidx = unsafe_load(desc.ti)
+  ctmpidx = unsafe_load(desc.cti)
+  @test ctmpidx == 0
+  @test tmpidx == 0
 end
 
 @testset "@FastTPSA - Functions: identities, using TPSs" begin
@@ -844,6 +858,13 @@ end
   @test @FastTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t))) < tol
   @test @FastTPSA(norm(angle(t) - atan(imag(t),real(t)))) < tol
   @test @FastTPSA(norm(complex(t) - t)) < tol
+
+  # Make sure stack is 0:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  tmpidx = unsafe_load(desc.ti)
+  ctmpidx = unsafe_load(desc.cti)
+  @test ctmpidx == 0
+  @test tmpidx == 0
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
