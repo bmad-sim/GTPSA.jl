@@ -1,4 +1,4 @@
-macro FastTPSA(expr)
+macro FastGTPSA(expr)
   return :(to_TPS($(to_temp_form(esc(expr)))))
 end 
 
@@ -19,16 +19,16 @@ end
 # Fallback for non-TPSA types
 to_TPS(a) = (@inline; a)
 
-function to_temp_form(expr)
+function to_temp_form(expr::Expr)
   fcns = [:inv, :atan, :abs, :sqrt, :exp, :log, :sin, :cos, :tan, :csc, :sec, :cot, :sinc, :sinh, :cosh,
           :tanh, :csch, :sech, :coth, :asin, :acos, :atan, :acsc, :asec, :acot, :asinh, :acosh, :atanh, :acsch, 
           :asech, :acoth, :real, :imag, :conj, :angle, :complex, :sinhc, :asinc, :asinhc, :erf, :erfc, :norm,
           :polar, :rect] # hypot not included bc appears does not support in-place input = output
   if expr.head == :.
-    pkg = expr.args[1]
-    if pkg == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
-      str = "__t_" * string(expr.args[end].value)
-      expr.args[end] = QuoteNode(Symbol(str))
+    pkg = Symbol(expr.args[1])
+    if pkg == :GTPSA && Symbol(expr.args[end].value) in fcns # Only change is function is in GTPSA
+      str1 = "__t_" * string(Symbol(expr.args[end].value))
+      expr.args[end] = QuoteNode(Symbol(str1))
     end
     return expr
   end

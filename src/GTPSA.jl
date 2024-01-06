@@ -420,7 +420,7 @@ export
   hessian!,
 
   # Temporaries:
-  @FastTPSA,
+  @FastGTPSA,
   ±,
   ∓,
   ⨰,
@@ -1214,6 +1214,6 @@ end
 
 include("operators.jl")
 include("methods.jl")
-include("fast_tpsa.jl")
+include("fast_gtpsa.jl")
 
 end

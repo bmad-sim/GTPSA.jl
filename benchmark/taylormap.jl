@@ -4,42 +4,42 @@ using BenchmarkTools: @btime, @benchmark
 
 # Comparison with GTPSA for 4 variables to 2nd order and 50 parameters to 2nd order
 # As of 1/4/2023 (Julia v1.10)
-# Using the @FastTPSA macro:
+# Using the @FastGTPSA macro:
 # GTPSA: 6.107 ms (1229 allocations: 140.53 KiB)
 # ForwardDiff: 80.202 ms (31875 allocations: 167.75 MiB)
 #
-# Without the @FastTPSA macro:
+# Without the @FastGTPSA macro:
 # GTPSA: 21.141 ms (6629 allocations: 224.91 KiB)
 # ForwardDiff: 78.312 ms (31875 allocations: 167.75 MiB)
 
 function track_qf(z0, k1, hkick)
   L = 0.5
-  z1 = @FastTPSA cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
-  z2 = @FastTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
-  z3 = @FastTPSA cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
-  z4 = @FastTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
+  z1 = @FastGTPSA cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
+  z2 = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
+  z3 = @FastGTPSA cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
+  z4 = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
   return [z1,z2,z3,z4]
 end
 
 function track_qd(z0, k1, vkick)
   L = 0.5
-  z1 = @FastTPSA cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
-  z2 = @FastTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
-  z3 = @FastTPSA cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
-  z4 = @FastTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
+  z1 = @FastGTPSA cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
+  z2 = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
+  z3 = @FastGTPSA cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
+  z4 = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
   return [z1,z2,z3,z4] 
 end
 
 function track_drift(z0)
   L = 0.75
-  z1 = @FastTPSA z0[1]+z0[2]*L
-  z3 = @FastTPSA z0[3]+z0[4]*L
+  z1 = @FastGTPSA z0[1]+z0[2]*L
+  z3 = @FastGTPSA z0[3]+z0[4]*L
   return [z1,z0[2],z3 , z0[4]]
 end
 
 function track_sextupole(z0, k2l)
-  z2 = @FastTPSA z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
-  z4 = @FastTPSA z0[4]+k2l/2.0*z0[1]*z0[3]
+  z2 = @FastGTPSA z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
+  z4 = @FastGTPSA z0[4]+k2l/2.0*z0[1]*z0[3]
   return  [z0[1], z2, z0[3], z4]
 end
 
