@@ -875,7 +875,9 @@ end
 
 @testset "Type stability" begin
   include("type_stable.jl")
-  JET.@test_opt type_stable_test()
+  include("../benchmark/taylormap.jl")
+  @test_opt type_stable_test()
+  @test_opt benchmark_GTPSA()
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
