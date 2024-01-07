@@ -1211,17 +1211,19 @@ function show(io::IO, t::TPS)
   nn = desc.nn
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
-  out = Matrix{Any}(undef, 0, (1+nn)) # First col is coefficient, rest are orders
+  out = Matrix{Any}(undef, 0, (1+1+1+nn)) # First col is coefficient, rest are orders
   idx = Cint(-1)
   idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
   while idx > 0
-    out = vcat(out, Any[v[] convert(Vector{Int}, mono)...])
+    order = Int(sum(mono))
+    out = vcat(out, Any[v[] order "" convert(Vector{Int}, mono)...])
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
   end
   if size(out)[1] == 0
     out = vcat(out, Any[0.0 zeros(Int,nn)...])
   end
-  println(io, "   COEFFICIENT              EXPONENT")
+  println(io, "TPS:")
+  println(io, "   COEFFICIENT              ORDER   EXPONENTS")
   pretty_table(io, out,tf=tf_borderless,formatters=ft_printf("%23.16lE", [1]),show_header=false, alignment=:l)
 end
 
