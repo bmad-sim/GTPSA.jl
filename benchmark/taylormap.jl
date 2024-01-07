@@ -1,19 +1,16 @@
 using GTPSA
 using ForwardDiff
-using DiffResults
 using BenchmarkTools: @btime, @benchmark
 
 # Comparison with GTPSA for 4 variables to 2nd order and 50 parameters to 2nd order
 # As of 1/7/2023 (Julia v1.10)
 # Using the @FastGTPSA macro:
 # GTPSA:                    5.444 ms (1227 allocations: 140.00 KiB)
-# ForwardDiff:             89.485 ms (31875 allocations: 167.75 MiB)
-# ForwardDiff+DiffResults: 92.704 ms (30392 allocations: 166.98 MiB)
+# ForwardDiff:             20.675 ms (9136 allocations: 43.04 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
 # GTPSA:                   13.154 ms (6627 allocations: 224.38 KiB)
-# ForwardDiff:             91.402 ms (31875 allocations: 167.75 MiB)
-# ForwardDiff+DiffResults: 88.282 ms (30392 allocations: 166.98 MiB)
+# ForwardDiff:             19.928 ms (9136 allocations: 43.04 MiB)
  
 
 function track_qf(z0, k1, hkick)
@@ -69,41 +66,16 @@ function benchmark_GTPSA()
   z = vars(d)
   k = params(d)
   map = track_ring([z[1], z[2], z[3], z[4]], 0.36+k[1], k[2], k[3:end])
-  j = jacobian(map, include_params=true)
-  h1 = hessian(map[1], include_params=true)
-  h2 = hessian(map[2], include_params=true)
-  h3 = hessian(map[3], include_params=true)
-  h4 = hessian(map[4], include_params=true)
-  return j, h1, h2, h3, h4
+  return map
 end
-
 
 function benchmark_ForwardDiff()
   m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6], z[7:end])
   j = Array{Float64}(undef,4,56)
-  h1 = Array{Float64}(undef,56,56)
-  h2 = Array{Float64}(undef,56,56)
-  h3 = Array{Float64}(undef,56,56)
-  h4 = Array{Float64}(undef,56,56)
+  h = Array{Float64}(undef,224,56)
   ForwardDiff.jacobian!(j, m, zeros(56))
-  ForwardDiff.hessian!(h1, z->m(z)[1], zeros(56))
-  ForwardDiff.hessian!(h2, z->m(z)[2], zeros(56))
-  ForwardDiff.hessian!(h3, z->m(z)[3], zeros(56))
-  ForwardDiff.hessian!(h4, z->m(z)[4], zeros(56))
-  return j, h1, h2, h3, h4
-end
-
-function benchmark_DiffResults()
-  m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6], z[7:end])
-  result1 = DiffResults.HessianResult(zeros(56))
-  result2 = DiffResults.HessianResult(zeros(56))
-  result3 = DiffResults.HessianResult(zeros(56))
-  result4 = DiffResults.HessianResult(zeros(56))
-  result1 = ForwardDiff.hessian!(result1, z->m(z)[1], zeros(56))
-  result2 = ForwardDiff.hessian!(result2, z->m(z)[2], zeros(56))
-  result3 = ForwardDiff.hessian!(result3, z->m(z)[3], zeros(56))
-  result4 = ForwardDiff.hessian!(result4, z->m(z)[4], zeros(56))
-  return result1, result2, result3, result4
+  ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(56))
+  return j, h
 end
 
 #m_GTPSA = @btime benchmark_GTPSA()

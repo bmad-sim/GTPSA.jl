@@ -3,9 +3,9 @@
 
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders in the variables. 
 
-GTPSA, which uses the Truncated Power Series Algebra method for performing automatic differentation (AD), has several advantages over current Julia AD packages:
+Truncated Power Series Algebra performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of performing nested derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. `GTPSA.jl` therefore has similar performance as `ForwardDiff.jl` to first-order, but significantly better performance at second order and above.
 
-1. **Speed and Accuracy**: Because the TPSA method does not take any symbolic derivatives, nor use finite differencing, derivatives are calculated with high efficiency and accuracy
+1. **Speed**: Because the power series expansion is directly used for higher-order derivatives, as opposed to nested derivatives, `GTPSA.jl` is sig
 2. **Arbitrary Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 5th order in $x_1$ and 1st order in $x_2$ is done trivially in GTPSA
 3. **All Taylor Coefficients Stored**: GTPSA implements an efficient monomial coefficient indexing function for high speed even with TPSs having large number of variables to high orders
 4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two proves advantageous for analyses of Taylor maps, such as normal form
