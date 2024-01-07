@@ -1214,17 +1214,18 @@ function show(io::IO, t::TPS)
   out = Matrix{Any}(undef, 0, (1+1+1+nn)) # First col is coefficient, rest are orders
   idx = Cint(-1)
   idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
-  while idx > 0
+  while idx >= 0
     order = Int(sum(mono))
     out = vcat(out, Any[v[] order "" convert(Vector{Int}, mono)...])
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
   end
   if size(out)[1] == 0
-    out = vcat(out, Any[0.0 zeros(Int,nn)...])
+    out = vcat(out, Any[0.0 Int(0) "" zeros(Int,nn)...])
   end
   println(io, "TPS:")
-  println(io, "   COEFFICIENT              ORDER   EXPONENTS")
-  pretty_table(io, out,tf=tf_borderless,formatters=ft_printf("%23.16lE", [1]),show_header=false, alignment=:l)
+  println(io, "  COEFFICIENT               ORDER    EXPONENTS")
+  formatters = (ft_printf("%23.16le", [1]), ft_printf("%2i", 2:3+nn))
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
 function show(io::IO, t::ComplexTPS)
@@ -1237,18 +1238,19 @@ function show(io::IO, t::ComplexTPS)
   out = Matrix{Any}(undef, 0, (1+1+1+1+nn)) # First col is coefficient, rest are orders
   idx = Cint(-1)
   idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
-  while idx > 0
+  while idx >= 0
     order = Int(sum(mono))
     out = vcat(out, Any[real(v[]) imag(v[]) order "" convert(Vector{Int}, mono)...])
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
   end
   if size(out)[1] == 0
-    out = vcat(out, Any[0.0 zeros(Int,nn)...])
+    out = vcat(out, Any[0.0 0.0 Int(0) "" zeros(Int,nn)...])
   end
   println(io, "ComplexTPS:")
   #println(io, "   COEFFICIENT")
-  println(io, "   REAL                      IMAG                     ORDER   EXPONENTS")
-  pretty_table(io, out,tf=tf_borderless,formatters=(ft_printf("%23.16lE", [1]),ft_printf("%23.16lE", [2])),show_header=false, alignment=:l)
+  println(io, "  REAL                      IMAG                      ORDER    EXPONENTS")
+  formatters = (ft_printf("%23.16le", [1]),ft_printf("%23.16le", [2]), ft_printf("%2i", 3:4+nn))
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
 
