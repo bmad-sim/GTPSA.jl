@@ -48,9 +48,9 @@ import Base:  +,
               lastindex,
               setindex!,
               ==,
-              print
+              show
 
-using GTPSA_jll
+using GTPSA_jll, Printf, PrettyTables
 
 export
   # Constants:
@@ -394,7 +394,6 @@ export
   Descriptor,
   TPS,
   ComplexTPS,
-  print,
   unit  ,
   sinhc ,
   asinc ,
@@ -412,6 +411,9 @@ export
 
   # Methods:
   evaluate,
+  derivative,
+  derivativem,
+  integrate,
   gradient,
   gradient!,
   jacobian,
@@ -420,17 +422,16 @@ export
   hessian!,
 
   # Temporaries:
-  @usetemps,
+  @FastGTPSA,
   ±,
   ∓,
   ⨰,
   ⨱,
   ⤊,
-  get_rtemp!,
   __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
           __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
           __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
-          __t_polar, __t_rect
+          __t_polar, __t_rect, __t_hypot
 
 
 
@@ -1171,37 +1172,85 @@ end
 
 
 # --- print ---
-#=
-function show(io::IO, t::TPS)
-  # Get nn (length of monomial)
-  tpsa = unsafe_load(t.tpsa)
-  name = Base.unsafe_convert(String, tpsa.nam)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, tpsa))
+function show(io::IO, d::Descriptor)
+  desc = unsafe_load(d.desc)
   nv = desc.nv
   np = desc.np
   nn = desc.nn
-
-  m = @ccall malloc(sizeof(Cuchar)*desc.n)
-  v = @ccall malloc(sizeof(Cdouble))
-  i = Cint(-2)
-  while i != Cint(-1)
-    i += Cint(1)
-    i = mad_tpsa_cycle!(tpsa, i, desc.nn, m, v)
-
+  no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
+  no = convert(Vector{Int}, no_)
+  println(io, "GTPSA Descriptor")
+  println(io, "-----------------------")
+  if nv > 0
+    @printf(io, "%-18s %i\n", "# Variables: ", nv)
+    if all(no[1] .== no[1:nv])
+      @printf(io, "%-18s %i\n", "Variable order: ", no[1])
+    else
+      @printf(io, "%-18s", "Variable orders: ")
+      print(io, no[1:nv])
+      print(io, "\n")
+    end
   end
-
-
-
-end=#
-
-
-function print(t::TPS)
-  mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
+  if np > 0
+    @printf(io, "%-18s %i\n", "# Parameters: ", np)
+    if all(no[nv+1] .== no[nv+1:end])
+      @printf(io, "%-18s %i\n", "Parameter order: ", no[nv+1])
+    else
+      @printf(io, "%-18s", "Parameter orders: ")
+      print(io, no[nv+1:end])
+      print(io, "\n")
+    end
+  end
 end
 
-function print(t::ComplexTPS)
-  mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
+
+function show(io::IO, t::TPS)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  nn = desc.nn
+  v = Ref{Cdouble}()
+  mono = Vector{UInt8}(undef, nn)
+  out = Matrix{Any}(undef, 0, (1+1+1+nn)) # First col is coefficient, rest are orders
+  idx = Cint(-1)
+  idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  while idx > 0
+    order = Int(sum(mono))
+    out = vcat(out, Any[v[] order "" convert(Vector{Int}, mono)...])
+    idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  end
+  if size(out)[1] == 0
+    out = vcat(out, Any[0.0 zeros(Int,nn)...])
+  end
+  println(io, "TPS:")
+  println(io, "   COEFFICIENT              ORDER   EXPONENTS")
+  pretty_table(io, out,tf=tf_borderless,formatters=ft_printf("%23.16lE", [1]),show_header=false, alignment=:l)
 end
+
+function show(io::IO, t::ComplexTPS)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  nn = desc.nn
+  v = Ref{ComplexF64}()
+  mono = Vector{UInt8}(undef, nn)
+  out = Matrix{Any}(undef, 0, (1+1+1+1+nn)) # First col is coefficient, rest are orders
+  idx = Cint(-1)
+  idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  while idx > 0
+    order = Int(sum(mono))
+    out = vcat(out, Any[real(v[]) imag(v[]) order "" convert(Vector{Int}, mono)...])
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  end
+  if size(out)[1] == 0
+    out = vcat(out, Any[0.0 zeros(Int,nn)...])
+  end
+  println(io, "ComplexTPS:")
+  #println(io, "   COEFFICIENT")
+  println(io, "   REAL                      IMAG                     ORDER   EXPONENTS")
+  pretty_table(io, out,tf=tf_borderless,formatters=(ft_printf("%23.16lE", [1]),ft_printf("%23.16lE", [2])),show_header=false, alignment=:l)
+end
+
 
 # -- zero -- 
 @inline function zero(t::TPS)::TPS
@@ -1214,6 +1263,6 @@ end
 
 include("operators.jl")
 include("methods.jl")
-include("usetemps.jl")
+include("fast_gtpsa.jl")
 
 end

@@ -133,8 +133,8 @@ end
 
 # TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
 function +(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_add!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_addt!(ct1.tpsa, t1.tpsa, ct.tpsa)
   return ct
 end
 
@@ -197,14 +197,14 @@ end
 
 # TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
 function -(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_sub!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_subt!(ct1.tpsa, t1.tpsa, ct.tpsa)
   return ct
 end
 
 function -(t1::TPS, ct1::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_sub!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_tsub!(t1.tpsa, ct1.tpsa, ct.tpsa)
   return ct
 end
 
@@ -259,8 +259,8 @@ end
 
 # TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
 function *(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_mul!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_mult!(ct1.tpsa, t1.tpsa, ct.tpsa)
   return ct
 end
 
@@ -320,14 +320,14 @@ end
 
 # TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
 function /(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_div!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_divt!(ct1.tpsa, t1.tpsa, ct.tpsa)
   return ct
 end
 
 function /(t1::TPS, ct1::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_div!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_tdiv!(t1.tpsa, ct1.tpsa, ct.tpsa)
   return ct
 end
 
@@ -411,14 +411,14 @@ end
 
 # TPS to ComplexTPS promotion, w/o creating temp ComplexTPS:
 function ^(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_pow!(ct1.tpsa, ct.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_powt!(ct1.tpsa, t1.tpsa, ct.tpsa)
   return ct
 end
 
 function ^(t1::TPS, ct1::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_pow!(ct.tpsa, ct1.tpsa, ct.tpsa)
+  ct = zero(ct1)
+  mad_ctpsa_tpow!(t1.tpsa, ct1.tpsa, ct.tpsa)
   return ct
 end
 
@@ -853,12 +853,22 @@ function complex(t1::TPS)::ComplexTPS
   return ComplexTPS(t1)
 end
 
-function complex(ct1::ComplexTPS)
+function complex(ct1::ComplexTPS)::ComplexTPS
   return ComplexTPS(ct1)
 end
 
 function complex(t1::TPS, t2::TPS)::ComplexTPS
   return ComplexTPS(t1, t2)
+end
+
+function complex(t1::TPS, a::Real)::ComplexTPS
+  t2 = TPS(a,t1)
+  return ComplexTPS(t1, t2)
+end
+
+function complex(a::Real, t1::TPS)::ComplexTPS
+  t2 = TPS(a,t1)
+  return ComplexTPS(t2, t1)
 end
 
 function polar(ct1::ComplexTPS)::ComplexTPS
