@@ -14,7 +14,7 @@ GTPSA provides several advantages over current Julia AD packages:
 5. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two can be very advantageous for analyses of Taylor maps, such as normal form analysis
 6. **Fast JIT Compilation**: Though powerful, GTPSA is a lightweight package with a fast JIT compilation, easing iterative REPL development 
 
-**GTPSA is fast!** See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
+**GTPSA is fast!** See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the Jacobian and Hessians for a system with 56 inputs and 4 outputs.
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
