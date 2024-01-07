@@ -1179,7 +1179,7 @@ function show(io::IO, d::Descriptor)
   nn = desc.nn
   no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
   no = convert(Vector{Int}, no_)
-  println(io, "\nGTPSA Descriptor")
+  println(io, "GTPSA Descriptor")
   println(io, "-----------------------")
   if nv > 0
     @printf(io, "%-18s %i\n", "# Variables: ", nv)
@@ -1227,16 +1227,30 @@ function show(io::IO, t::TPS)
   pretty_table(io, out,tf=tf_borderless,formatters=ft_printf("%23.16lE", [1]),show_header=false, alignment=:l)
 end
 
-
-#=
-function print(t::TPS)
-  mad_tpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
+function show(io::IO, t::ComplexTPS)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  nn = desc.nn
+  v = Ref{ComplexF64}()
+  mono = Vector{UInt8}(undef, nn)
+  out = Matrix{Any}(undef, 0, (1+1+1+1+nn)) # First col is coefficient, rest are orders
+  idx = Cint(-1)
+  idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  while idx > 0
+    order = Int(sum(mono))
+    out = vcat(out, Any[real(v[]) imag(v[]) order "" convert(Vector{Int}, mono)...])
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+  end
+  if size(out)[1] == 0
+    out = vcat(out, Any[0.0 zeros(Int,nn)...])
+  end
+  println(io, "ComplexTPS:")
+  #println(io, "   COEFFICIENT")
+  println(io, "   REAL                      IMAG                     ORDER   EXPONENTS")
+  pretty_table(io, out,tf=tf_borderless,formatters=(ft_printf("%23.16lE", [1]),ft_printf("%23.16lE", [2])),show_header=false, alignment=:l)
 end
 
-function print(t::ComplexTPS)
-  mad_ctpsa_print(t.tpsa, Base.unsafe_convert(Cstring, ""), 0.,Int32(0),C_NULL)
-end
-=#
 
 # -- zero -- 
 @inline function zero(t::TPS)::TPS
