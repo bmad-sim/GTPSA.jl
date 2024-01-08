@@ -10,7 +10,7 @@ function to_TPS(tpsa::Ptr{RTPSA})::TPS
 end
 
 function to_TPS(ctpsa::Ptr{CTPSA})::ComplexTPS
-  ct = TPS(mad_tpsa_new(ctpsa, MAD_TPSA_SAME))
+  ct = ComplexTPS(mad_ctpsa_new(ctpsa, MAD_TPSA_SAME))
   mad_ctpsa_copy!(ctpsa,ct.tpsa)
   rel_temp!(ctpsa)
   return ct

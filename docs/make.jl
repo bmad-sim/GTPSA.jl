@@ -9,7 +9,8 @@ makedocs(
   [
     "Home" => "index.md",
     "Usage" => "usage.md",
-    "Constructors" => "constructors.md",
+    "Taylor Maps" => "taylor.md",
+    "Code Index" => "code.md",
     "For Developers" => "devel.md"
   ]
 )

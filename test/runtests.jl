@@ -882,16 +882,27 @@ end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
   include("../benchmark/taylormap.jl")
-  j, h1, h2, h3, h4 = benchmark_GTPSA()
-  jFD, h1FD, h2FD, h3FD, h4FD = benchmark_ForwardDiff()
+  map = benchmark_GTPSA()
+  jFD, hFD = benchmark_ForwardDiff()
   tol = 1e-12
+  
+  h1FD = reshape(hFD,4,56,56)[1,:,:]
+  h2FD = reshape(hFD,4,56,56)[2,:,:]
+  h3FD = reshape(hFD,4,56,56)[3,:,:]
+  h4FD = reshape(hFD,4,56,56)[4,:,:]
+
+  j = jacobian(map,include_params=true)
+  h1 = hessian(map[1],include_params=true)
+  h2 = hessian(map[2],include_params=true)
+  h3 = hessian(map[3],include_params=true)
+  h4 = hessian(map[4],include_params=true)
 
 
-  @test all(j - jFD .< tol)
-  @test all(h1 - h1FD .< tol)
-  @test all(h2 - h2FD .< tol)
-  @test all(h3 - h3FD .< tol)
-  @test all(h4 - h4FD .< tol)
+  @test all(abs.(j - jFD) .< tol)
+  @test all(abs.(h1 - h1FD) .< tol)
+  @test all(abs.(h2 - h2FD) .< tol)
+  @test all(abs.(h3 - h3FD) .< tol)
+  @test all(abs.(h4 - h4FD) .< tol)
 end
 
 @testset "Compare with MAD" begin

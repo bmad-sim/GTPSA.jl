@@ -2,45 +2,66 @@ using GTPSA
 using ForwardDiff
 using BenchmarkTools: @btime, @benchmark
 
-# Comparison with GTPSA for 4 variables to 2nd order and 50 parameters to 2nd order
-# As of 1/7/2023 (Julia v1.10)
+# As of 1/7/2023 (Julia v1.10) on Mac M2 Ultra: Comparison with GTPSA for 56 inputs and 4 outputs
+#
+# 3rd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                    5.444 ms (1227 allocations: 140.00 KiB)
-# ForwardDiff:             20.675 ms (9136 allocations: 43.04 MiB)
+# GTPSA:                  137.391 ms
+# ForwardDiff:          2.614 s
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                   13.154 ms (6627 allocations: 224.38 KiB)
-# ForwardDiff:             19.928 ms (9136 allocations: 43.04 MiB)
+# GTPSA:                  225.718 ms
+# ForwardDiff:          2.524 s
+#
+# 2nd Order ---------------------------------------------------------
+# Using the @FastGTPSA macro:
+# GTPSA:                    3.789 ms
+# ForwardDiff:             14.602 ms
+#
+# Without the @FastGTPSA macro (including ForwardDiff as control):
+# GTPSA:                    9.154 ms
+# ForwardDiff:             14.979 ms
+#
+# 1st Order ---------------------------------------------------------
+# Using the @FastGTPSA macro:
+# GTPSA:                  151.208 μs
+# ForwardDiff:            136.500 μs
+#
+# Without the @FastGTPSA macro (including ForwardDiff as control):
+# GTPSA:                  404.875 μs
+# ForwardDiff:            131.458 μs
+#
+# Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS, so it can be
+# inserted into functions while still maintaining generic code
  
-
 function track_qf(z0, k1, hkick)
   L = 0.5
-  z1 =  cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
-  z2 =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
-  z3 =  cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
-  z4 =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
+  z1 = @FastGTPSA cos(sqrt(k1)*L)*z0[1]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
+  z2 = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[1] + cos(sqrt(k1)*L)*z0[2] + hkick
+  z3 = @FastGTPSA cosh(sqrt(k1)*L)*z0[3]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
+  z4 = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[3] + cosh(sqrt(k1)*L)*z0[4]
   return [z1,z2,z3,z4]
 end
 
 function track_qd(z0, k1, vkick)
   L = 0.5
-  z1 =  cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
-  z2 =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
-  z3 =  cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
-  z4 =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
+  z1 = @FastGTPSA cosh(sqrt(k1)*L)*z0[1]          + 1. /sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
+  z2 = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[1] + cosh(sqrt(k1)*L)*z0[2]
+  z3 = @FastGTPSA cos(sqrt(k1)*L)*z0[3]           + 1. /sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
+  z4 = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[3] + cos(sqrt(k1)*L)*z0[4] + vkick
   return [z1,z2,z3,z4] 
 end
 
 function track_drift(z0)
   L = 0.75
-  z1 =  z0[1]+z0[2]*L
-  z3 =  z0[3]+z0[4]*L
+  z1 = @FastGTPSA z0[1]+z0[2]*L
+  z3 = @FastGTPSA z0[3]+z0[4]*L
   return [z1,z0[2],z3 , z0[4]]
 end
 
 function track_sextupole(z0, k2l)
-  z2 =  z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
-  z4 =  z0[4]+k2l/2.0*z0[1]*z0[3]
+  z2 = @FastGTPSA z0[2]-k2l/2.0*(z0[1]^2 - z0[3]^2)
+  z4 = @FastGTPSA z0[4]+k2l/2.0*z0[1]*z0[3]
   return  [z0[1], z2, z0[3], z4]
 end
 
@@ -73,10 +94,9 @@ function benchmark_ForwardDiff()
   m(z) = track_ring([z[1], z[2], z[3], z[4]], 0.36+z[5], z[6], z[7:end])
   j = Array{Float64}(undef,4,56)
   h = Array{Float64}(undef,224,56)
+  #c = Array{Float64}(undef,12544,56)
   ForwardDiff.jacobian!(j, m, zeros(56))
   ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(56))
-  return j, h
+  #ForwardDiff.jacobian!(c, z->ForwardDiff.jacobian(z->ForwardDiff.jacobian(z->m(z), z), z), zeros(56))
+  return j, h #, c
 end
-
-#m_GTPSA = @btime benchmark_GTPSA()
-#m_ForwardDiff = @btime benchmark_ForwardDiff()

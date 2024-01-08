@@ -2,17 +2,20 @@
 
 *A Julia interface to the Generalised Truncated Power Series Algebra (GTPSA) library in MAD.*
 
-This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to individual arbitrary orders in the variables (up to 63). 
+This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://github.com/MethodicalAcceleratorDesign/MAD-NG), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders in the variables. 
 
-GTPSA, which uses the Truncated Power Series Algebra method for calculating Taylor expansions, has several advantages over current similar Julia packages:
+Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of performing nested derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a fast monomial indexing function for propagating the partial derivatives, gives `GTPSA.jl` nearly the same performance as `ForwardDiff.jl` to 1st-order, but significantly faster performance for 2nd-order calculations and above.
 
-1. **Speed and Accuracy**: Because the TPSA method does not take any symbolic derivatives, nor use finite differencing, Taylor expansions are calculated with high efficiency, speed, and accuracy
-2. **Arbitrary Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 5th order in $x_1$ and 1st order in $x_2$ is done trivially in GTPSA
-3. **All Taylor Coefficients Stored**: All monomial coefficients are stored and propagated according to the algebra. GTPSA also implements an efficient coefficient indexing function for high speed even with TPSs having large number of variables to high orders
-4. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two is highly advantageous in analyses of Taylor maps (e.g. normal form)
+GTPSA provides several advantages over current Julia AD packages:
 
+1. **Speed**: By directly using the power series expansions, `GTPSA.jl` is faster than `ForwardDiff.jl` for 2nd-order and above, and has the nearly the same performance as `ForwardDiff.jl` for 1st-order
+2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is done trivially in GTPSA
+3. **Complex Numbers**: GTPSA natively supports complex numbers, and allows for mixing of complex and real truncated power series
+4. **All Taylor Coefficients Stored**: GTPSA implements an efficient partial derivative indexing function for high speed even with TPSs having a large number of variables to high orders
+5. **Distinction Between "Variables" and "Parameters"**: When the TPS represents a *Taylor map* of a dynamical system, which defines the evolution of map *variables* given some variations in map *parameters*, distinguishing between the two can be very advantageous for analyses of Taylor maps, such as normal form analysis
+6. **Fast JIT Compilation**: Though powerful, GTPSA is a lightweight package with a fast JIT compilation, easing iterative REPL development 
 
-**GTPSA is fast!** See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` and `TaylorSeries.jl` in calculating a multivariable Taylor map to 2nd order.
+See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 56 inputs and 4 outputs. **We observed GTPSA to be nearly x4 faster than ForwardDiff to 2nd order, and > x50 faster to 3rd order in our example.**
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
@@ -28,47 +31,37 @@ For developers,
 ```
 
 ## Basic Usage
-First, a `Descriptor` must be created specifying the number of variables, number of parameters, the orders of each variable, and the orders of each parameter for the TPSA. The `Descriptor` stores all of the monomial indexing/lookup information for TPSs in the TPSA, based on these values. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the elementary math operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `coth`, etc.).
+First, a `Descriptor` must be created specifying the number of variables and truncation order for each variable in the TPSA. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the arithmetic operator (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `tanh`, etc.).
 
-TPSs can be viewed as structures containing the coefficients of all the monomials in a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the TPS of a function $f(x_1,x_2) = x_1^2\frac{\sin{(2+x_1x_2)}}{\exp{(x_1+x_2)}}$ to 15th order in $x_1$ and $x_2$:
+TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the truncated power series of a function $f(x_1, x_2) = \cos{(x_1)}+i\sin{(x_2)}$ to 6th order in $x_1$ and $x_2$:
 ```
 using GTPSA
 
-# Define the Descriptor for the TPSA
-d = Descriptor(2, 15)
+# Descriptor for TPSA with 2 variables to 6th order
+d = Descriptor(2, 6)
 
 # Get the TPSs corresponding to each variable based on the Descriptor
 x = vars(d)
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
-f = x[1]^2*sin(2+x[1]*x[2])/exp(x[1]+x[2])
+f = cos(x[1]) + im*sin(x[2])
 ```
 
 `f` itself is a TPS. Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` then gives the output
 
 ```
-         :  R, NV =   2, MO = 15
- *******************************************************
-     I   COEFFICIENT             ORDER   EXPONENTS
-     1   9.0929742682568171E-01    2     2 0
-     2   0.0000000000000000E+00    2     1 1
-     3   0.0000000000000000E+00    2     0 2
-     4  -9.0929742682568171E-01    3     3 0
-     5  -9.0929742682568171E-01    3     2 1
-     6   0.0000000000000000E+00    3     1 2
-     7   0.0000000000000000E+00    3     0 3
-     8   4.5464871341284085E-01    4     4 0
-     9   4.9315059027853930E-01    4     3 1
-    10   4.5464871341284085E-01    4     2 2
-    11   0.0000000000000000E+00    4     1 3
-    12   0.0000000000000000E+00    4     0 4
-    13  -1.5154957113761358E-01    5     5 0
-    14  -3.8501876865698448E-02    5     4 1
-                    ...
+ComplexTPS:
+  REAL                      IMAG                      ORDER    EXPONENTS
+   1.0000000000000000e+00    0.0000000000000000e+00    0        0    0
+   0.0000000000000000e+00    1.0000000000000000e+00    1        0    1
+  -5.0000000000000000e-01    0.0000000000000000e+00    2        2    0
+   0.0000000000000000e+00   -1.6666666666666666e-01    3        0    3
+   4.1666666666666664e-02    0.0000000000000000e+00    4        4    0
+   0.0000000000000000e+00    8.3333333333333332e-03    5        0    5
+  -1.3888888888888887e-03    0.0000000000000000e+00    6        6    0
 ```
-This print function will be rewritten.
 
-For multivariable TPSs including variables/parameters with different individual orders, and complex TPSs, see [Usage](@ref).
+For more details, including TPSs with custom orders in individual variables, see [the documentation](https://bmad-sim.github.io/GTPSA.jl/).
 
 Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
 
