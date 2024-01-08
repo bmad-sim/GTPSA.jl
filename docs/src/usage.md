@@ -25,10 +25,6 @@ f = cos(x[1]) + sqrt(1 + x[2])
 
 A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(d)` or `ComplexTPS(d)` respectively. 
 
-```@docs
-vars
-complexvars
-```
 
 ## Partial Derivative Getting/Setting
 ### Individual Partial Derivatives
