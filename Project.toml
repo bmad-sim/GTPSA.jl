@@ -10,16 +10,17 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 GTPSA_jll = "1.1.1"
+PrettyTables = "2"
 julia = "1.6"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 TaylorSeries = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
-DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
