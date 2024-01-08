@@ -31,7 +31,7 @@ For developers,
 ```
 
 ## Basic Usage
-First, a `Descriptor` must be created specifying the number of variables and truncation order for each variable in the TPSA. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the arithmetic operator (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `tanh`, etc.).
+First, a `Descriptor` must be created specifying the number of variables and truncation order for each variable in the TPSA. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the arithmetic operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `tanh`, etc.).
 
 TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the truncated power series of a function $f(x_1, x_2) = \cos{(x_1)}+i\sin{(x_2)}$ to 6th order in $x_1$ and $x_2$:
 ```
