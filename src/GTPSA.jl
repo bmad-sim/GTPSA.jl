@@ -452,70 +452,72 @@ end
 
 # Descriptor outer constructors
 """
-    Descriptor(nv::Integer, mo::Integer)::Descriptor
+    Descriptor(nv::Integer, vo::Integer)::Descriptor
 
-Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
+Creates a TPSA Descriptor with `nv` variables of maximum order `vo` for each.
 
 ### Input
 - `nv` -- Number of variables in the TPSA
-- `mo` -- Maximum order of the variables in the TPSA
+- `vo` -- Maximum order of the variables in the TPSA
 """
-function Descriptor(nv::Integer, mo::Integer)::Descriptor
-  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+function Descriptor(nv::Integer, vo::Integer)::Descriptor
+  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
 end
 
 """
-    Descriptor(mos::Vector{<:Integer})::Descriptor
+    Descriptor(vos::Vector{<:Integer})::Descriptor
 
-Creates a TPSA Descriptor with `length(mos)` variables with individual max 
-orders specified in the Vector `mos`. 
+Creates a TPSA Descriptor with `length(mos)` variables with individual truncation 
+orders specified in the Vector `vos`. 
 
 ### Input
-- `mos` -- Vector of the individual max orders of each variable
+- `vos` -- Vector of the individual truncation orders of each variable
 """
-function Descriptor(mos::Vector{<:Integer})::Descriptor
-  nv = length(mos)
+function Descriptor(vos::Vector{<:Integer})::Descriptor
+  nv = length(vos)
   np = 0
-  mo = maximum(mos)
+  mo = maximum(vos)
   po = 0
-  no = mos
+  no = vos
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 """
-    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
+    Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
 
-Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
-of maximum order `po` (`<= mo`).
+Creates a TPSA Descriptor with `nv` variables each with truncation order `vo`, and `np` 
+parameters each with truncation order `po`
 
 ### Input
 - `nv` -- Number of variables in the TPSA
-- `mo` -- Maximum order of the variables in the TPSA
+- `vo` -- Truncation order of the variables in the TPSA
 - `np` -- Number of parameters in the TPSA
-- `po` -- Maximum order of the parameters (`<= mo`) in the TPSA
+- `po` -- Truncation order of the parameters
 """
-function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
-  return Descriptor(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
+function Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
+  mo = max(vo,po)
+  no = vcat(Cuchar(vo)*ones(Cuchar,nv), Cuchar(po)*ones(Cuchar,np))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
 end
 
 
 """
-    Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
+    Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 
-Creates a TPSA Descriptor with `length(mos)` variables with individual max 
-orders specified in `mos`, and `length(pos)` parameters with individual max 
+Creates a TPSA Descriptor with `length(vos)` variables with individual truncation 
+orders specified in `vos`, and `length(pos)` parameters with individual truncation 
 orders specified in `pos`.
 
 ### Input
-- `mos` -- Vector of the individual max orders of each variable
-- `pos` -- Vector of the individual max orders of each parameter
+- `vos` -- Vector of the individual truncation orders of each variable
+- `pos` -- Vector of the individual truncation orders of each parameter
 """
-function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
-  nv = length(mos)
+function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
+  nv = length(vos)
   np = length(pos)
-  mo = maximum(mos)
   po = maximum(pos)
-  no = vcat(mos,pos)
+  mo = max(maximum(vos),po)
+  no = vcat(vos,pos)
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
