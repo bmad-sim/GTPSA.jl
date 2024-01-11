@@ -1,5 +1,6 @@
 using GTPSA
 using ForwardDiff
+using MuladdMacro
 using BenchmarkTools: @btime, @benchmark
 
 # As of 1/7/2023 (Julia v1.10) on Mac M2 Ultra: Comparison with GTPSA for 56 inputs and 4 outputs

@@ -46,7 +46,8 @@ import Base:  +,
               getindex,
               setindex!,
               ==,
-              show
+              show,
+              muladd
 
 using GTPSA_jll, Printf, PrettyTables
 
@@ -1263,7 +1264,8 @@ end
 end
 
 include("operators.jl")
-include("methods.jl")
+include("analysis.jl")
 include("fast_gtpsa.jl")
+include("composites.jl")
 
 end
