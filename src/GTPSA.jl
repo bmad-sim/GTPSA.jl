@@ -845,18 +845,18 @@ end
 
 # Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
+  numv = Cint(length(vars))
+  nump = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(numv+nump))
+  for i=1:numv
     sm[2*i-1] = convert(Cint, vars[i].first)
     sm[2*i] = convert(Cint, vars[i].second)
   end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
+  for i=numv+1:numv+nump
+    sm[2*i-1] = convert(Cint, params[i].first+numv)
     sm[2*i] = convert(Cint, params[i].second)
   end
-  return sm, nv+np
+  return sm, Cint(2)*(numv+nump)
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)

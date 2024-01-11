@@ -1068,6 +1068,7 @@ function __t_atan(a::Real, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+__t_atan(a,b) = (@inline; atan(a,b))
 
 function __t_norm(tpsa1::Ptr{RTPSA})::Float64
   nrm = mad_tpsa_nrm(tpsa1)
@@ -1080,6 +1081,8 @@ function __t_norm(ctpsa1::Ptr{CTPSA})::Float64
   rel_temp!(ctpsa1)
   return nrm 
 end
+
+__t_norm(a) = (@inline; norm(a))
 
 
 # --- rest of unary functions ---
@@ -1744,3 +1747,78 @@ end
 
 __t_hypot(a,b) = (@inline; hypot(a,b))
 __t_hypot(a,b,c) = (@inline; hypot(a,b,c))
+
+#=  Temporaries use with muladd not supported - GTPSA muladd cannot do aliasing.
+
+# For safety, just don'tpsa do "aliasing" (output=input) with composites 
+# because inconsistent behavior here + also not always faster (1/11/2023). 
+# --- __t_muladd --- 
+# a*t1 + b
+function __t_muladd(a::Real, t1::TPS, b::Real)::Ptr{RTPSA}
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_axpb!(convert(Cdouble, a), t1.tpsa, convert(Cdouble, b), tpsa)
+  return tpsa
+end
+
+function __t_muladd(a::Number, ct1::ComplexTPS, b::Number)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_axpb!(convert(ComplexF64, a), ct1.tpsa, convert(ComplexF64, b), ctpsa)
+  return ctpsa
+end
+
+function __t_muladd(t1::TPS, a::Real, b::Real)
+  return __t_muladd(a,t1,b)
+end
+
+function __t_muladd(ct1::ComplexTPS, a::Number, b::Number)
+  return __t_muladd(a,ct1,b)
+end
+
+# t1*t2 + a
+function __t_muladd(t1::TPS, t2::TPS, a::Real)::Ptr{RTPSA}
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_axypb!(1.0, t1.tpsa, t2.tpsa, convert(Cdouble, a), tpsa)
+  return tpsa
+end
+
+function __t_muladd(ct1::ComplexTPS, ct2::ComplexTPS, a::Number)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_axypb!(convert(ComplexF64, 1.0), ct1.tpsa, ct2.tpsa, convert(ComplexF64, a), ctpsa)
+  return ctpsa
+end
+
+# a*t1 + t2
+function __t_muladd(a::Real, t1::TPS, t2::TPS)::Ptr{RTPSA}
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_axpbypc!(convert(Cdouble, a), t1.tpsa, 1.0, t2.tpsa, 0.0, tpsa)
+  return tpsa
+end
+
+function __t_muladd(a::Number, ct1::ComplexTPS, ct2::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_axpbypc!(convert(ComplexF64, a), ct1.tpsa, convert(ComplexF64,1.0), ct2.tpsa, convert(ComplexF64,0.0), ctpsa)
+  return ctpsa
+end
+
+function __t_muladd(t1::TPS, a::Real, t2::TPS)
+  return __t_muladd(a,t1,t2)
+end
+
+function __t_muladd(ct1::ComplexTPS, a::Number, ct2::ComplexTPS)
+  return __t_muladd(a,ct1,ct2)
+end
+
+# t1*t2 + t3
+function __t_muladd(t1::TPS, t2::TPS, t3::TPS)::Ptr{RTPSA}
+  tpsa = get_rtemp!(t1)
+  mad_tpsa_axypbzpc!(1.0, t1.tpsa, t2.tpsa, 1.0, t3.tpsa, 0.0, tpsa)
+  return tpsa
+end
+
+function __t_muladd(ct1::ComplexTPS, ct2::ComplexTPS, ct3::ComplexTPS)::Ptr{CTPSA}
+  ctpsa = get_ctemp!(ct1)
+  mad_ctpsa_axypbzpc!(convert(ComplexF64,1), ct1.tpsa, ct2.tpsa, convert(ComplexF64,1), ct3.tpsa, convert(ComplexF64,0), ctpsa)
+  return ctpsa
+end
+=#
+#__t_muladd(a,b,c) = (@inline; muladd(a,b,c))

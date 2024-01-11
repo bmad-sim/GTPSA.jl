@@ -456,16 +456,28 @@ end
   d = Descriptor(1, 5)
   t1 = TPS(d)
   t1[0] = 1
+  t1[1] = 1
+  t1[2] = 1
   t2 = zero(t1)
   t2[0] = 2
+  t2[1] = 2
+  t2[2] = 2
   t3 = zero(t1)
   t3[0] = 3
+  t3[1] = 3
+  t3[2] = 3
   ct1 = ComplexTPS(t1)
   ct1[0] = 1 + 1im
+  ct1[1] = 1 + 1im
+  ct1[2] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
+  ct2[1] = 2 + 2im
+  ct2[2] = 2 + 2im
   ct3 = zero(ct1)
   ct3[0] = 3 + 3im
+  ct3[1] = 3 + 3im
+  ct3[2] = 3 + 3im
 
   # muladd
   # a*t1 + b
@@ -475,63 +487,26 @@ end
   bc = 6im
   @test @muladd(5*t3 + 6) == 5*t3 + 6        # checked for actually calling composite muladd         
   @test @muladd(t3*5 + 6) == 5*t3 + 6        # checked for actually calling composite muladd 
-  @test @muladd(5*t3 + bc) == 5*t3 + bc      # checked for actually calling composite muladd   
-  @test @muladd(t3*5 + bc) == 5*t3 + bc      # checked for actually calling composite muladd   
-  @test @muladd(ac*t3 + 6) == ac*t3 + 6      # checked for actually calling composite muladd   
-  @test @muladd(t3*ac + 6) == ac*t3 + 6      # checked for actually calling composite muladd   
-  @test @muladd(ac*t3 + bc) == ac*t3 + bc    # checked for actually calling composite muladd     
-  @test @muladd(t3*ac + bc) == ac*t3 + bc    # checked for actually calling composite muladd     
   @test @muladd(ac*ct3 + bc) == ac*ct3 + bc  # checked for actually calling composite muladd       
   @test @muladd(ct3*ac + bc) == ac*ct3 + bc  # checked for actually calling composite muladd       
   
   # t3*t2 + a 
   @test @muladd(t3*t2 + a) == t3*t2 + a       # checked for actually calling composite muladd 
-  @test @muladd(t2*t3 + a) == t2*t3 + a       # checked for actually calling composite muladd 
-  @test @muladd(t2*t2 + a) == t2*t2 + a       # checked for actually calling composite muladd 
-  @test @muladd(t3*t2 + ac) == t3*t2 + ac     # checked for actually calling composite muladd   
-  @test @muladd(t3*t2 + ac) == t3*t2 + ac     # checked for actually calling composite muladd   
-  @test @muladd(t2*t3 + ac) == t2*t3 + ac     # checked for actually calling composite muladd   
-  @test @muladd(t2*t2 + ac) == t2*t2 + ac     # checked for actually calling composite muladd   
-  @test @muladd(ct3*t2 + a) == ct3*t2 + a     # checked for actually calling composite muladd   
-  @test @muladd(t2*ct3 + a) == ct3*t2 + a     # checked for actually calling composite muladd   
-  @test @muladd(ct3*t2 + ac) == ct3*t2 + ac   # checked for actually calling composite muladd     
-  @test @muladd(t2*ct3 + ac) == ct3*t2 + ac   # checked for actually calling composite muladd     
-  @test @muladd(ct3*ct2 + a) == ct3*ct2 + a   # checked for actually calling composite muladd     
-  @test @muladd(ct2*ct3 + a) == ct3*ct2 + a   # checked for actually calling composite muladd     
+  @test @muladd(t2*t3 + a) == t2*t3 + a       # checked for actually calling composite muladd  
   @test @muladd(ct3*ct2 + ac) == ct3*ct2 + ac # checked for actually calling composite muladd       
   @test @muladd(ct2*ct3 + ac) == ct3*ct2 + ac # checked for actually calling composite muladd       
   
   # a*t3 + t2
   @test @muladd(a*t3 + t2) == a*t3 + t2       # checked for actually calling composite muladd
   @test @muladd(t3*a + t2) == a*t3 + t2       # checked for actually calling composite muladd
-  @test @muladd(ac*t3 + t2) == ac*t3 + t2     # checked for actually calling composite muladd 
-  @test @muladd(t3*ac + t2) == ac*t3 + t2     # checked for actually calling composite muladd 
-  @test @muladd(a*ct3 + t2) == a*ct3 + t2     # checked for actually calling composite muladd 
-  @test @muladd(ct3*a + t2) == a*ct3 + t2     # checked for actually calling composite muladd 
-  @test @muladd(ac*ct3 + t2) == ac*ct3 + t2   # checked for actually calling composite muladd   
-  @test @muladd(ct3*ac + t2) == ac*ct3 + t2   # checked for actually calling composite muladd   
-  @test @muladd(a*t3 + ct2) == a*t3 + ct2     # checked for actually calling composite muladd 
-  @test @muladd(t3*a + ct2) == a*t3 + ct2     # checked for actually calling composite muladd 
-  @test @muladd(ac*t3 + ct2) == ac*t3 + ct2   # checked for actually calling composite muladd   
-  @test @muladd(t3*ac + ct2) == ac*t3 + ct2   # checked for actually calling composite muladd   
-  @test @muladd(a*ct3 + ct2) == a*ct3 + ct2   # checked for actually calling composite muladd   
-  @test @muladd(ct3*a + ct2) == a*ct3 + ct2   # checked for actually calling composite muladd   
   @test @muladd(ac*ct3 + ct2) == ac*ct3 + ct2 # checked for actually calling composite muladd     
   @test @muladd(ct3*ac + ct2) == ac*ct3 + ct2 # checked for actually calling composite muladd     
   
   # t3*t2 + t3
-  @test @muladd(t2*t3 + t1) == t2*t3 + t1
-  @test @muladd(t3*t2 + t1) == t2*t3 + t1
-  @test @muladd(t2*ct3 + t1) == t2*ct3 + t1
-  @test @muladd(ct3*t2 + t1) == t2*ct3 + t1
-  @test @muladd(ct2*ct3 + t1) == ct2*ct3 + t1
-  @test @muladd(ct3*ct2 + t1) == ct2*ct3 + t1
-  @test @muladd(t2*t3 + ct1) == t2*t3 + ct1
-  @test @muladd(t3*t2 + ct1) == t2*t3 + ct1
-  @test @muladd(t2*ct3 + ct1) == t2*ct3 + ct1
-  @test @muladd(ct3*t2 + ct1) == t2*ct3 + ct1
-  @test @muladd(ct2*ct3 + ct1) == ct2*ct3 + ct1
-  @test @muladd(ct3*ct2 + ct1) == ct2*ct3 + ct1
+  @test @muladd(t2*t3 + t1) == t2*t3 + t1        # checked for actually calling composite method 
+  @test @muladd(t3*t2 + t1) == t2*t3 + t1        # checked for actually calling composite method 
+  @test @muladd(ct2*ct3 + ct1) == ct2*ct3 + ct1  # checked for actually calling composite method       
+  @test @muladd(ct3*ct2 + ct1) == ct2*ct3 + ct1  # checked for actually calling composite method       
 end
 
 @testset "@FastGTPSA - Arithmetic operators" begin

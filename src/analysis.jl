@@ -79,3 +79,9 @@ function derivative(ct1::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params
   mad_ctpsa_derivm!(ct1.tpsa, ct.tpsa, n, ords)
   return ct
 end
+
+function poissonbracket(t1::TPS, t2::TPS)::TPS
+  t = zero(t1)
+  mad_tpsa_poisbra!(t1.tpsa,t2.tpsa,t3.tpsa)
+  return t
+end
