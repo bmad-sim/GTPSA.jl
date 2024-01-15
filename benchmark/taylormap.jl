@@ -1,5 +1,6 @@
 using GTPSA
 using ForwardDiff
+using MuladdMacro
 using BenchmarkTools: @btime, @benchmark
 
 # As of 1/7/2023 (Julia v1.10) on Mac M2 Ultra: Comparison with GTPSA for 56 inputs and 4 outputs
@@ -32,7 +33,7 @@ using BenchmarkTools: @btime, @benchmark
 # ForwardDiff:            131.458 μs
 #
 # Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS, so it can be
-# inserted into functions while still maintaining generic code
+# inserted into functions while still maintaining generic code, as shown here
  
 function track_qf(z0, k1, hkick)
   L = 0.5
@@ -83,7 +84,7 @@ function track_ring(z0, k1, k2l, kick)
 end
 
 function benchmark_GTPSA()
-  d = Descriptor(4,2,52,2)
+  d = Descriptor(4,3,52,3)
   z = vars(d)
   k = params(d)
   map = track_ring([z[1], z[2], z[3], z[4]], 0.36+k[1], k[2], k[3:end])

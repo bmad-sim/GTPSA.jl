@@ -46,7 +46,8 @@ import Base:  +,
               getindex,
               setindex!,
               ==,
-              show
+              show,
+              muladd
 
 using GTPSA_jll, Printf, PrettyTables
 
@@ -844,18 +845,18 @@ end
 
 # Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
+  numv = Cint(length(vars))
+  nump = Cint(length(params))
+  sm = Vector{Cint}(undef, 2*(numv+nump))
+  for i=1:numv
     sm[2*i-1] = convert(Cint, vars[i].first)
     sm[2*i] = convert(Cint, vars[i].second)
   end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
+  for i=numv+1:numv+nump
+    sm[2*i-1] = convert(Cint, params[i].first+numv)
     sm[2*i] = convert(Cint, params[i].second)
   end
-  return sm, nv+np
+  return sm, Cint(2)*(numv+nump)
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
@@ -1060,12 +1061,13 @@ function hessian!(result::Matrix{Float64},t::TPS; include_params=false)
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1092,12 +1094,13 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1128,12 +1131,13 @@ function hessian!(result::Matrix{ComplexF64},t::ComplexTPS; include_params=false
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1157,13 +1161,15 @@ function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
   mono = Vector{UInt8}(undef, n)
   idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   while idx > 0 && idx <= maxidx
-    i = j = findfirst(x->x==0x2,mono)
+    i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+    else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1263,7 +1269,7 @@ end
 end
 
 include("operators.jl")
-include("methods.jl")
+include("analysis.jl")
 include("fast_gtpsa.jl")
 
 end

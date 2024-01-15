@@ -23,7 +23,7 @@ function to_temp_form(expr)
   fcns = [:inv, :atan, :abs, :sqrt, :exp, :log, :sin, :cos, :tan, :csc, :sec, :cot, :sinc, :sinh, :cosh,
           :tanh, :csch, :sech, :coth, :asin, :acos, :atan, :acsc, :asec, :acot, :asinh, :acosh, :atanh, :acsch, 
           :asech, :acoth, :real, :imag, :conj, :angle, :complex, :sinhc, :asinc, :asinhc, :erf, :erfc, :norm,
-          :polar, :rect] # hypot not included bc appears does not support in-place input = output
+          :polar, :rect, :+, :-, :*, :/, :^]# hypot not included bc appears does not support in-place input = output
   if expr.head == :.
     pkg = expr.args[1]
     if pkg == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
@@ -33,7 +33,7 @@ function to_temp_form(expr)
     return expr
   end
   for i in eachindex(expr.args)
-    if expr.args[i] isa Expr
+    if expr.args[i] isa Expr && expr.args[i].args[1] in fcns
       to_temp_form(expr.args[i])
     elseif expr.args[i] == :+
       expr.args[i] = :±  # \pm  (allowed as unary operator)
@@ -50,6 +50,7 @@ function to_temp_form(expr)
       expr.args[i] = Symbol(str)
     end
   end
+
   return expr
 end
 
@@ -1068,6 +1069,7 @@ function __t_atan(a::Real, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+__t_atan(a,b) = (@inline; atan(a,b))
 
 function __t_norm(tpsa1::Ptr{RTPSA})::Float64
   nrm = mad_tpsa_nrm(tpsa1)
@@ -1080,6 +1082,8 @@ function __t_norm(ctpsa1::Ptr{CTPSA})::Float64
   rel_temp!(ctpsa1)
   return nrm 
 end
+
+__t_norm(a) = (@inline; norm(a))
 
 
 # --- rest of unary functions ---
