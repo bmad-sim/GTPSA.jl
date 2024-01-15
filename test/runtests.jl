@@ -1,6 +1,5 @@
 using Test, JET
 using SpecialFunctions
-using MuladdMacro
 SF = SpecialFunctions
 using GTPSA
 
@@ -450,63 +449,6 @@ end
   @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
   @test norm(angle(t) - atan(imag(t),real(t))) < tol
   @test norm(complex(t) - t) < tol
-end
-
-@testset "Composites" begin
-  d = Descriptor(1, 5)
-  t1 = TPS(d)
-  t1[0] = 1
-  t1[1] = 1
-  t1[2] = 1
-  t2 = zero(t1)
-  t2[0] = 2
-  t2[1] = 2
-  t2[2] = 2
-  t3 = zero(t1)
-  t3[0] = 3
-  t3[1] = 3
-  t3[2] = 3
-  ct1 = ComplexTPS(t1)
-  ct1[0] = 1 + 1im
-  ct1[1] = 1 + 1im
-  ct1[2] = 1 + 1im
-  ct2 = zero(ct1)
-  ct2[0] = 2 + 2im
-  ct2[1] = 2 + 2im
-  ct2[2] = 2 + 2im
-  ct3 = zero(ct1)
-  ct3[0] = 3 + 3im
-  ct3[1] = 3 + 3im
-  ct3[2] = 3 + 3im
-
-  # muladd
-  # a*t1 + b
-  a = 5
-  b = 6
-  ac = 5im
-  bc = 6im
-  @test @muladd(5*t3 + 6) == 5*t3 + 6        # checked for actually calling composite muladd         
-  @test @muladd(t3*5 + 6) == 5*t3 + 6        # checked for actually calling composite muladd 
-  @test @muladd(ac*ct3 + bc) == ac*ct3 + bc  # checked for actually calling composite muladd       
-  @test @muladd(ct3*ac + bc) == ac*ct3 + bc  # checked for actually calling composite muladd       
-  
-  # t3*t2 + a 
-  @test @muladd(t3*t2 + a) == t3*t2 + a       # checked for actually calling composite muladd 
-  @test @muladd(t2*t3 + a) == t2*t3 + a       # checked for actually calling composite muladd  
-  @test @muladd(ct3*ct2 + ac) == ct3*ct2 + ac # checked for actually calling composite muladd       
-  @test @muladd(ct2*ct3 + ac) == ct3*ct2 + ac # checked for actually calling composite muladd       
-  
-  # a*t3 + t2
-  @test @muladd(a*t3 + t2) == a*t3 + t2       # checked for actually calling composite muladd
-  @test @muladd(t3*a + t2) == a*t3 + t2       # checked for actually calling composite muladd
-  @test @muladd(ac*ct3 + ct2) == ac*ct3 + ct2 # checked for actually calling composite muladd     
-  @test @muladd(ct3*ac + ct2) == ac*ct3 + ct2 # checked for actually calling composite muladd     
-  
-  # t3*t2 + t3
-  @test @muladd(t2*t3 + t1) == t2*t3 + t1        # checked for actually calling composite method 
-  @test @muladd(t3*t2 + t1) == t2*t3 + t1        # checked for actually calling composite method 
-  @test @muladd(ct2*ct3 + ct1) == ct2*ct3 + ct1  # checked for actually calling composite method       
-  @test @muladd(ct3*ct2 + ct1) == ct2*ct3 + ct1  # checked for actually calling composite method       
 end
 
 @testset "@FastGTPSA - Arithmetic operators" begin

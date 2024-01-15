@@ -84,7 +84,7 @@ function track_ring(z0, k1, k2l, kick)
 end
 
 function benchmark_GTPSA()
-  d = Descriptor(4,2,52,2)
+  d = Descriptor(4,3,52,3)
   z = vars(d)
   k = params(d)
   map = track_ring([z[1], z[2], z[3], z[4]], 0.36+k[1], k[2], k[3:end])

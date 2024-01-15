@@ -1061,12 +1061,13 @@ function hessian!(result::Matrix{Float64},t::TPS; include_params=false)
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1093,12 +1094,13 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1129,12 +1131,13 @@ function hessian!(result::Matrix{ComplexF64},t::ComplexTPS; include_params=false
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1158,13 +1161,15 @@ function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
   mono = Vector{UInt8}(undef, n)
   idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   while idx > 0 && idx <= maxidx
-    i = j = findfirst(x->x==0x2,mono)
+    i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+    else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1266,6 +1271,5 @@ end
 include("operators.jl")
 include("analysis.jl")
 include("fast_gtpsa.jl")
-include("composites.jl")
 
 end
