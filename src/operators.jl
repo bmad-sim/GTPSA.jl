@@ -935,7 +935,7 @@ function asinc(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
   mad_ctpsa_asinc!(ct.tpsa, ct.tpsa)
-  return t
+  return ct
 end
 
 function sinhc(ct1::ComplexTPS)::ComplexTPS
@@ -951,7 +951,7 @@ function asinhc(ct1::ComplexTPS)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
   mad_ctpsa_asinhc!(ct.tpsa, ct.tpsa)
-  return t
+  return ct
 end
 
 # These functions are not implemented in the GTPSA C library, so they 
