@@ -330,7 +330,7 @@ function ±(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
 end
 
 function ±(tpsa1::Ptr{RTPSA},ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
-  return tpsa1 ± ctpsa1
+  return ctpsa1 ± tpsa1
 end
 
 function ±(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
@@ -1069,6 +1069,17 @@ function __t_atan(a::Real, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+function __t_atan(t1::TPS, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_atan2!(t1.tpsa, tpsa1, tpsa1)
+  return tpsa1
+end
+
+function __t_atan(tpsa1::Ptr{RTPSA}, t1::TPS)::Ptr{RTPSA}
+  mad_tpsa_atan2!(tpsa1, t1.tpsa, tpsa1)
+  return tpsa1
+end
+
+
 __t_atan(a,b) = (@inline; atan(a,b))
 
 function __t_norm(tpsa1::Ptr{RTPSA})::Float64
@@ -1403,7 +1414,7 @@ function __t_angle(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
-__t_angle(a) = (@inline, angle(a))
+__t_angle(a) = (@inline; angle(a))
 
 function __t_complex(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
@@ -1426,7 +1437,7 @@ function __t_complex(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return ctpsa1
 end
 
-__t_complex(a) = (@inline, complex(a))
+__t_complex(a) = (@inline; complex(a))
 
 function __t_complex(t1::TPS, t2::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
@@ -1492,7 +1503,7 @@ function __t_complex(a::Real, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   return ctpsa
 end
 
-__t_complex(a,b) = (@inline, complex(a,b))
+__t_complex(a,b) = (@inline; complex(a,b))
 
 function __t_polar(ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
@@ -1507,20 +1518,20 @@ end
 
 function __t_polar(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_polar!(ctpsa, ctpsa)
   return ctpsa
 end
 
 function __t_polar(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   ctpsa = get_ctemp_low!(tpsa1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
   mad_ctpsa_polar!(ctpsa, ctpsa)
   return ctpsa
 end
 
-__t_polar(a) = (@inline, polar(a))
+__t_polar(a) = (@inline; polar(a))
 
 function __t_rect(ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
@@ -1530,19 +1541,19 @@ end
 
 function __t_rect(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   mad_ctpsa_rect!(ctpsa1, ctpsa1)
-  return ctpsa
+  return ctpsa1
 end
 
 function __t_rect(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_rect!(ctpsa, ctpsa)
   return ctpsa
 end
 
 function __t_rect(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
-  ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
   mad_ctpsa_rect!(ctpsa, ctpsa)
   return ctpsa

@@ -206,19 +206,18 @@ end
   @test norm(GTPSA.erfc(t) - SF.erfc(v)) < tol
   @test norm(-im*GTPSA.erf(t*im) - SF.erfi(v)) < tol
   
-  # Uncomment when fixed
-  @test_skip norm(atan(t3,t2) - atan(3,2)) < tol
-  @test_skip norm(atan(t3,2) - atan(3,2)) < tol
-  @test_skip norm(atan(3,t2) - atan(3,2)) < tol
-  @test_skip norm(atan(t3,-t2) - atan(3,-2)) < tol
-  @test_skip norm(atan(t3,-2) - atan(3,-2)) < tol
-  @test_skip norm(atan(3,-t2) - atan(3,-2)) < tol
-  @test_skip norm(atan(-t3,-t2) - atan(-3,-2)) < tol
-  @test_skip norm(atan(-t3,-2) - atan(-3,-2)) < tol
-  @test_skip norm(atan(-3,-t2) - atan(-3,-2)) < tol
-  @test_skip norm(atan(-t3,t2) - atan(-3,2)) < tol
-  @test_skip norm(atan(-t3,2) - atan(-3,2)) < tol
-  @test_skip norm(atan(-3,t2) - atan(-3,2)) < tol
+  @test norm(atan(t3,t2) - atan(3,2)) < tol
+  @test norm(atan(t3,2) - atan(3,2)) < tol
+  @test norm(atan(3,t2) - atan(3,2)) < tol
+  @test norm(atan(t3,-t2) - atan(3,-2)) < tol
+  @test norm(atan(t3,-2) - atan(3,-2)) < tol
+  @test norm(atan(3,-t2) - atan(3,-2)) < tol
+  @test norm(atan(-t3,-t2) - atan(-3,-2)) < tol
+  @test norm(atan(-t3,-2) - atan(-3,-2)) < tol
+  @test norm(atan(-3,-t2) - atan(-3,-2)) < tol
+  @test norm(atan(-t3,t2) - atan(-3,2)) < tol
+  @test norm(atan(-t3,2) - atan(-3,2)) < tol
+  @test norm(atan(-3,t2) - atan(-3,2)) < tol
   
   @test norm(hypot(t2,t3) - hypot(2,3)) < tol
   @test norm(hypot(2,t3) - hypot(2,3)) < tol
@@ -230,15 +229,14 @@ end
   @test norm(hypot(1, 2, t3) - hypot(1,2,3)) < tol
   @test norm(hypot(1, t2, 3) - hypot(1,2,3)) < tol
   @test norm(hypot(t1, 2, 3) - hypot(1,2,3)) < tol
-  # Uncomment when fixed
-  @test_skip norm(angle(t2) - angle(2)) < tol
-  @test_skip norm(angle(-t2) - angle(-2)) < tol
-  @test_skip norm(complex(t3) - complex(3)) < tol
-  @test_skip norm(complex(t2,t3) - complex(2,3)) < tol
-  @test_skip norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
-  @test_skip norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
-  @test_skip norm(rect(t2) - (2*cos(0) + 2*sin(0))) < tol
-  @test_skip norm(rect(-t1) - (-1*cos(0) + -1*sin(0))) < tol
+  @test norm(angle(t2) - angle(2)) < tol
+  @test norm(angle(-t2) - angle(-2)) < tol
+  @test norm(complex(t3) - complex(3)) < tol
+  @test norm(complex(t2,t3) - complex(2,3)) < tol
+  @test norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
+  @test norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
+  @test norm(rect(t2) - (2*cos(0) + 2*sin(0))) < tol
+  @test norm(rect(-t1) - (-1*cos(0) + -1*sin(0))) < tol
   
 
   v = 0.5+0.5im
@@ -268,21 +266,20 @@ end
   @test norm(sech(t) - sech(v)) < tol
   @test norm(coth(t) - coth(v)) < tol
 
-  # Uncomment these when inverse trig C code is fixed
-  @test_skip norm(asin(t) - asin(v)) < tol
-  @test_skip norm(acos(t) - acos(v)) < tol
-  @test_skip norm(atan(t) - atan(v)) < tol
-  @test_skip norm(acsc(t) - acsc(v)) < tol
-  @test_skip norm(asec(t) - asec(v)) < tol
-  @test_skip norm(acot(t) - acot(v)) < tol
-  @test_skip norm(asinh(t) - asinh(v)) < tol
-  @test_skip norm(acosh(t) - acosh(v)) < tol
-  @test_skip norm(atanh(t) - atanh(v)) < tol
-  @test_skip norm(acsch(t) - acsch(v)) < tol
-  @test_skip norm(asech(t) - asech(v)) < tol
-  @test_skip norm(acoth(t) - acoth(v)) < tol
-  @test_skip norm(asinc(t) - asin(v)/v) < tol
-  @test_skip norm(asinhc(t) - asinh(v)/v) < tol
+  @test norm(asin(t) - asin(v)) < tol
+  @test norm(acos(t) - acos(v)) < tol
+  @test norm(atan(t) - atan(v)) < tol
+  @test norm(acsc(t) - acsc(v)) < tol
+  @test norm(asec(t) - asec(v)) < tol
+  @test norm(acot(t) - acot(v)) < tol
+  @test norm(asinh(t) - asinh(v)) < tol
+  @test norm(acosh(t) - acosh(v)) < tol
+  @test norm(atanh(t) - atanh(v)) < tol
+  @test norm(acsch(t) - acsch(v)) < tol
+  @test norm(asech(t) - asech(v)) < tol
+  @test norm(acoth(t) - acoth(v)) < tol
+  @test norm(asinc(t/pi) - asin(v)/v) < tol
+  @test norm(asinhc(t/pi) - asinh(v)/v) < tol
 
   @test norm(zero(t) - zero(v)) < tol
   @test norm(real(t) - real(v)) < tol
@@ -303,19 +300,18 @@ end
   @test norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
   @test norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
   
-  # Uncomment when fixed
-  @test_skip norm(angle(t2+im*t3) - angle(2+3im)) < tol
-  @test_skip norm(angle(t2-im*t3) - angle(2-3im)) < tol
-  @test_skip norm(angle(-t2-im*t3) - angle(-2-3im)) < tol
-  @test_skip norm(angle(-t2+im*t3) - angle(-2+3im)) < tol
-  @test_skip norm(angle(ct2) - angle(2+2im)) < tol
-  @test_skip norm(angle(-ct2) - angle(-2-2im)) < tol
-  @test_skip norm(complex(ct3) - complex(3+3im)) < tol
-  @test_skip norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
-  @test_skip norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
+  @test norm(angle(t2+im*t3) - angle(2+3im)) < tol
+  @test norm(angle(t2-im*t3) - angle(2-3im)) < tol
+  @test norm(angle(-t2-im*t3) - angle(-2-3im)) < tol
+  @test norm(angle(-t2+im*t3) - angle(-2+3im)) < tol
+  @test norm(angle(ct2) - angle(2+2im)) < tol
+  @test norm(angle(-ct2) - angle(-2-2im)) < tol
+  @test norm(complex(ct3) - complex(3+3im)) < tol
+  @test norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
+  @test norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
   @test_skip norm(rect(ct2) - (2*cos(2) + 2*sin(2))) < tol
   @test_skip norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1))) < tol
-
+  
   # Hypot, mixing TPS with ComplexTPS
   @test norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
   @test norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
@@ -429,21 +425,20 @@ end
   @test norm(1 - tanh(t)^2 - sech(t)^2) < tol
   @test norm(coth(t)^2 - 1 - csch(t)^2) < tol
   
-  # Uncomment these when C code corrects for unbounded imaginary domain
-  @test_skip norm(asin(sin(t)) - t) < tol
-  @test_skip norm(acos(cos(t)) - t) < tol
-  @test_skip norm(atan(tan(t)) - t) < tol
-  @test_skip norm(acsc(t) - asin(1/t)) < tol
-  @test_skip norm(asec(t) - acos(1/t)) < tol
-  @test_skip norm(acot(t) - acot(1/t)) < tol
-  @test_skip norm(asinh(sinh(t)) - t) < tol
-  @test_skip norm(acosh(cosh(t)) - t) < tol
-  @test_skip norm(atanh(tanh(t)) - t) < tol
-  @test_skip norm(acsch(t) - asinh(1/t)) < tol
-  @test_skip norm(asech(t) - acosh(1/t)) < tol
-  @test_skip norm(acoth(t) - acoth(1/t)) < tol
-  @test_skip norm(asinc(t) - asin(t)/t) < tol
-  @test_skip norm(asinhc(t) - asinh(t)/t) < tol
+  @test norm(asin(sin(t)) - t) < tol
+  @test norm(acos(cos(t)) - t) < tol
+  @test norm(atan(tan(t)) - t) < tol
+  @test norm(acsc(t) - asin(1/t)) < tol
+  @test norm(asec(t) - acos(1/t)) < tol
+  @test norm(acot(t) - atan(1/t)) < tol
+  @test norm(asinh(sinh(t)) - t) < tol
+  @test norm(acosh(cosh(t)) - t) < tol
+  @test norm(atanh(tanh(t)) - t) < tol
+  @test norm(acsch(t) - asinh(1/t)) < tol
+  @test norm(asech(t) - acosh(1/t)) < tol
+  @test norm(acoth(t) - atanh(1/t)) < tol
+  @test norm(asinc(t/pi) - asin(t)/t) < tol
+  @test norm(asinhc(t/pi) - asinh(t)/t) < tol
   
   @test norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)) < tol
   @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
@@ -613,19 +608,18 @@ end
   @test @FastGTPSA(norm(GTPSA.erf(t) - SF.erf(v))) < tol
   @test @FastGTPSA(norm(GTPSA.erfc(t) - SF.erfc(v))) < tol
   @test @FastGTPSA(norm(-im*GTPSA.erf(t*im) - SF.erfi(v))) < tol
-  # Uncomment when fixed
-  @test_skip @FastGTPSA(norm(atan(t3,t2) - atan(3,2))) < tol
-  @test_skip @FastGTPSA(norm(atan(t3,2) - atan(3,2))) < tol
-  @test_skip @FastGTPSA(norm(atan(3,t2) - atan(3,2))) < tol
-  @test_skip @FastGTPSA(norm(atan(t3,-t2) - atan(3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(t3,-2) - atan(3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(3,-t2) - atan(3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-t3,-t2) - atan(-3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-t3,-2) - atan(-3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-3,-t2) - atan(-3,-2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-t3,t2) - atan(-3,2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-t3,2) - atan(-3,2))) < tol
-  @test_skip @FastGTPSA(norm(atan(-3,t2) - atan(-3,2))) < tol
+  @test @FastGTPSA(norm(atan(t3,t2) - atan(3,2))) < tol
+  @test @FastGTPSA(norm(atan(t3,2) - atan(3,2))) < tol
+  @test @FastGTPSA(norm(atan(3,t2) - atan(3,2))) < tol
+  @test @FastGTPSA(norm(atan(t3,-t2) - atan(3,-2))) < tol
+  @test @FastGTPSA(norm(atan(t3,-2) - atan(3,-2))) < tol
+  @test @FastGTPSA(norm(atan(3,-t2) - atan(3,-2))) < tol
+  @test @FastGTPSA(norm(atan(-t3,-t2) - atan(-3,-2))) < tol
+  @test @FastGTPSA(norm(atan(-t3,-2) - atan(-3,-2))) < tol
+  @test @FastGTPSA(norm(atan(-3,-t2) - atan(-3,-2))) < tol
+  @test @FastGTPSA(norm(atan(-t3,t2) - atan(-3,2))) < tol
+  @test @FastGTPSA(norm(atan(-t3,2) - atan(-3,2))) < tol
+  @test @FastGTPSA(norm(atan(-3,t2) - atan(-3,2))) < tol
   
   @test @FastGTPSA(norm(hypot(t2,t3) - hypot(2,3))) < tol
   @test @FastGTPSA(norm(hypot(2,t3) - hypot(2,3))) < tol
@@ -638,15 +632,14 @@ end
   @test @FastGTPSA(norm(hypot(1, t2, 3) - hypot(1,2,3))) < tol
   @test @FastGTPSA(norm(hypot(t1, 2, 3) - hypot(1,2,3))) < tol
   
-  # Uncomment when fixed
-  @test_skip @FastGTPSA(norm(angle(t2) - angle(2))) < tol
-  @test_skip @FastGTPSA(norm(angle(-t2) - angle(-2))) < tol
-  @test_skip @FastGTPSA(norm(complex(t3) - complex(3))) < tol
-  @test_skip @FastGTPSA(norm(complex(t2,t3) - complex(2,3))) < tol
-  @test_skip @FastGTPSA(norm(polar(t2) - (abs(2)+im*atan(0,2)))) < tol
-  @test_skip @FastGTPSA(norm(polar(-t1) - (abs(-1)+im*atan(0,-1)))) < tol
-  @test_skip @FastGTPSA(norm(rect(t2) - (2*cos(0) + 2*sin(0)))) < tol
-  @test_skip @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + -1*sin(0)))) < tol
+  @test @FastGTPSA(norm(angle(t2) - angle(2))) < tol
+  @test @FastGTPSA(norm(angle(-t2) - angle(-2))) < tol
+  @test @FastGTPSA(norm(complex(t3) - complex(3))) < tol
+  @test @FastGTPSA(norm(complex(t2,t3) - complex(2,3))) < tol
+  @test @FastGTPSA(norm(polar(t2) - (abs(2)+im*atan(0,2)))) < tol
+  @test @FastGTPSA(norm(polar(-t1) - (abs(-1)+im*atan(0,-1)))) < tol
+  @test @FastGTPSA(norm(rect(t2) - (2*cos(0) + 2*sin(0)))) < tol
+  @test @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + -1*sin(0)))) < tol
   
 
   v = 0.5+0.5im
@@ -675,22 +668,21 @@ end
   @test @FastGTPSA(norm(csch(t) - csch(v))) < tol
   @test @FastGTPSA(norm(sech(t) - sech(v))) < tol
   @test @FastGTPSA(norm(coth(t) - coth(v))) < tol
-  
-  # Uncomment these when inverse trig C code is fixed
-  @test_skip @FastGTPSA(norm(asin(t) - asin(v))) < tol
-  @test_skip @FastGTPSA(norm(acos(t) - acos(v))) < tol
-  @test_skip @FastGTPSA(norm(atan(t) - atan(v))) < tol
-  @test_skip @FastGTPSA(norm(acsc(t) - acsc(v))) < tol
-  @test_skip @FastGTPSA(norm(asec(t) - asec(v))) < tol
-  @test_skip @FastGTPSA(norm(acot(t) - acot(v))) < tol
-  @test_skip @FastGTPSA(norm(asinh(t) - asinh(v))) < tol
-  @test_skip @FastGTPSA(norm(acosh(t) - acosh(v))) < tol
-  @test_skip @FastGTPSA(norm(atanh(t) - atanh(v))) < tol
-  @test_skip @FastGTPSA(norm(acsch(t) - acsch(v))) < tol
-  @test_skip @FastGTPSA(norm(asech(t) - asech(v))) < tol
-  @test_skip @FastGTPSA(norm(acoth(t) - acoth(v))) < tol
-  @test_skip @FastGTPSA(norm(asinc(t) - asin(v)/v)) < tol
-  @test_skip @FastGTPSA(norm(asinhc(t) - asinh(v)/v)) < tol
+
+  @test @FastGTPSA(norm(asin(t) - asin(v))) < tol
+  @test @FastGTPSA(norm(acos(t) - acos(v))) < tol
+  @test @FastGTPSA(norm(atan(t) - atan(v))) < tol
+  @test @FastGTPSA(norm(acsc(t) - acsc(v))) < tol
+  @test @FastGTPSA(norm(asec(t) - asec(v))) < tol
+  @test @FastGTPSA(norm(acot(t) - acot(v))) < tol
+  @test @FastGTPSA(norm(asinh(t) - asinh(v))) < tol
+  @test @FastGTPSA(norm(acosh(t) - acosh(v))) < tol
+  @test @FastGTPSA(norm(atanh(t) - atanh(v))) < tol
+  @test @FastGTPSA(norm(acsch(t) - acsch(v))) < tol
+  @test @FastGTPSA(norm(asech(t) - asech(v))) < tol
+  @test @FastGTPSA(norm(acoth(t) - acoth(v))) < tol
+  @test @FastGTPSA(norm(asinc(t/pi) - asin(v)/v)) < tol
+  @test @FastGTPSA(norm(asinhc(t/pi) - asinh(v)/v)) < tol
   
   @test @FastGTPSA(norm(zero(t) - zero(v))) < tol
   @test @FastGTPSA(norm(real(t) - real(v))) < tol
@@ -711,16 +703,15 @@ end
   @test @FastGTPSA(norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
   @test @FastGTPSA(norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
   
-  # Uncomment when fixed
-  @test_skip @FastGTPSA(norm(angle(t2+im*t3) - angle(2+3im))) < tol
-  @test_skip @FastGTPSA(norm(angle(t2-im*t3) - angle(2-3im))) < tol
-  @test_skip @FastGTPSA(norm(angle(-t2-im*t3) - angle(-2-3im))) < tol
-  @test_skip @FastGTPSA(norm(angle(-t2+im*t3) - angle(-2+3im))) < tol
-  @test_skip @FastGTPSA(norm(angle(ct2) - angle(2+2im))) < tol
-  @test_skip @FastGTPSA(norm(angle(-ct2) - angle(-2-2im))) < tol
-  @test_skip @FastGTPSA(norm(complex(ct3) - complex(3+3im))) < tol
-  @test_skip @FastGTPSA(norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))) < tol
-  @test_skip @FastGTPSA(norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))) < tol
+  @test @FastGTPSA(norm(angle(t2+im*t3) - angle(2+3im))) < tol
+  @test @FastGTPSA(norm(angle(t2-im*t3) - angle(2-3im))) < tol
+  @test @FastGTPSA(norm(angle(-t2-im*t3) - angle(-2-3im))) < tol
+  @test @FastGTPSA(norm(angle(-t2+im*t3) - angle(-2+3im))) < tol
+  @test @FastGTPSA(norm(angle(ct2) - angle(2+2im))) < tol
+  @test @FastGTPSA(norm(angle(-ct2) - angle(-2-2im))) < tol
+  @test @FastGTPSA(norm(complex(ct3) - complex(3+3im))) < tol
+  @test @FastGTPSA(norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))) < tol
+  @test @FastGTPSA(norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))) < tol
   @test_skip @FastGTPSA(norm(rect(ct2) - (2*cos(2) + 2*sin(2)))) < tol
   @test_skip @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1)))) < tol
   
@@ -844,21 +835,20 @@ end
   @test @FastGTPSA(norm(1 - tanh(t)^2 - sech(t)^2)) < tol
   @test @FastGTPSA(norm(coth(t)^2 - 1 - csch(t)^2)) < tol
   
-  # Uncomment these when C code corrects for unbounded imaginary domain
-  @test_skip @FastGTPSA(norm(asin(sin(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(acos(cos(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(atan(tan(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(acsc(t) - asin(1/t))) < tol
-  @test_skip @FastGTPSA(norm(asec(t) - acos(1/t))) < tol
-  @test_skip @FastGTPSA(norm(acot(t) - acot(1/t))) < tol
-  @test_skip @FastGTPSA(norm(asinh(sinh(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(acosh(cosh(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(atanh(tanh(t)) - t)) < tol
-  @test_skip @FastGTPSA(norm(acsch(t) - asinh(1/t))) < tol
-  @test_skip @FastGTPSA(norm(asech(t) - acosh(1/t))) < tol
-  @test_skip @FastGTPSA(norm(acoth(t) - acoth(1/t))) < tol
-  @test_skip @FastGTPSA(norm(asinc(t) - asin(t)/t)) < tol
-  @test_skip @FastGTPSA(norm(asinhc(t) - asinh(t)/t)) < tol
+  @test @FastGTPSA(norm(asin(sin(t)) - t)) < tol
+  @test @FastGTPSA(norm(acos(cos(t)) - t)) < tol
+  @test @FastGTPSA(norm(atan(tan(t)) - t)) < tol
+  @test @FastGTPSA(norm(acsc(t) - asin(1/t))) < tol
+  @test @FastGTPSA(norm(asec(t) - acos(1/t))) < tol
+  @test @FastGTPSA(norm(acot(t) - atan(1/t))) < tol
+  @test @FastGTPSA(norm(asinh(sinh(t)) - t)) < tol
+  @test @FastGTPSA(norm(acosh(cosh(t)) - t)) < tol
+  @test @FastGTPSA(norm(atanh(tanh(t)) - t)) < tol
+  @test @FastGTPSA(norm(acsch(t) - asinh(1/t))) < tol
+  @test @FastGTPSA(norm(asech(t) - acosh(1/t))) < tol
+  @test @FastGTPSA(norm(acoth(t) - atanh(1/t))) < tol
+  @test @FastGTPSA(norm(asinc(t/pi) - asin(t)/t)) < tol
+  @test @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t)) < tol
   
   @test @FastGTPSA(norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t))) < tol
   @test @FastGTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t))) < tol
