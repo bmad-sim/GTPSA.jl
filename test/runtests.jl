@@ -235,8 +235,8 @@ end
   @test norm(complex(t2,t3) - complex(2,3)) < tol
   @test norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
   @test norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
-  @test norm(rect(t2) - (2*cos(0) + 2*sin(0))) < tol
-  @test norm(rect(-t1) - (-1*cos(0) + -1*sin(0))) < tol
+  @test norm(rect(t2) - (2*cos(0) + im*2*sin(0))) < tol
+  @test norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0))) < tol
   
 
   v = 0.5+0.5im
@@ -309,8 +309,8 @@ end
   @test norm(complex(ct3) - complex(3+3im)) < tol
   @test norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
   @test norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
-  @test_skip norm(rect(ct2) - (2*cos(2) + 2*sin(2))) < tol
-  @test_skip norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1))) < tol
+  @test norm(rect(ct2) - (2*cos(2) + im*2*sin(2))) < tol
+  @test norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1))) < tol
   
   # Hypot, mixing TPS with ComplexTPS
   @test norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
@@ -638,8 +638,8 @@ end
   @test @FastGTPSA(norm(complex(t2,t3) - complex(2,3))) < tol
   @test @FastGTPSA(norm(polar(t2) - (abs(2)+im*atan(0,2)))) < tol
   @test @FastGTPSA(norm(polar(-t1) - (abs(-1)+im*atan(0,-1)))) < tol
-  @test @FastGTPSA(norm(rect(t2) - (2*cos(0) + 2*sin(0)))) < tol
-  @test @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + -1*sin(0)))) < tol
+  @test @FastGTPSA(norm(rect(t2) - (2*cos(0) + im*2*sin(0)))) < tol
+  @test @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0)))) < tol
   
 
   v = 0.5+0.5im
@@ -712,8 +712,8 @@ end
   @test @FastGTPSA(norm(complex(ct3) - complex(3+3im))) < tol
   @test @FastGTPSA(norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))) < tol
   @test @FastGTPSA(norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))) < tol
-  @test_skip @FastGTPSA(norm(rect(ct2) - (2*cos(2) + 2*sin(2)))) < tol
-  @test_skip @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1)))) < tol
+  @test @FastGTPSA(norm(rect(ct2) - (2*cos(2) + im*2*sin(2)))) < tol
+  @test @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1)))) < tol
   
   # Hypot, mixing TPS with ComplexTPS
   @test @FastGTPSA(norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))) < tol
