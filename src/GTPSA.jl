@@ -1218,14 +1218,43 @@ function show(io::IO, d::Descriptor)
   show_GTPSA_info(io, desc)
 end
 
-struct ParamPair
-  idx::Int
-  ord::Int
+struct MonoDisplay
+  varidxs::Vector{Int}
+  varords::Vector{Int}
+  paramidxs::Vector{Int}
+  paramords::Vector{Int}
 end
-# Dumb workaround to get nice string output in PrettyTables
-Base.show(io::IO, p::ParamPair) = print(io, "k", p.idx, "=>", p.ord)
 
-function show(io::IO, t::TPS)
+function show(io::IO, m::MonoDisplay)
+  subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
+  function superscript(i)
+    if i < 0
+        c = [Char(0x207B)]
+    else
+        c = []
+    end
+    for d in reverse(digits(abs(i)))
+        if d == 0 push!(c, Char(0x2070)) end
+        if d == 1 push!(c, Char(0x00B9)) end
+        if d == 2 push!(c, Char(0x00B2)) end
+        if d == 3 push!(c, Char(0x00B3)) end
+        if d > 3 push!(c, Char(0x2070+d)) end
+    end
+    return join(c)
+  end
+  for i=1:length(m.varidxs)
+    varidx = m.varidxs[i]
+    varord = m.varords[i]
+    print(io, "(v" * subscript(varidx) * ")" * superscript(varord) * " ")
+  end
+  for i=1:length(m.paramidxs)
+    paramidx = m.paramidxs[i]
+    paramord = m.paramords[i]
+    print(io, "(p" * subscript(paramidx) * ")" * superscript(paramord) * " ")
+  end
+end
+
+function format(t::TPS; coloffset=0)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
@@ -1235,57 +1264,58 @@ function show(io::IO, t::TPS)
 
   # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
   if nn <= 6
-    out = Matrix{Any}(undef, 0, (1+1+1+nn)) # Coefficient, order, spacing, exponents
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+nn)) # Coefficient, order, spacing, exponents
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      out = vcat(out, Any[v[] order nothing convert(Vector{Int}, mono)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[0.0 Int(0) nothing zeros(Int,nn)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing zeros(Int,nn)...])
     end
-    formatters = (ft_printf("%23.16le", [1]), ft_printf("%2i", 2:3+nn), ft_nonothing)
-    cutcols = 1+1+1+nn
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2:coloffset+3+nn), ft_nonothing)
   else
-    out = Matrix{Any}(nothing, 0, (1+1+1+desc.mo))
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1))
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      varpairs = Vector{Pair{Int,Int}}(undef,0)
-      parampairs = Vector{ParamPair}(undef,0)
+      varidxs = Vector{Int}(undef,0)
+      varords = Vector{Int}(undef,0)
+      paramidxs = Vector{Int}(undef,0)
+      paramords = Vector{Int}(undef,0)
       # Create variable pairs
-      for var_idx in findall(x->x>0x0, mono)
-        if var_idx > nv
-          push!(parampairs, ParamPair(var_idx-nv,Int(mono[var_idx])))
+      for vp_idx in findall(x->x>0x0, mono)
+        if vp_idx > nv
+          push!(paramidxs, vp_idx-nv)
+          push!(paramords, Int(mono[vp_idx]))
         else
-          push!(varpairs, var_idx=>Int(mono[var_idx]))
+          push!(varidxs, vp_idx)
+          push!(varords, Int(mono[vp_idx]))
         end
       end
-      out = vcat(out, Any[v[] order nothing varpairs... parampairs... repeat([nothing], desc.mo - (length(varpairs)+length(parampairs)))...])
+      mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[0.0 Int(0) repeat([nothing], desc.mo +1)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing 1])
     end
-    formatters = (ft_printf("%23.16le", [1]), ft_printf("%2i", 2), ft_nonothing)
-    # Refine out to get rid of extra trailing columns
-    cutcols = 4
-    while cutcols < size(out)[2]
-      if all(isnothing.(out[:,cutcols]))
-        break
-      end
-      cutcols = cutcols + 1
-    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2), ft_nonothing)
   end
-  println(io, "TPS:")
-  println(io, "  COEFFICIENT               ORDER    EXPONENTS")
-  pretty_table(io, out[:,1:cutcols],tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  return out, formatters
 end
 
-function show(io::IO, t::ComplexTPS)
+function show(io::IO, t::TPS)
+  out, formatters = format(t)
+  println(io, "TPS:")
+  println(io, "  COEFFICIENT               ORDER    MONOMIAL")
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+end
+
+function format(t::ComplexTPS; coloffset=0)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
@@ -1295,55 +1325,131 @@ function show(io::IO, t::ComplexTPS)
 
   # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
   if nn <= 6
-    out = Matrix{Any}(undef, 0, (1+1+1+1+nn)) # First col is coefficient, rest are orders
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # First col is coefficient, rest are orders
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      out = vcat(out, Any[real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[0.0 0.0 Int(0) nothing zeros(Int,nn)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing zeros(Int,nn)...])
     end
-    formatters = (ft_printf("%23.16le", [1]),ft_printf("%23.16le", [2]), ft_printf("%2i", 3:4+nn), ft_nonothing)
-    cutcols = 1+1+1+1+nn
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3:coloffset+4+nn), ft_nonothing)
   else
-    out = Matrix{Any}(nothing, 0, (1+1+1+1+desc.mo))
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      varpairs = Vector{Pair{Int,Int}}(undef,0)
-      parampairs = Vector{ParamPair}(undef,0)
+      varidxs = Vector{Int}(undef,0)
+      varords = Vector{Int}(undef,0)
+      paramidxs = Vector{Int}(undef,0)
+      paramords = Vector{Int}(undef,0)
       # Create variable pairs
-      for var_idx in findall(x->x>0x0, mono)
-        if var_idx > nv
-          push!(parampairs, ParamPair(var_idx-nv,Int(mono[var_idx])))
+      for vp_idx in findall(x->x>0x0, mono)
+        if vp_idx > nv
+          push!(paramidxs, vp_idx-nv)
+          push!(paramords, Int(mono[vp_idx]))
         else
-          push!(varpairs, var_idx=>Int(mono[var_idx]))
+          push!(varidxs, vp_idx)
+          push!(varords, Int(mono[vp_idx]))
         end
       end
-      out = vcat(out, Any[real(v[]) imag(v[]) order nothing varpairs... parampairs... repeat([nothing], desc.mo - (length(varpairs)+length(parampairs)))...])
+      mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[0.0 0.0 Int(0) repeat([nothing], desc.mo +1)...])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing 1])
     end
-    formatters = (ft_printf("%23.16le", [1]),ft_printf("%23.16le", [2]), ft_printf("%2i", 3), ft_nonothing)
-    # Refine out to get rid of extra trailing columns
-    cutcols = 5
-    while cutcols < size(out)[2]
-      if all(isnothing.(out[:,cutcols]))
-        break
-      end
-      cutcols = cutcols + 1
-    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3), ft_nonothing)
   end
-  println(io, "ComplexTPS:")
-  println(io, "  REAL                      IMAG                      ORDER    EXPONENTS")
-  pretty_table(io, out[:,1:cutcols],tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  return out, formatters
 end
+
+function show(io::IO, t::ComplexTPS)
+  out, formatters = format(t)
+  println(io, "ComplexTPS:")
+  println(io, "  REAL                      IMAG                      ORDER    MONOMIAL")
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+end
+
+function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
+  tf_GTPSA = TextFormat(up_right_corner     = '-',
+                       up_left_corner      = '-',
+                       bottom_left_corner  = ' ',
+                       bottom_right_corner = ' ',
+                       up_intersection     = '-',
+                       left_intersection   = '-',
+                       right_intersection  = ' ',
+                       middle_intersection = ' ',
+                       bottom_intersection = ' ',
+                       column              = ' ',
+                       row                 = '-',
+                       hlines              = [])#,
+                       #vlines              = :all);
+  N = length(m)
+  hlines = Int[0]
+  out, formatters = format(m[1], coloffset=1)
+  out[:,1] .= 1
+  for i=2:N
+    push!(hlines, length(out[:,1]))
+    tmpout, __ = format(m[i],coloffset=1)
+    tmpout[:,1] .= i
+    out = vcat(out, tmpout)
+  end
+  println(io, N, "-element Vector{TPS}:")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  ELE   COEFFICIENT               ORDER    MONOMIAL")
+  else
+    println(io, "  ELE   COEFFICIENT               ORDER    EXPONENT")
+  end
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
+end
+
+function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
+  tf_GTPSA = TextFormat(up_right_corner     = '-',
+                       up_left_corner      = '-',
+                       bottom_left_corner  = ' ',
+                       bottom_right_corner = ' ',
+                       up_intersection     = '-',
+                       left_intersection   = '-',
+                       right_intersection  = ' ',
+                       middle_intersection = ' ',
+                       bottom_intersection = ' ',
+                       column              = ' ',
+                       row                 = '-',
+                       hlines              = [])#,
+                       #vlines              = :all);
+  N = length(m)
+  hlines = Int[0]
+  out, formatters = format(m[1], coloffset=1)
+  out[:,1] .= 1
+  for i=2:N
+    push!(hlines, length(out[:,1]))
+    tmpout, __ = format(m[i],coloffset=1)
+    tmpout[:,1] .= i
+    out = vcat(out, tmpout)
+  end
+  println(io, N, "-element Vector{TPS}:")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  nn = desc.nn
+  println(io, N, "-element Vector{ComplexTPS}:")
+  if nn > 6
+    println(io, "  ELE   REAL                      IMAG                      ORDER    MONOMIAL")
+  else
+    println(io, "  ELE   REAL                      IMAG                      ORDER    EXPONENT")
+  end
+  
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
+end
+
 
 
 # -- zero -- 
