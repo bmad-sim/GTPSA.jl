@@ -845,7 +845,7 @@ end
 
 # Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
-  # WE MUST ORDER THE VARIABLES !!!
+  # WE MUST Order THE VARIABLES !!!
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!!!
   numv = Cint(length(vars))
@@ -1311,7 +1311,7 @@ end
 function show(io::IO, t::TPS)
   out, formatters = format(t)
   println(io, "TPS:")
-  println(io, "  COEFFICIENT               ORDER    MONOMIAL")
+  println(io, "  Coefficient              Order     Monomial")
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
@@ -1372,7 +1372,7 @@ end
 function show(io::IO, t::ComplexTPS)
   out, formatters = format(t)
   println(io, "ComplexTPS:")
-  println(io, "  REAL                      IMAG                      ORDER    MONOMIAL")
+  println(io, "  REAL                      IMAG                     Order     Monomial")
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
@@ -1391,6 +1391,10 @@ function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
                        hlines              = [])#,
                        #vlines              = :all);
   N = length(m)
+  if N < 1
+    print(io, m)
+    return
+  end
   hlines = Int[0]
   out, formatters = format(m[1], coloffset=1)
   out[:,1] .= 1
@@ -1405,9 +1409,9 @@ function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   nn = desc.nn
   if nn > 6
-    println(io, "  ELE   COEFFICIENT               ORDER    MONOMIAL")
+    println(io, "  Out   Coefficient              Order     Monomial")
   else
-    println(io, "  ELE   COEFFICIENT               ORDER    EXPONENT")
+    println(io, "  Out   Coefficient              Order     Exponent")
   end
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
 end
@@ -1427,6 +1431,10 @@ function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
                        hlines              = [])#,
                        #vlines              = :all);
   N = length(m)
+  if N < 1
+    print(io, m)
+    return
+  end
   hlines = Int[0]
   out, formatters = format(m[1], coloffset=1)
   out[:,1] .= 1
@@ -1442,9 +1450,9 @@ function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
   nn = desc.nn
   println(io, N, "-element Vector{ComplexTPS}:")
   if nn > 6
-    println(io, "  ELE   REAL                      IMAG                      ORDER    MONOMIAL")
+    println(io, "  Out   Real                      Imag                     Order     Monomial")
   else
-    println(io, "  ELE   REAL                      IMAG                      ORDER    EXPONENT")
+    println(io, "  Out   Real                      Imag                     Order     Exponent")
   end
   
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
