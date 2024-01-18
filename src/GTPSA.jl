@@ -1311,7 +1311,14 @@ end
 function show(io::IO, t::TPS)
   out, formatters = format(t)
   println(io, "TPS:")
-  println(io, "  Coefficient              Order     Monomial")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Coefficient              Order     Monomial")
+  else
+    println(io, "  Coefficient              Order     Exponent")
+  end
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
@@ -1372,7 +1379,13 @@ end
 function show(io::IO, t::ComplexTPS)
   out, formatters = format(t)
   println(io, "ComplexTPS:")
-  println(io, "  REAL                      IMAG                     Order     Monomial")
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Real                      Imag                     Order     Monomial")
+  else
+    println(io, "  Real                      Imag                     Order     Exponent")
+  end
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
 end
 
@@ -1444,11 +1457,10 @@ function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
-  println(io, N, "-element Vector{TPS}:")
+  println(io, N, "-element Vector{ComplexTPS}:")
   # Check if sparse monomial or exponent:
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   nn = desc.nn
-  println(io, N, "-element Vector{ComplexTPS}:")
   if nn > 6
     println(io, "  Out   Real                      Imag                     Order     Monomial")
   else
