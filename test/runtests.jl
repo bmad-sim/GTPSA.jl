@@ -9,52 +9,121 @@ using GTPSA
   ct = ComplexTPS(t)
 
   # Basics
+  @test isequal(t , 0)
+  @test isequal(0 , t)
+  @test isequal(ct , 0)
+  @test isequal(0 , ct)
+  @test isequal(ct , t)
+  @test isequal(t , ct)
+  @test !(t === ct)
+  @test isequal(t , zero(t))
+  @test isequal(ct , zero(ct))
   @test t == 0
   @test 0 == t
   @test ct == 0
   @test 0 == ct
-  @test ct == t
   @test t == ct
-  @test !(t === ct)
+  @test ct == t
   @test t == zero(t)
-  @test ct == zero(ct)
+  @test ct == zero(t)
 
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
 
+  @test isequal(t, 1)
+  @test isequal(1, t)
+  @test isequal(ct, 1)
+  @test isequal(1, ct)
   @test t == 1
+  @test 1 == t
   @test ct == 1
+  @test 1 == ct
 
   # Check +, - unary functions and real, imag
+  @test isequal(t, +t)
   @test t == +t
   @test !(t === +t)
+  @test isequal(-1, -t)
   @test -1 == -t
   @test !(t === -t)
 
+  @test isequal(ct, +ct)
   @test ct == +ct
   @test !(ct === +ct)
-  @test -1 == -ct
+  @test isequal(-1, -ct)
+  @test -t == -ct
   @test !(ct === -ct)
 
-  @test t == real(t) == ct == real(ct) == 1
-  @test imag(t) == imag(ct) == 0
-  @test !(t == im) && !(im == t)
+  @test isequal(t, real(t))
+  @test isequal(real(t), ct)
+  @test isequal(ct, real(ct))
+  @test isequal(real(ct),1)
+  @test isequal(imag(t), imag(ct))
+  @test isequal(imag(ct), 0)
+  @test !isequal(t,im) && !isequal(im, ct)
+  @test t == real(t)
+  @test real(t) == ct
+  @test ct == real(ct)
+  @test real(ct) == 1
+  @test imag(t) == imag(ct)
+  @test imag(ct) == 0
+  @test t != im && ct != im
+
+  @test ct == t
+  @test t == ct
+  @test ct+im != t
+  @test t != ct+im
+  @test ct+im == t+im
+  @test t+im == ct+im
   
   # Set ct = im
   ct[0] = im
-  @test ct == im
-  @test im == ct
-  @test real(ct) == 0
-  @test imag(ct) == t == 1
+  @test isequal(ct, im)
+  @test isequal(im, ct)
+  @test isequal(real(ct), 0)
+  @test isequal(imag(ct), t)
+  @test isequal(t, 1)
 
-  # Now do operators
+
   t1 = t
   t1[0] = 1
   t2 = zero(t1)
   t2[0] = 2
   t3 = zero(t1)
   t3[0] = 3
+
+  @test t1 == 1
+  @test 1 == t1
+  @test t1 != 2
+  @test 2 != t1
+  @test t1 != t2
+  @test t2 == 2
+  @test 2 == t2
+  @test t3 == t2+t1
+  @test t2 < t3
+  @test t2 < 3
+  @test t2 <= t3
+  @test t2 <= 3
+  @test t2+t1 <= t3
+  @test 3 <= t3
+
+  @test !(t2 > t3)
+  @test !(t2 > 3)
+  @test !(t2 >= t3)
+  @test !(t2 >= 3)
+
+  @test t3 > t2
+  @test t3 > 2
+  @test t3 >= t2
+  @test t3 >= 2
+  @test t3 >= t1+t2
+  @test t3 >= 3
+
+  @test !(t3 < t2)
+  @test !(t3 < 2)
+  @test !(t3 <= t2)
+  @test !(t3 <= 2)
 
   ct1 = ct
   ct1[0] = 1 + 1im
@@ -64,7 +133,7 @@ using GTPSA
   ct3[0] = 3 + 3im
 
   tol = 1e-14
-
+  # Now do operators
   # Test definition of 1-norm:
   tn = zero(t1)
   tn[0] = 1; tn[1] = 2; tn[2] = 3; tn[3] = 4; tn[4] = 5; tn[5] = 6

@@ -15,7 +15,7 @@ d2 = Descriptor([4, 4, 4], [2])
 d3 = Descriptor([6, 5], [4])
 ```
 
-Just as the variables as a vector of TPSs can be obtained using `vars` or `complexvars`, the parameters as a vector of TPSs can be obtained using `params` or `complexparams`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2,k_1) = \cos{(x_1)} + \sin{(k_1)}\sqrt{1+x_2}$ to 10th order in $x_1$ and $x_2$ but only 5th order in the parameter $k_1$:
+Just as the variables as a vector of TPSs can be obtained using `vars` or `complexvars`, the parameters as a vector of TPSs can be obtained using `params` or `complexparams`. For example, suppose we wish to calculate the Taylor series for $f(v_1,v_2,p_1) = \cos{(v_1)} + \sin{(p_1)}\sqrt{1+v_2}$ to 10th order in $v_1$ and $v_2$ but only 5th order in the parameter $p_1$:
 
 ```
 d = Descriptor(2, 10, 1, 5)  # or equivalently Descriptor([10, 10], [5])
@@ -29,8 +29,8 @@ f = cos(x[1]) + sin(k[1]) * sqrt(1 + x[2])
 
 The monomial coefficient indexing in a TPS `t` including is also extended:
 
-1. **By Order:** `t[<x_1 order>, ..., <x_nv order>, <k_1 order>, ..., <k_np order>]`. For example, for a TPS with variables $x_1$, $x_2$ and parameter $k_1$, the $x_1^3x_2^1k_1^2$ monomial coefficient is accessed with `t[3,1,2]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables/parameters is allowed.
-2. **By Var => Order, Param => Order:** `t[<ix_var> => <order>, ..., params=(<ix_param> => <order>, ...)]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1$, $x_2$ and parameter $k_1$, the $x_1^3x_2^1k_1^2$ monomial is accessed with `t[1=>3, 2=>1, params=(1=>2,)]`. The scalar part of the TPS cannot be set with this method.
+1. **By Order:** `t[<v_1 order>, ..., <x_nv order>, <p_1 order>, ..., <k_np order>]`. For example, for a TPS with variables $v_1$, $v_2$ and parameter $p_1$, the $v_1^3v_2^1p_1^2$ monomial coefficient is accessed with `t[3,1,2]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables/parameters is allowed.
+2. **By Var => Order, Param => Order:** `t[<ix_var> => <order>, ..., params=(<ix_param> => <order>, ...)]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $v_1$, $v_2$ and parameter $p_1$, the $v_1^3v_2^1p_1^2$ monomial is accessed with `t[1=>3, 2=>1, params=(1=>2,)]`. The scalar part of the TPS cannot be set with this method.
 
 ```
 # Descriptor for 2 variables with order 5, and 2 parameters with orders 5

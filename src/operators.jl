@@ -45,54 +45,142 @@ end
 
 
 # --- Compare ---
-# TPS:
+# For the general comparison operators (==, >, <, >=, etc) the scalar part is used
+# for equal behavior to Dual numbers. For comparing every coefficient in a TPS, we use
+# isequal, just as Dual Numbers. 
+
+function <(t1::TPS, t2::TPS)::Bool
+  return mad_tpsa_get0(t1.tpsa) < mad_tpsa_get0(t2.tpsa)
+end
+
+function <(t1::TPS, a::Real)::Bool
+  return mad_tpsa_get0(t1.tpsa) < a
+end
+
+function <(a::Real, t1::TPS)::Bool
+  return a < mad_tpsa_get0(t1.tpsa)
+end
+
+function >(t1::TPS, t2::TPS)::Bool
+  return t2 < t1
+end
+
+function >(t1::TPS, a::Real)::Bool
+  return a < t1
+end
+
+function >(a::Real, t1::TPS)::Bool
+  return t1 < a
+end
+
+function <=(t1::TPS, t2::TPS)::Bool
+  return mad_tpsa_get0(t1.tpsa) <= mad_tpsa_get0(t2.tpsa)
+end
+
+function <=(t1::TPS, a::Real)::Bool
+  return mad_tpsa_get0(t1.tpsa) <= a
+end
+
+function <=(a::Real, t1::TPS)::Bool
+  return a <= mad_tpsa_get0(t1.tpsa)
+end
+
+function >=(t1::TPS, t2::TPS)::Bool
+  return t2 <= t1
+end
+
+function >=(t1::TPS, a::Real)::Bool
+  return a <= t1
+end
+
+function >=(a::Real, t1::TPS)::Bool
+  return t1 <= a
+end
+
+# Note Complex numbers/TPSs have no defined >, <
+
 function ==(t1::TPS, t2::TPS)::Bool
-  return convert(Bool, mad_tpsa_equ(t1.tpsa, t2.tpsa, convert(Cdouble, 0.)))
+  return mad_tpsa_get0(t1.tpsa) == mad_tpsa_get0(t2.tpsa)
 end
 
-function ==(t1::TPS, a::Real)::Bool
-  t2 = TPS(a, t1)
-  return t1 == t2
+function ==(t1::TPS, a::Number)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
 end
 
-function ==(a::Real, t1::TPS)::Bool
-  return t1 == a
+function ==(a::Number,t1::TPS)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
 end
 
-# ComplexTPS:
 function ==(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
-  return convert(Bool, mad_ctpsa_equ(ct1.tpsa, ct2.tpsa, convert(Cdouble, 0.)))
+  return mad_ctpsa_get0(ct1.tpsa) == mad_ctpsa_get0(ct2.tpsa)
 end
 
 function ==(ct1::ComplexTPS, a::Number)::Bool
-  ct2 = ComplexTPS(a, ct1)
-  return ct1 == ct2
+  return mad_ctpsa_get0(ct1.tpsa) == a
 end
 
 function ==(a::Number, ct1::ComplexTPS)::Bool
-  return ct1 == a
-end
-
-# TPS/ComplexTPS and Real/Complex conversion:
-function ==(t1::TPS, a::Complex)::Bool
-  if (imag(a) != 0)
-    return false
-  else
-    return t1 == real(a)
-  end
-end
-
-function ==(a::Complex, t1::TPS)::Bool
-  return t1 == a
+  return mad_ctpsa_get0(ct1.tpsa) == a
 end
 
 function ==(ct1::ComplexTPS, t1::TPS)::Bool
-  ct2 = ComplexTPS(t1)
-  return ct1 == ct2
+  return mad_ctpsa_get0(ct1.tpsa) == mad_tpsa_get0(t1.tpsa)
 end
 
 function ==(t1::TPS, ct1::ComplexTPS)::Bool
   return ct1 == t1
+end
+
+
+# --- Compare entire TPS ---
+# TPS:
+function isequal(t1::TPS, t2::TPS)::Bool
+  return convert(Bool, mad_tpsa_equ(t1.tpsa, t2.tpsa, convert(Cdouble, 0.)))
+end
+
+function isequal(t1::TPS, a::Real)::Bool
+  t2 = TPS(a, t1)
+  return isequal(t1,t2)
+end
+
+function isequal(a::Real, t1::TPS)::Bool
+  return isequal(t1, a)
+end
+
+# ComplexTPS:
+function isequal(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
+  return convert(Bool, mad_ctpsa_equ(ct1.tpsa, ct2.tpsa, convert(Cdouble, 0.)))
+end
+
+function isequal(ct1::ComplexTPS, a::Number)::Bool
+  ct2 = ComplexTPS(a, ct1)
+  return isequal(ct1, ct2)
+end
+
+function isequal(a::Number, ct1::ComplexTPS)::Bool
+  return isequal(ct1, a)
+end
+
+# TPS/ComplexTPS and Real/Complex conversion:
+function isequal(t1::TPS, a::Complex)::Bool
+  if (imag(a) != 0)
+    return false
+  else
+    return isequal(t1, real(a))
+  end
+end
+
+function isequal(a::Complex, t1::TPS)::Bool
+  return isequal(t1, a)
+end
+
+function isequal(ct1::ComplexTPS, t1::TPS)::Bool
+  ct2 = ComplexTPS(t1)
+  return isequal(ct1, ct2)
+end
+
+function isequal(t1::TPS, ct1::ComplexTPS)::Bool
+  return isequal(ct1, t1)
 end
 
 

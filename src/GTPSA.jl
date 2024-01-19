@@ -46,6 +46,12 @@ import Base:  +,
               getindex,
               setindex!,
               ==,
+              <,
+              >,
+              <=,
+              >=,
+              !=,
+              isequal,
               show,
               muladd
 
@@ -523,7 +529,7 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 end
 
 # Wrapper struct for Ptr{RTPSA}
-mutable struct TPS
+mutable struct TPS <: Number
   tpsa::Ptr{RTPSA}
   function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
@@ -607,7 +613,7 @@ end
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS
+mutable struct ComplexTPS <: Number
   tpsa::Ptr{CTPSA}
   function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
     ct = new(ct1)
@@ -1319,7 +1325,8 @@ function show(io::IO, t::TPS)
   else
     println(io, "  Coefficient              Order     Exponent")
   end
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  # Remove two lines from display size
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
 function format(t::ComplexTPS; coloffset=0)
@@ -1386,7 +1393,7 @@ function show(io::IO, t::ComplexTPS)
   else
     println(io, "  Real                      Imag                     Order     Exponent")
   end
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
 function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
@@ -1426,7 +1433,7 @@ function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
   else
     println(io, "  Out   Coefficient              Order     Exponent")
   end
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
 function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
@@ -1467,7 +1474,7 @@ function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
     println(io, "  Out   Real                      Imag                     Order     Exponent")
   end
   
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'))
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
 
@@ -1482,7 +1489,7 @@ end
 end
 
 include("operators.jl")
-include("analysis.jl")
+include("methods.jl")
 include("fast_gtpsa.jl")
 
 end

@@ -4,52 +4,121 @@ function type_stable_test()
   ct = ComplexTPS(t)
 
   # Basics
+  isequal(t , 0)
+  isequal(0 , t)
+  isequal(ct , 0)
+  isequal(0 , ct)
+  isequal(ct , t)
+  isequal(t , ct)
+  !(t === ct)
+  isequal(t , zero(t))
+  isequal(ct , zero(ct))
   t == 0
   0 == t
   ct == 0
   0 == ct
-  ct == t
   t == ct
-  !(t === ct)
+  ct == t
   t == zero(t)
-  ct == zero(ct)
+  ct == zero(t)
 
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
 
+  isequal(t, 1)
+  isequal(1, t)
+  isequal(ct, 1)
+  isequal(1, ct)
   t == 1
+  1 == t
   ct == 1
+  1 == ct
 
   # Check +, - unary functions and real, imag
+  isequal(t, +t)
   t == +t
   !(t === +t)
+  isequal(-1, -t)
   -1 == -t
   !(t === -t)
 
+  isequal(ct, +ct)
   ct == +ct
   !(ct === +ct)
-  -1 == -ct
+  isequal(-1, -ct)
+  -t == -ct
   !(ct === -ct)
 
-  t == real(t) == ct == real(ct) == 1
-  imag(t) == imag(ct) == 0
-  !(t == im) && !(im == t)
+  isequal(t, real(t))
+  isequal(real(t), ct)
+  isequal(ct, real(ct))
+  isequal(real(ct),1)
+  isequal(imag(t), imag(ct))
+  isequal(imag(ct), 0)
+  !isequal(t,im) && !isequal(im, ct)
+  t == real(t)
+  real(t) == ct
+  ct == real(ct)
+  real(ct) == 1
+  imag(t) == imag(ct)
+  imag(ct) == 0
+  t != im && ct != im
 
+  ct == t
+  t == ct
+  ct+im != t
+  t != ct+im
+  ct+im == t+im
+  t+im == ct+im
+  
   # Set ct = im
   ct[0] = im
-  ct == im
-  im == ct
-  real(ct) == 0
-  imag(ct) == t == 1
+  isequal(ct, im)
+  isequal(im, ct)
+  isequal(real(ct), 0)
+  isequal(imag(ct), t)
+  isequal(t, 1)
 
-  # Now do operators
+
   t1 = t
   t1[0] = 1
   t2 = zero(t1)
   t2[0] = 2
   t3 = zero(t1)
   t3[0] = 3
+
+  t1 == 1
+  1 == t1
+  t1 != 2
+  2 != t1
+  t1 != t2
+  t2 == 2
+  2 == t2
+  t3 == t2+t1
+  t2 < t3
+  t2 < 3
+  t2 <= t3
+  t2 <= 3
+  t2+t1 <= t3
+  3 <= t3
+
+  !(t2 > t3)
+  !(t2 > 3)
+  !(t2 >= t3)
+  !(t2 >= 3)
+
+  t3 > t2
+  t3 > 2
+  t3 >= t2
+  t3 >= 2
+  t3 >= t1+t2
+  t3 >= 3
+
+  !(t3 < t2)
+  !(t3 < 2)
+  !(t3 <= t2)
+  !(t3 <= 2)
 
   ct1 = ct
   ct1[0] = 1 + 1im
@@ -59,13 +128,12 @@ function type_stable_test()
   ct3[0] = 3 + 3im
 
   tol = 1e-14
-
+  # Now do operators
   # Test definition of 1-norm:
   tn = zero(t1)
   tn[0] = 1; tn[1] = 2; tn[2] = 3; tn[3] = 4; tn[4] = 5; tn[5] = 6
   tcn = zero(ct1)
   tcn[0] = 1+1im; tcn[1] = 2+2im; tcn[2] = 3+3im; tcn[3] = 4+4im; tcn[4] = 5+5im; tcn[5] = 6+6im
-
   norm(tn) == sum([i for i in 1:6])
   norm(tcn) == sum([abs(i+i*im) for i in 1:6])
 

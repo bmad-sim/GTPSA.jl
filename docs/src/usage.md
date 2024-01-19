@@ -11,7 +11,7 @@ d2 = Descriptor([1, 2, 3])  # Use this ctor when variables have different trunca
 ```
 
 ## Calculating a TPS
-After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as TPSs) can be obtained using `vars` or `complexvars`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
+After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as TPSs) can be obtained using `vars` or `complexvars`. For example, suppose we wish to calculate the Taylor series for $f(v_1,v_2) = \cos{(v_1)} + \sqrt{1+v_2}$ to 4th order in $v_1$ and but only 1st order in $v_2$:
 
 ```
 d = Descriptor([4, 1])
@@ -30,8 +30,8 @@ A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be creat
 ### Individual Partial Derivatives
 Individual monomial coefficients in a TPS `t` can be get/set with two methods of indexing:
 
-1. **By Order:** `t[<x_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables $x_1$, $x_2$, the $x_1^3x_2^1$ monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
-2. **By Var => Order:** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1,x_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
+1. **By Order:** `t[<v_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables $v_1$, $v_2$, the $v_1^3v_2^1$ monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
+2. **By Var => Order:** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $v_1,v_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
 
 ```
 # Descriptor for 2 variables with order 5
