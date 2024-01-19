@@ -1,6 +1,6 @@
 # Taylor Map Analysis
 ## Definitions
-In some use cases, the TPS may define the evolution of some state $x$ of a dynamical system, e.g. $x_f = \mathcal{M}(x_i,k)$, where $k$ is some defined external parameter. When $\mathcal{M}$ is expanded in powers of $\Delta x_i$ and $\Delta k$, this is referred to as a *Taylor map*. $x$ is referred to as a map variable or *variable*, as its evolution is defined by the TPS. $k$, which does not evolve with $\mathcal{M}$, is referred to as a *parameter*. GTPSA allows distinction between map variables and parameters, as well as the individual orders for each, to speed up Taylor map analyses.
+In some use cases, the TPS may define the evolution of some state $v$ of a dynamical system, e.g. $v_f = \mathcal{M}(v_i,p)$, where $p$ is some defined external parameter. When $\mathcal{M}$ is expanded in powers of $\Delta v_i$ and $\Delta p$, this is referred to as a *Taylor map*. $v$ is referred to as a map variable or *variable*, as its evolution is defined by the TPS. $p$, which does not evolve with $\mathcal{M}$, is referred to as a *parameter*. GTPSA allows distinction between map variables and parameters, as well as the individual orders for each, to speed up Taylor map analyses.
 
 ## TPSA Including Variables and Parameters
 
@@ -20,11 +20,11 @@ Just as the variables as a vector of TPSs can be obtained using `vars` or `compl
 ```
 d = Descriptor(2, 10, 1, 5)  # or equivalently Descriptor([10, 10], [5])
 
-x = vars(d)     # Returns a Vector of each variable as a TPS
-k = params(d)   # Returns a Vector of each parameter as a TPS
+v = vars(d)     # Returns a Vector of each variable as a TPS
+p = params(d)   # Returns a Vector of each parameter as a TPS
 
 # f is a TPS containing the result
-f = cos(x[1]) + sin(k[1]) * sqrt(1 + x[2])
+f = cos(v[1]) + sin(p[1]) * sqrt(1 + v[2])
 ```
 
 The monomial coefficient indexing in a TPS `t` including is also extended:
@@ -35,30 +35,30 @@ The monomial coefficient indexing in a TPS `t` including is also extended:
 ```
 # Descriptor for 2 variables with order 5, and 2 parameters with orders 5
 d = Descriptor(2, 5, 2, 5)
-x = vars(d)
-x1 = x[1]
-x2 = x[2]
-k = params(d)
-k1 = k[1]
-k2 = k[2]
+v = vars(d)
+v1 = v[1]
+v2 = v[2]
+p = params(d)
+p1 = p[1]
+p2 = p[2]
 
 # Example of indexing by order -------
 y1 = TPS(d)             # Create blank TPS with zero for all coefficients
 y1[1,0,0,0] = 1         # Set first-order part for first variable equal to 1
-y1 == x1                # Is true
+y1 == v1                # Is true
 
 z2 = TPS(d)             # Create blank TPS with zero for all coefficients
 z2[0,0,0,1] = 1         # Set first-order part for second parameter equal to 1
-z2 == k2                # Is true
+z2 == p2                # Is true
 
 # Example of indexing by var => order, param => order -------
 y1 = TPS(d)             # Create blank TPS with zero for all coefficients
 y1[1=>1] = 1            # Set first-order part for first variable equal to 1
-y1 == x1                # Is true
+y1 == v1                # Is true
 
 z2 = TPS(d)             # Create blank TPS with zero for all coefficients
 z2[params=(2=>1,)] = 1  # Set first-order part for second parameter equal to 1
-z2 == k2                # Is true
+z2 == p2                # Is true
 ```
 
 The gradient, Jacobian, and Hessian convenience getters include an option kwarg `include_params`, which may be set to true to include parameters in the extracted partial derivatives.

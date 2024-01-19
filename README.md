@@ -40,10 +40,10 @@ using GTPSA
 d = Descriptor(2, 6)
 
 # Get the TPSs corresponding to each variable based on the Descriptor
-x = vars(d)
+v = vars(d)
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
-f = cos(x[1]) + im*sin(x[2])
+f = cos(v[1]) + im*sin(v[2])
 ```
 
 `f` itself is a TPS. Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` then gives the output
