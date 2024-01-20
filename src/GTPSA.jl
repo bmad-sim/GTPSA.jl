@@ -52,8 +52,7 @@ import Base:  +,
               >=,
               !=,
               isequal,
-              show,
-              muladd
+              show
 
 using GTPSA_jll, Printf, PrettyTables
 
@@ -413,17 +412,19 @@ export
   polar,
   rect, 
 
-  # Methods:
-  evaluate,
-  derivative,
-  derivativem,
-  integrate,
+  # Convenience getters:
   gradient,
   gradient!,
   jacobian,
   jacobian!,
   hessian,
   hessian!,
+
+  # Methods:
+  evaluate,
+  differentiate,
+  integrate,
+
 
   # Temporaries:
   @FastGTPSA,
@@ -435,7 +436,7 @@ export
   __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
   __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
   __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
-  __t_polar, __t_rect, __t_hypot
+  __t_polar, __t_rect
 
 
 
@@ -980,6 +981,8 @@ function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
   return grad
 end
 
+#∇(t::Union{TPS,ComplexTPS}) = gradient(t,include_params=true);
+
 function jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   n = desc.nv
@@ -1267,6 +1270,7 @@ function format(t::TPS; coloffset=0)
   nn = desc.nn
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
+  EPS = 0 # 1e-100
 
   # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
   if nn <= 6
@@ -1275,7 +1279,9 @@ function format(t::TPS; coloffset=0)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
+      end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
@@ -1303,7 +1309,9 @@ function format(t::TPS; coloffset=0)
         end
       end
       mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
-      out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
+      end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
@@ -1336,6 +1344,7 @@ function format(t::ComplexTPS; coloffset=0)
   nn = desc.nn
   v = Ref{ComplexF64}()
   mono = Vector{UInt8}(undef, nn)
+  EPS = 0 # 1e-100
 
   # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
   if nn <= 6
@@ -1344,7 +1353,9 @@ function format(t::ComplexTPS; coloffset=0)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
+      end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
@@ -1372,7 +1383,9 @@ function format(t::ComplexTPS; coloffset=0)
         end
       end
       mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
-      out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
+      end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0

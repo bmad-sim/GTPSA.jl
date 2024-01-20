@@ -1,6 +1,6 @@
 using Test, JET
 using SpecialFunctions
-SF = SpecialFunctions
+const SF = SpecialFunctions
 using GTPSA
 
 @testset "Arithmetic operators" begin
@@ -513,6 +513,228 @@ end
   @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
   @test norm(angle(t) - atan(imag(t),real(t))) < tol
   @test norm(complex(t) - t) < tol
+end
+
+@testset "Indexing" begin
+  d = Descriptor(3,10,2,10)
+  v = vars(d)
+  p = params(d)
+  tol = 1e-18
+
+  f = sin(v[1])
+  @test abs(f[0] - 0) < tol
+  @test abs(f[1] - 1) < tol
+  @test abs(f[2] - 0) < tol
+  @test abs(f[3] - -1/factorial(3)) < tol
+  @test abs(f[4] - 0) < tol
+  @test abs(f[5] - 1/factorial(5)) < tol
+  @test abs(f[6] - 0) < tol
+  @test abs(f[7] - -1/factorial(7)) < tol
+  @test abs(f[8] - 0) < tol
+  @test abs(f[9] - 1/factorial(9)) < tol
+  @test abs(f[10] - 0) < tol
+
+  @test abs(f[1=>1] - f[1]) < tol
+  @test abs(f[1=>2] - f[2]) < tol
+  @test abs(f[1=>3] - f[3]) < tol
+  @test abs(f[1=>4] - f[4]) < tol
+  @test abs(f[1=>5] - f[5]) < tol
+  @test abs(f[1=>6] - f[6]) < tol
+  @test abs(f[1=>7] - f[7]) < tol
+  @test abs(f[1=>8] - f[8]) < tol
+  @test abs(f[1=>9] - f[9]) < tol
+  @test abs(f[1=>10] - f[10]) < tol
+
+  fc = complex(f)
+  @test abs(fc[0] - 0) < tol
+  @test abs(fc[1] - 1) < tol
+  @test abs(fc[2] - 0) < tol
+  @test abs(fc[3] - -1/factorial(3)) < tol
+  @test abs(fc[4] - 0) < tol
+  @test abs(fc[5] - 1/factorial(5)) < tol
+  @test abs(fc[6] - 0) < tol
+  @test abs(fc[7] - -1/factorial(7)) < tol
+  @test abs(fc[8] - 0) < tol
+  @test abs(fc[9] - 1/factorial(9)) < tol
+  @test abs(fc[10] - 0) < tol
+
+  @test abs(fc[1=>1] - f[1]) < tol
+  @test abs(fc[1=>2] - f[2]) < tol
+  @test abs(fc[1=>3] - f[3]) < tol
+  @test abs(fc[1=>4] - f[4]) < tol
+  @test abs(fc[1=>5] - f[5]) < tol
+  @test abs(fc[1=>6] - f[6]) < tol
+  @test abs(fc[1=>7] - f[7]) < tol
+  @test abs(fc[1=>8] - f[8]) < tol
+  @test abs(fc[1=>9] - f[9]) < tol
+  @test abs(fc[1=>10] - f[10]) < tol
+
+  f2 = sin(v[1]) + cos(v[2])
+  @test abs(f2[0] - 1) < tol
+  @test abs(f2[1] - 1) < tol
+  @test abs(f2[2] - 0) < tol
+  @test abs(f2[3] - -1/factorial(3)) < tol
+  @test abs(f2[4] - 0) < tol
+  @test abs(f2[5] - 1/factorial(5)) < tol
+  @test abs(f2[6] - 0) < tol
+  @test abs(f2[7] - -1/factorial(7)) < tol
+  @test abs(f2[8] - 0) < tol
+  @test abs(f2[9] - 1/factorial(9)) < tol
+  @test abs(f2[10] - 0) < tol
+
+  @test abs(f2[0,0] - 1) < tol
+  @test abs(f2[0,1] - 0) < tol
+  @test abs(f2[0,2] - -1/factorial(2)) < tol
+  @test abs(f2[0,3] - 0) < tol
+  @test abs(f2[0,4] - 1/factorial(4)) < tol
+  @test abs(f2[0,5] - 0) < tol
+  @test abs(f2[0,6] - -1/factorial(6)) < tol
+  @test abs(f2[0,7] - 0) < tol
+  @test abs(f2[0,8] - 1/factorial(8)) < tol
+  @test abs(f2[0,9] - 0) < tol
+  @test abs(f2[0,10] - -1/factorial(10)) < tol
+
+  @test abs(f2[1=>1] - f2[1]) < tol
+  @test abs(f2[1=>2] - f2[2]) < tol
+  @test abs(f2[1=>3] - f2[3]) < tol
+  @test abs(f2[1=>4] - f2[4]) < tol
+  @test abs(f2[1=>5] - f2[5]) < tol
+  @test abs(f2[1=>6] - f2[6]) < tol
+  @test abs(f2[1=>7] - f2[7]) < tol
+  @test abs(f2[1=>8] - f2[8]) < tol
+  @test abs(f2[1=>9] - f2[9]) < tol
+  @test abs(f2[1=>10] - f2[10]) < tol
+
+  @test abs(f2[2=>1] - f2[0,1]) < tol
+  @test abs(f2[2=>2] - f2[0,2]) < tol
+  @test abs(f2[2=>3] - f2[0,3]) < tol
+  @test abs(f2[2=>4] - f2[0,4]) < tol
+  @test abs(f2[2=>5] - f2[0,5]) < tol
+  @test abs(f2[2=>6] - f2[0,6]) < tol
+  @test abs(f2[2=>7] - f2[0,7]) < tol
+  @test abs(f2[2=>8] - f2[0,8]) < tol
+  @test abs(f2[2=>9] - f2[0,9]) < tol
+  @test abs(f2[2=>10] - f2[0,10]) < tol
+
+  f2c = complex(sin(v[1]) + cos(v[2]))
+  @test abs(f2c[0] - 1) < tol
+  @test abs(f2c[1] - 1) < tol
+  @test abs(f2c[2] - 0) < tol
+  @test abs(f2c[3] - -1/factorial(3)) < tol
+  @test abs(f2c[4] - 0) < tol
+  @test abs(f2c[5] - 1/factorial(5)) < tol
+  @test abs(f2c[6] - 0) < tol
+  @test abs(f2c[7] - -1/factorial(7)) < tol
+  @test abs(f2c[8] - 0) < tol
+  @test abs(f2c[9] - 1/factorial(9)) < tol
+  @test abs(f2c[10] - 0) < tol
+
+  @test abs(f2c[0,0] - 1) < tol
+  @test abs(f2c[0,1] - 0) < tol
+  @test abs(f2c[0,2] - -1/factorial(2)) < tol
+  @test abs(f2c[0,3] - 0) < tol
+  @test abs(f2c[0,4] - 1/factorial(4)) < tol
+  @test abs(f2c[0,5] - 0) < tol
+  @test abs(f2c[0,6] - -1/factorial(6)) < tol
+  @test abs(f2c[0,7] - 0) < tol
+  @test abs(f2c[0,8] - 1/factorial(8)) < tol
+  @test abs(f2c[0,9] - 0) < tol
+  @test abs(f2c[0,10] - -1/factorial(10)) < tol
+
+  @test abs(f2c[1=>1] - f2c[1]) < tol
+  @test abs(f2c[1=>2] - f2c[2]) < tol
+  @test abs(f2c[1=>3] - f2c[3]) < tol
+  @test abs(f2c[1=>4] - f2c[4]) < tol
+  @test abs(f2c[1=>5] - f2c[5]) < tol
+  @test abs(f2c[1=>6] - f2c[6]) < tol
+  @test abs(f2c[1=>7] - f2c[7]) < tol
+  @test abs(f2c[1=>8] - f2c[8]) < tol
+  @test abs(f2c[1=>9] - f2c[9]) < tol
+  @test abs(f2c[1=>10] - f2c[10]) < tol
+
+  @test abs(f2c[2=>1] - f2c[0,1]) < tol
+  @test abs(f2c[2=>2] - f2c[0,2]) < tol
+  @test abs(f2c[2=>3] - f2c[0,3]) < tol
+  @test abs(f2c[2=>4] - f2c[0,4]) < tol
+  @test abs(f2c[2=>5] - f2c[0,5]) < tol
+  @test abs(f2c[2=>6] - f2c[0,6]) < tol
+  @test abs(f2c[2=>7] - f2c[0,7]) < tol
+  @test abs(f2c[2=>8] - f2c[0,8]) < tol
+  @test abs(f2c[2=>9] - f2c[0,9]) < tol
+  @test abs(f2c[2=>10] - f2c[0,10]) < tol
+
+  f3 = sin(v[1]) + cos(v[2]) + exp(p[1])
+  @test abs(f3[0] - 2) < tol
+  @test abs(f3[1] - 1) < tol
+  @test abs(f3[2] - 0) < tol
+  @test abs(f3[3] - -1/factorial(3)) < tol
+  @test abs(f3[4] - 0) < tol
+  @test abs(f3[5] - 1/factorial(5)) < tol
+  @test abs(f3[6] - 0) < tol
+  @test abs(f3[7] - -1/factorial(7)) < tol
+  @test abs(f3[8] - 0) < tol
+  @test abs(f3[9] - 1/factorial(9)) < tol
+  @test abs(f3[10] - 0) < tol
+
+  @test abs(f3[0,0] - 2) < tol
+  @test abs(f3[0,1] - 0) < tol
+  @test abs(f3[0,2] - -1/factorial(2)) < tol
+  @test abs(f3[0,3] - 0) < tol
+  @test abs(f3[0,4] - 1/factorial(4)) < tol
+  @test abs(f3[0,5] - 0) < tol
+  @test abs(f3[0,6] - -1/factorial(6)) < tol
+  @test abs(f3[0,7] - 0) < tol
+  @test abs(f3[0,8] - 1/factorial(8)) < tol
+  @test abs(f3[0,9] - 0) < tol
+  @test abs(f3[0,10] - -1/factorial(10)) < tol
+
+  @test abs(f3[0,0,0,0] - 2) < tol
+  @test abs(f3[0,0,0,1] - 1/factorial(1)) < tol
+  @test abs(f3[0,0,0,2] - 1/factorial(2)) < tol
+  @test abs(f3[0,0,0,3] - 1/factorial(3)) < tol
+  @test abs(f3[0,0,0,4] - 1/factorial(4)) < tol
+  @test abs(f3[0,0,0,5] - 1/factorial(5)) < tol
+  @test abs(f3[0,0,0,6] - 1/factorial(6)) < tol
+  @test abs(f3[0,0,0,7] - 1/factorial(7)) < tol
+  @test abs(f3[0,0,0,8] - 1/factorial(8)) < tol
+  @test abs(f3[0,0,0,9] - 1/factorial(9)) < tol
+  @test abs(f3[0,0,0,10] - 1/factorial(10)) < tol
+
+  @test abs(f3[1=>1] - f3[1]) < tol
+  @test abs(f3[1=>2] - f3[2]) < tol
+  @test abs(f3[1=>3] - f3[3]) < tol
+  @test abs(f3[1=>4] - f3[4]) < tol
+  @test abs(f3[1=>5] - f3[5]) < tol
+  @test abs(f3[1=>6] - f3[6]) < tol
+  @test abs(f3[1=>7] - f3[7]) < tol
+  @test abs(f3[1=>8] - f3[8]) < tol
+  @test abs(f3[1=>9] - f3[9]) < tol
+  @test abs(f3[1=>10] - f3[10]) < tol
+
+  @test abs(f3[2=>1] - f3[0,1]) < tol
+  @test abs(f3[2=>2] - f3[0,2]) < tol
+  @test abs(f3[2=>3] - f3[0,3]) < tol
+  @test abs(f3[2=>4] - f3[0,4]) < tol
+  @test abs(f3[2=>5] - f3[0,5]) < tol
+  @test abs(f3[2=>6] - f3[0,6]) < tol
+  @test abs(f3[2=>7] - f3[0,7]) < tol
+  @test abs(f3[2=>8] - f3[0,8]) < tol
+  @test abs(f3[2=>9] - f3[0,9]) < tol
+  @test abs(f3[2=>10] - f3[0,10]) < tol
+
+  @test abs(f3[params=(1=>1,)] - f3[0,0,0,1]) < tol
+  @test abs(f3[params=(1=>2,)] - f3[0,0,0,2]) < tol
+  @test abs(f3[params=(1=>3,)] - f3[0,0,0,3]) < tol
+  @test abs(f3[params=(1=>4,)] - f3[0,0,0,4]) < tol
+  @test abs(f3[params=(1=>5,)] - f3[0,0,0,5]) < tol
+  @test abs(f3[params=(1=>6,)] - f3[0,0,0,6]) < tol
+  @test abs(f3[params=(1=>7,)] - f3[0,0,0,7]) < tol
+  @test abs(f3[params=(1=>8,)] - f3[0,0,0,8]) < tol
+  @test abs(f3[params=(1=>9,)] - f3[0,0,0,9]) < tol
+  @test abs(f3[params=(1=>10,)] - f3[0,0,0,10]) < tol
+
+
+
 end
 
 @testset "@FastGTPSA - Arithmetic operators" begin

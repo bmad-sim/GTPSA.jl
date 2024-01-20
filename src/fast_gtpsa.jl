@@ -1637,7 +1637,7 @@ end
 # asinhc is not in Julia, but in C is asinc(x) = asin(x)*x
 # To give similiar behavior, define asinc(x) = asin(pi*x)*(pi*x)
 function __t_asinhc(ct1::ComplexTPS)::Ptr{CTPSA}
-  ctpsa = get_rtemp!(ct1)
+  ctpsa = get_ctemp!(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
   mad_ctpsa_asinhc!(ctpsa, ctpsa)
   return ctpsa
