@@ -422,7 +422,7 @@ export
 
   # Methods:
   evaluate,
-  differentiate,
+  derivative,
   integrate,
 
 
@@ -880,7 +880,7 @@ function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}..
   if isempty(params)
     n = Cint(maximum(map(x->x.first, vars)))
   else
-    n = Cint(maximum(map(x->x.first, params)))
+    n = Cint(maximum(map(x->x.first, params))) + nv
   end
   ords = zeros(Cuchar, n)
   for var in vars
@@ -1254,12 +1254,12 @@ function show(io::IO, m::MonoDisplay)
   for i=1:length(m.varidxs)
     varidx = m.varidxs[i]
     varord = m.varords[i]
-    print(io, "(v" * subscript(varidx) * ")" * superscript(varord) * " ")
+    print(io, "(x" * subscript(varidx) * ")" * superscript(varord) * " ")
   end
   for i=1:length(m.paramidxs)
     paramidx = m.paramidxs[i]
     paramord = m.paramords[i]
-    print(io, "(p" * subscript(paramidx) * ")" * superscript(paramord) * " ")
+    print(io, "(k" * subscript(paramidx) * ")" * superscript(paramord) * " ")
   end
 end
 
@@ -1308,7 +1308,11 @@ function format(t::TPS; coloffset=0)
           push!(varords, Int(mono[vp_idx]))
         end
       end
-      mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      if iszero(varords) && iszero(paramords)
+        mono_display=1
+      else
+        mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      end
       if abs(v[]) > EPS
         out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
       end
@@ -1382,7 +1386,11 @@ function format(t::ComplexTPS; coloffset=0)
           push!(varords, Int(mono[vp_idx]))
         end
       end
-      mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      if iszero(varords) && iszero(paramords)
+        mono_display=1
+      else
+        mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      end
       if abs(v[]) > EPS
         out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
       end

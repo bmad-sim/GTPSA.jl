@@ -38,58 +38,64 @@ function evaluate(ct1::ComplexTPS, x::Real)::ComplexF64
 end
 
 # --- Integral/Derivative  ---
-function integrate(t1::TPS)::TPS
+function integrate(t1::TPS; var::Integer=1)::TPS
   t = zero(t1)
-  mad_tpsa_integ!(t1.tpsa, t.tpsa, convert(Cint, 1))
+  mad_tpsa_integ!(t1.tpsa, t.tpsa, convert(Cint, var))
   return t
 end
 
-function integrate(t1::TPS, iv::Integer)::TPS
-  t = zero(t1)
-  mad_tpsa_integ!(t1.tpsa, t.tpsa, convert(Cint, iv))
-  return t
-end
-
-function integrate(ct1::ComplexTPS, iv::Integer)::ComplexTPS
+function integrate(ct1::ComplexTPS; var::Integer=1)::ComplexTPS
   ct = zero(ct1)
-  mad_ctpsa_integ!(ct1.tpsa, ct.tpsa, convert(Cint, iv))
-  return ct
-end
-
-function differentiate(t1::TPS)::TPS
-  t = zero(t1)
-  mad_tpsa_deriv!(t1.tpsa, t.tpsa, convert(Cint, 1))
-  return t
-end
-
-function differentiate(t1::TPS, iv::Integer)::TPS
-  t = zero(t1)
-  mad_tpsa_deriv!(t1.tpsa, t.tpsa, convert(Cint, iv))
-  return t
-end
-
-function differentiate(ct1::ComplexTPS, iv::Integer)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_deriv!(ct1.tpsa, ct.tpsa, convert(Cint, iv))
+  mad_ctpsa_integ!(ct1.tpsa, ct.tpsa, convert(Cint, var))
   return ct
 end
 
 # Derivative wrt specific monomial
-function differentiate(t1::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
+function derivative(t1::TPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
   t = zero(t1)
-  # Need to create array of orders with length nv + np
-  ords, n = pairs_to_m(t1,vars...,params=params)
-  mad_tpsa_derivm!(t1.tpsa, t.tpsa, n, ords)
-  return t
+  if isempty(vars) && isempty(params)
+    if param > 0
+      if var > 0
+        error("Use sparse monomial indexing to take derivative wrt higher order monomials.")
+      end
+      desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+      nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+      var = param + nv
+    elseif var == 0
+      var = 1
+    end
+    mad_tpsa_deriv!(t1.tpsa, t.tpsa, convert(Cint, var))
+    return t
+  else
+    # Need to create array of orders with length nv + np
+    ords, n = pairs_to_m(t1,vars...,params=params)
+    mad_tpsa_derivm!(t1.tpsa, t.tpsa, n, ords)
+    return t
+  end
 end
 
 # Derivative wrt specific monomial
-function differentiate(ct1::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexTPS
-  ct = zero(ct1)
-  # Need to create array of orders with length nv + np
-  ords, n = pairs_to_m(ct1,vars...,params=params)
-  mad_ctpsa_derivm!(ct1.tpsa, ct.tpsa, n, ords)
-  return ct
+function derivative(t1::ComplexTPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexTPS
+  t = zero(t1)
+  if isempty(vars) && isempty(params)
+    if param > 0
+      if var > 0
+        error("Use sparse monomial indexing to take derivative wrt higher order monomials.")
+      end
+      desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+      nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+      var = param + nv
+    elseif var == 0
+      var = 1
+    end
+    mad_ctpsa_deriv!(t1.tpsa, t.tpsa, convert(Cint, var))
+    return t
+  else
+    # Need to create array of orders with length nv + np
+    ords, n = pairs_to_m(t1,vars...,params=params)
+    mad_ctpsa_derivm!(t1.tpsa, t.tpsa, n, ords)
+    return t
+  end
 end
 
 #=
