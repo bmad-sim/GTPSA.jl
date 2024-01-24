@@ -46,6 +46,12 @@ import Base:  +,
               getindex,
               setindex!,
               ==,
+              <,
+              >,
+              <=,
+              >=,
+              !=,
+              isequal,
               show
 
 using GTPSA_jll, Printf, PrettyTables
@@ -406,17 +412,19 @@ export
   polar,
   rect, 
 
-  # Methods:
-  evaluate,
-  derivative,
-  derivativem,
-  integrate,
+  # Convenience getters:
   gradient,
   gradient!,
   jacobian,
   jacobian!,
   hessian,
   hessian!,
+
+  # Methods:
+  evaluate,
+  derivative,
+  integrate,
+
 
   # Temporaries:
   @FastGTPSA,
@@ -428,7 +436,7 @@ export
   __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
   __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
   __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
-  __t_polar, __t_rect, __t_hypot
+  __t_polar, __t_rect
 
 
 
@@ -452,75 +460,77 @@ end
 
 # Descriptor outer constructors
 """
-    Descriptor(nv::Integer, mo::Integer)::Descriptor
+    Descriptor(nv::Integer, vo::Integer)::Descriptor
 
-Creates a TPSA Descriptor with `nv` variables of maximum order `mo`.
+Creates a TPSA Descriptor with `nv` variables of maximum order `vo` for each.
 
 ### Input
 - `nv` -- Number of variables in the TPSA
-- `mo` -- Maximum order of the variables in the TPSA
+- `vo` -- Maximum order of the variables in the TPSA
 """
-function Descriptor(nv::Integer, mo::Integer)::Descriptor
-  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+function Descriptor(nv::Integer, vo::Integer)::Descriptor
+  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
 end
 
 """
-    Descriptor(mos::Vector{<:Integer})::Descriptor
+    Descriptor(vos::Vector{<:Integer})::Descriptor
 
-Creates a TPSA Descriptor with `length(mos)` variables with individual max 
-orders specified in the Vector `mos`. 
+Creates a TPSA Descriptor with `length(mos)` variables with individual truncation 
+orders specified in the Vector `vos`. 
 
 ### Input
-- `mos` -- Vector of the individual max orders of each variable
+- `vos` -- Vector of the individual truncation orders of each variable
 """
-function Descriptor(mos::Vector{<:Integer})::Descriptor
-  nv = length(mos)
+function Descriptor(vos::Vector{<:Integer})::Descriptor
+  nv = length(vos)
   np = 0
-  mo = maximum(mos)
+  mo = maximum(vos)
   po = 0
-  no = mos
+  no = vos
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 """
-    Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
+    Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
 
-Creates a TPSA Descriptor with `nv` variables of maximum order `mo`, and `np` parameters
-of maximum order `po` (`<= mo`).
+Creates a TPSA Descriptor with `nv` variables each with truncation order `vo`, and `np` 
+parameters each with truncation order `po`
 
 ### Input
 - `nv` -- Number of variables in the TPSA
-- `mo` -- Maximum order of the variables in the TPSA
+- `vo` -- Truncation order of the variables in the TPSA
 - `np` -- Number of parameters in the TPSA
-- `po` -- Maximum order of the parameters (`<= mo`) in the TPSA
+- `po` -- Truncation order of the parameters
 """
-function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
-  return Descriptor(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
+function Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
+  mo = max(vo,po)
+  no = vcat(Cuchar(vo)*ones(Cuchar,nv), Cuchar(po)*ones(Cuchar,np))
+  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
 end
 
 
 """
-    Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
+    Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 
-Creates a TPSA Descriptor with `length(mos)` variables with individual max 
-orders specified in `mos`, and `length(pos)` parameters with individual max 
+Creates a TPSA Descriptor with `length(vos)` variables with individual truncation 
+orders specified in `vos`, and `length(pos)` parameters with individual truncation 
 orders specified in `pos`.
 
 ### Input
-- `mos` -- Vector of the individual max orders of each variable
-- `pos` -- Vector of the individual max orders of each parameter
+- `vos` -- Vector of the individual truncation orders of each variable
+- `pos` -- Vector of the individual truncation orders of each parameter
 """
-function Descriptor(mos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
-  nv = length(mos)
+function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
+  nv = length(vos)
   np = length(pos)
-  mo = maximum(mos)
   po = maximum(pos)
-  no = vcat(mos,pos)
+  mo = max(maximum(vos),po)
+  no = vcat(vos,pos)
   return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
 end
 
 # Wrapper struct for Ptr{RTPSA}
-mutable struct TPS
+mutable struct TPS <: Number
   tpsa::Ptr{RTPSA}
   function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
@@ -604,7 +614,7 @@ end
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS
+mutable struct ComplexTPS <: Number
   tpsa::Ptr{CTPSA}
   function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
     ct = new(ct1)
@@ -841,28 +851,36 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
-  nv = Cint(length(vars))
-  np = Cint(length(params))
-  sm = Vector{Cint}(undef, 2*(nv+np))
-  for i=1:nv
-    sm[2*i-1] = convert(Cint, vars[i].first)
-    sm[2*i] = convert(Cint, vars[i].second)
+function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
+  # WE MUST Order THE VARIABLES !!!
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv # TOTAL NUMBER OF VARS!!!!!!
+  numv = Cint(length(vars))
+  nump = Cint(length(params))
+  imin = min(minimum(x->x.first, vars,init=typemax(Int)), minimum(x->x.first+nv, params,init=typemax(Int)))
+  imax = max(maximum(x->x.first, vars,init=0), maximum(x->x.first+nv, params,init=0))
+  len = imax-imin+1
+  sm = zeros(Cint, 2*len)
+  sm[1:2:end] = imin:imax
+  for i=1:numv
+    sm[2*(vars[i].first-imin+1)] = convert(Cint, vars[i].second)
   end
-  for i=nv+1:nv+np
-    sm[2*i-1] = convert(Cint, params[i].first+nv)
-    sm[2*i] = convert(Cint, params[i].second)
+  for i=1:nump
+    sm[2*(params[i].first+nv-imin+1)] = convert(Cint, params[i].second)
   end
-  return sm, nv+np
+
+  return sm, 2*len
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{UInt8}, Cint}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nv = desc.nv
   n = Cint(0)
   if isempty(params)
     n = Cint(maximum(map(x->x.first, vars)))
   else
-    n = Cint(maximum(map(x->x.first, params)))
+    n = Cint(maximum(map(x->x.first, params))) + nv
   end
   ords = zeros(Cuchar, n)
   for var in vars
@@ -881,7 +899,7 @@ end
 
 function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
   # use sparse monomial getter
-  sm, n = pairs_to_sm(vars..., params=params)
+  sm, n = pairs_to_sm(t, vars..., params=params)
   return mad_tpsa_getsm(t.tpsa, n, sm)
 end
 
@@ -892,7 +910,7 @@ end
 
 function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
   # use sparse monomial getter
-  sm, n = pairs_to_sm(vars..., params=params)
+  sm, n = pairs_to_sm(ct, vars..., params=params)
   return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 
@@ -903,8 +921,7 @@ function setindex!(t::TPS, v::Real, ords::Integer...)
 end
 
 function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
-  # use sparse monomial getter
-  sm, n = pairs_to_sm(vars..., params=params)
+  sm, n = pairs_to_sm(t, vars..., params=params)
   mad_tpsa_setsm!(t.tpsa, n, sm, 0.0, convert(Cdouble, v))
 end
 
@@ -912,9 +929,8 @@ function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
   mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-function getindex(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
-  # use sparse monomial getter
-  sm, n = pairs_to_sm(vars..., params=params)
+function setindex!(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
+  sm, n = pairs_to_sm(ct, vars..., params=params)
   mad_ctpsa_setsm!(ct.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
@@ -964,6 +980,8 @@ function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
   mad_ctpsa_getv!(t.tpsa, Cint(1), n, grad)
   return grad
 end
+
+#∇(t::Union{TPS,ComplexTPS}) = gradient(t,include_params=true);
 
 function jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
@@ -1058,12 +1076,13 @@ function hessian!(result::Matrix{Float64},t::TPS; include_params=false)
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1090,12 +1109,13 @@ function hessian(t::TPS; include_params=false)::Matrix{Float64}
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_tpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1126,12 +1146,13 @@ function hessian!(result::Matrix{ComplexF64},t::ComplexTPS; include_params=false
   while idx > 0 && idx <= maxidx
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = j = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    result[i,j] = v[]
-    result[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
 end
@@ -1155,13 +1176,15 @@ function hessian(t::ComplexTPS; include_params=false)::Matrix{ComplexF64}
   mono = Vector{UInt8}(undef, n)
   idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   while idx > 0 && idx <= maxidx
-    i = j = findfirst(x->x==0x2,mono)
+    i = findfirst(x->x==0x1, mono)
     if isnothing(i)
-      i = findfirst(x->x==0x1, mono)
+      i = findfirst(x->x==0x2, mono)
+      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+    else 
       j = findlast(x->x==0x1, mono)
+      H[i,j] = v[]
+      H[j,i] = v[]
     end
-    H[i,j] = v[]
-    H[j,i] = v[]
     idx = mad_ctpsa_cycle!(t.tpsa, idx, n, mono, v)
   end
   return H
@@ -1169,15 +1192,12 @@ end
 
 
 # --- print ---
-function show(io::IO, d::Descriptor)
-  desc = unsafe_load(d.desc)
+function show_GTPSA_info(io::IO, desc::Desc)
   nv = desc.nv
   np = desc.np
   nn = desc.nn
   no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
   no = convert(Vector{Int}, no_)
-  println(io, "GTPSA Descriptor")
-  println(io, "-----------------------")
   if nv > 0
     @printf(io, "%-18s %i\n", "# Variables: ", nv)
     if all(no[1] .== no[1:nv])
@@ -1200,55 +1220,284 @@ function show(io::IO, d::Descriptor)
   end
 end
 
+function show(io::IO, d::Descriptor)
+  println(io, "GTPSA Descriptor")
+  println(io, "-----------------------")
+  desc = unsafe_load(d.desc)
+  show_GTPSA_info(io, desc)
+end
 
-function show(io::IO, t::TPS)
+struct MonoDisplay
+  varidxs::Vector{Int}
+  varords::Vector{Int}
+  paramidxs::Vector{Int}
+  paramords::Vector{Int}
+end
+
+function show(io::IO, m::MonoDisplay)
+  subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
+  function superscript(i)
+    if i < 0
+        c = [Char(0x207B)]
+    else
+        c = []
+    end
+    for d in reverse(digits(abs(i)))
+        if d == 0 push!(c, Char(0x2070)) end
+        if d == 1 push!(c, Char(0x00B9)) end
+        if d == 2 push!(c, Char(0x00B2)) end
+        if d == 3 push!(c, Char(0x00B3)) end
+        if d > 3 push!(c, Char(0x2070+d)) end
+    end
+    return join(c)
+  end
+  for i=1:length(m.varidxs)
+    varidx = m.varidxs[i]
+    varord = m.varords[i]
+    print(io, "(x" * subscript(varidx) * ")" * superscript(varord) * " ")
+  end
+  for i=1:length(m.paramidxs)
+    paramidx = m.paramidxs[i]
+    paramord = m.paramords[i]
+    print(io, "(k" * subscript(paramidx) * ")" * superscript(paramord) * " ")
+  end
+end
+
+function format(t::TPS; coloffset=0)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
   nn = desc.nn
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
-  out = Matrix{Any}(undef, 0, (1+1+1+nn)) # First col is coefficient, rest are orders
-  idx = Cint(-1)
-  idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
-  while idx >= 0
-    order = Int(sum(mono))
-    out = vcat(out, Any[v[] order "" convert(Vector{Int}, mono)...])
+  EPS = 0 # 1e-100
+
+  # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
+  if nn <= 6
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+nn)) # Coefficient, order, spacing, exponents
+    idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    while idx >= 0
+      order = Int(sum(mono))
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
+      end
+      idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    end
+    if size(out)[1] == 0
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing zeros(Int,nn)...])
+    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2:coloffset+3+nn), ft_nonothing)
+  else
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1))
+    idx = Cint(-1)
+    idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    while idx >= 0
+      order = Int(sum(mono))
+      varidxs = Vector{Int}(undef,0)
+      varords = Vector{Int}(undef,0)
+      paramidxs = Vector{Int}(undef,0)
+      paramords = Vector{Int}(undef,0)
+      # Create variable pairs
+      for vp_idx in findall(x->x>0x0, mono)
+        if vp_idx > nv
+          push!(paramidxs, vp_idx-nv)
+          push!(paramords, Int(mono[vp_idx]))
+        else
+          push!(varidxs, vp_idx)
+          push!(varords, Int(mono[vp_idx]))
+        end
+      end
+      if iszero(varords) && iszero(paramords)
+        mono_display=1
+      else
+        mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      end
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
+      end
+      idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    end
+    if size(out)[1] == 0
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing 1])
+    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2), ft_nonothing)
   end
-  if size(out)[1] == 0
-    out = vcat(out, Any[0.0 Int(0) "" zeros(Int,nn)...])
-  end
-  println(io, "TPS:")
-  println(io, "  COEFFICIENT               ORDER    EXPONENTS")
-  formatters = (ft_printf("%23.16le", [1]), ft_printf("%2i", 2:3+nn))
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  return out, formatters
 end
 
-function show(io::IO, t::ComplexTPS)
+function show(io::IO, t::TPS)
+  out, formatters = format(t)
+  println(io, "TPS:")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Coefficient              Order     Monomial")
+  else
+    println(io, "  Coefficient              Order     Exponent")
+  end
+  # Remove two lines from display size
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+end
+
+function format(t::ComplexTPS; coloffset=0)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
   nn = desc.nn
   v = Ref{ComplexF64}()
   mono = Vector{UInt8}(undef, nn)
-  out = Matrix{Any}(undef, 0, (1+1+1+1+nn)) # First col is coefficient, rest are orders
-  idx = Cint(-1)
-  idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
-  while idx >= 0
-    order = Int(sum(mono))
-    out = vcat(out, Any[real(v[]) imag(v[]) order "" convert(Vector{Int}, mono)...])
+  EPS = 0 # 1e-100
+
+  # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
+  if nn <= 6
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # First col is coefficient, rest are orders
+    idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    while idx >= 0
+      order = Int(sum(mono))
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
+      end
+      idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    end
+    if size(out)[1] == 0
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing zeros(Int,nn)...])
+    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3:coloffset+4+nn), ft_nonothing)
+  else
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
+    idx = Cint(-1)
+    idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    while idx >= 0
+      order = Int(sum(mono))
+      varidxs = Vector{Int}(undef,0)
+      varords = Vector{Int}(undef,0)
+      paramidxs = Vector{Int}(undef,0)
+      paramords = Vector{Int}(undef,0)
+      # Create variable pairs
+      for vp_idx in findall(x->x>0x0, mono)
+        if vp_idx > nv
+          push!(paramidxs, vp_idx-nv)
+          push!(paramords, Int(mono[vp_idx]))
+        else
+          push!(varidxs, vp_idx)
+          push!(varords, Int(mono[vp_idx]))
+        end
+      end
+      if iszero(varords) && iszero(paramords)
+        mono_display=1
+      else
+        mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
+      end
+      if abs(v[]) > EPS
+        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
+      end
+      idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
+    end
+    if size(out)[1] == 0
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing 1])
+    end
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3), ft_nonothing)
   end
-  if size(out)[1] == 0
-    out = vcat(out, Any[0.0 0.0 Int(0) "" zeros(Int,nn)...])
-  end
-  println(io, "ComplexTPS:")
-  #println(io, "   COEFFICIENT")
-  println(io, "  REAL                      IMAG                      ORDER    EXPONENTS")
-  formatters = (ft_printf("%23.16le", [1]),ft_printf("%23.16le", [2]), ft_printf("%2i", 3:4+nn))
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l)
+  return out, formatters
 end
+
+function show(io::IO, t::ComplexTPS)
+  out, formatters = format(t)
+  println(io, "ComplexTPS:")
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Real                      Imag                     Order     Monomial")
+  else
+    println(io, "  Real                      Imag                     Order     Exponent")
+  end
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+end
+
+function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
+  tf_GTPSA = TextFormat(up_right_corner     = '-',
+                       up_left_corner      = '-',
+                       bottom_left_corner  = ' ',
+                       bottom_right_corner = ' ',
+                       up_intersection     = '-',
+                       left_intersection   = '-',
+                       right_intersection  = ' ',
+                       middle_intersection = ' ',
+                       bottom_intersection = ' ',
+                       column              = ' ',
+                       row                 = '-',
+                       hlines              = [])#,
+                       #vlines              = :all);
+  N = length(m)
+  if N < 1
+    print(io, m)
+    return
+  end
+  hlines = Int[0]
+  out, formatters = format(m[1], coloffset=1)
+  out[:,1] .= 1
+  for i=2:N
+    push!(hlines, length(out[:,1]))
+    tmpout, __ = format(m[i],coloffset=1)
+    tmpout[:,1] .= i
+    out = vcat(out, tmpout)
+  end
+  println(io, N, "-element Vector{TPS}:")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Out   Coefficient              Order     Monomial")
+  else
+    println(io, "  Out   Coefficient              Order     Exponent")
+  end
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+end
+
+function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
+  tf_GTPSA = TextFormat(up_right_corner     = '-',
+                       up_left_corner      = '-',
+                       bottom_left_corner  = ' ',
+                       bottom_right_corner = ' ',
+                       up_intersection     = '-',
+                       left_intersection   = '-',
+                       right_intersection  = ' ',
+                       middle_intersection = ' ',
+                       bottom_intersection = ' ',
+                       column              = ' ',
+                       row                 = '-',
+                       hlines              = [])#,
+                       #vlines              = :all);
+  N = length(m)
+  if N < 1
+    print(io, m)
+    return
+  end
+  hlines = Int[0]
+  out, formatters = format(m[1], coloffset=1)
+  out[:,1] .= 1
+  for i=2:N
+    push!(hlines, length(out[:,1]))
+    tmpout, __ = format(m[i],coloffset=1)
+    tmpout[:,1] .= i
+    out = vcat(out, tmpout)
+  end
+  println(io, N, "-element Vector{ComplexTPS}:")
+  # Check if sparse monomial or exponent:
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  nn = desc.nn
+  if nn > 6
+    println(io, "  Out   Real                      Imag                     Order     Monomial")
+  else
+    println(io, "  Out   Real                      Imag                     Order     Exponent")
+  end
+  
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+end
+
 
 
 # -- zero -- 

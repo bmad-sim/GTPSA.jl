@@ -4,52 +4,121 @@ function type_stable_test()
   ct = ComplexTPS(t)
 
   # Basics
+  isequal(t , 0)
+  isequal(0 , t)
+  isequal(ct , 0)
+  isequal(0 , ct)
+  isequal(ct , t)
+  isequal(t , ct)
+  !(t === ct)
+  isequal(t , zero(t))
+  isequal(ct , zero(ct))
   t == 0
   0 == t
   ct == 0
   0 == ct
-  ct == t
   t == ct
-  !(t === ct)
+  ct == t
   t == zero(t)
-  ct == zero(ct)
+  ct == zero(t)
 
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
 
+  isequal(t, 1)
+  isequal(1, t)
+  isequal(ct, 1)
+  isequal(1, ct)
   t == 1
+  1 == t
   ct == 1
+  1 == ct
 
   # Check +, - unary functions and real, imag
+  isequal(t, +t)
   t == +t
   !(t === +t)
+  isequal(-1, -t)
   -1 == -t
   !(t === -t)
 
+  isequal(ct, +ct)
   ct == +ct
   !(ct === +ct)
-  -1 == -ct
+  isequal(-1, -ct)
+  -t == -ct
   !(ct === -ct)
 
-  t == real(t) == ct == real(ct) == 1
-  imag(t) == imag(ct) == 0
-  !(t == im) && !(im == t)
+  isequal(t, real(t))
+  isequal(real(t), ct)
+  isequal(ct, real(ct))
+  isequal(real(ct),1)
+  isequal(imag(t), imag(ct))
+  isequal(imag(ct), 0)
+  !isequal(t,im) && !isequal(im, ct)
+  t == real(t)
+  real(t) == ct
+  ct == real(ct)
+  real(ct) == 1
+  imag(t) == imag(ct)
+  imag(ct) == 0
+  t != im && ct != im
 
+  ct == t
+  t == ct
+  ct+im != t
+  t != ct+im
+  ct+im == t+im
+  t+im == ct+im
+  
   # Set ct = im
   ct[0] = im
-  ct == im
-  im == ct
-  real(ct) == 0
-  imag(ct) == t == 1
+  isequal(ct, im)
+  isequal(im, ct)
+  isequal(real(ct), 0)
+  isequal(imag(ct), t)
+  isequal(t, 1)
 
-  # Now do operators
+
   t1 = t
   t1[0] = 1
   t2 = zero(t1)
   t2[0] = 2
   t3 = zero(t1)
   t3[0] = 3
+
+  t1 == 1
+  1 == t1
+  t1 != 2
+  2 != t1
+  t1 != t2
+  t2 == 2
+  2 == t2
+  t3 == t2+t1
+  t2 < t3
+  t2 < 3
+  t2 <= t3
+  t2 <= 3
+  t2+t1 <= t3
+  3 <= t3
+
+  !(t2 > t3)
+  !(t2 > 3)
+  !(t2 >= t3)
+  !(t2 >= 3)
+
+  t3 > t2
+  t3 > 2
+  t3 >= t2
+  t3 >= 2
+  t3 >= t1+t2
+  t3 >= 3
+
+  !(t3 < t2)
+  !(t3 < 2)
+  !(t3 <= t2)
+  !(t3 <= 2)
 
   ct1 = ct
   ct1[0] = 1 + 1im
@@ -59,13 +128,12 @@ function type_stable_test()
   ct3[0] = 3 + 3im
 
   tol = 1e-14
-
+  # Now do operators
   # Test definition of 1-norm:
   tn = zero(t1)
   tn[0] = 1; tn[1] = 2; tn[2] = 3; tn[3] = 4; tn[4] = 5; tn[5] = 6
   tcn = zero(ct1)
   tcn[0] = 1+1im; tcn[1] = 2+2im; tcn[2] = 3+3im; tcn[3] = 4+4im; tcn[4] = 5+5im; tcn[5] = 6+6im
-
   norm(tn) == sum([i for i in 1:6])
   norm(tcn) == sum([abs(i+i*im) for i in 1:6])
 
@@ -200,8 +268,6 @@ function type_stable_test()
   norm(GTPSA.erfc(t) - SF.erfc(v))
   norm(-im*GTPSA.erf(t*im) - SF.erfi(v))
   =#
-
-  #= Uncomment when fixed
   norm(atan(t3,t2) - atan(3,2))
   norm(atan(t3,2) - atan(3,2))
   norm(atan(3,t2) - atan(3,2))
@@ -214,7 +280,6 @@ function type_stable_test()
   norm(atan(-t3,t2) - atan(-3,2))
   norm(atan(-t3,2) - atan(-3,2))
   norm(atan(-3,t2) - atan(-3,2))
-  =#
   norm(hypot(t2,t3) - hypot(2,3))
   norm(hypot(2,t3) - hypot(2,3))
   norm(hypot(t2,3) - hypot(2,3))
@@ -225,7 +290,6 @@ function type_stable_test()
   norm(hypot(1, 2, t3) - hypot(1,2,3))
   norm(hypot(1, t2, 3) - hypot(1,2,3))
   norm(hypot(t1, 2, 3) - hypot(1,2,3))
-  #= Uncomment when fixed
   norm(angle(t2) - angle(2))
   norm(angle(-t2) - angle(-2))
   norm(complex(t3) - complex(3))
@@ -234,7 +298,6 @@ function type_stable_test()
   norm(polar(-t1) - (abs(-1)+im*atan(0,-1)))
   norm(rect(t2) - (2*cos(0) + 2*sin(0)))
   norm(rect(-t1) - (-1*cos(0) + -1*sin(0)))
-  =#
 
   v = 0.5+0.5im
   t = ComplexTPS(t)
@@ -262,8 +325,6 @@ function type_stable_test()
   norm(csch(t) - csch(v))
   norm(sech(t) - sech(v))
   norm(coth(t) - coth(v))
-
-  #= Uncomment these when inverse trig C code is fixed
   norm(asin(t) - asin(v))
   norm(acos(t) - acos(v))
   norm(atan(t) - atan(v))
@@ -278,7 +339,6 @@ function type_stable_test()
   norm(acoth(t) - acoth(v))
   norm(asinc(t) - asin(v)/v)
   norm(asinhc(t) - asinh(v)/v)
-  =#
   norm(zero(t) - zero(v))
   norm(real(t) - real(v))
   norm(imag(t) - imag(v))
@@ -299,8 +359,6 @@ function type_stable_test()
   norm(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))
   norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))
   norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im))
-
-  #= Uncomment when fixed
   norm(angle(t2+im*t3) - angle(2+3im))
   norm(angle(t2-im*t3) - angle(2-3im))
   norm(angle(-t2-im*t3) - angle(-2-3im))
@@ -312,8 +370,6 @@ function type_stable_test()
   norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))
   norm(rect(ct2) - (2*cos(2) + 2*sin(2)))
   norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1)))
-  =#
-
   # Hypot, mixing TPS with ComplexTPS
   norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))
   norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im))
@@ -386,10 +442,8 @@ function type_stable_test()
   norm(acoth(1/t) - atanh(t))
   norm(asinc(t/pi) - asin(t)/t)
   norm(asinhc(t/pi) - asinh(t)/t)
-  #=
   norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t))
   norm(GTPSA.erf(-t) + GTPSA.erf(t))
-  =#
   norm(angle(t))
   norm(complex(t) - t)
   norm(complex(t,t) - (t+im*t))
@@ -427,7 +481,6 @@ function type_stable_test()
   norm(1 - tanh(t)^2 - sech(t)^2)
   norm(coth(t)^2 - 1 - csch(t)^2)
 
-  #= Uncomment these when C code corrects for unbounded imaginary domain
   norm(asin(sin(t)) - t)
   norm(acos(cos(t)) - t)
   norm(atan(tan(t)) - t)
@@ -442,13 +495,228 @@ function type_stable_test()
   norm(acoth(t) - acoth(1/t))
   norm(asinc(t) - asin(t)/t)
   norm(asinhc(t) - asinh(t)/t)
-  =#
-  #=
+ 
   norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t))
   norm(GTPSA.erf(-t) + GTPSA.erf(t))
-  =#
   norm(angle(t) - atan(imag(t),real(t)))
   norm(complex(t) - t)
+
+  d = Descriptor(3,10,2,10)
+  v = vars(d)
+  p = params(d)
+  tol = 1e-18
+
+  f = sin(v[1])
+  abs(f[0] - 0) 
+  abs(f[1] - 1) 
+  abs(f[2] - 0) 
+  abs(f[3] - -1/factorial(3)) 
+  abs(f[4] - 0) 
+  abs(f[5] - 1/factorial(5)) 
+  abs(f[6] - 0) 
+  abs(f[7] - -1/factorial(7)) 
+  abs(f[8] - 0) 
+  abs(f[9] - 1/factorial(9)) 
+  abs(f[10] - 0) 
+
+  abs(f[1=>1] - f[1]) 
+  abs(f[1=>2] - f[2]) 
+  abs(f[1=>3] - f[3]) 
+  abs(f[1=>4] - f[4]) 
+  abs(f[1=>5] - f[5]) 
+  abs(f[1=>6] - f[6]) 
+  abs(f[1=>7] - f[7]) 
+  abs(f[1=>8] - f[8]) 
+  abs(f[1=>9] - f[9]) 
+  abs(f[1=>10] - f[10]) 
+
+  fc = complex(f)
+  abs(fc[0] - 0) 
+  abs(fc[1] - 1) 
+  abs(fc[2] - 0) 
+  abs(fc[3] - -1/factorial(3)) 
+  abs(fc[4] - 0) 
+  abs(fc[5] - 1/factorial(5)) 
+  abs(fc[6] - 0) 
+  abs(fc[7] - -1/factorial(7)) 
+  abs(fc[8] - 0) 
+  abs(fc[9] - 1/factorial(9)) 
+  abs(fc[10] - 0) 
+
+  abs(fc[1=>1] - f[1]) 
+  abs(fc[1=>2] - f[2]) 
+  abs(fc[1=>3] - f[3]) 
+  abs(fc[1=>4] - f[4]) 
+  abs(fc[1=>5] - f[5]) 
+  abs(fc[1=>6] - f[6]) 
+  abs(fc[1=>7] - f[7]) 
+  abs(fc[1=>8] - f[8]) 
+  abs(fc[1=>9] - f[9]) 
+  abs(fc[1=>10] - f[10]) 
+
+  f2 = sin(v[1]) + cos(v[2])
+  abs(f2[0] - 1) 
+  abs(f2[1] - 1) 
+  abs(f2[2] - 0) 
+  abs(f2[3] - -1/factorial(3)) 
+  abs(f2[4] - 0) 
+  abs(f2[5] - 1/factorial(5)) 
+  abs(f2[6] - 0) 
+  abs(f2[7] - -1/factorial(7)) 
+  abs(f2[8] - 0) 
+  abs(f2[9] - 1/factorial(9)) 
+  abs(f2[10] - 0) 
+
+  abs(f2[0,0] - 1) 
+  abs(f2[0,1] - 0) 
+  abs(f2[0,2] - -1/factorial(2)) 
+  abs(f2[0,3] - 0) 
+  abs(f2[0,4] - 1/factorial(4)) 
+  abs(f2[0,5] - 0) 
+  abs(f2[0,6] - -1/factorial(6)) 
+  abs(f2[0,7] - 0) 
+  abs(f2[0,8] - 1/factorial(8)) 
+  abs(f2[0,9] - 0) 
+  abs(f2[0,10] - -1/factorial(10)) 
+
+  abs(f2[1=>1] - f2[1]) 
+  abs(f2[1=>2] - f2[2]) 
+  abs(f2[1=>3] - f2[3]) 
+  abs(f2[1=>4] - f2[4]) 
+  abs(f2[1=>5] - f2[5]) 
+  abs(f2[1=>6] - f2[6]) 
+  abs(f2[1=>7] - f2[7]) 
+  abs(f2[1=>8] - f2[8]) 
+  abs(f2[1=>9] - f2[9]) 
+  abs(f2[1=>10] - f2[10]) 
+
+  abs(f2[2=>1] - f2[0,1]) 
+  abs(f2[2=>2] - f2[0,2]) 
+  abs(f2[2=>3] - f2[0,3]) 
+  abs(f2[2=>4] - f2[0,4]) 
+  abs(f2[2=>5] - f2[0,5]) 
+  abs(f2[2=>6] - f2[0,6]) 
+  abs(f2[2=>7] - f2[0,7]) 
+  abs(f2[2=>8] - f2[0,8]) 
+  abs(f2[2=>9] - f2[0,9]) 
+  abs(f2[2=>10] - f2[0,10]) 
+
+  f2c = complex(sin(v[1]) + cos(v[2]))
+  abs(f2c[0] - 1) 
+  abs(f2c[1] - 1) 
+  abs(f2c[2] - 0) 
+  abs(f2c[3] - -1/factorial(3)) 
+  abs(f2c[4] - 0) 
+  abs(f2c[5] - 1/factorial(5)) 
+  abs(f2c[6] - 0) 
+  abs(f2c[7] - -1/factorial(7)) 
+  abs(f2c[8] - 0) 
+  abs(f2c[9] - 1/factorial(9)) 
+  abs(f2c[10] - 0) 
+
+  abs(f2c[0,0] - 1) 
+  abs(f2c[0,1] - 0) 
+  abs(f2c[0,2] - -1/factorial(2)) 
+  abs(f2c[0,3] - 0) 
+  abs(f2c[0,4] - 1/factorial(4)) 
+  abs(f2c[0,5] - 0) 
+  abs(f2c[0,6] - -1/factorial(6)) 
+  abs(f2c[0,7] - 0) 
+  abs(f2c[0,8] - 1/factorial(8)) 
+  abs(f2c[0,9] - 0) 
+  abs(f2c[0,10] - -1/factorial(10)) 
+
+  abs(f2c[1=>1] - f2c[1]) 
+  abs(f2c[1=>2] - f2c[2]) 
+  abs(f2c[1=>3] - f2c[3]) 
+  abs(f2c[1=>4] - f2c[4]) 
+  abs(f2c[1=>5] - f2c[5]) 
+  abs(f2c[1=>6] - f2c[6]) 
+  abs(f2c[1=>7] - f2c[7]) 
+  abs(f2c[1=>8] - f2c[8]) 
+  abs(f2c[1=>9] - f2c[9]) 
+  abs(f2c[1=>10] - f2c[10]) 
+
+  abs(f2c[2=>1] - f2c[0,1]) 
+  abs(f2c[2=>2] - f2c[0,2]) 
+  abs(f2c[2=>3] - f2c[0,3]) 
+  abs(f2c[2=>4] - f2c[0,4]) 
+  abs(f2c[2=>5] - f2c[0,5]) 
+  abs(f2c[2=>6] - f2c[0,6]) 
+  abs(f2c[2=>7] - f2c[0,7]) 
+  abs(f2c[2=>8] - f2c[0,8]) 
+  abs(f2c[2=>9] - f2c[0,9]) 
+  abs(f2c[2=>10] - f2c[0,10]) 
+
+  f3 = sin(v[1]) + cos(v[2]) + exp(p[1])
+  abs(f3[0] - 2) 
+  abs(f3[1] - 1) 
+  abs(f3[2] - 0) 
+  abs(f3[3] - -1/factorial(3)) 
+  abs(f3[4] - 0) 
+  abs(f3[5] - 1/factorial(5)) 
+  abs(f3[6] - 0) 
+  abs(f3[7] - -1/factorial(7)) 
+  abs(f3[8] - 0) 
+  abs(f3[9] - 1/factorial(9)) 
+  abs(f3[10] - 0) 
+
+  abs(f3[0,0] - 2) 
+  abs(f3[0,1] - 0) 
+  abs(f3[0,2] - -1/factorial(2)) 
+  abs(f3[0,3] - 0) 
+  abs(f3[0,4] - 1/factorial(4)) 
+  abs(f3[0,5] - 0) 
+  abs(f3[0,6] - -1/factorial(6)) 
+  abs(f3[0,7] - 0) 
+  abs(f3[0,8] - 1/factorial(8)) 
+  abs(f3[0,9] - 0) 
+  abs(f3[0,10] - -1/factorial(10)) 
+
+  abs(f3[0,0,0,0] - 2) 
+  abs(f3[0,0,0,1] - 1/factorial(1)) 
+  abs(f3[0,0,0,2] - 1/factorial(2)) 
+  abs(f3[0,0,0,3] - 1/factorial(3)) 
+  abs(f3[0,0,0,4] - 1/factorial(4)) 
+  abs(f3[0,0,0,5] - 1/factorial(5)) 
+  abs(f3[0,0,0,6] - 1/factorial(6)) 
+  abs(f3[0,0,0,7] - 1/factorial(7)) 
+  abs(f3[0,0,0,8] - 1/factorial(8)) 
+  abs(f3[0,0,0,9] - 1/factorial(9)) 
+  abs(f3[0,0,0,10] - 1/factorial(10)) 
+
+  abs(f3[1=>1] - f3[1]) 
+  abs(f3[1=>2] - f3[2]) 
+  abs(f3[1=>3] - f3[3]) 
+  abs(f3[1=>4] - f3[4]) 
+  abs(f3[1=>5] - f3[5]) 
+  abs(f3[1=>6] - f3[6]) 
+  abs(f3[1=>7] - f3[7]) 
+  abs(f3[1=>8] - f3[8]) 
+  abs(f3[1=>9] - f3[9]) 
+  abs(f3[1=>10] - f3[10]) 
+
+  abs(f3[2=>1] - f3[0,1]) 
+  abs(f3[2=>2] - f3[0,2]) 
+  abs(f3[2=>3] - f3[0,3]) 
+  abs(f3[2=>4] - f3[0,4]) 
+  abs(f3[2=>5] - f3[0,5]) 
+  abs(f3[2=>6] - f3[0,6]) 
+  abs(f3[2=>7] - f3[0,7]) 
+  abs(f3[2=>8] - f3[0,8]) 
+  abs(f3[2=>9] - f3[0,9]) 
+  abs(f3[2=>10] - f3[0,10]) 
+
+  abs(f3[params=(1=>1,)] - f3[0,0,0,1]) 
+  abs(f3[params=(1=>2,)] - f3[0,0,0,2]) 
+  abs(f3[params=(1=>3,)] - f3[0,0,0,3]) 
+  abs(f3[params=(1=>4,)] - f3[0,0,0,4]) 
+  abs(f3[params=(1=>5,)] - f3[0,0,0,5]) 
+  abs(f3[params=(1=>6,)] - f3[0,0,0,6]) 
+  abs(f3[params=(1=>7,)] - f3[0,0,0,7]) 
+  abs(f3[params=(1=>8,)] - f3[0,0,0,8]) 
+  abs(f3[params=(1=>9,)] - f3[0,0,0,9]) 
+  abs(f3[params=(1=>10,)] - f3[0,0,0,10]) 
 
   d = Descriptor(1, 5)
   t = TPS(d)
@@ -611,7 +879,6 @@ function type_stable_test()
   @FastGTPSA(norm(GTPSA.erfc(t) - SF.erfc(v)))
   @FastGTPSA(norm(-im*GTPSA.erf(t*im) - SF.erfi(v)))
   =#
-  #= Uncomment when fixed
   @FastGTPSA(norm(atan(t3,t2) - atan(3,2)))
   @FastGTPSA(norm(atan(t3,2) - atan(3,2)))
   @FastGTPSA(norm(atan(3,t2) - atan(3,2)))
@@ -624,7 +891,6 @@ function type_stable_test()
   @FastGTPSA(norm(atan(-t3,t2) - atan(-3,2)))
   @FastGTPSA(norm(atan(-t3,2) - atan(-3,2)))
   @FastGTPSA(norm(atan(-3,t2) - atan(-3,2)))
-  =#
   @FastGTPSA(norm(hypot(t2,t3) - hypot(2,3)))
   @FastGTPSA(norm(hypot(2,t3) - hypot(2,3)))
   @FastGTPSA(norm(hypot(t2,3) - hypot(2,3)))
@@ -636,7 +902,6 @@ function type_stable_test()
   @FastGTPSA(norm(hypot(1, t2, 3) - hypot(1,2,3)))
   @FastGTPSA(norm(hypot(t1, 2, 3) - hypot(1,2,3)))
 
-  #= Uncomment when fixed
   @FastGTPSA(norm(angle(t2) - angle(2)))
   @FastGTPSA(norm(angle(-t2) - angle(-2)))
   @FastGTPSA(norm(complex(t3) - complex(3)))
@@ -645,7 +910,6 @@ function type_stable_test()
   @FastGTPSA(norm(polar(-t1) - (abs(-1)+im*atan(0,-1))))
   @FastGTPSA(norm(rect(t2) - (2*cos(0) + 2*sin(0))))
   @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + -1*sin(0))))
-  =#
 
   v = 0.5+0.5im
   t = ComplexTPS(t)
@@ -673,8 +937,6 @@ function type_stable_test()
   @FastGTPSA(norm(csch(t) - csch(v)))
   @FastGTPSA(norm(sech(t) - sech(v)))
   @FastGTPSA(norm(coth(t) - coth(v)))
-
-  #= Uncomment these when inverse trig C code is fixed
   @FastGTPSA(norm(asin(t) - asin(v)))
   @FastGTPSA(norm(acos(t) - acos(v)))
   @FastGTPSA(norm(atan(t) - atan(v)))
@@ -689,7 +951,6 @@ function type_stable_test()
   @FastGTPSA(norm(acoth(t) - acoth(v)))
   @FastGTPSA(norm(asinc(t) - asin(v)/v))
   @FastGTPSA(norm(asinhc(t) - asinh(v)/v))
-  =#
   @FastGTPSA(norm(zero(t) - zero(v)))
   @FastGTPSA(norm(real(t) - real(v)))
   @FastGTPSA(norm(imag(t) - imag(v)))
@@ -711,7 +972,6 @@ function type_stable_test()
   @FastGTPSA(norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)))
   @FastGTPSA(norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)))
 
-  #= Uncomment when fixed
   @FastGTPSA(norm(angle(t2+im*t3) - angle(2+3im)))
   @FastGTPSA(norm(angle(t2-im*t3) - angle(2-3im)))
   @FastGTPSA(norm(angle(-t2-im*t3) - angle(-2-3im)))
@@ -723,7 +983,6 @@ function type_stable_test()
   @FastGTPSA(norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))))
   @FastGTPSA(norm(rect(ct2) - (2*cos(2) + 2*sin(2))))
   @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + -1*sin(-1))))
-  =#
   # Hypot, mixing TPS with ComplexTPS
   @FastGTPSA(norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)))
   @FastGTPSA(norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)))
@@ -802,10 +1061,8 @@ function type_stable_test()
   @FastGTPSA(norm(acoth(1/t) - atanh(t)))
   @FastGTPSA(norm(asinc(t/pi) - asin(t)/t))
   @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t))
-  #=
   @FastGTPSA(norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)))
   @FastGTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t)))
-  =#
   @FastGTPSA(norm(angle(t)))
   @FastGTPSA(norm(complex(t) - t))
   @FastGTPSA(norm(complex(t,t) - (t+im*t)))
@@ -843,8 +1100,6 @@ function type_stable_test()
   @FastGTPSA(norm(1 - tanh(t)^2 - sech(t)^2))
   @FastGTPSA(norm(coth(t)^2 - 1 - csch(t)^2))
 
-  # Uncomment these when C code corrects for unbounded imaginary domain
-  #=
   @FastGTPSA(norm(asin(sin(t)) - t))
   @FastGTPSA(norm(acos(cos(t)) - t))
   @FastGTPSA(norm(atan(tan(t)) - t))
@@ -859,11 +1114,8 @@ function type_stable_test()
   @FastGTPSA(norm(acoth(t) - acoth(1/t)))
   @FastGTPSA(norm(asinc(t) - asin(t)/t))
   @FastGTPSA(norm(asinhc(t) - asinh(t)/t))
-  =#
-  #=
   @FastGTPSA(norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)))
   @FastGTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t)))
-  =#
   @FastGTPSA(norm(angle(t) - atan(imag(t),real(t))))
   @FastGTPSA(norm(complex(t) - t))
 

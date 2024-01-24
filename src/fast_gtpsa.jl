@@ -10,7 +10,7 @@ function to_TPS(tpsa::Ptr{RTPSA})::TPS
 end
 
 function to_TPS(ctpsa::Ptr{CTPSA})::ComplexTPS
-  ct = TPS(mad_tpsa_new(ctpsa, MAD_TPSA_SAME))
+  ct = ComplexTPS(mad_ctpsa_new(ctpsa, MAD_TPSA_SAME))
   mad_ctpsa_copy!(ctpsa,ct.tpsa)
   rel_temp!(ctpsa)
   return ct
@@ -23,7 +23,7 @@ function to_temp_form(expr)
   fcns = [:inv, :atan, :abs, :sqrt, :exp, :log, :sin, :cos, :tan, :csc, :sec, :cot, :sinc, :sinh, :cosh,
           :tanh, :csch, :sech, :coth, :asin, :acos, :atan, :acsc, :asec, :acot, :asinh, :acosh, :atanh, :acsch, 
           :asech, :acoth, :real, :imag, :conj, :angle, :complex, :sinhc, :asinc, :asinhc, :erf, :erfc, :norm,
-          :polar, :rect] # hypot not included bc appears does not support in-place input = output
+          :polar, :rect, :+, :-, :*, :/, :^]# hypot not included bc appears does not support in-place input = output
   if expr.head == :.
     pkg = expr.args[1]
     if pkg == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
@@ -33,7 +33,7 @@ function to_temp_form(expr)
     return expr
   end
   for i in eachindex(expr.args)
-    if expr.args[i] isa Expr
+    if expr.args[i] isa Expr && expr.args[i].args[1] in fcns
       to_temp_form(expr.args[i])
     elseif expr.args[i] == :+
       expr.args[i] = :±  # \pm  (allowed as unary operator)
@@ -50,6 +50,7 @@ function to_temp_form(expr)
       expr.args[i] = Symbol(str)
     end
   end
+
   return expr
 end
 
@@ -329,7 +330,7 @@ function ±(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
 end
 
 function ±(tpsa1::Ptr{RTPSA},ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
-  return tpsa1 ± ctpsa1
+  return ctpsa1 ± tpsa1
 end
 
 function ±(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}
@@ -1068,6 +1069,18 @@ function __t_atan(a::Real, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
+function __t_atan(t1::TPS, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
+  mad_tpsa_atan2!(t1.tpsa, tpsa1, tpsa1)
+  return tpsa1
+end
+
+function __t_atan(tpsa1::Ptr{RTPSA}, t1::TPS)::Ptr{RTPSA}
+  mad_tpsa_atan2!(tpsa1, t1.tpsa, tpsa1)
+  return tpsa1
+end
+
+
+__t_atan(a,b) = (@inline; atan(a,b))
 
 function __t_norm(tpsa1::Ptr{RTPSA})::Float64
   nrm = mad_tpsa_nrm(tpsa1)
@@ -1080,6 +1093,8 @@ function __t_norm(ctpsa1::Ptr{CTPSA})::Float64
   rel_temp!(ctpsa1)
   return nrm 
 end
+
+__t_norm(a) = (@inline; norm(a))
 
 
 # --- rest of unary functions ---
@@ -1399,7 +1414,7 @@ function __t_angle(tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   return tpsa1
 end
 
-__t_angle(a) = (@inline, angle(a))
+__t_angle(a) = (@inline; angle(a))
 
 function __t_complex(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
@@ -1422,7 +1437,7 @@ function __t_complex(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   return ctpsa1
 end
 
-__t_complex(a) = (@inline, complex(a))
+__t_complex(a) = (@inline; complex(a))
 
 function __t_complex(t1::TPS, t2::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
@@ -1488,7 +1503,7 @@ function __t_complex(a::Real, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   return ctpsa
 end
 
-__t_complex(a,b) = (@inline, complex(a,b))
+__t_complex(a,b) = (@inline; complex(a,b))
 
 function __t_polar(ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
@@ -1503,20 +1518,20 @@ end
 
 function __t_polar(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_polar!(ctpsa, ctpsa)
   return ctpsa
 end
 
 function __t_polar(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   ctpsa = get_ctemp_low!(tpsa1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
   mad_ctpsa_polar!(ctpsa, ctpsa)
   return ctpsa
 end
 
-__t_polar(a) = (@inline, polar(a))
+__t_polar(a) = (@inline; polar(a))
 
 function __t_rect(ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
@@ -1526,19 +1541,19 @@ end
 
 function __t_rect(ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   mad_ctpsa_rect!(ctpsa1, ctpsa1)
-  return ctpsa
+  return ctpsa1
 end
 
 function __t_rect(t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_rect!(ctpsa, ctpsa)
   return ctpsa
 end
 
 function __t_rect(tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
-  ctpsa = get_ctemp!(t1)
-  mad_tpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
+  ctpsa = get_ctemp_low!(tpsa1)
+  mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
   mad_ctpsa_rect!(ctpsa, ctpsa)
   return ctpsa
@@ -1622,7 +1637,7 @@ end
 # asinhc is not in Julia, but in C is asinc(x) = asin(x)*x
 # To give similiar behavior, define asinc(x) = asin(pi*x)*(pi*x)
 function __t_asinhc(ct1::ComplexTPS)::Ptr{CTPSA}
-  ctpsa = get_rtemp!(ct1)
+  ctpsa = get_ctemp!(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ctpsa)
   mad_ctpsa_asinhc!(ctpsa, ctpsa)
   return ctpsa

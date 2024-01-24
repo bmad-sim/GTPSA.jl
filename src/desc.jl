@@ -10,7 +10,7 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `nn::Cint`                   -- Number of variables + number of parameters, `nn = nv+np <= 100000`
 - `nv::Cint`                   -- Number of variables
 - `np::Cint`                   -- Number of parameters
-- `mo::Cuchar`                 -- Max order of variables
+- `mo::Cuchar`                 -- Max order of both variables AND parameters
 - `po::Cuchar`                 -- Max order of parameterss
 - `to::Cuchar`                 -- Global order of truncation. Note: `ord_t` in gtpsa is `typedef` for `unsigned char` (`Cuchar`)
 - `no::Ptr{Cuchar}`            -- Array of orders of each variable (first `nv` entries) and parameters (last `np` entries), length `nn`. Note: In C this is `const`
@@ -98,7 +98,7 @@ parameters, and parameter order.
 
 ### Input
 - `nv`  -- Number of variables
-- `mo`  -- Maximum order of TPSA, `mo = max(1, mo)`
+- `mo`  -- Maximum order of TPSA INCLUDING PARAMETERS, `mo = max(1, mo)`
 - `np_` -- (Optional) Number of parameters, default is 0
 - `po_` -- (Optional) Order of parameters, `po = max(1, po_)`
 
@@ -114,7 +114,7 @@ end
 """
     mad_desc_newvpo(nv::Cint, mo::Cuchar, np_::Cint, po_::Cuchar, no_::Vector{Cuchar})::Ptr{Desc}
 
-Creates a TPSA descriptor with the specifed number of variables, maximum order, number of parameters, 
+Creates a TPSA descriptor with the specifed number of variables, maximum order for both variables and parameters, number of parameters, 
 parameter order, and individual variable/parameter orders specified in `no`. The first `nv` entries in `no` 
 correspond to the variables' orders and the next `np` entries correspond the parameters' orders.
 
