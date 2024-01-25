@@ -1,3 +1,13 @@
+# -- zero -- 
+function zero(t::TPS)::TPS
+  return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
+end
+
+function zero(ct::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
+end
+
+
 # --- Unary ---
 # TPS:
 function +(t1::TPS)::TPS
