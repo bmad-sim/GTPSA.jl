@@ -1,6 +1,6 @@
 # Advanced Usage
 ## Definitions
-GTPSA allows for explicitly distinguishing between state *variables* and external *parameters*. For example, suppose you have defined the evolution of some initial state $x_i$ of a dynamical system to a final state $x_f$ as $x_f = \mathcal{M}(x_i,k)$, where $k$ is some external parameter. When $\mathcal{M}$ is expanded in powers of $\Delta x_i$ and $\Delta k$, distinguishing between the state variable $v$ and parameter $k$ can significantly simplify analyses of the system. 
+GTPSA allows for explicitly distinguishing between state *variables* and external *parameters*. For example, suppose you have defined the evolution of some initial state $x_i$ of a dynamical system to a final state $x_f$ as $x_f = \mathcal{M}(x_i,k)$, where $k$ is some external parameter. When $\mathcal{M}$ is expanded in powers of $\Delta x_i$ and $\Delta k$, distinguishing between the state variable $x$ and parameter $k$ can significantly simplify analyses of the system. 
 
 ## TPSA Including Variables and Parameters
 Two extra `Descriptor` constructors can be used to define a TPSA with both variables and parameters.

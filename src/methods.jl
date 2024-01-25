@@ -50,8 +50,7 @@ function integrate(ct1::ComplexTPS; var::Integer=1)::ComplexTPS
   return ct
 end
 
-# Derivative wrt specific monomial
-function derivative(t1::TPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
+function differentiate(t1::TPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
   t = zero(t1)
   if isempty(vars) && isempty(params)
     if param > 0
@@ -74,8 +73,7 @@ function derivative(t1::TPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, 
   end
 end
 
-# Derivative wrt specific monomial
-function derivative(t1::ComplexTPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexTPS
+function differentiate(t1::ComplexTPS, vars::Pair{<:Integer,<:Integer}...; var=0,param=0, params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexTPS
   t = zero(t1)
   if isempty(vars) && isempty(params)
     if param > 0
@@ -97,6 +95,18 @@ function derivative(t1::ComplexTPS, vars::Pair{<:Integer,<:Integer}...; var=0,pa
     return t
   end
 end
+
+"""
+    getord(t::TPS, order::Integer)::TPS
+
+Extracts one homogenous polynomial from the TPS of the given order.
+"""
+function getord(t1::TPS, order::Integer)::TPS
+  t = zero(t1)
+  mad_tpsa_getord!(t1.tpsa, t.tpsa, convert(Cuchar, order))
+  return t
+end
+
 
 #=
 function poissonbracket(t1::TPS, t2::TPS)::TPS

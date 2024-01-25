@@ -422,7 +422,7 @@ export
 
   # Methods:
   evaluate,
-  derivative,
+  differentiate,
   integrate,
 
 
@@ -935,6 +935,22 @@ function setindex!(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}..
 end
 
 # --- gradient, jacobian, hessian getters ---
+"""
+    gradient!(result::Vector{Float64}, t::TPS; include_params=false)
+
+Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
+vector in-place. The partial derivatives wrt the parameters will also be extracted 
+when the `include_params` flag is set to `true`. Note that this function is not 
+calculating anything - just extracting the first-order monomial coefficients already 
+in the TPS.
+
+### Input
+- `t`              -- TPS to extract the gradient from
+- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false.
+
+### Output
+- `result`         -- Preallocated vector to fill with the gradient of the TPS
+"""
 function gradient!(result::Vector{Float64}, t::TPS; include_params=false)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   n = desc.nv
@@ -947,6 +963,21 @@ function gradient!(result::Vector{Float64}, t::TPS; include_params=false)
   mad_tpsa_getv!(t.tpsa, Cint(1), n, result)
 end
 
+"""
+    gradient(t::TPS; include_params=false)::Vector{Float64}
+
+Extracts the first-order partial derivatives from the TPS. The partial derivatives wrt 
+the parameters will also be extracted when the `include_params` flag is set to `true`. 
+Note that this function is not calculating anything - just extracting the first-order 
+monomial coefficients already in the TPS.
+
+### Input
+- `t`              -- TPS to extract the gradient from
+- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false.
+
+### Output
+- `grad`           -- Gradient of the TPS
+"""
 function gradient(t::TPS; include_params=false)::Vector{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   n = desc.nv
@@ -958,8 +989,24 @@ function gradient(t::TPS; include_params=false)::Vector{Float64}
   return grad
 end
 
-function gradient!(result::Vector{Float64}, t::ComplexTPS; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+"""
+    gradient!(result::Vector{ComplexF64}, ct::ComplexTPS; include_params=false)
+
+Extracts the first-order partial derivatives from the ComplexTPS and fills the `result` 
+vector in-place. The partial derivatives wrt the parameters will also be extracted 
+when the `include_params` flag is set to `true`. Note that this function is not 
+calculating anything - just extracting the first-order monomial coefficients already 
+in the ComplexTPS.
+
+### Input
+- `ct`             -- ComplexTPS to extract the gradient from
+- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false.
+
+### Output
+- `result`         -- Preallocated vector to fill with the gradient of the ComplexTPS
+"""
+function gradient!(result::Vector{ComplexF64}, ct::ComplexTPS; include_params=false)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   n = desc.nv
   if include_params
     n += desc.np
@@ -967,22 +1014,51 @@ function gradient!(result::Vector{Float64}, t::ComplexTPS; include_params=false)
   if length(result) != n
     error("Incorrect size for result")
   end
-  mad_tpsa_getv!(t.tpsa, Cint(1), n, result)
+  mad_ctpsa_getv!(ct.tpsa, Cint(1), n, result)
 end
 
-function gradient(t::ComplexTPS; include_params=false)::Vector{ComplexF64}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+"""
+    gradient(ct::ComplexTPS; include_params=false)::Vector{ComplexF64}
+
+Extracts the first-order partial derivatives from the ComplexTPS. The partial derivatives wrt 
+the parameters will also be extracted when the `include_params` flag is set to `true`. 
+Note that this function is not calculating anything - just extracting the first-order 
+monomial coefficients already in the ComplexTPS.
+
+### Input
+- `ct`             -- ComplexTPS to extract the gradient from
+- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false.
+
+### Output
+- `grad`           -- Gradient of the ComplexTPS
+"""
+function gradient(ct::ComplexTPS; include_params=false)::Vector{ComplexF64}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ct.tpsa).d))
   n = desc.nv
   if include_params
     n += desc.np
   end
   grad = Vector{ComplexF64}(undef, n)
-  mad_ctpsa_getv!(t.tpsa, Cint(1), n, grad)
+  mad_ctpsa_getv!(ct.tpsa, Cint(1), n, grad)
   return grad
 end
 
-#∇(t::Union{TPS,ComplexTPS}) = gradient(t,include_params=true);
+"""
+    jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false)
 
+Extracts the first-order partial derivatives from the Vector of TPSs and fills the `result` 
+matrix in-place. The partial derivatives wrt the parameters will also be extracted 
+when the `include_params` flag is set to `true`. Note that this function is not 
+calculating anything - just extracting the first-order monomial coefficients already 
+in the TPS.
+
+### Input
+- `t`              -- TPS to extract the gradient from
+- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false.
+
+### Output
+- `result`         -- Preallocated vector to fill with the gradient of the TPS
+"""
 function jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   n = desc.nv
@@ -1001,6 +1077,7 @@ function jacobian!(result::Matrix{Float64}, m::Vector{TPS}; include_params=false
     result[i,:] = grad
   end
 end
+
 
 function jacobian(m::Vector{TPS}; include_params=false)::Matrix{Float64}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
