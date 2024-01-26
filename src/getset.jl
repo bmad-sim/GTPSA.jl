@@ -3,8 +3,8 @@ function setindex!(t::TPS, v::Real, ords::Integer...)
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
 end
 
-function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
-  sm, n = pairs_to_sm(t, vars..., params=params)
+function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
+  sm, n = pairs_to_sm(t, vars, params=params)
   mad_tpsa_setsm!(t.tpsa, n, sm, 0.0, convert(Cdouble, v))
 end
 
@@ -12,8 +12,8 @@ function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
   mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
-function setindex!(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())
-  sm, n = pairs_to_sm(ct, vars..., params=params)
+function setindex!(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
+  sm, n = pairs_to_sm(ct, vars, params=params)
   mad_ctpsa_setsm!(ct.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
 end
 
@@ -23,9 +23,9 @@ function getindex(t::TPS, ords::Integer...)::Float64
   return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
-function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Float64
+function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Float64
   # use sparse monomial getter
-  sm, n = pairs_to_sm(t, vars..., params=params)
+  sm, n = pairs_to_sm(t, vars, params=params)
   return mad_tpsa_getsm(t.tpsa, n, sm)
 end
 
@@ -34,9 +34,9 @@ function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
   return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
-function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::ComplexF64
+function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::ComplexF64
   # use sparse monomial getter
-  sm, n = pairs_to_sm(ct, vars..., params=params)
+  sm, n = pairs_to_sm(ct, vars, params=params)
   return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 

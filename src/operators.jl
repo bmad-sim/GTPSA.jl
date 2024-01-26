@@ -149,7 +149,7 @@ function isequal(t1::TPS, t2::TPS)::Bool
 end
 
 function isequal(t1::TPS, a::Real)::Bool
-  t2 = TPS(a, t1)
+  t2 = TPS(t1,a)
   return isequal(t1,t2)
 end
 
@@ -163,7 +163,7 @@ function isequal(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
 end
 
 function isequal(ct1::ComplexTPS, a::Number)::Bool
-  ct2 = ComplexTPS(a, ct1)
+  ct2 = ComplexTPS(ct1, a)
   return isequal(ct1, ct2)
 end
 
@@ -543,13 +543,13 @@ function atan(t1::TPS, t2::TPS)::TPS
 end
 
 function atan(t1::TPS, a::Real)::TPS
-  t = TPS(a, t1)
+  t = TPS(t1,a)
   mad_tpsa_atan2!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
 
 function atan(a::Real, t1::TPS)::TPS
-  t = TPS(a, t1)
+  t = TPS(t1,a)
   mad_tpsa_atan2!(t.tpsa, t1.tpsa, t.tpsa)
   return t
 end
@@ -561,7 +561,7 @@ function hypot(t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number)::TPS
-  t = TPS(abs(a), t1)
+  t = TPS(t1, abs(a))
   mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
@@ -577,7 +577,7 @@ function hypot(t1::TPS, t2::TPS, t3::TPS)::TPS
 end
 
 function hypot(t1::TPS, t2::TPS, a::Number)::TPS
-  t3 = TPS(abs(a), t1)
+  t3 = TPS(t1, abs(a))
   return hypot(t1, t2, t3)
 end
 
@@ -590,7 +590,7 @@ function hypot(a::Number, t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number, b::Number)::TPS
-  t2 = TPS(abs(a), t1)
+  t2 = TPS(t1,abs(a))
   return hypot(t1, t2, b)
 end
 
@@ -960,12 +960,12 @@ function complex(t1::TPS, t2::TPS)::ComplexTPS
 end
 
 function complex(t1::TPS, a::Real)::ComplexTPS
-  t2 = TPS(a,t1)
+  t2 = TPS(t1,a)
   return ComplexTPS(t1, t2)
 end
 
 function complex(a::Real, t1::TPS)::ComplexTPS
-  t2 = TPS(a,t1)
+  t2 = TPS(t1,a)
   return ComplexTPS(t2, t1)
 end
 

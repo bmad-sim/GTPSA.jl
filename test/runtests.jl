@@ -722,16 +722,16 @@ end
   @test abs(f3[2=>9] - f3[0,9]) < tol
   @test abs(f3[2=>10] - f3[0,10]) < tol
 
-  @test abs(f3[params=(1=>1,)] - f3[0,0,0,1]) < tol
-  @test abs(f3[params=(1=>2,)] - f3[0,0,0,2]) < tol
-  @test abs(f3[params=(1=>3,)] - f3[0,0,0,3]) < tol
-  @test abs(f3[params=(1=>4,)] - f3[0,0,0,4]) < tol
-  @test abs(f3[params=(1=>5,)] - f3[0,0,0,5]) < tol
-  @test abs(f3[params=(1=>6,)] - f3[0,0,0,6]) < tol
-  @test abs(f3[params=(1=>7,)] - f3[0,0,0,7]) < tol
-  @test abs(f3[params=(1=>8,)] - f3[0,0,0,8]) < tol
-  @test abs(f3[params=(1=>9,)] - f3[0,0,0,9]) < tol
-  @test abs(f3[params=(1=>10,)] - f3[0,0,0,10]) < tol
+  @test abs(f3[params=[1=>1]] - f3[0,0,0,1]) < tol
+  @test abs(f3[params=[1=>2]] - f3[0,0,0,2]) < tol
+  @test abs(f3[params=[1=>3]] - f3[0,0,0,3]) < tol
+  @test abs(f3[params=[1=>4]] - f3[0,0,0,4]) < tol
+  @test abs(f3[params=[1=>5]] - f3[0,0,0,5]) < tol
+  @test abs(f3[params=[1=>6]] - f3[0,0,0,6]) < tol
+  @test abs(f3[params=[1=>7]] - f3[0,0,0,7]) < tol
+  @test abs(f3[params=[1=>8]] - f3[0,0,0,8]) < tol
+  @test abs(f3[params=[1=>9]] - f3[0,0,0,9]) < tol
+  @test abs(f3[params=[1=>10]] - f3[0,0,0,10]) < tol
 
 
 

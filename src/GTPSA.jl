@@ -405,12 +405,15 @@ export
   erf   ,
   erfc ,
   norm,
+  polar,
+  rect, 
+
+  # Monomial as TPS creators:
   vars,
   params,
   complexvars,
   complexparams,
-  polar,
-  rect, 
+  mono,
 
   # Convenience getters:
   gradient,
@@ -422,11 +425,14 @@ export
 
   # Methods:
   evaluate,
-  integrate,
-  differentiate,
+  ∫,
+  ∂,
   getord,
-  poisbra,
-  liebra,
+  cutord,
+  pb,
+  lb,
+  getvectorfield,
+  exppb,
   
 
 
@@ -572,7 +578,7 @@ function TPS(t1::TPS)::TPS
 end
 
 """
-    TPS(a::Real, t1::TPS)::TPS
+    TPS(t1::TPS, a::Real)::TPS
 
 Promotes the scalar `a` to a new `TPS` using the same 
 `Descriptor` as `t1`
@@ -582,7 +588,7 @@ Promotes the scalar `a` to a new `TPS` using the same
 - `a`  -- Scalar to create new `TPS` with
 - `t1` -- `TPS` to use same `Descriptor` as
 """
-function TPS(a::Real, t1::TPS)::TPS
+function TPS(t1::TPS, a::Real)::TPS
   t = zero(t1)
   mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
   return t
@@ -685,32 +691,32 @@ function ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
 end
 
 """
-    ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
+    ComplexTPS(ct1::ComplexTPS, a::Number)::ComplexTPS
 
 Promotes the scalar `a` to a new `ComplexTPS` using the same
 `Descriptor` as `ct1`
 
 ### Input
-- `a`    -- Scalar to create new `ComplexTPS` with
 - `ct1`  -- `ComplexTPS` to use same `Descriptor` as
+- `a`    -- Scalar to create new `ComplexTPS` with
 """
-function ComplexTPS(a::Number, ct1::ComplexTPS)::ComplexTPS
+function ComplexTPS(ct1::ComplexTPS, a::Number)::ComplexTPS
   ct = zero(ct1)
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
 """
-    ComplexTPS(a::Number, t1::TPS)::ComplexTPS
+    ComplexTPS(t1::TPS, a::Number)::ComplexTPS
 
 Promotes the scalar `a` to a new `ComplexTPS` using the same
 `Descriptor` as `t1`
 
 ### Input
-- `a`   -- Scalar to create new `ComplexTPS` with
 - `t1`  -- `TPS` to use same `Descriptor` as
+- `a`   -- Scalar to create new `ComplexTPS` with
 """
-function ComplexTPS(a::Number, t1::TPS)::ComplexTPS
+function ComplexTPS(t1::TPS, a::Number)::ComplexTPS
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
   return ct
@@ -854,8 +860,62 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
   return k
 end
 
-# Function to convert var=>ord, params=(param=>ord,) to sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{Cint}, Cint}
+
+"""
+
+    mono(d::Descriptor, ords::Integer...=0)::TPS
+
+Returns a the monomial specified by `ords` (indexing by order) as a `TPS`.
+
+# Examples
+```julia-repl
+julia> d = Descriptor(2,5,3,5);
+
+julia> mono(d, 3, 1)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    4        3    1    0    0    0
+
+julia> mono(d, 1, 0, 2, 1)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    4        1    0    2    1    0
+```
+"""
+function mono(d::Descriptor, ords::Integer...=0)::TPS
+  t = TPS(d)
+  t[ords...] = 1
+  return t
+end
+
+"""
+    mono(d::Descriptor, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
+
+Returns a the monomial specified by `vars` and optionally `params` (indexing by sparse-monomial) as a `TPS`.
+
+```julia-repl
+julia> d = Descriptor(2,5,3,5);
+
+julia> mono(d, 1=>3, 2=>1)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    4        3    1    0    0    0
+
+
+julia> mono(d, 1=>1, params=(1=>2,2=>1))
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    4        1    0    2    1    0
+```
+"""
+function mono(d::Descriptor, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
+  t = TPS(d)
+  t[vars..., params=params] = 1
+  return t
+end
+
+# Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
+function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Tuple{Vector{Cint}, Cint}
   # WE MUST Order THE VARIABLES !!!
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!!!
@@ -877,7 +937,7 @@ function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}.
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Tuple{Vector{UInt8}, Cint}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   n = Cint(0)
