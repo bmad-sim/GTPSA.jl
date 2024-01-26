@@ -7,6 +7,59 @@ function zero(ct::ComplexTPS)::ComplexTPS
   return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
 end
 
+# --- special zero with promotion ---
+function zero_promote(t1::TPS, t2::TPS)::TPS
+  return TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
+end
+
+function zero_promote(t1::TPS, ct1::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+end
+
+function zero_promote(ct1::ComplexTPS, t1::TPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+end
+
+function zero_promote(ct1::ComplexTPS, ct2::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+end
+
+# Vectorized zero_promote, output length is same as m1
+function zero_promote(m1::Vector{TPS}, m2::Vector{TPS})::Tuple{Vector{TPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{TPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{TPS}, m2::Vector{ComplexTPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m2[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{ComplexTPS}, m2::Vector{TPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{ComplexTPS}, m2::Vector{ComplexTPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
 
 # --- Unary ---
 # TPS:

@@ -201,33 +201,28 @@ function deriv(t1::Union{TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
-"""
-    getord(t::TPS, order::Integer)::TPS
+# --- getord and cutord ---
+# Low-level equivalent calls for TPS and ComplexTPS:
+getord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cuchar) = (@inline;  mad_tpsa_getord!(tpsa1, tpsa, order))
+getord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cuchar) = (@inline;  mad_ctpsa_getord!(ctpsa1, ctpsa, order))
+cutord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cuchar) = (@inline;  mad_tpsa_cutord!(tpsa1, tpsa, order))
+cutord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cuchar) = (@inline;  mad_ctpsa_cutord!(ctpsa1, ctpsa, order))
 
-Extracts one homogenous polynomial from the TPS of the given order.
 """
-function getord(t1::TPS, order::Integer)::TPS
+    getord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
+
+Extracts one homogenous polynomial from `t1` of the given order.
+"""
+function getord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
   t = zero(t1)
-  mad_tpsa_getord!(t1.tpsa, t.tpsa, convert(Cuchar, order))
+  getord!(t1.tpsa, t.tpsa, convert(Cuchar, order))
   return t
 end
 
 """
-    getord(ct1::ComplexTPS, order::Integer)::ComplexTPS
+    cutord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
 
-Extracts one homogenous polynomial from the ComplexTPS of the given order.
-"""
-function getord(ct1::ComplexTPS, order::Integer)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_getord!(ct1.tpsa, ct.tpsa, convert(Cuchar, order))
-  return ct
-end
-
-
-"""
-    cutord(t::TPS, order::Integer)::TPS
-
-Cuts out the monomials in `TPS` at the given order and above. Or, if `order` 
+Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`.
 
 # Examples
@@ -250,50 +245,23 @@ TPS:
    2.7557319223985893e-06    9        9
 ```
 """
-function cutord(t1::TPS, order::Integer)::TPS
+function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
   t = zero(t1)
-  mad_tpsa_cutord!(t1.tpsa, t.tpsa, convert(Cint, order))
+  cutord!(t1.tpsa, t.tpsa, convert(Cint, order))
   return t
 end
 
-"""
-    cutord(ct1::ComplexTPS, order::Integer)::ComplexTPS
-
-Cuts out the monomials in `ComplexTPS` at the given order and above. Or, if `order` 
-is negative, will cut monomials with orders at and below `abs(order)`.
-    
-
-# Examples
-```julia-repl
-julia> d = Descriptor(1,10);
-
-julia> x = complexvars(d);
-
-julia> cutord(sin(x[1]), 5)
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-   1.0000000000000000e+00    0.0000000000000000e+00    1        1
-  -1.6666666666666666e-01    0.0000000000000000e+00    3        3
-
-
-julia> cutord(sin(x[1]), -5)
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-  -1.9841269841269841e-04    0.0000000000000000e+00    7        7
-   2.7557319223985893e-06    0.0000000000000000e+00    9        9
-```
-"""
-function cutord(ct1::ComplexTPS, order::Integer)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_cutord!(ct1.tpsa, ct.tpsa, convert(Cint, order))
-  return ct
-end
-
+# --- Poisson bracket ---
+# Low-level calls
+poisbra!(tpsa1::Ptr{RTPSA}, tpsa2::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, nv::Cint) = (@inline; mad_tpsa_poisbra!(tpsa1, tpsa2, tpsa, nv))
+poisbra!(tpsa1::Ptr{RTPSA}, ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, nv::Cint) = (@inline; mad_ctpsa_poisbrat!(ctpsa1,tpsa1,ctpsa, nv))
+poisbra!(ctpsa1::Ptr{CTPSA}, tpsa1::Ptr{RTPSA}, ctpsa::Ptr{CTPSA}, nv::Cint) = (@inline; mad_ctpsa_tpoisbra!(tpsa1, ctpsa1, ctpsa, nv))
+poisbra!(ctpsa1::Ptr{CTPSA}, ctpsa2::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, nv::Cint) = (@inline; mad_ctpsa_poisbra!(ctpsa1,ctpsa2, ctpsa, nv))
 
 """
-    pb(f::TPS, g::TPS)::TPS
+    pb(f::Union{TPS, ComplexTPS}, g::Union{TPS, ComplexTPS})
 
-Assuming the variables in the `TPSA` are canonically-conjugate, and ordered so that the canonically-
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), computes the Poisson bracket 
 of the scalar functions `f` and `g`. The Poisson bracket of two functions `{f, g}` is defined as 
 `Σᵢ (∂f/∂qᵢ)(∂g/∂pᵢ) - (∂g/∂qᵢ)(∂f/∂pᵢ)`.
@@ -330,129 +298,49 @@ TPS:
    1.0000000000000000e+00    1        0    0    1    0
 ```
 """
-function pb(f::TPS, g::TPS)::TPS
-  t = zero(f)
+function pb(f::Union{TPS, ComplexTPS}, g::Union{TPS, ComplexTPS})
+  t = zero_promote(f,g)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(f.tpsa).d))
-  mad_tpsa_poisbra!(f.tpsa,g.tpsa,t.tpsa, desc.nv)
+  poisbra!(f.tpsa,g.tpsa,t.tpsa, desc.nv)
   return t
 end
 
-"""
-    pb(f::ComplexTPS, g::ComplexTPS)::ComplexTPS
-
-Assuming the variables in the `TPSA` are canonically-conjugate, and ordered so that the canonically-
-conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), computes the Poisson bracket 
-of the scalar functions `f` and `g`. The Poisson bracket of two functions `{f, g}` is defined as 
-`Σᵢ (∂f/∂qᵢ)(∂g/∂pᵢ) - (∂g/∂qᵢ)(∂f/∂pᵢ)`.
-
-```julia-repl
-julia> d = Descriptor(4,10);
-
-julia> x = complexvars(d);
-
-julia> f = (x[1]^2 + x[2]^2)/2 + (x[3]^2 + x[4]^2)/2;
-
-julia> pb(f,x[1])
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-  -1.0000000000000000e+00   -0.0000000000000000e+00    1        0    1    0    0
-
-
-julia> pb(f,x[2])
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-   1.0000000000000000e+00    0.0000000000000000e+00    1        1    0    0    0
-
-
-julia> pb(f,x[3])
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-  -1.0000000000000000e+00   -0.0000000000000000e+00    1        0    0    0    1
-
-
-julia> pb(f,x[4])
-ComplexTPS:
-  Real                      Imag                     Order     Exponent
-   1.0000000000000000e+00    0.0000000000000000e+00    1        0    0    1    0
-```
-"""
-function pb(f::ComplexTPS, g::ComplexTPS)::ComplexTPS
-  ct = zero(f)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(f.tpsa).d))
-  mad_ctpsa_poisbra!(f.tpsa,g.tpsa,ct.tpsa, desc.nv)
-  return ct
-end
-
-function pb(f::TPS, g::ComplexTPS)::ComplexTPS
-  ct = zero(g)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(f.tpsa).d))
-  mad_ctpsa_tpoisbra!(f.tpsa,g.tpsa,ct.tpsa, desc.nv)
-  return ct
-end
-
-function pb(f::ComplexTPS, g::TPS)::ComplexTPS
-  ct = zero(f)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(f.tpsa).d))
-  mad_ctpsa_poisbrat!(f.tpsa,g.tpsa,ct.tpsa, desc.nv)
-  return ct
-end
-
+# --- Lie bracket ---
+liebra!(na::Cint, m1::Vector{Ptr{RTPSA}}, m2::Vector{Ptr{RTPSA}}, m3::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_liebra!(na, m1, m2, m3))
+liebra!(na::Cint, m1::Vector{Ptr{CTPSA}}, m2::Vector{Ptr{CTPSA}}, m3::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_liebra!(na, m1, m2, m3))
 
 """
-    lb(A::Vector{TPS}, F::Vector{TPS})::Vector{TPS}
+    lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
 
 Computes the Lie bracket of the vector functions `A` and `F`
 eq 3.42 3.43 in Etienne's book
 """
-function lb(A::Vector{TPS}, F::Vector{TPS})::Vector{TPS}
-  na = Cint(length(A))
+function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
+  mc, na = zero_promote(A, F)
   m1 = map(t->t.tpsa, A)
   m2 = map(t->t.tpsa, F)
-  mc = Vector{TPS}(undef, na)
-  for i in eachindex(mc)
-    mc[i] = zero(A[1])
-  end
   m3 = map(t->t.tpsa, mc)
-  mad_tpsa_liebra!(na, m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
+  liebra!(na, m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
   return mc
 end
 
-function lb(A::Vector{ComplexTPS}, F::Vector{ComplexTPS})::Vector{ComplexTPS}
-  na = Cint(length(A))
-  m1 = map(t->t.tpsa, A)
-  m2 = map(t->t.tpsa, F)
-  mc = Vector{ComplexTPS}(undef, na)
-  for i in eachindex(mc)
-    mc[i] = zero(A[1])
-  end
-  m3 = map(t->t.tpsa, mc)
-  mad_ctpsa_liebra!(na, m2, m1, m3)    # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
-  return mc
-end
+# --- getvectorfield ---
+vec2fld!(na::Cint, tpsa::Ptr{RTPSA}, m::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_vec2fld!(na, tpsa, m))
+vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_vec2fld!(na, ctpsa, m))
 
-function getvectorfield(h::TPS)::Vector{TPS}
+function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
   na = desc.nv
-  mc = Vector{TPS}(undef, na) 
+  mc = Vector{typeof(h)}(undef, na) 
   for i in eachindex(mc)
     mc[i] = zero(h)
   end
   m = map(t->t.tpsa, mc)
-  mad_tpsa_vec2fld!(na, h.tpsa, m)
+  vec2fld!(na, h.tpsa, m)
   return mc
 end
 
-function getvectorfield(h::ComplexTPS)::Vector{ComplexTPS}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
-  na = desc.nv
-  mc = Vector{ComplexTPS}(undef, na) 
-  for i in eachindex(mc)
-    mc[i] = zero(h)
-  end
-  m = map(t->t.tpsa, mc)
-  mad_ctpsa_vec2fld!(na, h.tpsa, m)
-  return mc
-end
+# --- exp([f, .]) m ---
 
 function exppb(ma::Vector{TPS}, mb::Vector{TPS})::Vector{TPS}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
