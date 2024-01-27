@@ -42,7 +42,9 @@ import Base:  +,
               imag  ,
               conj  ,
               angle ,
-              complex, 
+              complex,
+              Complex,
+              promote_rule,
               getindex,
               setindex!,
               ==,
@@ -540,7 +542,7 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 end
 
 # Wrapper struct for Ptr{RTPSA}
-mutable struct TPS <: Number
+mutable struct TPS <: Real
   tpsa::Ptr{RTPSA}
   function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
@@ -861,57 +863,62 @@ function complexparams(d::Descriptor)::Vector{ComplexTPS}
 end
 
 
-"""
+function mono(d::Descriptor, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::TPS
+  return low_mono(d, v, param, params)
+end
 
-    mono(d::Descriptor, ords::Integer...=0)::TPS
-
-Returns a the monomial specified by `ords` (indexing by order) as a `TPS`.
-
-# Examples
-```julia-repl
-julia> d = Descriptor(2,5,3,5);
-
-julia> mono(d, 3, 1)
-TPS:
-  Coefficient              Order     Exponent
-   1.0000000000000000e+00    4        3    1    0    0    0
-
-julia> mono(d, 1, 0, 2, 1)
-TPS:
-  Coefficient              Order     Exponent
-   1.0000000000000000e+00    4        1    0    2    1    0
-```
-"""
-function mono(d::Descriptor, ords::Integer...=0)::TPS
+# Variable/parameter:
+function low_mono(d::Descriptor, v::Integer, param::Nothing, params::Nothing)::TPS
   t = TPS(d)
-  t[ords...] = 1
+  mad_tpsa_seti!(t.tpsa, Cint(v), 0.0, 1.0)
   return t
 end
 
-"""
-    mono(d::Descriptor, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
-
-Returns a the monomial specified by `vars` and optionally `params` (indexing by sparse-monomial) as a `TPS`.
-
-```julia-repl
-julia> d = Descriptor(2,5,3,5);
-
-julia> mono(d, 1=>3, 2=>1)
-TPS:
-  Coefficient              Order     Exponent
-   1.0000000000000000e+00    4        3    1    0    0    0
-
-
-julia> mono(d, 1=>1, params=(1=>2,2=>1))
-TPS:
-  Coefficient              Order     Exponent
-   1.0000000000000000e+00    4        1    0    2    1    0
-```
-"""
-function mono(d::Descriptor, vars::Pair{<:Integer, <:Integer}...; params::Tuple{Vararg{Pair{<:Integer,<:Integer}}}=())::TPS
+function low_mono(d::Descriptor, v::Nothing, param::Integer, params::Nothing)::TPS
   t = TPS(d)
-  t[vars..., params=params] = 1
+  desc = unsafe_load(d.desc)
+  nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+  mad_tpsa_seti!(t.tpsa, Cint(v) + nv, 0.0, 1.0)
   return t
+end
+
+# Default to scalar value if nothing passed
+function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Nothing)::TPS
+  t = TPS(d)
+  t[0] = 1.0
+  return t
+end
+
+# Monomial by order:
+function low_mono(d::Descriptor, v::Vector{<:Integer}, param::Nothing, params::Nothing)::TPS
+  t = TPS(d)
+  t[v...] = 1.0
+  return t
+end
+
+# Monomial by sparse monomial:
+function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
+  t = TPS(d)
+  t[v..., params=params] = 1.0
+  return t
+end
+
+function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::TPS
+  t = TPS(d)
+  # Need to create array of orders with length nv + np
+  t[v...] = 1.0
+  return t
+end
+
+function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
+  t = TPS(d)
+  t[params=params] = 1.0
+  return t
+end
+
+# Throw error if no above use cases satisfied:
+function low_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
+  error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
@@ -961,5 +968,20 @@ include("show.jl")
 include("operators.jl")
 include("methods.jl")
 include("fast_gtpsa.jl")
+
+# Prevent undefined behavior
+Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Base.Complex{TPS}(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Base.Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Base.Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Base.Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+
+
+promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = TPS
+promote_rule(::Type{ComplexTPS}, ::Union{Type{Complex},Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = ComplexTPS
+promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
 
 end

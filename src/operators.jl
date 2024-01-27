@@ -8,6 +8,13 @@ function zero(ct::ComplexTPS)::ComplexTPS
 end
 
 # --- special zero with promotion ---
+#= Using standard "promote" + zero is expensive for methods with
+   defined internal real to complex conversion (e.g. mad_tpsa_poisbrat)
+   so zero_promote will give back a zero TPS/ComplexTPS with the highest type 
+   of the two passed. Currently this is only used in methods.jl
+   to simplify the code (one written function for all types). It technically could have
+   been used throughout operators.jl too, but was not. 
+=#
 function zero_promote(t1::TPS, t2::TPS)::TPS
   return TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
 end
@@ -17,7 +24,7 @@ function zero_promote(t1::TPS, ct1::ComplexTPS)::ComplexTPS
 end
 
 function zero_promote(ct1::ComplexTPS, t1::TPS)::ComplexTPS
-  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME)) 
 end
 
 function zero_promote(ct1::ComplexTPS, ct2::ComplexTPS)::ComplexTPS

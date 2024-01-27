@@ -317,8 +317,8 @@ eq 3.42 3.43 in Etienne's book
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
   mc, na = zero_promote(A, F)
-  m1 = map(t->t.tpsa, A)
-  m2 = map(t->t.tpsa, F)
+  m1 = map(t->convert(typeof(mc[1]), t).tpsa, A)   # Promotes if necessary, else does nothing
+  m2 = map(t->convert(typeof(mc[1]), t).tpsa, F)   # Promotes if necessary, else does nothing
   m3 = map(t->t.tpsa, mc)
   liebra!(na, m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
   return mc
@@ -341,17 +341,15 @@ function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
 end
 
 # --- exp([f, .]) m ---
+exppb!(na::Cint, ma::Ptr{RTPSA}, mb::Ptr{RTPSA}, mc::Ptr{RTPSA}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
+exppb!(na::Cint, ma::Ptr{CTPSA}, mb::Ptr{CTPSA}, mc::Ptr{CTPSA}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
-function exppb(ma::Vector{TPS}, mb::Vector{TPS})::Vector{TPS}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
-  na = desc.nv
-  m1 = map(t->t.tpsa, ma)
-  m2 = map(t->t.tpsa, mb)
-  mc = Vector{TPS}(undef, na) 
-  for i in eachindex(mc)
-    mc[i] = zero(ma[1])
-  end
+function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+  mc, na = zero_promote(ma, mb)
+  m1 = map(t->convert(typeof(mc[1]), t).tpsa, ma)   # Promotes if necessary, else does nothing
+  m2 = map(t->convert(typeof(mc[1]), t).tpsa, mb)   # Promotes if necessary, else does nothing
   m3 = map(t->t.tpsa, mc)
-  mad_tpsa_exppb!(na, m1, m2, m3)
+  exppb!(na, m1, m2, m3)  
   return mc
 end
+
