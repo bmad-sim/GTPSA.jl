@@ -209,7 +209,7 @@ function isequal(t1::TPS, t2::TPS)::Bool
 end
 
 function isequal(t1::TPS, a::Real)::Bool
-  t2 = TPS(t1,a)
+  t2 = TPS(a,use=t1)
   return isequal(t1,t2)
 end
 
@@ -223,7 +223,7 @@ function isequal(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
 end
 
 function isequal(ct1::ComplexTPS, a::Number)::Bool
-  ct2 = ComplexTPS(ct1, a)
+  ct2 = ComplexTPS(a,use=ct1)
   return isequal(ct1, ct2)
 end
 
@@ -245,8 +245,7 @@ function isequal(a::Complex, t1::TPS)::Bool
 end
 
 function isequal(ct1::ComplexTPS, t1::TPS)::Bool
-  ct2 = ComplexTPS(t1)
-  return isequal(ct1, ct2)
+  return convert(Bool, mad_ctpsa_equt(ct1.tpsa, t1.tpsa, convert(Cdouble, 0.)))
 end
 
 function isequal(t1::TPS, ct1::ComplexTPS)::Bool
@@ -603,13 +602,13 @@ function atan(t1::TPS, t2::TPS)::TPS
 end
 
 function atan(t1::TPS, a::Real)::TPS
-  t = TPS(t1,a)
+  t = TPS(a,use=t1)
   mad_tpsa_atan2!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
 
 function atan(a::Real, t1::TPS)::TPS
-  t = TPS(t1,a)
+  t = TPS(a,use=t1)
   mad_tpsa_atan2!(t.tpsa, t1.tpsa, t.tpsa)
   return t
 end
@@ -621,7 +620,7 @@ function hypot(t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number)::TPS
-  t = TPS(t1, abs(a))
+  t = TPS(abs(a),use=t1)
   mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
@@ -637,7 +636,7 @@ function hypot(t1::TPS, t2::TPS, t3::TPS)::TPS
 end
 
 function hypot(t1::TPS, t2::TPS, a::Number)::TPS
-  t3 = TPS(t1, abs(a))
+  t3 = TPS(abs(a),use=t1)
   return hypot(t1, t2, t3)
 end
 
@@ -650,7 +649,7 @@ function hypot(a::Number, t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number, b::Number)::TPS
-  t2 = TPS(t1,abs(a))
+  t2 = TPS(abs(a),use=t1)
   return hypot(t1, t2, b)
 end
 
@@ -1020,13 +1019,11 @@ function complex(t1::TPS, t2::TPS)::ComplexTPS
 end
 
 function complex(t1::TPS, a::Real)::ComplexTPS
-  t2 = TPS(t1,a)
-  return ComplexTPS(t1, t2)
+  return ComplexTPS(t1, a)
 end
 
 function complex(a::Real, t1::TPS)::ComplexTPS
-  t2 = TPS(t1,a)
-  return ComplexTPS(t2, t1)
+  return ComplexTPS(a, t1)
 end
 
 function polar(ct1::ComplexTPS)::ComplexTPS

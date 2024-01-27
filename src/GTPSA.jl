@@ -5,6 +5,7 @@ import Base:  +,
               *,
               /,
               ^,
+              ∘,
               inv,
               atan,
               hypot,
@@ -434,7 +435,12 @@ export
   pb,
   lb,
   getvectorfield,
+  gethamiltonian,
   exppb,
+  logpb,
+  fgrad,
+  pinv,
+  translate,
   
 
 
@@ -542,7 +548,7 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 end
 
 # Wrapper struct for Ptr{RTPSA}
-mutable struct TPS <: Real
+mutable struct TPS# <: Real
   tpsa::Ptr{RTPSA}
   function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
@@ -580,53 +586,37 @@ function TPS(t1::TPS)::TPS
 end
 
 """
-    TPS(t1::TPS, a::Real)::TPS
+    TPS(a::Real, t1::TPS)::TPS
 
 Promotes the scalar `a` to a new `TPS` using the same 
 `Descriptor` as `t1`
-
 
 ### Input
 - `a`  -- Scalar to create new `TPS` with
 - `t1` -- `TPS` to use same `Descriptor` as
 """
-function TPS(t1::TPS, a::Real)::TPS
-  t = zero(t1)
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
+function TPS(a::Real; use::Union{TPS,Nothing}=nothing)::TPS
+  low_TPS(a,use)
+end
+
+function low_TPS(a::Real, use::TPS)::TPS
+  t = zero(use)
+  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
   return t
 end
 
-# Unsafe constructors using most recently-defined Descriptor:
-"""
-    unsafe_TPS()::TPS
-
-Creates a new Truncated Power Series `TPS`, however only 
-uses the most recently-defined `Descriptor`. Therefore, this can 
-be unsafe if more than one `Descriptor` is defined.
-"""
-function unsafe_TPS()::TPS
-  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+function low_TPS(a::Real, use::Nothing)::TPS
+  error("SOMETHING WENT VERY WRONG!!!")
+  t = TPS()
+  mad_tpsa_set0!(t.tpsa, convert(Float64, 0), convert(Float64,a))
+  return tt
 end
 
-"""
-    unsafe_TPS(a::Real)::TPS
-
-Promotes the scalar `a` to a new `TPS`, however only 
-uses the most recently-defined `Descriptor`. Therefore, this can 
-be unsafe if more than one `Descriptor` is defined.
-
-### Input
-- `a` -- Scalar to create new `TPS` with
-"""
-function unsafe_TPS(a::Real)::TPS
-  t = unsafe_TPS()
-  mad_tpsa_set0!(t.tpsa, 1., convert(Float64,a))
-  return t
-end
+TPS() = TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS <: Number
+mutable struct ComplexTPS# <: Number
   tpsa::Ptr{CTPSA}
   function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
     ct = new(ct1)
@@ -692,65 +682,54 @@ function ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
   return ct
 end
 
-"""
-    ComplexTPS(ct1::ComplexTPS, a::Number)::ComplexTPS
+function ComplexTPS(t1::TPS, a::Real)::ComplexTPS
+  ct = ComplexTPS(t1)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, im*a))
+  return ct
+end
 
-Promotes the scalar `a` to a new `ComplexTPS` using the same
-`Descriptor` as `ct1`
-
-### Input
-- `ct1`  -- `ComplexTPS` to use same `Descriptor` as
-- `a`    -- Scalar to create new `ComplexTPS` with
-"""
-function ComplexTPS(ct1::ComplexTPS, a::Number)::ComplexTPS
-  ct = zero(ct1)
+function ComplexTPS(a::Real, t1::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cplx!(Base.unsafe_convert(Ptr{RTPSA}, C_NULL), t1.tpsa, ct.tpsa)
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
 """
-    ComplexTPS(t1::TPS, a::Number)::ComplexTPS
+    ComplexTPS(a::Number; use::Union{TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
 
 Promotes the scalar `a` to a new `ComplexTPS` using the same
-`Descriptor` as `t1`
+`Descriptor` as `use`
 
 ### Input
-- `t1`  -- `TPS` to use same `Descriptor` as
-- `a`   -- Scalar to create new `ComplexTPS` with
+- `a`    -- Scalar to create new `ComplexTPS` with
+- `use`  -- (Optional) `TPS`/`ComplexTPS` to use same `Descriptor` as. Default is `nothing` (most recent `Descriptor`)
 """
-function ComplexTPS(t1::TPS, a::Number)::ComplexTPS
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+function ComplexTPS(a::Number; use::Union{TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+  return low_ComplexTPS(a, use)
+end
+
+function low_ComplexTPS(a::Number, use::ComplexTPS)::ComplexTPS
+  ct = zero(use)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, a))
   return ct
 end
 
-# Unsafe constructors using most recently-defined Descriptor:
-"""
-    unsafe_ComplexTPS()::ComplexTPS
-
-Creates a new Complex Truncated Power Series `ComplexTPS`, however only 
-uses the most recently-defined `Descriptor`. Therefore, this can 
-be unsafe if more than one `Descriptor` is defined.
-"""
-function unsafe_ComplexTPS()::ComplexTPS
-  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
-end
-
-"""
-    unsafe_ComplexTPS(a::Number)::ComplexTPS
-
-Promotes the scalar `a` to a new `ComplexTPS`, however only 
-uses the most recently-defined `Descriptor`. Therefore, this can 
-be unsafe if more than one `Descriptor` is defined.
-
-### Input
-- `a` -- Scalar to create new `ComplexTPS` with
-"""
-function unsafe_ComplexTPS(a::Number)::ComplexTPS
-  ct = unsafe_ComplexTPS()
-  mad_ctpsa_set0!(ct.tpsa, 1., convert(ComplexF64,a))
+function low_ComplexTPS(a::Number, use::TPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
+
+# WARNING: THIS FUNCTION SHOULD NEVER BE REACHED INTERNALLY!!!!
+function low_ComplexTPS(a::Number, use::Nothing)::ComplexTPS
+  error("SOMETHING WENT VERY WRONG!!!")
+  ct = ComplexTPS()
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  return ct
+end
+
+ComplexTPS() = ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
 
 
 # --- Variable/parameter generators ---
@@ -970,14 +949,17 @@ include("methods.jl")
 include("fast_gtpsa.jl")
 
 # Prevent undefined behavior
-Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Base.Complex{TPS}(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Base.Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Base.Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Base.Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+# Until AbstractComplex is implemented, I make the ctor return ComplexTPS
+# error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+#=
+Complex(t1::TPS) = complex(t1) 
+Complex(t1::TPS, t2::TPS) = complex(t1, t2)
+Complex(t1::TPS, a::Real) = complex(t1, a)
+BaseComplex(a::Real, t1::TPS) = complex(a, t1)
+Complex{TPS}(t1::TPS) = complex(t1) 
+Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
+Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
+Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)=#
 
 
 promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = TPS

@@ -316,11 +316,12 @@ Computes the Lie bracket of the vector functions `A` and `F`
 eq 3.42 3.43 in Etienne's book
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
-  mc, na = zero_promote(A, F)
-  m1 = map(t->convert(typeof(mc[1]), t).tpsa, A)   # Promotes if necessary, else does nothing
-  m2 = map(t->convert(typeof(mc[1]), t).tpsa, F)   # Promotes if necessary, else does nothing
+  A1, F1 = promote(A, F)
+  m1 = map(t->t.tpsa, A1)  
+  m2 = map(t->t.tpsa, F1) 
+  mc = zero.(A1)
   m3 = map(t->t.tpsa, mc)
-  liebra!(na, m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
+  GC.@preserve A1 F1 liebra!(Cint(length(A)), m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
   return mc
 end
 
@@ -331,7 +332,7 @@ vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctp
 function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
   na = desc.nv
-  mc = Vector{typeof(h)}(undef, na) 
+  mc = Vector{typeof(h)}(undef, na)
   for i in eachindex(mc)
     mc[i] = zero(h)
   end
@@ -340,16 +341,134 @@ function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   return mc
 end
 
-# --- exp([f, .]) m ---
-exppb!(na::Cint, ma::Ptr{RTPSA}, mb::Ptr{RTPSA}, mc::Ptr{RTPSA}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
-exppb!(na::Cint, ma::Ptr{CTPSA}, mb::Ptr{CTPSA}, mc::Ptr{CTPSA}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
+# --- gethamiltonian ---
+fld2vec!(na::Cint, m::Vector{Ptr{RTPSA}}, tpsa::Ptr{RTPSA}) = (@inline; mad_tpsa_fld2vec!(na, ma, tpsa))
+fld2vec!(na::Cint, m::Vector{Ptr{CTPSA}},  ctpsa::Ptr{CTPSA}) = (@inline; mad_ctpsa_fld2vec!(na, ma, ctpsa))
+
+function gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
+  h = zero(m[1])
+  m1 = map(t->t.tpsa, m)
+  fld2vec!(Cint(length(m)), m1, h)
+  return h
+end
+
+
+# --- exp([ma, .]) mb ---
+exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
+exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
 function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  mc, na = zero_promote(ma, mb)
-  m1 = map(t->convert(typeof(mc[1]), t).tpsa, ma)   # Promotes if necessary, else does nothing
-  m2 = map(t->convert(typeof(mc[1]), t).tpsa, mb)   # Promotes if necessary, else does nothing
+  ma1, mb1 = promote(ma, mb)
+  m1 = map(t->t.tpsa, ma1) 
+  m2 = map(t->t.tpsa, mb1) 
+  mc = zero.(ma1)
   m3 = map(t->t.tpsa, mc)
-  exppb!(na, m1, m2, m3)  
+  GC.@preserve ma1 mb1 exppb!(Cint(length(na)), m1, m2, m3)  
   return mc
 end
 
+# --- logpb ---
+logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_logpb!(na, ma, mb, mc))
+logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_logpb!(na, ma, mb, mc))
+
+function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+  ma1, mb1 = promote(ma, mb)
+  m1 = map(t->t.tpsa, ma1) 
+  m2 = map(t->t.tpsa, mb1) 
+  mc = zero.(ma1)
+  m3 = map(t->t.tpsa, mc)
+  GC.@preserve ma1 mb1 logpb!(Cint(length(na)), m1, m2, m3)  
+  return mc
+end
+
+# --- F . grad ---
+fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA}) = (@inline; mad_tpsa_fgrad!(na, ma, b, c))
+fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA}) = (@inline; mad_ctpsa_fgrad!(na, ma, b, c))
+
+
+function fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
+  type = promote_type(typeof(ma[1]), typeof(b))
+  ma1 = convert(Vector{type},  ma)
+  b1 = convert(type, b)
+  m1 = map(t->t.tpsa, ma1) 
+  c = zero(b1)
+  GC.@preserve ma1 logpb!(Cint(length(na)), m1, b1.tpsa, c)  
+  return c
+end
+
+# --- mnrm ---
+mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Float64 = mad_tpsa_mrnm(na, ma)
+mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mrnm(na, ma)
+
+function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
+  return mrnm(Cint(length(ma)), map(x->x.tpsa, ma))
+end
+
+# --- map inversion ---
+minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_minv!(na, ma, mc))
+minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_minv!(na, ma, mc))
+
+function inv(ma::Vector{<:Union{TPS,ComplexTPS}})
+  mc = zero.(ma)
+  ma1 = map(x->x.tpsa, ma)
+  mc1 = map(x->x.tpsa, mc)
+  minv!(Cint(length(ma)), ma1, mc1)
+  return mc
+end
+
+# --- partial inversion ---
+pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint}) = (@inline; mad_tpsa_pminv!(na, ma, mc, select))
+pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint}) = (@inline; mad_ctpsa_pminv!(na, ma, mc, select))
+
+function pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+  mc = zero.(ma)
+  ma1 = map(x->x.tpsa, ma)
+  mc1 = map(x->x.tpsa, mc)
+  na = Cint(length(ma))
+  select = zeros(Cint, na)
+  select[vars] .= Cint(1)
+  pminv!(na, ma1, mc1, select)
+  return mc
+end
+
+# --- composition ---
+compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_compose!(na, ma, nb, mb, mc))
+compose!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_compose!(na, ma, nb, mb, mc))
+
+function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+  ma1, mb1 = promote(ma, mb)
+  m1 = map(t->t.tpsa, ma1) 
+  m2 = map(t->t.tpsa, mb1) 
+  na = Cint(length(ma))
+  nb = Cint(length(mb))
+  mc = Vector{typeof(ma1[1])}(undef, na)
+  for i in eachindex(mc)
+    mc[i] = zero(ma1[1])
+  end
+  m3 = map(t->t.tpsa, mc)
+  GC.@preserve ma1 mb1 compose!(na, m1, nb, m2, m3)
+  return mc
+end
+
+# --- translate ---
+function translate(m::Vector{TPS}, x::Vector{<:Real})::TPS
+  na = Cint(length(m))
+  nb = Cint(length(x))
+  tb = convert(Vector{Float64}, x)
+  ma1 = map(x->x.tpsa, m)
+  mc = zero.(m)
+  mc1 = map(x->x.tpsa, mc1)
+  mad_tpsa_translate!(na, ma1, nb, tb, mc1)
+  return mc
+end
+
+function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::TPS
+  na = Cint(length(m))
+  nb = Cint(length(x))
+  tb = convert(Vector{ComplexF64}, x)
+  ma1 = map(x->x.tpsa, m)
+  mc = zero.(m)
+  mc1 = map(x->x.tpsa, mc1)
+  mad_ctpsa_translate!(na, ma1, nb, tb, mc1)
+  return mc
+end
