@@ -550,7 +550,7 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
 end
 
 # Wrapper struct for Ptr{RTPSA}
-mutable struct TPS# <: Real
+mutable struct TPS <: Real
   tpsa::Ptr{RTPSA}
   function TPS(t1::Ptr{RTPSA})::TPS
     t = new(t1)
@@ -629,7 +629,7 @@ end
 
 
 # Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS# <: Number
+mutable struct ComplexTPS <: Number
   tpsa::Ptr{CTPSA}
   function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
     ct = new(ct1)
@@ -1068,21 +1068,44 @@ include("methods.jl")
 include("fast_gtpsa.jl")
 
 # Prevent undefined behavior
-# Until AbstractComplex is implemented, I make the ctor return ComplexTPS
-# error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+# Until AbstractComplex is implemented, I make the ctor return error because this should never happen 
+# asumming I wrapped enough
 #=
 Complex(t1::TPS) = complex(t1) 
 Complex(t1::TPS, t2::TPS) = complex(t1, t2)
 Complex(t1::TPS, a::Real) = complex(t1, a)
-BaseComplex(a::Real, t1::TPS) = complex(a, t1)
+Complex(a::Real, t1::TPS) = complex(a, t1)
 Complex{TPS}(t1::TPS) = complex(t1) 
 Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
 Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
 Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)=#
+Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex{TPS}(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
 
 
 promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = TPS
 promote_rule(::Type{ComplexTPS}, ::Union{Type{Complex},Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = ComplexTPS
 promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
 
+# Handle bool which is special for some stupid reason
++(t::TPS, z::Complex{Bool}) = t + Complex{Int}(z)
++(z::Complex{Bool}, t::TPS) = Complex{Int}(z) + t
+-(t::TPS, z::Complex{Bool}) = t - Complex{Int}(z)
+-(z::Complex{Bool}, t::TPS) = Complex{Int}(z) - t
+*(t::TPS, z::Complex{Bool}) = t * Complex{Int}(z)
+*(z::Complex{Bool}, t::TPS) = Complex{Int}(z) * t
+/(t::TPS, z::Complex{Bool}) = t / Complex{Int}(z)
+/(z::Complex{Bool}, t::TPS) = Complex{Int}(z) / t
+^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
+^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
+
+#=
+==(t::TPS, z::Complex) = t == Complex{Int}(z)
+==(z::Complex, t::TPS) = Complex{Int}(z) == t=#
 end

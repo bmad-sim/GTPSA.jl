@@ -181,6 +181,19 @@ function ==(a::Number,t1::TPS)::Bool
   return mad_tpsa_get0(t1.tpsa) == a
 end
 
+# ---
+
+function ==(t1::TPS, a::Complex)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
+end
+
+function ==(a::Complex,t1::TPS)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
+end
+
+# ---
+
+
 function ==(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
   return mad_ctpsa_get0(ct1.tpsa) == mad_ctpsa_get0(ct2.tpsa)
 end
