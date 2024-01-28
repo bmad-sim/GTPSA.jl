@@ -82,6 +82,11 @@ derivm!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, n::Cint, ords::Vector{Cuchar}) = 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
 alternatively any monomial specified by indexing-by-order OR indexing-by-sparse monomial.
 
+### Input
+- `v`      -- An integer (for variable index), an array of orders for each variable (for indexing-by-order), or an array of pairs (sparse monomial)
+- `param`  -- (Keyword argument, optional) An integer for the parameter index
+- `params` -- (Keyword argument, optional) An array of pairs for sparse-monomial indexing
+
 # Examples: Variable/Parameter Index:
 ```julia-repl
 julia> d = Descriptor(1,5,1,5);

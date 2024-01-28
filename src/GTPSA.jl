@@ -476,6 +476,8 @@ struct Descriptor
   desc::Ptr{Desc}
 end
 
+const DESC_CURR = Descriptor(MAD_DESC_CURR)
+
 # Descriptor outer constructors
 """
     Descriptor(nv::Integer, vo::Integer)::Descriptor
@@ -586,17 +588,18 @@ function TPS(t1::TPS)::TPS
 end
 
 """
-    TPS(a::Real, t1::TPS)::TPS
+    TPS(a::Real; use::Union{TPS,Nothing}=nothing)::TPS
 
 Promotes the scalar `a` to a new `TPS` using the same 
-`Descriptor` as `t1`
+`Descriptor` as `use`, or the most recently-defined `Descriptor` 
+if `nothing` is provided.
 
 ### Input
-- `a`  -- Scalar to create new `TPS` with
-- `t1` -- `TPS` to use same `Descriptor` as
+- `a`   -- Scalar to create new `TPS` with
+- `use` -- `TPS` to use same `Descriptor` as. Default is `nothing` for most recent `Descriptor`
 """
 function TPS(a::Real; use::Union{TPS,Nothing}=nothing)::TPS
-  low_TPS(a,use)
+  low_TPS(a, use)
 end
 
 function low_TPS(a::Real, use::TPS)::TPS
@@ -612,7 +615,17 @@ function low_TPS(a::Real, use::Nothing)::TPS
   return tt
 end
 
-TPS() = TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+"""
+    TPS()
+
+Create a new `TPS` using the most recently-defined `Descriptor`.
+
+WARNING: Use of this constructor should be avoided if possible 
+when more than one `Descriptor` is defined.
+"""
+function TPS()
+  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
 
 # Wrapper struct for Ptr{CTPSA}
@@ -703,7 +716,7 @@ Promotes the scalar `a` to a new `ComplexTPS` using the same
 
 ### Input
 - `a`    -- Scalar to create new `ComplexTPS` with
-- `use`  -- (Optional) `TPS`/`ComplexTPS` to use same `Descriptor` as. Default is `nothing` (most recent `Descriptor`)
+- `use`  -- `TPS`/`ComplexTPS` to use same `Descriptor` as. Default is `nothing` for most recent `Descriptor`
 """
 function ComplexTPS(a::Number; use::Union{TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
   return low_ComplexTPS(a, use)
@@ -729,15 +742,26 @@ function low_ComplexTPS(a::Number, use::Nothing)::ComplexTPS
   return ct
 end
 
-ComplexTPS() = ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+"""
+    ComplexTPS()
+
+Create a new `ComplexTPS` using the most recently-defined `Descriptor`.
+
+WARNING: Use of this constructor should be avoided if possible 
+when more than one `Descriptor` is defined.
+"""
+function ComplexTPS()
+  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+end
 
 
 # --- Variable/parameter generators ---
 
 """
-    vars(d::Descriptor)::Vector{TPS}
+    vars(d::Descriptor=DESC_CURR)::Vector{TPS}
 
 Returns `TPS`s corresponding to the variables for the `Descriptor`.
+Default value is the most recently-defined `Descriptor`.
 
 ### Input
 - `d` -- TPSA `Descriptor`
@@ -745,25 +769,29 @@ Returns `TPS`s corresponding to the variables for the `Descriptor`.
 ### Output
 - `x` -- `Vector` containing unit `TPS`s corresponding to each variable
 """
-function vars(d::Descriptor)::Vector{TPS}
-  desc = unsafe_load(d.desc)
+function vars(d::Descriptor=DESC_CURR)::Vector{TPS}
+  t1 = TPS(d)
+  desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
+  if nv < 1
+    return TPS[]
+  end
   x = Vector{TPS}(undef, nv)
-  ords = zeros(Cuchar, nv)
-  for i=1:nv
-    ords[i] = 0x1
+  t1[1] = 1.0
+  x[1] = t1
+  for i=2:nv
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, nv, ords, 0.0, 1.0)
+    mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     x[i] = t
-    ords[i] = 0x0
   end
   return x
 end
 
 """
-    params(d::Descriptor)::Vector{TPS}
+    params(d::Descriptor=DESC_CURR)::Vector{TPS}
 
 Returns `TPS`s corresponding to the parameters for the `Descriptor`.
+Default value is the most recently-defined `Descriptor`.
 
 ### Input
 - `d` -- TPSA `Descriptor`
@@ -771,27 +799,31 @@ Returns `TPS`s corresponding to the parameters for the `Descriptor`.
 ### Output
 - `k` -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
-function params(d::Descriptor)::Vector{TPS}
-  desc = unsafe_load(d.desc)
+function params(d::Descriptor=DESC_CURR)::Vector{TPS}
+  t1 = TPS(d)
+  desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
   np = desc.np
+  if np < 1
+    return TPS[]
+  end
   k = Vector{TPS}(undef, np)
-  ords = zeros(Cuchar, nv+np)
-  for i=nv+1:nv+np
-    ords[i] = 0x1
+  mad_tpsa_seti!(t1.tpsa, Cint(nv+1), 0.0, 1.0)
+  k[1] = t1
+  for i=nv+2:nv+np
     t = TPS(d)
-    mad_tpsa_setm!(t.tpsa, nv+np, ords, 0.0, 1.0)
+    mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     k[i-nv] = t
-    ords[i] = 0x0
   end
   return k
 end
 
 
 """
-    complexvars(d::Descriptor)::Vector{ComplexTPS}
+    complexvars(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the variables for the `Descriptor`.
+Default value is the most recently-defined `Descriptor`.
 
 ### Input
 - `d` -- TPSA `Descriptor`
@@ -799,25 +831,29 @@ Returns `ComplexTPS`s corresponding to the variables for the `Descriptor`.
 ### Output
 - `x` -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
-function complexvars(d::Descriptor)::Vector{ComplexTPS}
-  desc = unsafe_load(d.desc)
+function complexvars(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+  ct1 = ComplexTPS(d)
+  desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
+  if nv < 1
+    return ComplexTPS[]
+  end
   x = Vector{ComplexTPS}(undef, nv)
-  ords = zeros(Cuchar, nv)
-  for i=1:nv
-    ords[i] = 0x1
-    t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, nv, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
-    x[i] = t
-    ords[i] = 0x0
+  ct1[1] = 1.0
+  x[1] = ct1
+  for i=2:nv
+    ct = ComplexTPS(d)
+    mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
+    x[i] = ct
   end
   return x
 end
 
 """
-    complexparams(d::Descriptor)::Vector{TPS}
+    complexparams(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor`.
+Default value is the most recently-defined `Descriptor`.
 
 ### Input
 - `d` -- TPSA `Descriptor`
@@ -825,25 +861,108 @@ Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor`.
 ### Output
 - `k` -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
-function complexparams(d::Descriptor)::Vector{ComplexTPS}
-  desc = unsafe_load(d.desc)
+function complexparams(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+  ct1 = ComplexTPS(d)
+  desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
   np = desc.np
+  if np < 1
+    return ComplexTPS[]
+  end
   k = Vector{ComplexTPS}(undef, np)
-  ords = zeros(Cuchar, nv+np)
-  for i=nv+1:nv+np
-    ords[i] = 0x1
-    t = ComplexTPS(d)
-    mad_ctpsa_setm!(t.tpsa, nv+np, ords, convert(ComplexF64, 0), convert(ComplexF64, 1))
-    k[i-nv] = t
-    ords[i] = 0x0
+  mad_ctpsa_seti!(ct1.tpsa, Cint(nv+1), ComplexF64(0.0), ComplexF64(1.0))
+  k[1] = ct1
+  for i=nv+2:nv+np
+    ct = ComplexTPS(d)
+    mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
+    k[i-nv] = ct
   end
   return k
 end
 
+"""
+    mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=DESC_CURR)::TPS
 
-function mono(d::Descriptor, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::TPS
-  return low_mono(d, v, param, params)
+Returns a `TPS` corresponding to a specific monomial, specified using the variable/parameter index, or 
+monomial indexing-by-order OR monomial indexing-by-sparse monomial. 
+
+### Input
+- `v`      -- An integer (for variable index), an array of orders for each variable (for indexing-by-order), or an array of pairs (sparse monomial)
+- `param`  -- (Keyword argument, optional) An integer for the parameter index
+- `params` -- (Keyword argument, optional) An array of pairs for sparse-monomial indexing
+- `d`      -- (Keyword argument, optional) The descriptor to use to generate the monomial. Default is most recently-defined.
+
+# Examples: Variable/Parameter Index:
+```julia-repl
+julia> d = Descriptor(3,10,2,10);
+
+julia> mono(1)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        1    0    0    0    0
+
+
+julia> mono(2, use=d)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        0    1    0    0    0
+
+
+julia> mono(param=2)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        0    0    0    0    1
+```
+
+# Examples: Monomial Index-by-Order
+```julia-repl
+julia> mono([1])
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        1    0    0    0    0
+
+
+julia> mono([0,1])
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        0    1    0    0    0
+
+
+julia> mono([0,0,0,0,1], use=d)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        0    0    0    0    1
+
+
+julia> mono([1,0,0,0,1])
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    2        1    0    0    0    1
+```
+
+# Examples: Monomial Index-by-Sparse Monomial
+```julia-repl
+julia> mono([1=>1])
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        1    0    0    0    0
+
+
+julia> mono([2=>1])
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    1        0    1    0    0    0
+
+
+julia> mono([1=>1], params=[2=>1], use=d)
+TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    2        1    0    0    0    1
+```
+
+"""
+function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=DESC_CURR)::TPS
+  return low_mono(use, v, param, params)
 end
 
 # Variable/parameter:
@@ -855,9 +974,9 @@ end
 
 function low_mono(d::Descriptor, v::Nothing, param::Integer, params::Nothing)::TPS
   t = TPS(d)
-  desc = unsafe_load(d.desc)
+  desc = unsafe_load(mad_tpsa_desc(t.tpsa))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
-  mad_tpsa_seti!(t.tpsa, Cint(v) + nv, 0.0, 1.0)
+  mad_tpsa_seti!(t.tpsa, Cint(param) + nv, 0.0, 1.0)
   return t
 end
 
@@ -896,7 +1015,7 @@ function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Vector{<:Pa
 end
 
 # Throw error if no above use cases satisfied:
-function low_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
+function low_mono(d::Descriptor, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
