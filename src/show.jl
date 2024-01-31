@@ -225,7 +225,10 @@ function show(io::IO, t::ComplexTPS)
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
-function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
+show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
+show(io::IO, ::MIME"text/plain", m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
+
+function show_map(io::IO, m::Vector{TPS})
   for i in eachindex(m)
     if !isassigned(m, i)
       show(io, m)
@@ -272,7 +275,7 @@ function show(io::IO, ::MIME"text/plain", m::Vector{TPS})
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
 end
 
-function show(io::IO, ::MIME"text/plain", m::Vector{ComplexTPS})
+function show_map(io::IO,  m::Vector{ComplexTPS})
   for i in eachindex(m)
     if !isassigned(m, i)
       show(io, m)

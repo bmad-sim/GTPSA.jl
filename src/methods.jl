@@ -406,7 +406,7 @@ mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Float64 = mad_tpsa_mrnm(na, ma)
 mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mrnm(na, ma)
 
 function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
-  return mrnm(Cint(length(ma)), map(x->x.tpsa, ma))
+  return mnrm(Cint(length(ma)), map(x->x.tpsa, ma))
 end
 
 # --- map inversion ---
