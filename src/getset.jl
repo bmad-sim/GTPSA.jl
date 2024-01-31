@@ -1,3 +1,6 @@
+numtype(t::TPS) = Float64
+numtype(ct::ComplexTPS) = ComplexF64
+
 # --- Setters ---
 function setindex!(t::TPS, v::Real, ords::Integer...)
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
@@ -40,13 +43,13 @@ function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::V
   return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 
-# --- par --- (this should be combined with regular indexing using colon at some point)
+# --- par --- 
 cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
 cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
-idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = mad_tpsa_idxm(t, n, m)
-idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = mad_ctpsa_idxm(t, n, m)
-seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  mad_tpsa_seti!(t, i, a, b)
-seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  mad_ctpsa_seti!(t, i, a, b)
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
+seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
+seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
 
 function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
   par_mono = setup_mono(t, v, param, params)
@@ -103,17 +106,21 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
 end
 
 function low_par(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar})::typeof(t1)
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+  np = desc.np
   t = zero(t1)
   v = Cint(length(par_mono))
-  coef = Ref{typeof(t[0])}()
-  mono = Vector{Cuchar}(undef, v)
+  coef = Ref{numtype(t)}()
+  mono = Vector{Cuchar}(undef, np+nv)
   idx = idxm(t1.tpsa, v, par_mono)-Cint(1)
-  idx = cycle!(t1.tpsa, idx, v, mono, coef)
+  idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
   while idx >= 0
-    if mono == par_mono
-      seti!(t.tpsa, idx, convert(typeof(t[0]), 0.0), coef[])
+    if mono[1:v] == par_mono
+      t[zeros(Int, v)..., mono[v+1:end]...] = coef[]
+      # seti!(t.tpsa, idx, convert(typeof(t[0]), 0.0), coef[])
     end
-    idx = cycle!(t1.tpsa, idx, v, mono, coef)
+    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
   end
   return t
 end
