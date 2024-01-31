@@ -22,25 +22,34 @@ end
 
 
 # --- Getters ---
-function getindex(t::TPS, ords::Integer...)::Float64
-  return mad_tpsa_getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
+getm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = mad_tpsa_getm(t, n, m)
+getm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = mad_ctpsa_getm(t, n, m)
+getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})= mad_tpsa_getsm(t, n, m)
+getsm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint})= mad_ctpsa_getsm(t, n, m)
+
+function getindex(t::Union{TPS,ComplexTPS}, ords::Integer...)
+  return getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
 end
 
-function getindex(t::TPS, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Float64
+function getindex(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
   # use sparse monomial getter
   sm, n = pairs_to_sm(t, vars, params=params)
-  return mad_tpsa_getsm(t.tpsa, n, sm)
+  return getsm(t.tpsa, n, sm)
 end
 
-
-function getindex(ct::ComplexTPS, ords::Integer...)::ComplexF64
-  return mad_ctpsa_getm(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
+# par:
+function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
+  if !(ords[1:end-1] isa Tuple{Vararg{<:Integer}})
+    error("Invalid monomial index: colon must appear at end.")
+  end
+  return par(t, [ords[1:end-1]...])
 end
 
-function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::ComplexF64
-  # use sparse monomial getter
-  sm, n = pairs_to_sm(ct, vars, params=params)
-  return mad_ctpsa_getsm(ct.tpsa, n, sm)
+function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Integer}, Colon}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
+  if !(vars[1:end-1] isa Tuple{Vararg{<:Integer}})
+    error("Invalid monomial index: colon must appear at end.")
+  end
+  return par(t, [vars[1:end-1]...], params=params)
 end
 
 # --- par --- 

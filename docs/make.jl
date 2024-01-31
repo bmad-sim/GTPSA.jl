@@ -8,7 +8,7 @@ makedocs(
   pages = 
   [
     "Home" => "index.md",
-    "Basic Usage" => "usage.md",
+    "Usage" => "usage.md",
     "Advanced Usage" => "taylor.md",
     "Code Index" => "code.md",
     "For Developers" => "devel.md"

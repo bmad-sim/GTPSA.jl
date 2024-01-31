@@ -45,7 +45,7 @@ d = Descriptor(2, 6);
 x = vars(d);
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
-f = cos(x[1]) + im*sin(x[2])
+f = cos(x[1]) + 1im*sin(x[2])
 ```
 
 Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.

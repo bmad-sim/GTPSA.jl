@@ -1,28 +1,32 @@
 # Usage
 ## Defining the TPSA
-The `Descriptor` defines all information about the TPSA, including the number of variables and orders for each variable. The constructors for a `Descriptor` are:
+A `Descriptor` defines all information about the TPSA, including the number of variables and truncation orders for each variable. The constructors for a `Descriptor` are
 
-```julia
+```@example desc
+using GTPSA #hide
 # Descriptor for 2 variables with max order 10 for each
 d1 = Descriptor(2, 10)      # Use this ctor when all variables have the same order
+```
 
+```@example desc
 # Descriptor for 3 variables with orders 1, 2, 3 respectively
 d2 = Descriptor([1, 2, 3])  # Use this ctor when variables have different truncation orders
 ```
 
 ## Calculating a TPS
-After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
+After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
 
-```@example
+```@example 1
+using GTPSA #hide
 d = Descriptor([4, 1]);
 
 # Returns a Vector of each variable as a TPS
 x = vars(d) 
 ```
 
-These `TPS`s can then be manipulated just like any other mathemtical quantity in Julia:
+These `TPS`s can then be manipulated just like any other mathematical quantity in Julia:
 
-```@example
+```@example 1
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
@@ -39,8 +43,28 @@ Individual monomial coefficients in a TPS `t` can be get/set with two methods of
 1. **By Order:** `t[<x_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables $x_1$, $x_2$, the $x_1^3x_2^1$ monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
 2. **By Sparse Monomial** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1,x_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial coefficient is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
 
+These two methods of indexing are best shown with an example:
+```@example 2
+using GTPSA #hide
+
+d = Descriptor(3, 10);
+t = TPS(d); # Create zero TPS based on d
+
+# Example of indexing by order -----------
+t[0] = 1;
+t[1] = 2;
+t[0,1] = 3;
+t[0,0,1] = 4;
+t[2,1,3] = 5;
+
+print(t)
+```
+
+We can 
+
 ```@example
 # Descriptor for 2 variables with order 5
+using GTPSA #hide
 d = Descriptor(2, 5);
 x = vars(d);
 x1 = x[1];
@@ -52,7 +76,7 @@ x1[0,1] = 6;
 x1[3,2] = 7;
 print(x1)
 ```
-
+```
 y1 = TPS(d)             # Create blank TPS with zero for all coefficients
 y1[1,0] = 1             # Set first-order part for first variable equal to 1
 y1 == x1                # Is true
@@ -97,10 +121,10 @@ hessian!(h1, out[1])
 The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
 
 ```@example
-using BenchmarkTools
+using GTPSA, BenchmarkTools
 
 d = Descriptor(3, 5)
-v = vars(d)
+x = vars(d)
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im
 # Output:  1.346 μs (10 allocations: 160 bytes)
