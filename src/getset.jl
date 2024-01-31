@@ -40,6 +40,84 @@ function getindex(ct::ComplexTPS, vars::Pair{<:Integer, <:Integer}...; params::V
   return mad_ctpsa_getsm(ct.tpsa, n, sm)
 end
 
+# --- par --- (this should be combined with regular indexing using colon at some point)
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = mad_tpsa_idxm(t, n, m)
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = mad_ctpsa_idxm(t, n, m)
+seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  mad_tpsa_seti!(t, i, a, b)
+seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  mad_ctpsa_seti!(t, i, a, b)
+
+function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
+  par_mono = setup_mono(t, v, param, params)
+  return low_par(t, par_mono)
+end
+
+# Variable/parameter:
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
+  par_mono = zeros(Cuchar, v)
+  par_mono[v] = 0x1
+  return par_mono
+end
+
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::Vector{Cuchar}
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+  par_mono = zeros(Cuchar, param+nv)
+  par_mono[nv+param] = 0x1
+  return par_mono
+end
+
+# Default to scalar part as TPS if nothing passed:
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::Vector{Cuchar}
+  return [0x0]
+end
+
+# Monomial by order:
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::Vector{Cuchar}
+  return convert(Vector{Cuchar}, v)
+end
+
+# Monomial by sparse monomial:
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
+  # Need to create array of orders with length nv + np
+  ords, ___  = pairs_to_m(t1,v,params=params)
+  return ords
+end
+
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::Vector{Cuchar}
+  # Need to create array of orders with length nv + np
+  ords, ___  = pairs_to_m(t1,v)
+  return ords
+end
+
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
+  # Need to create array of orders with length nv + np
+  ords, ___ = pairs_to_m(t1,Pair{Int,Int}[],params=params)
+  return ords
+end
+
+# Throw error if no above use cases satisfied:
+function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
+  error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
+end
+
+function low_par(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar})::typeof(t1)
+  t = zero(t1)
+  v = Cint(length(par_mono))
+  coef = Ref{typeof(t[0])}()
+  mono = Vector{Cuchar}(undef, v)
+  idx = idxm(t1.tpsa, v, par_mono)-Cint(1)
+  idx = cycle!(t1.tpsa, idx, v, mono, coef)
+  while idx >= 0
+    if mono == par_mono
+      seti!(t.tpsa, idx, convert(typeof(t[0]), 0.0), coef[])
+    end
+    idx = cycle!(t1.tpsa, idx, v, mono, coef)
+  end
+  return t
+end
+
 # --- gradient, jacobian, hessian getters ---
 """
     gradient!(result::Vector{Float64}, t::TPS; include_params=false)

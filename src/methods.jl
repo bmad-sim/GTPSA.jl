@@ -477,3 +477,4 @@ function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::TPS
   mad_ctpsa_translate!(na, ma1, nb, tb, mc1)
   return mc
 end
+

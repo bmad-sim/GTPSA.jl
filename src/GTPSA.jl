@@ -425,6 +425,7 @@ export
   jacobian!,
   hessian,
   hessian!,
+  par,
 
   # Methods:
   evaluate,
@@ -890,7 +891,7 @@ monomial indexing-by-order OR monomial indexing-by-sparse monomial.
 - `v`      -- An integer (for variable index), an array of orders for each variable (for indexing-by-order), or an array of pairs (sparse monomial)
 - `param`  -- (Keyword argument, optional) An integer for the parameter index
 - `params` -- (Keyword argument, optional) An array of pairs for sparse-monomial indexing
-- `d`      -- (Keyword argument, optional) The descriptor to use to generate the monomial. Default is most recently-defined.
+- `use`    -- (Keyword argument, optional) The descriptor to use to generate the monomial. Default is most recently-defined.
 
 # Examples: Variable/Parameter Index:
 ```julia-repl
@@ -1093,7 +1094,7 @@ promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Ratio
 promote_rule(::Type{ComplexTPS}, ::Union{Type{Complex},Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = ComplexTPS
 promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
 
-# Handle bool which is special for some stupid reason
+# Handle bool which is special for some reason
 +(t::TPS, z::Complex{Bool}) = t + Complex{Int}(z)
 +(z::Complex{Bool}, t::TPS) = Complex{Int}(z) + t
 -(t::TPS, z::Complex{Bool}) = t - Complex{Int}(z)
@@ -1105,7 +1106,4 @@ promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
 ^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
 ^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
 
-#=
-==(t::TPS, z::Complex) = t == Complex{Int}(z)
-==(z::Complex, t::TPS) = Complex{Int}(z) == t=#
 end

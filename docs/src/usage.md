@@ -2,7 +2,7 @@
 ## Defining the TPSA
 The `Descriptor` defines all information about the TPSA, including the number of variables and orders for each variable. The constructors for a `Descriptor` are:
 
-```
+```julia
 # Descriptor for 2 variables with max order 10 for each
 d1 = Descriptor(2, 10)      # Use this ctor when all variables have the same order
 
@@ -11,15 +11,18 @@ d2 = Descriptor([1, 2, 3])  # Use this ctor when variables have different trunca
 ```
 
 ## Calculating a TPS
-After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as TPSs) can be obtained using `vars` or `complexvars`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
+After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
 
-```
-d = Descriptor([4, 1])
+```@example
+d = Descriptor([4, 1]);
 
 # Returns a Vector of each variable as a TPS
 x = vars(d) 
+```
 
-# f is a TPS containing the result
+These `TPS`s can then be manipulated just like any other mathemtical quantity in Julia:
+
+```@example
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
@@ -28,22 +31,28 @@ A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be creat
 
 ## Partial Derivative Getting/Setting
 ### Individual Monomial Coefficient
-> [!NOTE]
-> The value of a partial derivative is equal to the monomial coefficient in the Taylor series multiplied by a constant factor. E.g. for an expansion around zero $f(x)\approx f(0) + \frac{\partial f}{\partial x}\rvert_0x + \frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0 x^2 + ...$, the 2nd order monomial coefficient is $\frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0$. 
+!!! note
+    The value of a partial derivative is equal to the monomial coefficient in the Taylor series multiplied by a constant factor. E.g. for an expansion around zero $f(x)\approx f(0) + \frac{\partial f}{\partial x}\rvert_0x + \frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0 x^2 + ...$, the 2nd order monomial coefficient is $\frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0$. 
 
 Individual monomial coefficients in a TPS `t` can be get/set with two methods of indexing:
 
 1. **By Order:** `t[<x_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables $x_1$, $x_2$, the $x_1^3x_2^1$ monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
 2. **By Sparse Monomial** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1,x_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial coefficient is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
 
-```
+```@example
 # Descriptor for 2 variables with order 5
-d = Descriptor(2, 5)
-x = vars(d)
-x1 = x[1]
-x2 = x[2]
+d = Descriptor(2, 5);
+x = vars(d);
+x1 = x[1];
+x2 = x[2];
 
 # Example of indexing by order -------
+x1[1]   = 5;
+x1[0,1] = 6;
+x1[3,2] = 7;
+print(x1)
+```
+
 y1 = TPS(d)             # Create blank TPS with zero for all coefficients
 y1[1,0] = 1             # Set first-order part for first variable equal to 1
 y1 == x1                # Is true
@@ -87,7 +96,7 @@ hessian!(h1, out[1])
 
 The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
 
-```
+```@example
 using BenchmarkTools
 
 d = Descriptor(3, 5)
