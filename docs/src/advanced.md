@@ -5,22 +5,21 @@ GTPSA allows for explicitly distinguishing between state *variables* and externa
 ## TPSA Including Variables and Parameters
 Two extra `Descriptor` constructors can be used to define a TPSA with both variables and parameters.
 
-```
-# Descriptor for 3 variables with max order 4 for each, and 1 parameter with max order 2 (equivalent definitions)
+```@repl
+using GTPSA #hide
 d3 = Descriptor(3, 4, 1, 2)     
-d3 = Descriptor([4, 4, 4], [2]) 
-
-# Descriptor for 2 variables with max orders 6, 5 respectively and 1 parameter with max order 4
+d3 = Descriptor([4, 4, 4], [2]) # Equivalent as previous
 d4 = Descriptor([6, 5], [4])
 ```
 
-Just as the variables as a vector of TPSs can be obtained using `vars` or `complexvars`, the parameters as a vector of TPSs can be obtained using `params` or `complexparams`. For example, suppose we wish to calculate the Taylor series for $f(x_1,x_2,k_1) = \cos{(x_1)} + \sin{(k_1)}\sqrt{1+x_2}$ to 10th order in $x_1$ and $x_2$ but only 5th order in the parameter $k_1$:
+Just as the variables as a vector of TPSs can be obtained using `vars` or `complexvars`, the parameters as a vector of TPSs can be obtained using `params` or `complexparams`. For example, to calculate the Taylor series for $f(x_1,x_2,k_1) = \cos{(x_1)} + \sin{(k_1)}\sqrt{1+x_2}$ to 10th order in $x_1$ and $x_2$ but only 5th order in the parameter $k_1$:
 
-```
-d = Descriptor(2, 10, 1, 5)  # or equivalently Descriptor([10, 10], [5])
+```@example
+using GTPSA #hide
+d = Descriptor(2, 10, 1, 5);  # or equivalently Descriptor([10, 10], [5])
 
-x = vars(d)     # Returns a Vector of each variable as a TPS
-k = params(d)   # Returns a Vector of each parameter as a TPS
+x = vars(d);     # Returns a Vector of each variable as a TPS
+k = params(d);   # Returns a Vector of each parameter as a TPS
 
 # f is a TPS containing the result
 f = cos(x[1]) + sin(k[1]) * sqrt(1 + x[2])

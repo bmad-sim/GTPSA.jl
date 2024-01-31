@@ -46,7 +46,7 @@ function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
 end
 
 function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Integer}, Colon}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  if !(vars[1:end-1] isa Tuple{Vararg{<:Integer}})
+  if !(vars[1:end-1] isa Tuple{Vararg{<:Pair{<:Integer, <:Integer}}})
     error("Invalid monomial index: colon must appear at end.")
   end
   return par(t, [vars[1:end-1]...], params=params)

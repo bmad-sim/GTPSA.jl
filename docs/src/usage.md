@@ -5,12 +5,12 @@ A `Descriptor` defines all information about the TPSA, including the number of v
 ```@example desc
 using GTPSA #hide
 # Descriptor for 2 variables with max order 10 for each
-d1 = Descriptor(2, 10)      # Use this ctor when all variables have the same order
+d1 = Descriptor(2, 10)     
 ```
 
 ```@example desc
 # Descriptor for 3 variables with orders 1, 2, 3 respectively
-d2 = Descriptor([1, 2, 3])  # Use this ctor when variables have different truncation orders
+d2 = Descriptor([1, 2, 3])
 ```
 
 ## Calculating a TPS
@@ -32,6 +32,17 @@ f = cos(x[1]) + sqrt(1 + x[2])
 
 A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(d)` or `ComplexTPS(d)` respectively. 
 
+When a TPS contains more than 6 variables, a different type of `show` is used, instead showing the specific monomial instead of the exponents for each variable:
+
+```@example
+using GTPSA #hide
+d = Descriptor(10, 10);
+x = vars(d);
+
+g = sin(x[1]*x[3]^2) + cos(x[2]*x[7]);
+
+print(g)
+```
 
 ## Partial Derivative Getting/Setting
 ### Individual Monomial Coefficient
@@ -44,13 +55,13 @@ Individual monomial coefficients in a TPS `t` can be get/set with two methods of
 2. **By Sparse Monomial** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1,x_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial coefficient is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
 
 These two methods of indexing are best shown with an example:
-```@example 2
-using GTPSA #hide
 
+```@example
+using GTPSA #hide
+# Example of indexing by order -----------
 d = Descriptor(3, 10);
 t = TPS(d); # Create zero TPS based on d
 
-# Example of indexing by order -----------
 t[0] = 1;
 t[1] = 2;
 t[0,1] = 3;
@@ -60,77 +71,71 @@ t[2,1,3] = 5;
 print(t)
 ```
 
-We can 
-
-```@example
-# Descriptor for 2 variables with order 5
+```@example 
 using GTPSA #hide
-d = Descriptor(2, 5);
-x = vars(d);
-x1 = x[1];
-x2 = x[2];
+# Example of indexing by sparse monomial -----------
+d = Descriptor(3, 10);
+t = TPS(d); # Create zero TPS based on d
 
-# Example of indexing by order -------
-x1[1]   = 5;
-x1[0,1] = 6;
-x1[3,2] = 7;
-print(x1)
-```
-```
-y1 = TPS(d)             # Create blank TPS with zero for all coefficients
-y1[1,0] = 1             # Set first-order part for first variable equal to 1
-y1 == x1                # Is true
+t[1=>1] = 2;
+t[2=>1] = 3;
+t[3=>1] = 4;
+t[1=>2,2=>1,3=>3] = 5;
 
-z2 = TPS(d)             # Create blank TPS with zero for all coefficients
-z2[0,1] = 1             # Set first-order part for second variable equal to 1
-z2 == x2                # Is true
-
-# Example of indexing by var => order -------
-y1 = TPS(d)             # Create blank TPS with zero for all coefficients
-y1[1=>1] = 1            # Set first-order part for first variable equal to 1
-y1 == x1                # Is true
-
-z2 = TPS(d)             # Create blank TPS with zero for all coefficients
-z2[2=>1] = 1            # Set first-order part for second variable equal to 1
-z2 == x2                # Is true
+print(t)
 ```
 
 ### Gradients, Jacobians, Hessians
 The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a TPS/Vector of TPSs. Note that these functions are not actually calculating anything - at this point the TPS should already have been propagated through the system, and these functions are just extracting the corresponding partial derivatives.
 
-```
+```@example
+using GTPSA #hide
 # 2nd Order TPSA with 100 variables
-d = Descriptor(100, 2)
-x = vars(d)
+d = Descriptor(100, 2);
+x = vars(d);
 
-out = cumsum(x)
+out = cumsum(x);
 
 # Convenience getters for partial derivative extracting:
-grad1 = gradient(out[1])
-J = jacobian(out)
-h1 = hessian(out[1])
+grad1 = gradient(out[1]);
+J = jacobian(out);
+h1 = hessian(out[1]);
 
 # Also in-place getters
-gradient!(grad1, out[1])
-jacobian!(J, out)
-hessian!(h1, out[1])
+gradient!(grad1, out[1]);
+jacobian!(J, out);
+hessian!(h1, out[1]);
 ```
+
+## Slicing a TPS
+Parts of a `TPS` with certain variable orders can be extracted using the same indexing methods as above, but appending a colon (`:`) to the end of the indexing list:
+
+```@example
+using GTPSA #hide
+d = Descriptor(4, 6);
+x = vars(d);
+
+f = 2*x[1]^2*x[3]*x[4] + 3*x[1]^2*x[3]*x[4]^2 + 6*x[3] + 5
+g = f[1=>2,3=>1,:];
+
+print(f)
+print(g)
+```
+
 
 ## `@FastGTPSA` Macro
 
 The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
 
-```@example
+```@repl
 using GTPSA, BenchmarkTools
 
-d = Descriptor(3, 5)
-x = vars(d)
+d = Descriptor(3, 5);
+x = vars(d);
 
-@btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im
-# Output:  1.346 μs (10 allocations: 160 bytes)
+@btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 
- @btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im
-# Output:  1.225 μs (1 allocation: 16 bytes)
+@btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 ```
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/taylormap.jl`. To read about how it works, see [For Developers](@ref).
