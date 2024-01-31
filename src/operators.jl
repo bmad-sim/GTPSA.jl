@@ -1,3 +1,73 @@
+# -- zero -- 
+function zero(t::TPS)::TPS
+  return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
+end
+
+function zero(ct::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
+end
+
+# --- special zero with promotion ---
+#= Using standard "promote" + zero is expensive for methods with
+   defined internal real to complex conversion (e.g. mad_tpsa_poisbrat)
+   so zero_promote will give back a zero TPS/ComplexTPS with the highest type 
+   of the two passed. Currently this is only used in methods.jl
+   to simplify the code (one written function for all types). It technically could have
+   been used throughout operators.jl too, but was not. 
+=#
+function zero_promote(t1::TPS, t2::TPS)::TPS
+  return TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
+end
+
+function zero_promote(t1::TPS, ct1::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+end
+
+function zero_promote(ct1::ComplexTPS, t1::TPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME)) 
+end
+
+function zero_promote(ct1::ComplexTPS, ct2::ComplexTPS)::ComplexTPS
+  return ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+end
+
+# Vectorized zero_promote, output length is same as m1
+function zero_promote(m1::Vector{TPS}, m2::Vector{TPS})::Tuple{Vector{TPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{TPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{TPS}, m2::Vector{ComplexTPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m2[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{ComplexTPS}, m2::Vector{TPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
+
+function zero_promote(m1::Vector{ComplexTPS}, m2::Vector{ComplexTPS})::Tuple{Vector{ComplexTPS}, Cint}
+  na = Cint(length(m1))
+  m = Vector{ComplexTPS}(undef, na)
+  for i in eachindex(m)
+    m[i] = zero(m1[1])
+  end
+  return m, na
+end
+
 # --- Unary ---
 # TPS:
 function +(t1::TPS)::TPS
@@ -111,6 +181,19 @@ function ==(a::Number,t1::TPS)::Bool
   return mad_tpsa_get0(t1.tpsa) == a
 end
 
+# ---
+
+function ==(t1::TPS, a::Complex)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
+end
+
+function ==(a::Complex,t1::TPS)::Bool
+  return mad_tpsa_get0(t1.tpsa) == a
+end
+
+# ---
+
+
 function ==(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
   return mad_ctpsa_get0(ct1.tpsa) == mad_ctpsa_get0(ct2.tpsa)
 end
@@ -139,7 +222,7 @@ function isequal(t1::TPS, t2::TPS)::Bool
 end
 
 function isequal(t1::TPS, a::Real)::Bool
-  t2 = TPS(a, t1)
+  t2 = TPS(a,use=t1)
   return isequal(t1,t2)
 end
 
@@ -153,7 +236,7 @@ function isequal(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
 end
 
 function isequal(ct1::ComplexTPS, a::Number)::Bool
-  ct2 = ComplexTPS(a, ct1)
+  ct2 = ComplexTPS(a,use=ct1)
   return isequal(ct1, ct2)
 end
 
@@ -175,8 +258,7 @@ function isequal(a::Complex, t1::TPS)::Bool
 end
 
 function isequal(ct1::ComplexTPS, t1::TPS)::Bool
-  ct2 = ComplexTPS(t1)
-  return isequal(ct1, ct2)
+  return convert(Bool, mad_ctpsa_equt(ct1.tpsa, t1.tpsa, convert(Cdouble, 0.)))
 end
 
 function isequal(t1::TPS, ct1::ComplexTPS)::Bool
@@ -533,13 +615,13 @@ function atan(t1::TPS, t2::TPS)::TPS
 end
 
 function atan(t1::TPS, a::Real)::TPS
-  t = TPS(a, t1)
+  t = TPS(a,use=t1)
   mad_tpsa_atan2!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
 
 function atan(a::Real, t1::TPS)::TPS
-  t = TPS(a, t1)
+  t = TPS(a,use=t1)
   mad_tpsa_atan2!(t.tpsa, t1.tpsa, t.tpsa)
   return t
 end
@@ -551,7 +633,7 @@ function hypot(t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number)::TPS
-  t = TPS(abs(a), t1)
+  t = TPS(abs(a),use=t1)
   mad_tpsa_hypot!(t1.tpsa, t.tpsa, t.tpsa)
   return t
 end
@@ -567,7 +649,7 @@ function hypot(t1::TPS, t2::TPS, t3::TPS)::TPS
 end
 
 function hypot(t1::TPS, t2::TPS, a::Number)::TPS
-  t3 = TPS(abs(a), t1)
+  t3 = TPS(abs(a),use=t1)
   return hypot(t1, t2, t3)
 end
 
@@ -580,7 +662,7 @@ function hypot(a::Number, t1::TPS, t2::TPS)::TPS
 end
 
 function hypot(t1::TPS, a::Number, b::Number)::TPS
-  t2 = TPS(abs(a), t1)
+  t2 = TPS(abs(a),use=t1)
   return hypot(t1, t2, b)
 end
 
@@ -950,13 +1032,11 @@ function complex(t1::TPS, t2::TPS)::ComplexTPS
 end
 
 function complex(t1::TPS, a::Real)::ComplexTPS
-  t2 = TPS(a,t1)
-  return ComplexTPS(t1, t2)
+  return ComplexTPS(t1, a)
 end
 
 function complex(a::Real, t1::TPS)::ComplexTPS
-  t2 = TPS(a,t1)
-  return ComplexTPS(t2, t1)
+  return ComplexTPS(a, t1)
 end
 
 function polar(ct1::ComplexTPS)::ComplexTPS

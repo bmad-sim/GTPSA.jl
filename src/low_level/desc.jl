@@ -146,7 +146,7 @@ end
 
 
 """
-    mad_desc_getnv!(d::Ptr{Desc}, mo_::Vector{Cuchar}, np_::Vector{Cint}, po_::Vector{Cuchar}::Cint
+    mad_desc_getnv!(d::Ptr{Desc}, mo_::Ref{Cuchar}, np_::Ref{Cint}, po_::Ref{Cuchar}::Cint
 
 Returns the number of variables in the descriptor, and sets the passed `mo_`, `np_`, and `po_` to the maximum 
 order, number of parameters, and parameter order respectively.
@@ -160,7 +160,7 @@ order, number of parameters, and parameter order respectively.
 - `po_` -- (Optional) Parameter order of the descriptor
 - `ret` -- Number of variables in TPSA
 """
-function mad_desc_getnv!(d::Ptr{Desc}, mo_::Vector{Cuchar}, np_::Vector{Cint}, po_::Vector{Cuchar})::Cint
+function mad_desc_getnv!(d::Ptr{Desc}, mo_::Ref{Cuchar}, np_::Ref{Cint}, po_::Ref{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_desc_getnv(d::Ptr{Desc}, mo_::Ptr{Cuchar}, np_::Ptr{Cint}, po_::Ptr{Cuchar})::Cint
   return ret
 end

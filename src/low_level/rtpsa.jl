@@ -270,7 +270,7 @@ end
 """
     mad_tpsa_maxord!(t::Ptr{RTPSA}, n::Cint, idx_::Vector{Cint})::Cint
 
-Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n. If `idx_` 
+Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n`. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 
 
 ### Input
