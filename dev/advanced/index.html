@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Advanced Usage · GTPSA.jl</title><meta name="title" content="Advanced Usage · GTPSA.jl"/><meta property="og:title" content="Advanced Usage · GTPSA.jl"/><meta property="twitter:title" content="Advanced Usage · GTPSA.jl"/><meta name="description" content="Documentation for GTPSA.jl."/><meta property="og:description" content="Documentation for GTPSA.jl."/><meta property="twitter:description" content="Documentation for GTPSA.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GTPSA.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../usage/">Usage</a></li><li class="is-active"><a class="tocitem" href>Advanced Usage</a><ul class="internal"><li><a class="tocitem" href="#Definitions"><span>Definitions</span></a></li><li><a class="tocitem" href="#TPSA-Including-Variables-and-Parameters"><span>TPSA Including Variables and Parameters</span></a></li><li><a class="tocitem" href="#Taylor-Map-Methods"><span>Taylor Map Methods</span></a></li></ul></li><li><a class="tocitem" href="../code/">Code Index</a></li><li><a class="tocitem" href="../devel/">For Developers</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Advanced Usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Advanced Usage</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/bmad-sim/GTPSA.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/bmad-sim/GTPSA.jl/blob/main/docs/src/advanced.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Advanced-Usage"><a class="docs-heading-anchor" href="#Advanced-Usage">Advanced Usage</a><a id="Advanced-Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-Usage" title="Permalink"></a></h1><h2 id="Definitions"><a class="docs-heading-anchor" href="#Definitions">Definitions</a><a id="Definitions-1"></a><a class="docs-heading-anchor-permalink" href="#Definitions" title="Permalink"></a></h2><p>GTPSA allows for explicitly distinguishing between state <em>variables</em> and external <em>parameters</em>. For example, suppose you have defined the evolution of some initial state <span>$x_i$</span> of a dynamical system to a final state <span>$x_f$</span> as <span>$x_f = \mathcal{M}(x_i,k)$</span>, where <span>$k$</span> is some external parameter. When <span>$\mathcal{M}$</span> is expanded in powers of <span>$\Delta x_i$</span> and <span>$\Delta k$</span>, distinguishing between the state variable <span>$x$</span> and parameter <span>$k$</span> can significantly simplify analyses of the system. </p><h2 id="TPSA-Including-Variables-and-Parameters"><a class="docs-heading-anchor" href="#TPSA-Including-Variables-and-Parameters">TPSA Including Variables and Parameters</a><a id="TPSA-Including-Variables-and-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#TPSA-Including-Variables-and-Parameters" title="Permalink"></a></h2><p>Two extra <code>Descriptor</code> constructors can be used to define a TPSA with both variables and parameters.</p><pre><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; d3 = Descriptor(3, 4, 1, 2)</code><code class="nohighlight hljs ansi" style="display:block;">GTPSA Descriptor
+-----------------------
+# Variables:       3
+Variable order:    4
+# Parameters:      1
+Parameter order:   2</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; d3 = Descriptor([4, 4, 4], [2]) # Equivalent as previous</code><code class="nohighlight hljs ansi" style="display:block;">GTPSA Descriptor
+-----------------------
+# Variables:       3
+Variable order:    4
+# Parameters:      1
+Parameter order:   2</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; d4 = Descriptor([6, 5], [4])</code><code class="nohighlight hljs ansi" style="display:block;">GTPSA Descriptor
+-----------------------
+# Variables:       2
+Variable orders:  [6, 5]
+# Parameters:      1
+Parameter order:   4</code></pre><p>Just as the variables as a vector of TPSs can be obtained using <code>vars</code> or <code>complexvars</code>, the parameters as a vector of TPSs can be obtained using <code>params</code> or <code>complexparams</code>. For example, to calculate the Taylor series for <span>$f(x_1,x_2,k_1) = \cos{(x_1)} + \sin{(k_1)}\sqrt{1+x_2}$</span> to 10th order in <span>$x_1$</span> and <span>$x_2$</span> but only 5th order in the parameter <span>$k_1$</span>:</p><pre><code class="language-julia hljs">d = Descriptor(2, 10, 1, 5);  # or equivalently Descriptor([10, 10], [5])
+
+x = vars(d);     # Returns a Vector of each variable as a TPS
+k = params(d);   # Returns a Vector of each parameter as a TPS
+
+# f is a TPS containing the result
+f = cos(x[1]) + sin(k[1]) * sqrt(1 + x[2])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">TPS:
+  Coefficient              Order     Exponent
+   1.0000000000000000e+00    0        0    0    0
+   1.0000000000000000e+00    1        0    0    1
+  -5.0000000000000000e-01    2        2    0    0
+   5.0000000000000000e-01    2        0    1    1
+  -1.2500000000000000e-01    3        0    2    1
+  -1.6666666666666666e-01    3        0    0    3
+   4.1666666666666664e-02    4        4    0    0
+   6.2500000000000000e-02    4        0    3    1
+  -8.3333333333333329e-02    4        0    1    3
+  -3.9062500000000000e-02    5        0    4    1
+   2.0833333333333332e-02    5        0    2    3
+   8.3333333333333332e-03    5        0    0    5
+  -1.3888888888888887e-03    6        6    0    0
+   2.7343750000000000e-02    6        0    5    1
+  -1.0416666666666666e-02    6        0    3    3
+   4.1666666666666666e-03    6        0    1    5
+             ⋮              ⋮    ⋮   ⋮    ⋮    ⋮
+<span class="sgr36">                                    14 rows omitted
+</span></code></pre><p>The monomial coefficient indexing in a TPS <code>t</code> including is also extended:</p><ol><li><strong>By Order:</strong> <code>t[&lt;x_1 order&gt;, ..., &lt;x_nv order&gt;, &lt;k_1 order&gt;, ..., &lt;k_np order&gt;]</code>. For example, for a TPS with variables <span>$x_1$</span>, <span>$x_2$</span> and parameter <span>$k_1$</span>, the <span>$x_1^3x_2^1k_1^2$</span> monomial coefficient is accessed with <code>t[3,1,2]</code>. The 0th order part (the <em>scalar</em> part) of the TPS is indexed with <code>t[0,0,0]</code> or equivalently <code>t[0]</code>, as leaving out trailing zeros for unincluded variables/parameters is allowed.</li><li><strong>By Sparse Monomial:</strong> <code>t[&lt;ix_var&gt; =&gt; &lt;order&gt;, ..., params=(&lt;ix_param&gt; =&gt; &lt;order&gt;, ...)]</code>. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables <span>$x_1$</span>, <span>$x_2$</span> and parameter <span>$k_1$</span>, the <span>$x_1^3x_2^1k_1^2$</span> monomial is accessed with <code>t[1=&gt;3, 2=&gt;1, params=(1=&gt;2,)]</code>. The scalar part of the TPS cannot be set with this method.</li></ol><pre><code class="nohighlight hljs"># Descriptor for 2 variables with order 5, and 2 parameters with orders 5
+d = Descriptor(2, 5, 2, 5)
+x = vars(d)
+x1 = x[1]
+x2 = x[2]
+k = params(d)
+p1 = k[1]
+p2 = k[2]
+
+# Example of indexing by order -------
+y1 = TPS(d)             # Create blank TPS with zero for all coefficients
+y1[1,0,0,0] = 1         # Set first-order part for first variable equal to 1
+y1 == x1                # Is true
+
+z2 = TPS(d)             # Create blank TPS with zero for all coefficients
+z2[0,0,0,1] = 1         # Set first-order part for second parameter equal to 1
+z2 == p2                # Is true
+
+# Example of indexing by var =&gt; order, param =&gt; order -------
+y1 = TPS(d)             # Create blank TPS with zero for all coefficients
+y1[1=&gt;1] = 1            # Set first-order part for first variable equal to 1
+y1 == x1                # Is true
+
+z2 = TPS(d)             # Create blank TPS with zero for all coefficients
+z2[params=(2=&gt;1,)] = 1  # Set first-order part for second parameter equal to 1
+z2 == p2                # Is true</code></pre><p>The gradient, Jacobian, and Hessian convenience getters include an option kwarg <code>include_params</code>, which may be set to true to include parameters in the extracted partial derivatives.</p><h2 id="Taylor-Map-Methods"><a class="docs-heading-anchor" href="#Taylor-Map-Methods">Taylor Map Methods</a><a id="Taylor-Map-Methods-1"></a><a class="docs-heading-anchor-permalink" href="#Taylor-Map-Methods" title="Permalink"></a></h2></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../usage/">« Usage</a><a class="docs-footer-nextpage" href="../code/">Code Index »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Wednesday 31 January 2024 19:55">Wednesday 31 January 2024</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
