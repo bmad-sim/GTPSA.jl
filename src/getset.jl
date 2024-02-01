@@ -62,7 +62,11 @@ seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti
 seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
 
 function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{<:Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
-  par_mono = setup_mono(t, v, param, params)
+  if !(last(v) isa Colon)
+    par_mono = setup_mono(t, v, param, params)
+  else
+    par_mono = setup_mono(t, v, param, params)
+  end
   return low_par(t, par_mono)
 end
 
