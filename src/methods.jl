@@ -478,3 +478,9 @@ function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTP
   return mc
 end
 
+# --- change descriptor ---
+function change(ts::Pair{<:Union{TPS,ComplexTPS},<:Union{TPS,ComplexTPS}})
+  d1 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.first.tpsa).d))
+  d2 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.second.tpsa).d))
+
+end

@@ -32,17 +32,20 @@ f = cos(x[1]) + sqrt(1 + x[2])
 
 A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(d)` or `ComplexTPS(d)` respectively. 
 
-When a TPS contains more than 6 variables, a different type of `show` is used, instead showing the specific monomial instead of the exponents for each variable:
+When a TPS contains a lot of variables, the default output showing each variable exponent can be much larger than the screen. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
 ```@example
 using GTPSA #hide
 d = Descriptor(10, 10);
 x = vars(d);
-
+aq
+GTPSA.show_sparse = true;
 g = sin(x[1]*x[3]^2) + cos(x[2]*x[7]);
 
 print(g)
 ```
+
+Another global variable `GTPSA.show_eps` can be used to exclude monomials having `abs(<coef>) < GTPSA.show_eps` from `show`.
 
 ## Partial Derivative Getting/Setting
 ### Individual Monomial Coefficient
@@ -108,19 +111,35 @@ hessian!(h1, out[1]);
 ```
 
 ## Slicing a TPS
-Parts of a `TPS` with certain variable orders can be extracted using the same indexing methods as above, but appending a colon (`:`) to the end of the indexing list:
+Parts of a TPS with certain variable orders can be extracted by slicing the TPS. When indexing by order, a colon (`:`) can be used in place for a variable order to include all orders of that variable. If the last specified index is a colon, then the rest of the variable indices are assumed to be colons:
 
-```@example
+```@example slice
 using GTPSA #hide
-d = Descriptor(4, 6);
+d = Descriptor(5, 10);
 x = vars(d);
 
-f = 2*x[1]^2*x[3]*x[4] + 3*x[1]^2*x[3]*x[4]^2 + 6*x[3] + 5
-g = f[1=>2,3=>1,:];
+f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5] + 6*x[3] + 5;
+g = f[2,:,1];
+h = f[2,:,1,:];
 
 print(f)
 print(g)
+print(h)
 ```
+
+A TPS can also be sliced with indexing by sparse monomial. In this case, if a colon is included anywhere in the sparse monomial index, then all orders of all variables not explicity specified will be included:
+
+```@example slice
+ # Colon position does not matter in sparse-monomial indexing
+g = f[1=>2, 3=>1, :];
+h = f[1=>2, :, 3=>1, 4=>0, 5=>0];
+
+print(g)
+print(h)
+```
+
+## Multiple Descriptors
+In some cases, having multiple `Descriptor`s in the same program may be necessary; for example
 
 
 ## `@FastGTPSA` Macro

@@ -460,24 +460,33 @@ export
 
 
 # Low-level functions/structs and constants
-const NAMSZ = 16 
+const NAMSZ::Int = 16 
 include("low_level/mono.jl")
 include("low_level/desc.jl")
 include("low_level/rtpsa.jl")
 include("low_level/ctpsa.jl")
 
-const MAD_TPSA = :("libgtpsa")
+const MAD_TPSA::String = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
 const MAD_DESC_CURR::Ptr{Desc} = C_NULL
-const DESC_MAX_TMP = 8
+const DESC_MAX_TMP::Int = 8
 
 # Wrapper struct for Ptr{Desc}
 struct Descriptor
   desc::Ptr{Desc}
+  function Descriptor(desc::Ptr{Desc})::Descriptor
+    d = new(desc)
+    GTPSA.desc_current = d
+    return d
+  end
 end
 
-const DESC_CURR = Descriptor(MAD_DESC_CURR)
+# Global non-constants (types MUST be specified)
+desc_current::Descriptor = Descriptor(MAD_DESC_CURR)   # Current Descriptor
+show_eps::Float64 =  0.0                            # Print epsilon
+show_sparse::Bool = false                           # Use sparse monomial print
+
 
 # Descriptor outer constructors
 """
@@ -759,7 +768,7 @@ end
 # --- Variable/parameter generators ---
 
 """
-    vars(d::Descriptor=DESC_CURR)::Vector{TPS}
+    vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
 
 Returns `TPS`s corresponding to the variables for the `Descriptor`.
 Default value is the most recently-defined `Descriptor`.
@@ -770,7 +779,7 @@ Default value is the most recently-defined `Descriptor`.
 ### Output
 - `x` -- `Vector` containing unit `TPS`s corresponding to each variable
 """
-function vars(d::Descriptor=DESC_CURR)::Vector{TPS}
+function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   t1 = TPS(d)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
@@ -789,7 +798,7 @@ function vars(d::Descriptor=DESC_CURR)::Vector{TPS}
 end
 
 """
-    params(d::Descriptor=DESC_CURR)::Vector{TPS}
+    params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
 
 Returns `TPS`s corresponding to the parameters for the `Descriptor`.
 Default value is the most recently-defined `Descriptor`.
@@ -800,7 +809,7 @@ Default value is the most recently-defined `Descriptor`.
 ### Output
 - `k` -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
-function params(d::Descriptor=DESC_CURR)::Vector{TPS}
+function params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   t1 = TPS(d)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
@@ -821,7 +830,7 @@ end
 
 
 """
-    complexvars(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+    complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the variables for the `Descriptor`.
 Default value is the most recently-defined `Descriptor`.
@@ -832,7 +841,7 @@ Default value is the most recently-defined `Descriptor`.
 ### Output
 - `x` -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
-function complexvars(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1 = ComplexTPS(d)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
@@ -851,7 +860,7 @@ function complexvars(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
 end
 
 """
-    complexparams(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+    complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor`.
 Default value is the most recently-defined `Descriptor`.
@@ -862,7 +871,7 @@ Default value is the most recently-defined `Descriptor`.
 ### Output
 - `k` -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
-function complexparams(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
+function complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1 = ComplexTPS(d)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
@@ -882,7 +891,7 @@ function complexparams(d::Descriptor=DESC_CURR)::Vector{ComplexTPS}
 end
 
 """
-    mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=DESC_CURR)::TPS
+    mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=GTPSA.desc_current)::TPS
 
 Returns a `TPS` corresponding to a specific monomial, specified using the variable/parameter index, or 
 monomial indexing-by-order OR monomial indexing-by-sparse monomial. 
@@ -962,7 +971,7 @@ TPS:
 ```
 
 """
-function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=DESC_CURR)::TPS
+function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=GTPSA.desc_current)::TPS
   return low_mono(use, v, param, params)
 end
 
@@ -1043,7 +1052,7 @@ function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integ
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   n = Cint(0)
@@ -1052,7 +1061,11 @@ function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Intege
   else
     n = Cint(maximum(map(x->x.first, params))) + nv
   end
-  ords = zeros(Cuchar, n)
+  if zero_mono
+    ords = zeros(Cuchar, n)
+  else
+    ords = ones(Cuchar, n).*0xff
+  end
   for var in vars
     ords[var.first] = convert(Cuchar, var.second)
   end

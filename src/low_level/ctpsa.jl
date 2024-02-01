@@ -1048,7 +1048,7 @@ end
 """
     mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Cuchar
 
-Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_EPSILON` is used.
+Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
 
 ### Input
 - `a`    -- TPSA `a`

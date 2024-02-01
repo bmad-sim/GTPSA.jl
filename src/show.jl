@@ -78,16 +78,14 @@ function format(t::TPS; coloffset=0)
   nn = desc.nn
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
-  EPS = 0 # 1e-100
 
-  # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
-  if nn <= 6
+  if !GTPSA.show_sparse
     out = Matrix{Any}(undef, 0, (coloffset+1+1+1+nn)) # Coefficient, order, spacing, exponents
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      if abs(v[]) > EPS
+      if abs(v[]) > GTPSA.show_eps
         out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
       end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
@@ -121,7 +119,7 @@ function format(t::TPS; coloffset=0)
       else
         mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
       end
-      if abs(v[]) > EPS
+      if abs(v[]) > GTPSA.show_eps
         out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
       end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
@@ -156,16 +154,15 @@ function format(t::ComplexTPS; coloffset=0)
   nn = desc.nn
   v = Ref{ComplexF64}()
   mono = Vector{UInt8}(undef, nn)
-  EPS = 0 # 1e-100
 
-  # If nn > 6 (6 chosen arbitrarily), use sparse monomial format for print
-  if nn <= 6
+  # sparse monomial or order output
+  if !GTPSA.show_sparse
     out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # First col is coefficient, rest are orders
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      if abs(v[]) > EPS
+      if abs(v[]) > GTPSA.show_eps
         out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
       end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
@@ -199,7 +196,7 @@ function format(t::ComplexTPS; coloffset=0)
       else
         mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
       end
-      if abs(v[]) > EPS
+      if abs(v[]) > GTPSA.show_eps
         out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
       end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
@@ -314,7 +311,7 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
   # Check if sparse monomial or exponent:
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
   nn = desc.nn
-  if nn > 6
+  if GTPSA.show_sparse
     println(io, "  Out   Real                      Imag                     Order     Monomial")
   else
     println(io, "  Out   Real                      Imag                     Order     Exponent")

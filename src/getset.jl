@@ -43,14 +43,11 @@ function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
   if !(ords[1:end-1] isa Tuple{Vararg{<:Integer}})
     error("Invalid monomial index: colon must appear at end.")
   end=#
-  return par(t, ords)
+  return low_par(t, setup_mono(t,ords,nothing,nothing))
 end
 
 function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Integer}, Colon}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  if !(vars[1:end-1] isa Tuple{Vararg{<:Pair{<:Integer, <:Integer}}})
-    error("Invalid monomial index: colon must appear at end.")
-  end
-  return par(t, vars[1:end-1], params=params)
+  return low_par(t, setup_mono(t, vars, nothing, params))
 end
 
 # --- par --- 
@@ -62,8 +59,8 @@ seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti
 seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
 
 function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{<:Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
-  if !(last(v) isa Colon)
-    par_mono = setup_mono(t, v, param, params)
+  if (v isa Vector) && !(last(v) isa Colon)
+    par_mono = setup_mono(t, tuple(v...,:), param, params)
   else
     par_mono = setup_mono(t, v, param, params)
   end
@@ -72,7 +69,7 @@ end
 
 # Variable/parameter:
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
-  par_mono = zeros(Cuchar, v)
+  par_mono = ones(Cuchar, v+1).*0xff
   par_mono[v] = 0x1
   return par_mono
 end
@@ -80,44 +77,41 @@ end
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::Vector{Cuchar}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
-  par_mono = zeros(Cuchar, param+nv)
+  par_mono = ones(Cuchar, param+nv+1).*0xff
   par_mono[nv+param] = 0x1
   return par_mono
 end
-
+#=
 # Default to scalar part as TPS if nothing passed:
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::Vector{Cuchar}
   return [0x0]
 end
-
+=#
 # Monomial by order:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Integer}, Tuple{Vararg{<:Integer}}}, param::Nothing, params::Nothing)::Vector{Cuchar}
-  return convert(Vector{Cuchar}, [v...])
-end
-
-# This one is called when a colon IS in the tuple or vector somewhere
+# This one should ALWAYS be called by par or splicing colon IS in the tuple or vector somewhere
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Tuple{Vararg{<:Union{<:Integer,<:Colon}}},Vector{<:Any}}, param::Nothing, params::Nothing)::Vector{Cuchar}
-  return [replace(x-> x isa Colon ? 0xff : convert(Cuchar, x), v)...]
+  return [replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v)...]
 end
 
-# ALL SPARSE MONOMIAL SHOULD AUTOMATICALLY INCLUDE ALL OTHER VARS UNLESS EXPLICITLY ix_var=>0
+# By definition, sparse monomial makes everything else zero. SO if we reach this, it is automatically
+# assumed that everything else is colon except those explictly made ix_var=>0
 # Monomial by sparse monomial:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Pair{<:Integer,<:Integer}}}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}},  Tuple{Vararg{<:Union{Pair{<:Integer,<:Integer},<:Colon}}}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
   # Need to create array of orders with length nv + np
-  ords, ___  = pairs_to_m(t1,v,params=params)
-  return ords
+  ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),params=params,zero_mono=false)
+  return [ords..., 0xff]
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Union{Pair{<:Integer,<:Integer},<:Colon}}}}, param::Nothing, params::Nothing)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
-  ords, ___  = pairs_to_m(t1,v)
-  return ords
+  ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),zero_mono=false)
+  return [ords..., 0xff]
 end
 
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
   # Need to create array of orders with length nv + np
-  ords, ___ = pairs_to_m(t1,Pair{Int,Int}[],params=params)
-  return ords
+  ords, ___ = pairs_to_m(t1,Pair{Int,Int}[],params=params,zero_mono=false)
+  return [ords..., 0xff]
 end
 
 
@@ -137,13 +131,18 @@ function low_par(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar})::typeof(t1
   idx = idxm(t1.tpsa, v, replace(x->x==0xff ? 0x0 : x, par_mono))-Cint(1)
   idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
   valid_idxs = findall(x->x != 0xff, par_mono)
-  invalid_idxs = findall(x->x == 0xff, par_mono)
+  invalid_idxs = findall(x->x == 0xff, par_mono[1:min(v,np+nv)])
   while idx >= 0
+    # if last index in par_mono is a colon, assume all the rest are colons
+    # else assume the rest are zeros
     if all(mono[valid_idxs] .== par_mono[valid_idxs])
-      tmp = zeros(Cuchar, np+nv)
-      tmp[invalid_idxs] .= mono[invalid_idxs]
-      tmp[v+1:end] .= mono[v+1:end]
-      t[tmp...] = coef[]
+      if last(par_mono) == 0xff || all(mono[valid_idxs[end]+1:end] .== 0x0)
+       # just simply ignore everything after
+        tmp = zeros(Cuchar, np+nv)
+        tmp[invalid_idxs] .= mono[invalid_idxs]
+        tmp[v+1:end] .= mono[v+1:end]
+        t[tmp...] = coef[]
+      end
     end
     idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
   end
