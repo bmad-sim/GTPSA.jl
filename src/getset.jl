@@ -43,11 +43,11 @@ function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
   if !(ords[1:end-1] isa Tuple{Vararg{<:Integer}})
     error("Invalid monomial index: colon must appear at end.")
   end=#
-  return low_par(t, setup_mono(t,ords,nothing,nothing))
+  return slice(t, setup_mono(t,ords,nothing,nothing), false)
 end
 
 function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Integer}, Colon}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  return low_par(t, setup_mono(t, vars, nothing, params))
+  return slice(t, setup_mono(t, vars, nothing, params), false)
 end
 
 # --- par --- 
@@ -64,7 +64,7 @@ function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<
   else
     par_mono = setup_mono(t, v, param, params)
   end
-  return low_par(t, par_mono)
+  return slice(t, par_mono)
 end
 
 # Variable/parameter:
@@ -120,7 +120,7 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
-function low_par(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar})::typeof(t1)
+function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)::typeof(t1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
   np = desc.np
@@ -133,15 +133,17 @@ function low_par(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar})::typeof(t1
   valid_idxs = findall(x->x != 0xff, par_mono)
   invalid_idxs = findall(x->x == 0xff, par_mono[1:min(v,np+nv)])
   while idx >= 0
-    # if last index in par_mono is a colon, assume all the rest are colons
-    # else assume the rest are zeros
     if all(mono[valid_idxs] .== par_mono[valid_idxs])
+      # if last index in par_mono is a colon, assume all the rest are colons, else check if all are zeros
       if last(par_mono) == 0xff || all(mono[valid_idxs[end]+1:end] .== 0x0)
-       # just simply ignore everything after
-        tmp = zeros(Cuchar, np+nv)
-        tmp[invalid_idxs] .= mono[invalid_idxs]
-        tmp[v+1:end] .= mono[v+1:end]
-        t[tmp...] = coef[]
+        if par_it
+          tmp = zeros(Cuchar, np+nv)
+          tmp[invalid_idxs] .= mono[invalid_idxs]
+          tmp[v+1:end] .= mono[v+1:end]
+          t[tmp...] = coef[]
+        else
+          t[mono...] = coef[]
+        end
       end
     end
     idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
