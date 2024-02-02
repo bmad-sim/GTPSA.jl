@@ -37,7 +37,6 @@ function getindex(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...;
   return getsm(t.tpsa, n, sm)
 end
 
-# par:
 function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
   #=
   if !(ords[1:end-1] isa Tuple{Vararg{<:Integer}})

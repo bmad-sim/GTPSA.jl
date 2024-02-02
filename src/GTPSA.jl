@@ -425,7 +425,7 @@ export
   jacobian!,
   hessian,
   hessian!,
-  par,
+  
 
   # Methods:
   evaluate,
@@ -442,6 +442,7 @@ export
   fgrad,
   pinv,
   translate,
+  par,
   
 
 
@@ -628,13 +629,12 @@ end
 """
     TPS()
 
-Create a new `TPS` using the most recently-defined `Descriptor`.
+Create a new `TPS` using `GTPSA.desc_current`
 
-WARNING: Use of this constructor should be avoided if possible 
-when more than one `Descriptor` is defined.
+WARNING: Mixing `TPS`s from two different `Descriptor`s is not allowed.
 """
 function TPS()
-  return TPS(mad_tpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+  return TPS(GTPSA.desc_current)
 end
 
 
@@ -755,13 +755,12 @@ end
 """
     ComplexTPS()
 
-Create a new `ComplexTPS` using the most recently-defined `Descriptor`.
+Create a new `ComplexTPS` using `GTPSA.desc_current`
 
-WARNING: Use of this constructor should be avoided if possible 
-when more than one `Descriptor` is defined.
+WARNING: Mixing `ComplexTPS`s from two different `Descriptor`s is not allowed.
 """
 function ComplexTPS()
-  return ComplexTPS(mad_ctpsa_newd(MAD_DESC_CURR, MAD_TPSA_DEFAULT))
+  return ComplexTPS(GTPSA.desc_current)
 end
 
 
