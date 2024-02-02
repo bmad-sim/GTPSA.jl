@@ -143,6 +143,7 @@ function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
           t[tmp...] = coef[]
         else
           t[mono...] = coef[]
+          
         end
       end
     end
