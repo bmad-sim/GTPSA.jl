@@ -36,7 +36,7 @@ m = mono(..., use=descriptor)
 
 ------
 
-### Optional Arguments
+### Optional Argument
 
 `m = mono(..., use=descriptor)` creates a mono using any of the above methods but using the `Descriptor` specified in `use`
 

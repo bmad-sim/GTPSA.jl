@@ -15,10 +15,4 @@ Individual monomial coefficients in a TPS can be get/set with two methods of ind
 
 ## Documentation
 ```@docs
-gradient
-gradient!
-jacobian
-jacobian!
-hessian
-hessian!
 ```
