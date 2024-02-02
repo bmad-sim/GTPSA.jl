@@ -620,10 +620,10 @@ function low_TPS(a::Real, use::TPS)::TPS
 end
 
 function low_TPS(a::Real, use::Nothing)::TPS
-  error("SOMETHING WENT VERY WRONG!!!")
+  #error("SOMETHING WENT VERY WRONG!!!")
   t = TPS()
   mad_tpsa_set0!(t.tpsa, convert(Float64, 0), convert(Float64,a))
-  return tt
+  return t
 end
 
 """
@@ -746,7 +746,7 @@ end
 
 # WARNING: THIS FUNCTION SHOULD NEVER BE REACHED INTERNALLY!!!!
 function low_ComplexTPS(a::Number, use::Nothing)::ComplexTPS
-  error("SOMETHING WENT VERY WRONG!!!")
+  #error("SOMETHING WENT VERY WRONG!!!")
   ct = ComplexTPS()
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct

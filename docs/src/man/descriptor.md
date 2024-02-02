@@ -1,20 +1,21 @@
 # `Descriptor`
+*Defines the number of variables, number of parameters, and order(s) for each in the GTPSA*
 ## Syntax
 ```
-d = Descriptor(num_vars, var_ord)     
-d = Descriptor(var_ords)
-d = Descriptor(num_vars, var_ord, num_params, param_ord)   
-d = Descriptor(var_ords, param_ords)  
+d = Descriptor(num_vars, var_order)     
+d = Descriptor(var_orders)
+d = Descriptor(num_vars, var_order, num_params, param_order)   
+d = Descriptor(var_orders, param_orders)  
 ```
 
 ## Description
-`d = Descriptor(num_vars, var_ord)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_ord`
+`d = Descriptor(num_vars, var_order)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_order`
 
-`d = Descriptor(var_ords)` defines a GTPSA `Descriptor` with `length(var_ords)` variables each having individual truncation orders specified in the `var_ords` vector
+`d = Descriptor(var_orders)` defines a GTPSA `Descriptor` with `length(var_orders)` variables each having individual truncation orders specified in the `var_orders` vector
 
-`d = Descriptor(num_vars, var_ord, num_params, param_ord)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_ord`, and `num_params` parameters all having the same truncation order `param_ord`
+`d = Descriptor(num_vars, var_order, num_params, param_order)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_order`, and `num_params` parameters all having the same truncation order `param_order`
 
-`d = Descriptor(var_ords, param_ords)` defines a GTPSA `Descriptor` with `length(var_ords)` variables each having individual truncation orders specified in the `var_ords` vector, and `length(param_ords)` parameters each having individual truncation orders specified in the `param_ords` vector
+`d = Descriptor(var_orders, param_orders)` defines a GTPSA `Descriptor` with `length(var_orders)` variables each having individual truncation orders specified in the `var_orders` vector, and `length(param_orders)` parameters each having individual truncation orders specified in the `param_orders` vector
 
 -----
 
@@ -30,7 +31,7 @@ d4 = Descriptor([6, 5], [4])
 GTPSA.desc_current = d1
 ```
 
-## Constructors
+## Documentation
 ```@docs
 Descriptor
 ```

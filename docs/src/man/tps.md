@@ -1,34 +1,63 @@
 # `TPS`/`ComplexTPS`
+*Truncated Power Series struct*
 ## Syntax
 ```
-t = TPS(desc)
+t = TPS(descriptor)
 t = TPS(tps)
-t = TPS(num [, use=tps]) 
+t = TPS(real)
+t = TPS(real, use=tps)
 t = TPS() 
+
+ct = ComplexTPS(descriptor)
+ct = ComplexTPS(tps)
+ct = ComplexTPS(complextps)
+ct = ComplexTPS(number)
+ct = ComplexTPS(number, use=tps)
+ct = ComplexTPS() 
 ```
 
 ## Description
-`d = Descriptor(num_vars, var_ord)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_ord`
+`t = TPS(descriptor)` creates a new `TPS` with all coefficients equal to zero, in the GTPSA defined by the passed `Descriptor`
 
-`d = Descriptor([var1_ord, var2_ord, ..., varN_ord])` defines a GTPSA `Descriptor` with `N` variables each having individual truncation orders specified in the vector
+`t = TPS(tps)` creates a new copy of the passed `TPS`
 
-`d = Descriptor(num_vars, var_ord, num_params, param_ord)` defines a GTPSA `Descriptor` with `num_vars` variables all having the same truncation order `var_ord`, and `num_params` parameters all having the same truncation order `param_ord`
+`t = TPS(real)` creates a new `TPS` with scalar value equal to `real` using the `Descriptor` in `GTPSA.desc_current`
 
-`d = Descriptor([var1_ord, ..., varN_ord], [param1_ord, ..., paramM_ord])` defines a GTPSA `Descriptor` with `N` variables each having individual truncation orders specified in the first vector, and `M` parameters each having individual truncation orders specified in the second vector
+`t = TPS(real, use=tps)` creates a new `TPS` with scalar value equal to `real` using the same `Descriptor` as that in the passed `tps`
+
+`t = TPS()` creates a new `TPS` with all coefficients equal to zero using the `Descriptor` in `GTPSA.desc_current`
 
 -----
 
+`ct = ComplexTPS(descriptor)` creates a new `ComplexTPS` with all coefficients equal to zero, in the GTPSA defined by the passed `Descriptor`
+
+`ct = ComplexTPS(tps)` creates a new copy of the passed `TPS` promoted to a `ComplexTPS`
+
+`ct = ComplexTPS(complextps)` creates a new copy of the passed `ComplexTPS`
+
+`ct = ComplexTPS(number)` creates a new `ComplexTPS` with scalar value equal to `number` using the `Descriptor` in `GTPSA.desc_current`
+
+`ct = ComplexTPS(number, use=tps)` creates a new `ComplexTPS` with scalar value equal to `number` using the same `Descriptor` as that in the passed `tps`
+
+`ct = ComplexTPS()` creates a new `ComplexTPS` with all coefficients equal to zero using the `Descriptor` in `GTPSA.desc_current`
 
 ## Examples
 ```@repl desc
 using GTPSA #hide
-d1 = Descriptor(2, 10)         
-d2 = Descriptor([1, 2, 3])     
-d3 = Descriptor(3, 4, 1, 2)    
-d4 = Descriptor([6, 5], [4])   
-GTPSA.desc_current = d1
+d1 = Descriptor(2, 10);
+t1_1 = TPS()
+t1_2 = TPS(5)
+t1_3 = TPS(t1_2)
+ct1 = ComplexTPS(t1_3)
+d2 = Descriptor(5, 10);
+t2_1 = TPS()
+t2_2 = TPS(6)
+t1_4 = TPS(d1)
+t1_5 = TPS(6, use=t1_4)
 ```
 
-## Constructors
+## Documentation
 ```@docs
+TPS
+ComplexTPS
 ```
