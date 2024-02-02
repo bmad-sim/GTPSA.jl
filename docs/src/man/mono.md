@@ -1,5 +1,5 @@
 # `mono`
-*Creates a `TPS` corresponding to a specific monomial*
+*Creates a TPS corresponding to a specific monomial*
 ## Syntax
 ```
 m = mono(var_idx)
@@ -14,7 +14,7 @@ m = mono(..., use=descriptor)
 ```
 
 ## Description
-### Index by Variable/Parameter
+#### Index by Variable/Parameter
 
 `m = mono(var_idx)` creates a `TPS` equal to the variable specified by `var_idx` and the `Descriptor` in `GTPSA.desc_current`
 
@@ -22,13 +22,13 @@ m = mono(..., use=descriptor)
 
 ------
 
-### Indexing by Order
+#### Indexing by Order
 
 `m = mono(orders)` creates a `TPS` equal to the monomial specified by the indexing-by-order array `orders` and the `Descriptor` in `GTPSA.desc_current`
 
 ------
 
-### Indexing by Sparse Monomial
+#### Indexing by Sparse Monomial
 
 `m = mono(vars_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial array `vars_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
 

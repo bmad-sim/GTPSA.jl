@@ -80,22 +80,34 @@ function format(t::TPS; coloffset=0)
   mono = Vector{UInt8}(undef, nn)
 
   if !GTPSA.show_sparse
-    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+nn)) # Coefficient, order, spacing, exponents
+    if np > 0
+      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+nn)) # Coefficient, order, spacing, exponents
+    else
+      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # Coefficient, order, spacing, exponents
+    end
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
       if abs(v[]) > GTPSA.show_eps
-        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing convert(Vector{Int}, mono)...])
+        if np > 0
+          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])...])
+        else
+          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono)...])
+        end
       end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing zeros(Int,nn)...])
+      if np > 0
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)...])
+      else
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nn)...])
+      end
     end
-    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2:coloffset+3+nn), ft_nonothing)
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2:length(out[1,:])), ft_nonothing)
   else
-    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1))
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
@@ -120,14 +132,14 @@ function format(t::TPS; coloffset=0)
         mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
       end
       if abs(v[]) > GTPSA.show_eps
-        out = vcat(out, Any[repeat([nothing], coloffset)... v[] order nothing mono_display])
+        out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing mono_display])
       end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 Int(0) nothing 1])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing 1])
     end
-    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2), ft_nonothing)
+    formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+3), ft_nonothing)
   end
   return out, formatters
 end
@@ -136,16 +148,15 @@ function show(io::IO, t::TPS)
   out, formatters = format(t)
   println(io, "TPS:")
   # Check if sparse monomial or exponent:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nn = desc.nn
-  if nn > 6
-    println(io, "  Coefficient              Order     Monomial")
+  if GTPSA.show_sparse
+    println(io, " Coefficient                Order   Monomial")
   else
-    println(io, "  Coefficient              Order     Exponent")
+    println(io, " Coefficient                Order   Exponent")
   end
   # Remove two lines from display size
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
 end
+
 
 function format(t::ComplexTPS; coloffset=0)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
@@ -157,22 +168,34 @@ function format(t::ComplexTPS; coloffset=0)
 
   # sparse monomial or order output
   if !GTPSA.show_sparse
-    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # First col is coefficient, rest are orders
+    if np > 0
+      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+1+nn)) # First col is coefficient, rest are orders
+    else
+      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+nn)) # First col is coefficient, rest are orders
+    end
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
       if abs(v[]) > GTPSA.show_eps
-        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing convert(Vector{Int}, mono)...])
+        if np > 0
+          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])...])
+        else
+          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono)...])
+        end
       end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing zeros(Int,nn)...])
+      if np > 0
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)...])
+      else
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nn)...])
+      end
     end
-    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3:coloffset+4+nn), ft_nonothing)
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3:length(out[1,:])), ft_nonothing)
   else
-    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
+    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1+1))
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
@@ -197,14 +220,14 @@ function format(t::ComplexTPS; coloffset=0)
         mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
       end
       if abs(v[]) > GTPSA.show_eps
-        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) order nothing mono_display])
+        out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing mono_display])
       end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 Int(0) nothing 1])
+      out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing 1])
     end
-    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3), ft_nonothing)
+    formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+4), ft_nonothing)
   end
   return out, formatters
 end
@@ -214,12 +237,12 @@ function show(io::IO, t::ComplexTPS)
   println(io, "ComplexTPS:")
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nn = desc.nn
-  if nn > 6
-    println(io, "  Real                      Imag                     Order     Monomial")
+  if GTPSA.show_sparse
+    println(io, " Real                     Imag                       Order   Monomial")
   else
-    println(io, "  Real                      Imag                     Order     Exponent")
+    println(io, " Real                     Imag                       Order   Exponent")
   end
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
 end
 
 show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
@@ -245,7 +268,7 @@ function show_map(io::IO, m::Vector{TPS})
                        column              = ' ',
                        row                 = '-',
                        hlines              = [])#,
-                       #vlines              = :all);
+                       #vlines             =[]);
   N = length(m)
   if N < 1
     print(io, m)
@@ -262,14 +285,12 @@ function show_map(io::IO, m::Vector{TPS})
   end
   println(io, N, "-element Vector{TPS}:")
   # Check if sparse monomial or exponent:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
-  nn = desc.nn
-  if nn > 6
-    println(io, "  Out   Coefficient              Order     Monomial")
+  if GTPSA.show_sparse
+    println(io, "  Out  Coefficient                Order   Monomial")
   else
-    println(io, "  Out   Coefficient              Order     Exponent")
+    println(io, "  Out  Coefficient                Order   Exponent")
   end
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
 end
 
 function show_map(io::IO,  m::Vector{ComplexTPS})
@@ -309,13 +330,11 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
   end
   println(io, N, "-element Vector{ComplexTPS}:")
   # Check if sparse monomial or exponent:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
-  nn = desc.nn
   if GTPSA.show_sparse
-    println(io, "  Out   Real                      Imag                     Order     Monomial")
+    println(io, "  Out  Real                     Imag                       Order   Monomial")
   else
-    println(io, "  Out   Real                      Imag                     Order     Exponent")
+    println(io, "  Out  Real                     Imag                       Order   Exponent")
   end
   
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%2i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]))
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
 end

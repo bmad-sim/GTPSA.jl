@@ -11,29 +11,46 @@ jacobian!(J, F)
 H = hessian(f)
 hessian!(H, f)
 
-(gradient/jacobian/hessian)(!)(..., include_params=true)
+gradient(..., include_params=true); gradient!(..., include_params=true);
+jacobian(..., include_params=true); jacobian!(..., include_params=true);
+hessian(..., include_params=true);  hessian!(..., include_params=true);
 ```
 
 ## Description
 
 `grad = gradient(f)` extracts the gradient from the TPS `f`, defined as $\nabla f$
+
 `gradient!(grad, f)` fills `grad` vector in-place with the gradient extracted from the TPS `f`
 
 ------
 
-`J = jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as $J_{i,j} = \frac{\partial F_i}{\partial x_j}$
+`J = jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as $J_{ij} = \frac{\partial F_i}{\partial x_j}$
+
 `jacobian!(J, F)` fills the `J` matrix in-place with the Jacobian extracted from the vector of TPSs `F`
 
 ------
 
-`H = hessian(tps)` extracts the Hessian matrix from the TPS `f`, defined as $H_{i,j} = \frac{\partial^2 f}{\partial x_i\partial x_j}$
-`hessian!(H, tps)` fills the `H` matrix in-place with the Hessian extracted from the TPS `f`
+`H = hessian(f)` extracts the Hessian matrix from the TPS `f`, defined as $H_{ij} = \frac{\partial^2 f}{\partial x_i\partial x_j}$
+
+`hessian!(H, f)` fills the `H` matrix in-place with the Hessian extracted from the TPS `f`
 
 ------
-### Optional Argument
+#### Optional Argument
 
-The optional keyword argument `include_params`, which by default is set to `false`, can be set to `true` to include the partial derivatives with respect to the parameters in any of the extraction functions above.
+`include_params` can be set to `true` (default is `false`) to include the partial derivatives with respect to the parameters in any of the extraction functions above.
 
+## Examples
+
+```@repl
+using GTPSA; #hide
+d = Descriptor(2,10);
+x = vars(d);
+f = x[1] + 2*x[2] + 3*x[1]^2 + 4*x[1]*x[2] + 5*x[2]^2;
+g = 5*x[1] + 4*x[2] + 3*x[1]^2 + 2*x[1]*x[2] + x[2]^2;
+grad = gradient(f)
+J = jacobian([f, g])
+H = hessian(f)
+```
 
 ## Documentation
 ```@docs

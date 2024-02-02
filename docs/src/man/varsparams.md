@@ -1,5 +1,5 @@
-# `vars`/`params`
-*Creates a vector of `TPS`s corresponding to each variable/parameter in the GTPSA*
+# `vars`, `params`
+*Creates a vector of TPSs corresponding to each variable/parameter in the GTPSA*
 ## Syntax
 ```
 x = vars(descriptor)
