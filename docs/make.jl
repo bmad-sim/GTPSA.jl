@@ -9,7 +9,8 @@ makedocs(
   [
     "Home" => "index.md",
     "Quickstart Guide" => "quickstart.md",
-    "Manual" => ["man/definitions.md", 
+    "Manual" => ["man/toc.md",
+                 "man/definitions.md", 
                  "man/descriptor.md", 
                  "man/tps.md",
                  "man/varsparams.md",

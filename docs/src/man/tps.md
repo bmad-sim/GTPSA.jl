@@ -1,5 +1,5 @@
 # `TPS`/`ComplexTPS`
-*Truncated Power Series struct*
+*Truncated Power Series (TPS) struct*
 ## Syntax
 ```
 t = TPS(descriptor)

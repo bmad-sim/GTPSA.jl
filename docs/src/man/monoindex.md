@@ -24,7 +24,21 @@ print(f)
 ## By Sparse Monomial
 `t[<ix_var> => <order>, ..., params=[<ix_param> => <order>, ...]]`
 
-In GTPSAs with many variables and parameters, indexing-by-order is inconvenient because each order needs to be included up to the last included variable/parameter with nonzero order. In this case, a particular monomial can be indexed by specifying each variable/parameter number and its corresponding order in pairs. For example, for a TPS with variables $x_1, ..., x_{100}$ and parameters $k_1, ..., k_{50}$, the $x_{1}^3x_{99}^1k_{25}^2$ monomial coefficient is accessed with `t[1=>3, 99=>1, params=[25=>2]]`. The scalar part of the TPS cannot be get/set with this method.
+In GTPSAs with many variables and parameters, indexing-by-order is inconvenient because each order needs to be included up to the last included variable/parameter with nonzero order. In this case, a particular monomial can be indexed instead by specifying each variable/parameter number and its corresponding order in pairs. For example, for a TPS with variables $x_1, ..., x_{15}$ and parameters $k_1, ..., k_{10}$, the $x_{1}^3x_{15}^1k_{10}^2$ monomial coefficient is accessed with `t[1=>3, 15=>1, params=[10=>2]]`. The scalar part of the TPS cannot be get/set with this method.
+
+### Examples
+```@repl
+using GTPSA #hide
+d = Descriptor(15, 6, 10, 6); # 15 variables, 10 parameters all to 6th order
+GTPSA.show_sparse = true; # Use sparse output
+x = vars(d);
+k = params(d);
+f = 5 + sin(x[1])*sin(x[15])*cos(k[10])
+f[1=>3, 15=>1, params=[10=>2]]
+f[1=>1, 15=>2, params=[10=>3]] = 123; # Set monomial coefficient
+print(f)
+```
+
 
 
 
