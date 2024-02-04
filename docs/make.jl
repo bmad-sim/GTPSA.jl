@@ -8,9 +8,20 @@ makedocs(
   pages = 
   [
     "Home" => "index.md",
-    "Usage" => "usage.md",
-    "Advanced Usage" => "advanced.md",
-    "Code Index" => "code.md",
+    "Quickstart Guide" => "quickstart.md",
+    "Manual" => ["man/toc.md",
+                 "man/definitions.md", 
+                 "man/descriptor.md", 
+                 "man/tps.md",
+                 "man/varsparams.md",
+                 "man/monoindex.md",
+                 "man/mono.md",
+                 "man/gjh.md",
+                 "man/slice.md",
+                 "man/methods.md",
+                 "man/fastgtpsa.md",
+                 "man/io.md",
+                 "man/all.md"],
     "For Developers" => "devel.md"
   ]
 )

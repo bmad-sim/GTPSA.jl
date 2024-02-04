@@ -56,18 +56,19 @@ integ!(tpsa1::Ptr{RTPSA},  tpsa::Ptr{RTPSA}, var::Cint) = (@inline; mad_tpsa_int
 integ!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_integ!(ctpsa1, ctpsa, var))
 
 """
-    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+    integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
 
 Integrates `t1` wrt the variable `var`. Integration wrt 
 parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-function ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
   t = zero(t1)
   integ!(t1.tpsa, t.tpsa, Cint(var))
   return t
 end
 
+∫ = integ
 
 # --- Derivative ---
 # Low-level equivalent calls for TPS and ComplexTPS:
@@ -77,6 +78,7 @@ derivm!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, n::Cint, ords::Vector{Cuchar}) = (@
 derivm!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, n::Cint, ords::Vector{Cuchar}) = (@inline; mad_ctpsa_derivm!(ctpsa1, ctpsa, n, ords))
 
 """
+    deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
     ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
@@ -93,13 +95,13 @@ julia> d = Descriptor(1,5,1,5);
 
 julia> x1 = vars(d)[1]; k1 = params(d)[1];
 
-julia> ∂(x1*k1, 1)
+julia> deriv(x1*k1, 1)
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, param=1)
+julia> deriv(x1*k1, param=1)
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
@@ -107,19 +109,19 @@ TPS:
 
 # Examples: Monomial Index-by-Order
 ```julia-repl
-julia> ∂(x1*k1, [1,0])
+julia> deriv(x1*k1, [1,0])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, [0,1])
+julia> deriv(x1*k1, [0,1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
 
 
-julia> ∂(x1*k1, [1,1])
+julia> deriv(x1*k1, [1,1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    0        0    0
@@ -127,36 +129,36 @@ TPS:
 
 # Examples: Monomial Index-by-Sparse Monomial
 ```julia-repl
-julia> ∂(x1*k1, [1=>1])
+julia> deriv(x1*k1, [1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, params=[1=>1])
+julia> deriv(x1*k1, params=[1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
 
 
-julia> ∂(x1*k1, [1=>1], params=[1=>1])
+julia> deriv(x1*k1, [1=>1], params=[1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    0        0    0
 ```
 """
-function ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
-  return deriv(t1, v, param, params)
+function deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+  return low_deriv(t1, v, param, params)
 end
 
 # Variable/parameter:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   deriv!(t1.tpsa, t.tpsa, convert(Cint, v))
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::typeof(t1)
   t = zero(t1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
@@ -165,19 +167,19 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::No
 end
 
 # Default to first variable if nothing passed:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::typeof(t1)
-  return deriv(t1, 1, nothing, nothing)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::typeof(t1)
+  return low_deriv(t1, 1, nothing, nothing)
 end
 
 # Monomial by order:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   derivm!(t1.tpsa, t.tpsa, Cint(length(v)), convert(Vector{Cuchar}, v))
   return t
 end
 
 # Monomial by sparse monomial:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v,params=params)
@@ -185,7 +187,7 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v)
@@ -193,7 +195,7 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,Pair{Int,Int}[],params=params)
@@ -202,9 +204,11 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Ve
 end
 
 # Throw error if no above use cases satisfied:
-function deriv(t1::Union{TPS,ComplexTPS}, v, param, params)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
+
+∂ = deriv
 
 # --- getord and cutord ---
 # Low-level equivalent calls for TPS and ComplexTPS:
@@ -334,6 +338,9 @@ end
 vec2fld!(na::Cint, tpsa::Ptr{RTPSA}, m::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_vec2fld!(na, tpsa, m))
 vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_vec2fld!(na, ctpsa, m))
 
+"""
+    getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
+"""
 function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
   na = desc.nv
@@ -350,6 +357,9 @@ end
 fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, tpsa::Ptr{RTPSA}) = (@inline; mad_tpsa_fld2vec!(na, ma, tpsa))
 fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}},  ctpsa::Ptr{CTPSA}) = (@inline; mad_ctpsa_fld2vec!(na, ma, ctpsa))
 
+"""
+    gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
   h = zero(m[1])
   m1 = map(t->t.tpsa, m)
@@ -362,6 +372,9 @@ end
 exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
+"""
+    exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -376,6 +389,9 @@ end
 logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_logpb!(na, ma, mb, mc))
 logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_logpb!(na, ma, mb, mc))
 
+"""
+    logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -390,7 +406,9 @@ end
 fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA}) = (@inline; mad_tpsa_fgrad!(na, ma, b, c))
 fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA}) = (@inline; mad_ctpsa_fgrad!(na, ma, b, c))
 
-
+"""
+    fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
+"""
 function fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
   type = promote_type(typeof(ma[1]), typeof(b))
   ma1 = convert(Vector{type},  ma)
@@ -405,6 +423,9 @@ end
 mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Float64 = mad_tpsa_mnrm(na, ma)
 mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mnrm(na, ma)
 
+"""
+    norm(ma::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
   return mnrm(Cint(length(ma)), map(x->x.tpsa, ma))
 end
@@ -413,6 +434,9 @@ end
 minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_minv!(na, ma, mc))
 minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_minv!(na, ma, mc))
 
+"""
+    inv(ma::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function inv(ma::Vector{<:Union{TPS,ComplexTPS}})
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
@@ -425,6 +449,9 @@ end
 pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint}) = (@inline; mad_tpsa_pminv!(na, ma, mc, select))
 pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint}) = (@inline; mad_ctpsa_pminv!(na, ma, mc, select))
 
+"""
+    pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+"""
 function pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
@@ -440,6 +467,9 @@ end
 compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_compose!(na, ma, nb, mb, mc))
 compose!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_compose!(na, ma, nb, mb, mc))
 
+"""
+    ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -455,7 +485,12 @@ function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,Complex
   return mc
 end
 
+compose = ∘
+
 # --- translate ---
+"""
+    translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
+"""
 function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   na = Cint(length(m))
   nb = Cint(length(x))
@@ -467,6 +502,9 @@ function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   return mc
 end
 
+"""
+    translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
+"""
 function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
   na = Cint(length(m))
   nb = Cint(length(x))
@@ -478,3 +516,9 @@ function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTP
   return mc
 end
 
+# --- change descriptor ---
+function change(ts::Pair{<:Union{TPS,ComplexTPS},<:Union{TPS,ComplexTPS}})
+  d1 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.first.tpsa).d))
+  d2 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.second.tpsa).d))
+
+end

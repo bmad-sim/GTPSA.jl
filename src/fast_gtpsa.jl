@@ -1,3 +1,23 @@
+"""
+    FastGTPSA(expr)
+
+Macro speed up evaluation of mathematical expressions containing TPSs.
+@FastGTPSA is completely transparent to all other types, so it can be prepended 
+to expressions while still maintaining type-generic code.
+
+# Example
+```julia-repl
+julia> using GTPSA, BenchmarkTools
+
+julia> d = Descriptor(3,5); x = vars(d);
+
+julia> @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+  2.114 μs (10 allocations: 160 bytes)
+
+julia> @btime @FastGTPSA \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+  1.744 μs (1 allocation: 16 bytes)
+```
+"""
 macro FastGTPSA(expr)
   return :(to_TPS($(to_temp_form(esc(expr)))))
 end 
@@ -23,7 +43,7 @@ function to_temp_form(expr)
   fcns = [:inv, :atan, :abs, :sqrt, :exp, :log, :sin, :cos, :tan, :csc, :sec, :cot, :sinc, :sinh, :cosh,
           :tanh, :csch, :sech, :coth, :asin, :acos, :atan, :acsc, :asec, :acot, :asinh, :acosh, :atanh, :acsch, 
           :asech, :acoth, :real, :imag, :conj, :angle, :complex, :sinhc, :asinc, :asinhc, :erf, :erfc, :norm,
-          :polar, :rect, :+, :-, :*, :/, :^]# hypot not included bc appears does not support in-place input = output
+          :polar, :rect, :+, :-, :*, :/, :^]
   if expr.head == :.
     pkg = expr.args[1]
     if pkg == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
