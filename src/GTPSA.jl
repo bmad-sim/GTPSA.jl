@@ -430,6 +430,7 @@ export
 
   # Methods:
   evaluate,
+  compose,
   integ, ∫,
   deriv, ∂,
   getord,
