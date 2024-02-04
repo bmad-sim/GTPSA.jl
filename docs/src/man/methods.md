@@ -1,6 +1,5 @@
 # TPS and Map Methods
 ```@docs
-compose
 cutord
 deriv
 evaluate
