@@ -43,7 +43,7 @@ ct = ComplexTPS()
 
 ## Examples
 ```@repl desc
-using GTPSA #hide
+using GTPSA; GTPSA.show_sparse = false; #hide
 d1 = Descriptor(2, 10);
 t1_1 = TPS()
 t1_2 = TPS(5)

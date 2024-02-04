@@ -10,7 +10,7 @@ A particular monomial can be indexed by specifying the orders of each variable a
 
 ### Examples
 ```@repl
-using GTPSA #hide
+using GTPSA; GTPSA.show_sparse = false; #hide
 d = Descriptor(2, 6, 3, 6); # 2 variables, 3 parameters all to 6th order
 x = vars(d);
 k = params(d);
