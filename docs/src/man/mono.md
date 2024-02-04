@@ -45,7 +45,7 @@ m = mono(..., use=descriptor)
 
 ## Examples
 ```@repl desc
-using GTPSA #hide
+using GTPSA; GTPSA.show_sparse = false;#hide
 d1 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
 x1 = mono(1)
 k1 = mono(param=1)

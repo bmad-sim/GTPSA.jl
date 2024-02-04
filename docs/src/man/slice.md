@@ -62,7 +62,7 @@ f = par(tps, vars_sparse_mono, params=params_sparse_mono)
 ### Examples
 
 ```@repl par
-using GTPSA;  #hide
+using GTPSA; GTPSA.show_sparse = false; #hide
 d = Descriptor(5, 10, 2, 10);
 x = vars(d);
 k = params(d);
