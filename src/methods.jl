@@ -338,6 +338,9 @@ end
 vec2fld!(na::Cint, tpsa::Ptr{RTPSA}, m::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_vec2fld!(na, tpsa, m))
 vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_vec2fld!(na, ctpsa, m))
 
+"""
+    getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
+"""
 function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
   na = desc.nv
@@ -354,6 +357,9 @@ end
 fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, tpsa::Ptr{RTPSA}) = (@inline; mad_tpsa_fld2vec!(na, ma, tpsa))
 fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}},  ctpsa::Ptr{CTPSA}) = (@inline; mad_ctpsa_fld2vec!(na, ma, ctpsa))
 
+"""
+    gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
   h = zero(m[1])
   m1 = map(t->t.tpsa, m)
@@ -366,6 +372,9 @@ end
 exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
+"""
+    exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -380,6 +389,9 @@ end
 logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_logpb!(na, ma, mb, mc))
 logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_logpb!(na, ma, mb, mc))
 
+"""
+    logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -394,7 +406,9 @@ end
 fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA}) = (@inline; mad_tpsa_fgrad!(na, ma, b, c))
 fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA}) = (@inline; mad_ctpsa_fgrad!(na, ma, b, c))
 
-
+"""
+    fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
+"""
 function fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
   type = promote_type(typeof(ma[1]), typeof(b))
   ma1 = convert(Vector{type},  ma)
@@ -409,6 +423,9 @@ end
 mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Float64 = mad_tpsa_mnrm(na, ma)
 mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mnrm(na, ma)
 
+"""
+    norm(ma::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
   return mnrm(Cint(length(ma)), map(x->x.tpsa, ma))
 end
@@ -417,6 +434,9 @@ end
 minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_minv!(na, ma, mc))
 minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_minv!(na, ma, mc))
 
+"""
+    inv(ma::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function inv(ma::Vector{<:Union{TPS,ComplexTPS}})
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
@@ -429,6 +449,9 @@ end
 pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint}) = (@inline; mad_tpsa_pminv!(na, ma, mc, select))
 pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint}) = (@inline; mad_ctpsa_pminv!(na, ma, mc, select))
 
+"""
+    pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+"""
 function pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
@@ -444,6 +467,9 @@ end
 compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_compose!(na, ma, nb, mb, mc))
 compose!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_compose!(na, ma, nb, mb, mc))
 
+"""
+    ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+"""
 function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
@@ -462,6 +488,9 @@ end
 compose = ∘
 
 # --- translate ---
+"""
+    translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
+"""
 function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   na = Cint(length(m))
   nb = Cint(length(x))
@@ -473,6 +502,9 @@ function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   return mc
 end
 
+"""
+    translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
+"""
 function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
   na = Cint(length(m))
   nb = Cint(length(x))
