@@ -459,6 +459,8 @@ function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,Complex
   return mc
 end
 
+compose = ∘
+
 # --- translate ---
 function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   na = Cint(length(m))

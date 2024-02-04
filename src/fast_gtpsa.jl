@@ -11,10 +11,10 @@ julia> using GTPSA, BenchmarkTools
 
 julia> d = Descriptor(3,5); x = vars(d);
 
-julia> @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+julia> @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
   2.114 μs (10 allocations: 160 bytes)
 
-julia> @btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+julia> @btime @FastGTPSA \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
   1.744 μs (1 allocation: 16 bytes)
 ```
 """

@@ -1,5 +1,6 @@
 # TPS and Map Methods
 ```@docs
+∘
 cutord
 deriv
 evaluate
