@@ -487,9 +487,8 @@ end
 
 # Global non-constants (types MUST be specified)
 desc_current::Descriptor = Descriptor(MAD_DESC_CURR)   # Current Descriptor
-show_eps::Float64 =  0.0                            # Print epsilon
-show_sparse::Bool = false                           # Use sparse monomial print
-
+show_eps::Float64 =  0.0                               # Print epsilon
+show_sparse::Bool = false                              # Use sparse monomial print
 
 # Descriptor outer constructors
 """
