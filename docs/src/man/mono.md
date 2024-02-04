@@ -8,6 +8,7 @@ m = mono(param=param_idx)
 m = mono(orders)
 
 m = mono(vars_sparse_mono)
+m = mono(params=params_sparse_mono)
 m = mono(vars_sparse_mono, params=params_sparse_mono)
 
 m = mono(..., use=descriptor)
@@ -32,7 +33,9 @@ m = mono(..., use=descriptor)
 
 `m = mono(vars_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial array `vars_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
 
-`m = mono(vars_sparse_mono, params=params_sparse_mono)`creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial arrays `vars_sparse_mono` and `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
+`m = mono(params=params_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial array `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
+
+`m = mono(vars_sparse_mono, params=params_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial arrays `vars_sparse_mono` and `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
 
 ------
 

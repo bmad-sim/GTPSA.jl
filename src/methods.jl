@@ -56,18 +56,19 @@ integ!(tpsa1::Ptr{RTPSA},  tpsa::Ptr{RTPSA}, var::Cint) = (@inline; mad_tpsa_int
 integ!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_integ!(ctpsa1, ctpsa, var))
 
 """
-    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+    integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
 
 Integrates `t1` wrt the variable `var`. Integration wrt 
 parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-function ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
   t = zero(t1)
   integ!(t1.tpsa, t.tpsa, Cint(var))
   return t
 end
 
+∫ = integ
 
 # --- Derivative ---
 # Low-level equivalent calls for TPS and ComplexTPS:
@@ -77,6 +78,7 @@ derivm!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, n::Cint, ords::Vector{Cuchar}) = (@
 derivm!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, n::Cint, ords::Vector{Cuchar}) = (@inline; mad_ctpsa_derivm!(ctpsa1, ctpsa, n, ords))
 
 """
+    deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
     ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
@@ -93,13 +95,13 @@ julia> d = Descriptor(1,5,1,5);
 
 julia> x1 = vars(d)[1]; k1 = params(d)[1];
 
-julia> ∂(x1*k1, 1)
+julia> deriv(x1*k1, 1)
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, param=1)
+julia> deriv(x1*k1, param=1)
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
@@ -107,19 +109,19 @@ TPS:
 
 # Examples: Monomial Index-by-Order
 ```julia-repl
-julia> ∂(x1*k1, [1,0])
+julia> deriv(x1*k1, [1,0])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, [0,1])
+julia> deriv(x1*k1, [0,1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
 
 
-julia> ∂(x1*k1, [1,1])
+julia> deriv(x1*k1, [1,1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    0        0    0
@@ -127,36 +129,36 @@ TPS:
 
 # Examples: Monomial Index-by-Sparse Monomial
 ```julia-repl
-julia> ∂(x1*k1, [1=>1])
+julia> deriv(x1*k1, [1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        0    1
 
 
-julia> ∂(x1*k1, params=[1=>1])
+julia> deriv(x1*k1, params=[1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    1        1    0
 
 
-julia> ∂(x1*k1, [1=>1], params=[1=>1])
+julia> deriv(x1*k1, [1=>1], params=[1=>1])
 TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    0        0    0
 ```
 """
-function ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
-  return deriv(t1, v, param, params)
+function deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+  return low_deriv(t1, v, param, params)
 end
 
 # Variable/parameter:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   deriv!(t1.tpsa, t.tpsa, convert(Cint, v))
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::typeof(t1)
   t = zero(t1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
@@ -165,19 +167,19 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::No
 end
 
 # Default to first variable if nothing passed:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::typeof(t1)
-  return deriv(t1, 1, nothing, nothing)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::typeof(t1)
+  return low_deriv(t1, 1, nothing, nothing)
 end
 
 # Monomial by order:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   derivm!(t1.tpsa, t.tpsa, Cint(length(v)), convert(Vector{Cuchar}, v))
   return t
 end
 
 # Monomial by sparse monomial:
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v,params=params)
@@ -185,7 +187,7 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v)
@@ -193,7 +195,7 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}
   return t
 end
 
-function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,Pair{Int,Int}[],params=params)
@@ -202,9 +204,11 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Ve
 end
 
 # Throw error if no above use cases satisfied:
-function deriv(t1::Union{TPS,ComplexTPS}, v, param, params)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
+
+∂ = deriv
 
 # --- getord and cutord ---
 # Low-level equivalent calls for TPS and ComplexTPS:

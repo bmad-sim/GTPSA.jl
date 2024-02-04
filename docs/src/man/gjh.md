@@ -18,19 +18,19 @@ hessian(..., include_params=true);  hessian!(..., include_params=true);
 
 ## Description
 
-`grad = gradient(f)` extracts the gradient from the TPS `f`, defined as $\nabla f$
+`grad = gradient(f)` extracts the gradient from the TPS `f`, defined as ``\nabla f``
 
 `gradient!(grad, f)` fills `grad` vector in-place with the gradient extracted from the TPS `f`
 
 ------
 
-`J = jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as $J_{ij} = \frac{\partial F_i}{\partial x_j}$
+`J = jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as ``J_{ij} = \frac{\partial F_i}{\partial x_j}``
 
 `jacobian!(J, F)` fills the `J` matrix in-place with the Jacobian extracted from the vector of TPSs `F`
 
 ------
 
-`H = hessian(f)` extracts the Hessian matrix from the TPS `f`, defined as $H_{ij} = \frac{\partial^2 f}{\partial x_i\partial x_j}$
+`H = hessian(f)` extracts the Hessian matrix from the TPS `f`, defined as ``H_{ij} = \frac{\partial^2 f}{\partial x_i\partial x_j}``
 
 `hessian!(H, f)` fills the `H` matrix in-place with the Hessian extracted from the TPS `f`
 

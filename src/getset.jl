@@ -57,6 +57,74 @@ idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n,
 seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
 seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
 
+
+"""
+    par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{<:Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
+
+Extracts a polynomial from the TPS containing the specified monomial, and removes the monomial.
+
+### Input
+- `v`      -- An integer (for variable index), an array of orders for each variable (for indexing-by-order), or an array of pairs (sparse monomial)
+- `param`  -- (Keyword argument, optional) An integer for the parameter index
+- `params` -- (Keyword argument, optional) An array of pairs for sparse-monomial indexing
+
+# Examples: Variable/Parameter Index:
+```julia-repl
+julia> d = Descriptor(5, 10, 2, 10); x = vars(d); k = params(d);
+
+julia> f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5]*k[1] + 6*x[3] + 5
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e+00      0      0   0   0   0   0   |   0   0
+  6.0000000000000000e+00      1      0   0   1   0   0   |   0   0
+  2.0000000000000000e+00      3      2   0   1   0   0   |   0   0
+  3.0000000000000000e+00      8      2   1   1   2   1   |   1   0
+
+
+julia> par(f, 3)
+TPS:
+ Coefficient                Order   Exponent
+  6.0000000000000000e+00      0      0   0   0   0   0   |   0   0
+  2.0000000000000000e+00      2      2   0   0   0   0   |   0   0
+  3.0000000000000000e+00      7      2   1   0   2   1   |   1   0
+
+
+julia> par(f, param=1)
+TPS:
+ Coefficient                Order   Exponent
+  3.0000000000000000e+00      7      2   1   1   2   1   |   0   0
+```
+
+# Examples: Monomial Index-by-Order
+```julia-repl
+julia> par(f, [2,:,1])
+TPS:
+ Coefficient                Order   Exponent
+  2.0000000000000000e+00      0      0   0   0   0   0   |   0   0
+  3.0000000000000000e+00      5      0   1   0   2   1   |   1   0
+
+
+julia> par(f, [2,0,1])
+TPS:
+ Coefficient                Order   Exponent
+  2.0000000000000000e+00      0      0   0   0   0   0   |   0   0
+```
+
+# Examples: Monomial Index-by-Sparse Monomial
+```julia-repl
+julia> par(f, [1=>2, 3=>1])
+TPS:
+ Coefficient                Order   Exponent
+  2.0000000000000000e+00      0      0   0   0   0   0   |   0   0
+  3.0000000000000000e+00      5      0   1   0   2   1   |   1   0
+
+  
+julia> par(f, params=[1=>1])
+TPS:
+ Coefficient                Order   Exponent
+  3.0000000000000000e+00      7      2   1   1   2   1   |   0   0
+```
+"""
 function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{<:Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
   if (v isa Vector) && !(last(v) isa Colon)
     par_mono = setup_mono(t, tuple(v...,:), param, params)

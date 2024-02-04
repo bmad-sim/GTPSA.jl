@@ -16,11 +16,12 @@ makedocs(
                  "man/varsparams.md",
                  "man/monoindex.md",
                  "man/mono.md",
-                 "man/gjh.md"],
-                 #"man/methods.md",
-                 #"man/fastgtpsa.md",
-                 #"man/io.md",
-                 #"man/all.md"],
+                 "man/gjh.md",
+                 "man/slice.md",
+                 "man/methods.md",
+                 "man/fastgtpsa.md",
+                 "man/io.md",
+                 "man/all.md"],
     "For Developers" => "devel.md"
   ]
 )

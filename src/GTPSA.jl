@@ -429,8 +429,8 @@ export
 
   # Methods:
   evaluate,
-  ∫,
-  ∂,
+  integ, ∫,
+  deriv, ∂,
   getord,
   cutord,
   pb,
@@ -968,7 +968,6 @@ TPS:
   Coefficient              Order     Exponent
    1.0000000000000000e+00    2        1    0    0    0    1
 ```
-
 """
 function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=GTPSA.desc_current)::TPS
   return low_mono(use, v, param, params)

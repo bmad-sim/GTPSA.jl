@@ -14,7 +14,7 @@ d2 = Descriptor([1, 2, 3])
 ```
 
 ## Calculating a TPS
-After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, to calculate the Taylor series for $f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}$ to 4th order in $x_1$ and but only 1st order in $x_2$:
+After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, to calculate the Taylor series for ``f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}`` to 4th order in ``x_1`` and but only 1st order in ``x_2``:
 
 ```@example 1
 using GTPSA #hide
@@ -50,12 +50,12 @@ Another global variable `GTPSA.show_eps` can be set to exclude showing monomials
 ## Partial Derivative Getting/Setting
 ### Individual Monomial Coefficient
 !!! note
-    The value of a partial derivative is equal to the monomial coefficient in the Taylor series multiplied by a constant factor. E.g. for an expansion around zero $f(x)\approx f(0) + \frac{\partial f}{\partial x}\rvert_0x + \frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0 x^2 + ...$, the 2nd order monomial coefficient is $\frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0$. 
+    The value of a partial derivative is equal to the monomial coefficient in the Taylor series multiplied by a constant factor. E.g. for an expansion around zero ``f(x)\approx f(0) + \frac{\partial f}{\partial x}\rvert_0x + \frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0 x^2 + ...``, the 2nd order monomial coefficient is ``\frac{1}{2!}\frac{\partial^2 f}{\partial x^2}\rvert_0``. 
 
 Individual monomial coefficients in a TPS `t` can be get/set with two methods of indexing:
 
-1. **By Order:** `t[<x_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables $x_1$, $x_2$, the $x_1^3x_2^1$ monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
-2. **By Sparse Monomial** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables $x_1,x_2,...x_{100}$, the $x_{1}^3x_{99}^1$ monomial coefficient is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
+1. **By Order:** `t[<x_1 order>, ..., <x_nv order>]`. For example, for a TPS with variables ``x_1``, ``x_2``, the ``x_1^3x_2^1`` monomial coefficient is accessed with `t[3,1]`. The 0th order part (the *scalar* part) of the TPS is indexed with `t[0,0]` or equivalently `t[0]`, as leaving out trailing zeros for unincluded variables is allowed.
+2. **By Sparse Monomial** `t[<ix_var> => <order>, ...]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables ``x_1,x_2,...x_{100}``, the ``x_{1}^3x_{99}^1`` monomial coefficient is accessed with `t[1=>3, 99=>1]`. The scalar part of the TPS cannot be get/set with this method.
 
 These two methods of indexing are best shown with an example:
 
@@ -127,7 +127,7 @@ print(g)
 print(h)
 ```
 
-A TPS can also be sliced when indexing by sparse monomial. In this case, if a colon is included anywhere in the sparse monomial index, then all orders of all variables not explicity specified will be included:
+A TPS can also be sliced with indexing by sparse monomial. In this case, if a colon is included anywhere in the sparse monomial index, then all orders of all variables not explicity specified will be included:
 
 ```@example slice
  # Colon position does not matter in sparse-monomial indexing
@@ -149,9 +149,9 @@ using GTPSA, BenchmarkTools
 d = Descriptor(3, 5);
 x = vars(d);
 
-@btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+@btime ``x[1]^3*sin(``x[2])/log(2+``x[3])-exp(``x[1]*``x[2])*im;
 
-@btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+@btime @FastGTPSA ``x[1]^3*sin(``x[2])/log(2+``x[3])-exp(``x[1]*``x[2])*im;
 ```
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/taylormap.jl`. 
