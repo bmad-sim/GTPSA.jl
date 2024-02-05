@@ -321,8 +321,40 @@ liebra!(na::Cint, m1::Vector{Ptr{CTPSA}}, m2::Vector{Ptr{CTPSA}}, m3::Vector{Ptr
 """
     lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
 
-Computes the Lie bracket of the vector functions `A` and `F`
-eq 3.42 3.43 in Etienne's book
+Computes the Lie bracket of the vector functions `A` and `F`, defined over N variables as 
+`Σᵢᴺ Aᵢ (∂F/∂xᵢ) - Fᵢ (∂A/∂xᵢ)`
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> A = [-x[2], x[1]]
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+
+
+julia> F = [-x[1]^2, 2*x[1]*x[2]]
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      2      2   0
+-------------------------------------------------
+   2:   2.0000000000000000e+00      2      1   1
+
+
+julia> lb(A,F)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:   4.0000000000000000e+00      2      1   1
+-------------------------------------------------
+   2:   3.0000000000000000e+00      2      2   0
+   2:  -2.0000000000000000e+00      2      0   2
+```
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
   A1, F1 = promote(A, F)
@@ -340,6 +372,30 @@ vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctp
 
 """
     getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
+
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), calculate's the vector field (Hamilton's 
+equations) from the passed Hamiltonian, defined as `[∂h/∂p₁, -∂h/∂q₁, ...]`
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> h = (x[1]^2 + x[2]^2)/2
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+
+
+julia> getvectorfield(h)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+```
 """
 function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
@@ -358,25 +414,81 @@ fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, tpsa::Ptr{RTPSA}) = (@inline; mad_tps
 fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}},  ctpsa::Ptr{CTPSA}) = (@inline; mad_ctpsa_fld2vec!(na, ma, ctpsa))
 
 """
-    gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
+    gethamiltonian(F::Vector{<:Union{TPS,ComplexTPS}})
+
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), this function calculates the Hamiltonian 
+from a vector field `F` that can be obtained from a Hamiltonian (e.g. by `getvectorfield`). Explicitly, 
+`F₁p₁ - F₂q₁ + ... + F₂ₙ₋₁pₙ - F₂ₙqₙ `
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> h = (x[1]^2 + x[2]^2)/2
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+
+
+julia> F = getvectorfield(h)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+
+
+julia> gethamiltonian(F)
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+```
 """
-function gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
-  h = zero(m[1])
-  m1 = map(t->t.tpsa, m)
+function gethamiltonian(F::Vector{<:Union{TPS,ComplexTPS}})
+  h = zero(F[1])
+  m1 = map(t->t.tpsa, F)
   fld2vec!(Cint(length(m)), m1, h.tpsa)
   return h
 end
 
 
-# --- exp([ma, .]) mb ---
+# --- exp(F . grad) m ---
 exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
 """
-    exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+
+Calculates `exp(F⋅∇)m`
+
+# Example
+
+```julia-repl
+julia> d = Descriptor(2,10); x = vars()[1]; p = vars()[2];
+
+julia> time = 0.01; k = 2; m = 0.01;
+
+julia> h = p^2/(2m) + 1/2*k*x^2;
+
+julia> hf = getvectorfield(h);
+
+julia> map = exppb(-time*hf, [x, p])
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:   9.9001665555952290e-01      1      1   0
+   1:   9.9666999841313930e-01      1      0   1
+-------------------------------------------------
+   2:  -1.9933399968262787e-02      1      1   0
+   2:   9.9001665555952378e-01      1      0   1
+```
 """
-function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  ma1, mb1 = promote(ma, mb)
+function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+  ma1, mb1 = promote(F, m)
   m1 = map(t->t.tpsa, ma1) 
   m2 = map(t->t.tpsa, mb1) 
   mc = zero.(ma1)

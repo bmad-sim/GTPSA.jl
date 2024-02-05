@@ -1,4 +1,4 @@
-# `gradient`, `jacobian`, `hessian`
+# [`gradient`, `jacobian`, `hessian`](@id gjh)
 *Extracts specific partial derivatives from a TPS*
 ## Syntax
 ```

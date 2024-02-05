@@ -1,4 +1,4 @@
-# `mono`
+# [`mono`](@id mono)
 *Creates a TPS corresponding to a specific monomial*
 ## Syntax
 ```

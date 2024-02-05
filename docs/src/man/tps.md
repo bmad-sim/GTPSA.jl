@@ -1,4 +1,4 @@
-# `TPS`/`ComplexTPS`
+# [`TPS`/`ComplexTPS`](@id tpscomplextps)
 *Truncated Power Series (TPS) struct*
 ## Syntax
 ```

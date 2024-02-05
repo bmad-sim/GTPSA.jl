@@ -1,4 +1,4 @@
-# Monomial Indexing
+# [Monomial Indexing](@id monoindex)
 *Get/set individual monomial coefficients*
 
 Individual monomial coefficients in a TPS can be get/set with two methods of indexing: **by order**, and **by sparse monomial**. 

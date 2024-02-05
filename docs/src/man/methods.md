@@ -1,4 +1,4 @@
-# TPS and Map Methods
+# [TPS and Map Methods](@id tpsmapmethods)
 ```@docs
 cutord
 deriv
