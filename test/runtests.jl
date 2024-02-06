@@ -5,7 +5,7 @@ using GTPSA
 
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   ct = ComplexTPS(t)
 
   # Basics
@@ -223,7 +223,7 @@ end
 
 @testset "Functions: scalar TPSs vs. Julia scalars" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
@@ -404,7 +404,7 @@ end
 
 @testset "Functions: identities, using TPSs" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   t[0] = 0.5; t[1] = 2; t[2] = 3; t[3] = 4; t[4] = 5; t[5] = 6
 
   tol = 1e-10
@@ -739,7 +739,7 @@ end
 
 @testset "@FastGTPSA - Arithmetic operators" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   ct = ComplexTPS(t)
   # Set scalar part so both TPSs are 1
   t[0] = 1
@@ -848,7 +848,7 @@ end
 
 @testset "@FastGTPSA - Functions: scalar TPSs vs. Julia scalars" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
@@ -1036,7 +1036,7 @@ end
 
 @testset "@FastGTPSA - Functions: identities, using TPSs" begin
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   t[0] = 0.5; t[1] = 2; t[2] = 3; t[3] = 4; t[4] = 5; t[5] = 6
 
   tol = 1e-10

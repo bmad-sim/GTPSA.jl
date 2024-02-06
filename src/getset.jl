@@ -49,6 +49,12 @@ function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Intege
   return slice(t, setup_mono(t, vars, nothing, params), false)
 end
 
+#=
+function getindex(::TPS)
+  return TPS[]
+end
+=#
+
 # --- par --- 
 cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
 cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))

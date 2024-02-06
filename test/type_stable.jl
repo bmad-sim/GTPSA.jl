@@ -1,6 +1,6 @@
 function type_stable_test()
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   ct = ComplexTPS(t)
 
   # Basics
@@ -215,7 +215,7 @@ function type_stable_test()
   norm((3+3im)^t2 - (3+3im)^2)
 
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
@@ -391,7 +391,7 @@ function type_stable_test()
   norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3))
 
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   t[0] = 0.5; t[1] = 2; t[2] = 3; t[3] = 4; t[4] = 5; t[5] = 6
 
   tol = 1e-10
@@ -719,7 +719,7 @@ function type_stable_test()
   abs(f3[params=[1=>10]] - f3[0,0,0,10]) 
 
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   ct = ComplexTPS(t)
   # Set scalar part so both TPSs are 1
   t[0] = 1
@@ -826,7 +826,7 @@ function type_stable_test()
   tmpidx == 0
 
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
@@ -1010,7 +1010,7 @@ function type_stable_test()
   ctmpidx == 0
   tmpidx == 0
   d = Descriptor(1, 5)
-  t = TPS(d)
+  t = TPS(use=d)
   t[0] = 0.5; t[1] = 2; t[2] = 3; t[3] = 4; t[4] = 5; t[5] = 6
 
   tol = 1e-10

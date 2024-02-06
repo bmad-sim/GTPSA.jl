@@ -30,7 +30,7 @@ These `TPS`s can then be manipulated just like any other mathematical quantity i
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
-A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(d)` or `ComplexTPS(d)` respectively. 
+A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS(use=d)` respectively. 
 
 When a TPS contains a lot of variables, the default output showing each variable exponent can be larger than the screen can show. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
@@ -63,7 +63,7 @@ These two methods of indexing are best shown with an example:
 using GTPSA; GTPSA.show_sparse=false; #hide
 # Example of indexing by order -----------
 d = Descriptor(3, 10);
-t = TPS(d); # Create zero TPS based on d
+t = TPS(use=d); # Create zero TPS based on d
 
 t[0] = 1;
 t[1] = 2;
@@ -78,7 +78,7 @@ print(t)
 using GTPSA #hide
 # Example of indexing by sparse monomial -----------
 d = Descriptor(3, 10);
-t = TPS(d); # Create zero TPS based on d
+t = TPS(use=d); # Create zero TPS based on d
 
 t[1=>1] = 2;
 t[2=>1] = 3;

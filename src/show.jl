@@ -249,13 +249,18 @@ show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
 show(io::IO, ::MIME"text/plain", m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
 
 function show_map(io::IO, m::Vector{TPS})
+  N = length(m)
+  if N < 1
+    print(io, "TPS[]")
+    return
+  end
+  println(io, N, "-element Vector{TPS}:")
   for i in eachindex(m)
     if !isassigned(m, i)
-      show(io, m)
+      println(io, "\n\tAtleast one TPS in the Vector is undefined!")
       return
     end
   end
-
   tf_GTPSA = TextFormat(up_right_corner     = '-',
                        up_left_corner      = '-',
                        bottom_left_corner  = ' ',
@@ -269,11 +274,6 @@ function show_map(io::IO, m::Vector{TPS})
                        row                 = '-',
                        hlines              = [])#,
                        #vlines             =[]);
-  N = length(m)
-  if N < 1
-    print(io, m)
-    return
-  end
   hlines = Int[0]
   out, formatters = format(m[1], coloffset=1)
   out[:,1] .= 1
@@ -283,7 +283,6 @@ function show_map(io::IO, m::Vector{TPS})
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
-  println(io, N, "-element Vector{TPS}:")
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
     println(io, "  Out  Coefficient                Order   Monomial")
@@ -293,14 +292,19 @@ function show_map(io::IO, m::Vector{TPS})
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
 end
 
-function show_map(io::IO,  m::Vector{ComplexTPS})
+function show_map(io::IO,  m::Vector{ComplexTPS})  
+  N = length(m)
+  if N < 1
+    print(io, "ComplexTPS[]")
+    return
+  end
+  println(io, N, "-element Vector{ComplexTPS}:")
   for i in eachindex(m)
     if !isassigned(m, i)
-      show(io, m)
+      println(io, "\n\tAtleast one ComplexTPS in the Vector is undefined!")
       return
     end
   end
-  
   tf_GTPSA = TextFormat(up_right_corner     = '-',
                        up_left_corner      = '-',
                        bottom_left_corner  = ' ',
@@ -314,11 +318,6 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
                        row                 = '-',
                        hlines              = [])#,
                        #vlines              = :all);
-  N = length(m)
-  if N < 1
-    print(io, m)
-    return
-  end
   hlines = Int[0]
   out, formatters = format(m[1], coloffset=1)
   out[:,1] .= 1
@@ -328,7 +327,6 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
-  println(io, N, "-element Vector{ComplexTPS}:")
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
     println(io, "  Out  Real                     Imag                       Order   Monomial")
