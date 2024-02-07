@@ -2537,16 +2537,12 @@ end
 """
     mad_ctpsa_vec2fld!(na::Cint, a::Ptr{CTPSA}, mc::Vector{Ptr{CTPSA}})
 
-Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
-conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), calculates the vector field (Hamilton's 
-equations) from the passed Hamiltonian, defined as `[∂h/∂p₁, -∂h/∂q₁, ...]`
+???
 
 ### Input
-- `na`  -- Number of TPSA in `mc` consistent with number of variables in `a`
-- `a`   -- TPSA representing the Hamiltonian
-
-### Output
-- `mc`  -- Vector field obtained from the Hamiltonian
+- `na`
+- `a`
+- `mc`
 """
 function mad_ctpsa_vec2fld!(na::Cint, a::Ptr{CTPSA}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ptr{CTPSA}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2556,17 +2552,12 @@ end
 """
     mad_ctpsa_fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}}, c::Ptr{CTPSA})
 
-Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
-conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), this function calculates the Hamiltonian 
-from a vector field `F` that can be obtained from a Hamiltonian (e.g. by `getvectorfield`). Explicitly, 
-`∫ F₁ dp₁ - ∫ F₂ dq₁ + ... + ∫ F₂ₙ₋₁ dpₙ - ∫ F₂ₙ dqₙ `
+???
 
 ### Input
-- `na` -- Number of variables in `c` consistent with length of `ma`
-- `ma` -- Vector (force) field that can be obtained from Hamiltonian
-
-### Output
-- `c`  -- Hamiltonian one would obtain from the vector field
+- `na`
+- `ma`
+- `c`
 """
 function mad_ctpsa_fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}}, c::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{Ptr{CTPSA}}, c::Ptr{CTPSA})::Cvoid
@@ -2576,16 +2567,13 @@ end
 """
     mad_ctpsa_fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})
 
-Calculates `ma ⋅ ∇ b`
-
+???
 
 ### Input
-- `na` -- Length of `ma` consistent with number of variables in `b`
-- `ma` -- Vector field of TPSAs
-- `b`  -- TPSA
-
-### Output
-- `c`  -- Destination TPSA 
+- `na`
+- `ma`
+- `b`
+- `c`
 """
 function mad_ctpsa_fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})::Cvoid
@@ -2595,16 +2583,15 @@ end
 """
     mad_ctpsa_liebra!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
-Computes the Lie bracket of the vectors `ma` and `mb`, defined as 
-`Σᵢᴺ maᵢ (∂mb/∂xᵢ) - mbᵢ (∂ma/∂xᵢ)` (Equation 3.38 in Etienne's blue book).
+Computes the Lie bracket of the maps `ma` and `mb`.
 
 ### Input
-- `na` -- Number of TPSAs in vectors `ma` and `mb` consistent with number of variables
-- `ma` -- Vector of TPSAs `ma`
-- `mb` -- Vector of TPSAs `mb`
+- `na` -- Number of TPSAs in map `ma` and map `mb`
+- `ma` -- Map `ma`
+- `mb` -- Map `mb`
 
 ### Output
-- `mc` -- Destination Vector `mc`
+- `mc` -- Destination map `mc`
 """
 function mad_ctpsa_liebra!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2614,18 +2601,15 @@ end
 """
     mad_ctpsa_exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
-Computes `exp(ma ⋅ ∇)mb` (which, if the vector field `ma` can be derived from 
-a Hamiltonian, would satisfy `ma · ∇mb = [−K, mb] =: −K : mb per Equation 3.57 
-in Etienne's blue book). Note that here the operation is applied to each component of 
-`mb`, as ∇ is defined only on scalars.
+Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
 
 ### Input
-- `na` -- Number of TPSAs in Vectors `ma` and `mb` consistent with number of variables
-- `ma` -- Vector of TPSAs `ma`
-- `mb` -- Vector of TPSAs `mb`
+- `na` -- Number of TPSAs in Map `ma` and map `mb`
+- `ma` -- Map `ma`
+- `mb` -- Map `mb`
 
 ### Output
-- `mc` -- Destination Vector `mc`
+- `mc` -- Destination map `mc`
 """
 function mad_ctpsa_exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2636,7 +2620,6 @@ end
     mad_ctpsa_logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
 Computes the log of the Poisson bracket of the maps `ma` and `mb`.
-??
 
 ### Input
 - `na` -- Number of TPSAs in Map `ma` and map `mb`

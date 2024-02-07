@@ -234,7 +234,19 @@ mutable struct TPS <: Real
   end
 end
 
-function TPS(ta::Union{Real,Nothing}=nothing; use=Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
+# Wrapper struct for Ptr{CTPSA}
+mutable struct ComplexTPS <: Number
+  tpsa::Ptr{CTPSA}
+  function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
+    ct = new(ct1)
+    f(x) = mad_ctpsa_del!(x.tpsa)
+    finalizer(f,ct)
+    return ct
+  end
+end
+
+
+function TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
   return low_TPS(ta, use)
 end
 
@@ -289,18 +301,7 @@ end
 # -----------------------
 
 
-# Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS <: Number
-  tpsa::Ptr{CTPSA}
-  function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
-    ct = new(ct1)
-    f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,ct)
-    return ct
-  end
-end
-
-function ComplexTPS(cta::Union{Number,Nothing}=nothing; use=Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+function ComplexTPS(cta::Union{ComplexTPS,TPS,Real,Complex,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
   return low_ComplexTPS(cta, use)
 end
 
@@ -340,19 +341,19 @@ function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Union{TPS,ComplexTPS})
 end
 
 # --- promote number to ComplexTPS ---
-function low_ComplexTPS(a::Number, use::Nothing)
+function low_ComplexTPS(a::Union{Real,Complex}, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
 
-function low_ComplexTPS(a::Number, use::Union{TPS,ComplexTPS})
+function low_ComplexTPS(a::Union{Real,Complex}, use::Union{TPS,ComplexTPS})
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
 
-function low_ComplexTPS(a::Number, use::Descriptor)
+function low_ComplexTPS(a::Union{Real,Complex}, use::Descriptor)
   ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
@@ -361,7 +362,7 @@ end
 # -----------------------
 
 # Special real argument ctors
-function ComplexTPS(ta::Real, tb::Real; use=Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+function ComplexTPS(ta::Real, tb::Real; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
   low_ComplexTPS(ta, tb, use)
 end
 

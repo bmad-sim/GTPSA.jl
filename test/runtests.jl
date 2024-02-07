@@ -2,6 +2,7 @@ using Test, JET
 using SpecialFunctions
 const SF = SpecialFunctions
 using GTPSA
+import GTPSA: Desc, RTPSA, CTPSA
 
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
