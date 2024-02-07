@@ -130,6 +130,14 @@ include("low_level/desc.jl")
 include("low_level/rtpsa.jl")
 include("low_level/ctpsa.jl")
 
+# Useful type-generic functions:
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
+seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
+seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
+
 const MAD_TPSA::String = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
@@ -141,7 +149,6 @@ struct Descriptor
   desc::Ptr{Desc}
   function Descriptor(desc::Ptr{Desc})::Descriptor
     d = new(desc)
-    GTPSA.desc_current = d
     return d
   end
 end
@@ -163,7 +170,9 @@ Creates a TPSA `Descriptor` with `nv` variables of maximum order `vo` for each.
 - `vo` -- Maximum order of the variables in the TPSA
 """
 function Descriptor(nv::Integer, vo::Integer)::Descriptor
-  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
+  d = Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
+  GTPSA.desc_current = d
+  return d
 end
 
 """
@@ -181,7 +190,9 @@ function Descriptor(vos::Vector{<:Integer})::Descriptor
   mo = maximum(vos)
   po = 0
   no = vos
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  GTPSA.desc_current = d
+  return d
 end
 
 """
@@ -199,7 +210,9 @@ parameters each with truncation order `po`
 function Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
   mo = max(vo,po)
   no = vcat(Cuchar(vo)*ones(Cuchar,nv), Cuchar(po)*ones(Cuchar,np))
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
+  GTPSA.desc_current = d
+  return d
 end
 
 
@@ -220,7 +233,9 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
   po = maximum(pos)
   mo = max(maximum(vos),po)
   no = vcat(vos,pos)
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  GTPSA.desc_current = d
+  return d
 end
 
 # Wrapper struct for Ptr{RTPSA}
@@ -272,11 +287,11 @@ end
 
 # --- Change descriptor ---
 function low_TPS(t1::TPS, use::Descriptor)
-  error("Changing descriptors not currently supported")
+  return change(t1, use)
 end
 
 function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
-  error("Changing descriptors not currently supported")
+  return change(t1, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa).d)))
 end
 
 # --- promote real to TPS ---
@@ -333,11 +348,11 @@ end
 
 # --- Change descriptor ---
 function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Descriptor)
-  error("Changing descriptors not currently supported")
+  return change(t1, use)
 end
 
 function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Union{TPS,ComplexTPS})
-  error("Changing descriptors not currently supported")
+  return change(t1, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa).d)))
 end
 
 # --- promote number to ComplexTPS ---
@@ -372,26 +387,60 @@ function low_ComplexTPS(t1::TPS, t2::TPS, use::Nothing)
   return ct
 end
 
-function low_ComplexTPS(ta::Real, tb::Real, use::Descriptor)
-  error("Changing descriptors not currently supported")
-end
-
-function low_ComplexTPS(ta::Real, tb::Real, use::Union{TPS,ComplexTPS})
-  error("Changing descriptors not currently supported")
-end
-
 function low_ComplexTPS(t1::TPS, a::Real, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, im*a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(0,a)))
   return ct
 end
 
 function low_ComplexTPS(a::Real, t1::TPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(Base.unsafe_convert(Ptr{RTPSA}, C_NULL), t1.tpsa, ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, a))
   return ct
+end
+
+function low_ComplexTPS(a::Real, b::Real, use::Nothing)
+  ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  return ct
+end
+
+function low_ComplexTPS(a::Real, b::Real, use::Descriptor)
+  ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  return ct
+end
+
+function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  return ct
+end
+
+function low_ComplexTPS(ta::TPS, tb::TPS, use::Descriptor)
+  error("Changing descriptors not currently supported")
+end
+
+function low_ComplexTPS(ta::TPS, tb::Real, use::Descriptor)
+  error("Changing descriptors not currently supported")
+end
+
+function low_ComplexTPS(ta::Real, tb::TPS, use::Descriptor)
+  error("Changing descriptors not currently supported")
+end
+
+function low_ComplexTPS(ta::TPS, tb::TPS, use::Union{TPS,ComplexTPS})
+  error("Changing descriptors not currently supported")
+end
+
+function low_ComplexTPS(ta::TPS, tb::Real, use::Union{TPS,ComplexTPS})
+  error("Changing descriptors not currently supported")
+end
+
+function low_ComplexTPS(ta::Real, tb::TPS, use::Union{TPS,ComplexTPS})
+  error("Changing descriptors not currently supported")
 end
 
 # --- Variable/parameter generators ---
@@ -701,6 +750,30 @@ function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Intege
     ords[nv + param.first] = convert(Cuchar, param.second)
   end
   return ords, n
+end
+
+# Generic function to make new copy of TPS with different descriptor
+function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor)
+  # Quick check if actually changing
+  if Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d) == newd.desc
+    return typeof(t1)(t1)
+  end
+  t = typeof(t1)(use=newd)
+  desc = unsafe_load(newd.desc)
+  nv = desc.nv
+  np = desc.np
+
+  coef = Ref{numtype(t1)}()
+  mono = Vector{Cuchar}(undef, np+nv)
+  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
+  while idx >= 0
+    # if valid monomial in new descriptor:
+    if convert(Bool, mad_desc_isvalidm(newd.desc, np+nv, mono))
+      seti!(t.tpsa, idx, convert(numtype(t1), 0.0), convert(numtype(t1), coef[])) # set new tpsa
+    end
+    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+  end
+  return t
 end
 
 include("getset.jl")
