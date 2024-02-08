@@ -1,6 +1,6 @@
 # [`ComplexTPS`](@id complextps)
 *Complex Truncated Power Series struct*
-```TPS <: Number```
+```ComplexTPS <: Number```
 ## Syntax
 ```
 ct = ComplexTPS()
