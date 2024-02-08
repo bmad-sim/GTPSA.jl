@@ -368,7 +368,7 @@ function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS
   m2 = map(t->t.tpsa, F1) 
   mc = zero.(A1)
   m3 = map(t->t.tpsa, mc)
-  GC.@preserve A1 F1 liebra!(Cint(length(A)), m2, m1, m3)      # SIGN DIFFERENCE WITH ETIENNE'S BOOK!!!!
+  GC.@preserve A1 F1 liebra!(Cint(length(A)), m1, m2, m3)     
   return mc
 end
 
