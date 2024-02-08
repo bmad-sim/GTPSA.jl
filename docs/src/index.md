@@ -13,7 +13,7 @@ GTPSA provides several advantages over current Julia AD packages:
 3. **Complex Numbers**: GTPSA natively supports complex numbers, and allows for mixing of complex and real truncated power series
 4. **All Taylor Coefficients Stored**: GTPSA implements an efficient monomial coefficient indexing function for high speed even with TPSs having a large number of variables to high orders
 5. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
-6. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is very fast
+6. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
 
 See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 56 inputs and 4 outputs. **We observed GTPSA to be nearly x4 faster than ForwardDiff to 2nd order, and x19 faster to 3rd order in our example.**
 

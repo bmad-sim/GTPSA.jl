@@ -262,7 +262,24 @@ mutable struct ComplexTPS <: Number
   end
 end
 
+"""
+    TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
 
+Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
+is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
+which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+the `Descriptor` for that TPS will be used.
+
+The constructor can also be used to create a copy of a `TPS` under one `Descriptor` to instead 
+have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
+
+### Input
+- `ta`  -- Any `Real`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `ret` -- New `TPS` equal to `ta` with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
+"""
 function TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
   return low_TPS(ta, use)
 end
@@ -316,7 +333,24 @@ function low_TPS(a::Real, use::Descriptor)
 end
 
 # -----------------------
+"""
+    ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS 
 
+Constructor to create a new `ComplexTPS` equal to the number `cta`. If `cta` is a `ComplexTPS`, this 
+is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
+which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+the `Descriptor` for that TPS will be used.
+
+The constructor can also be used to create a copy of a `ComplexTPS` under one `Descriptor` to instead 
+have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
+
+### Input
+- `cta`  -- Any `Number`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `ret` -- New `ComplexTPS` equal to `cta` with removal of invalid monomials if `cta` is a `TPS`/`ComplexTPS` and a new `Descriptor` is specified
+"""
 function ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
   return low_ComplexTPS(cta, use)
 end
