@@ -1724,17 +1724,16 @@ end
 """
     mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
 
-Writes the vector a in terms 
-mc is a map (m is map)
-Take vector a, write in terms of all variables in mc 
-scalar potential described as TPSA -> vector field
-???
-Map to hamiltonian
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the vector field (Hamilton's 
+equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 
 ### Input
-- `na`  -- Number of TPSA in mc consistent with number of variables in a
-- `a`   
-- `mc`
+- `na`  -- Number of TPSA in `mc` consistent with number of variables in `a`
+- `a`   -- Hamiltonian as a TPSA
+
+### Output
+- `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
 function mad_tpsa_vec2fld!(na::Cint, a::Ptr{RTPSA}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{RTPSA}, mc::Ptr{Ptr{RTPSA}})::Cvoid
@@ -1744,12 +1743,16 @@ end
 """
     mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
 
-???
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the Hamiltonian one obtains 
+from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 
 ### Input
-- `na`
-- `ma`
-- `c`
+- `na`  -- Number of TPSA in `ma` consistent with number of variables in `c`
+- `ma`  -- Vector field 
+
+### Output
+- `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
 function mad_tpsa_fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{Ptr{RTPSA}}, c::Ptr{RTPSA})::Cvoid
@@ -1759,18 +1762,15 @@ end
 """
     mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
 
-Derivating vs a variable,. multiply and add sum
-Deriving a map vs each variable by itself TPSA
-???
-"Incomplete operator" used by the incomplete poisson bracket- computing PB with only 1 
-only positive part of PB
-Taking 1 TPSA, derive TPSA vs all variables, multiply result by variable in map and then sum
+Calculates `dot(ma, grad(b))`
 
 ### Input
-- `na`
-- `ma`
-- `b`
-- `c`
+- `na` -- Length of `ma` consistent with number of variables in `b`
+- `ma` -- Vector of TPSA
+- `b`  -- TPSA
+
+### Output
+- `c`  -- `dot(ma, grad(b))`
 """
 function mad_tpsa_fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA})::Cvoid
@@ -1780,15 +1780,16 @@ end
 """
     mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
-Computes the Lie bracket of the maps `ma` and `mb`.
+Computes the Lie bracket of the vector fields `ma` and `mb`, defined as 
+sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
 
 ### Input
-- `na` -- Number of TPSAs in map `ma` and map `mb`
-- `ma` -- Map `ma`
-- `mb` -- Map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_tpsa_liebra!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
@@ -1798,15 +1799,16 @@ end
 """
     mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
-Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
+Computes the exponential of fgrad of the vector fields `ma` and `mb`,
+literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
 
 ### Input
-- `na` -- Number of TPSAs in map `ma` and map `mb`
-- `ma` -- Map `ma`
-- `mb` -- Map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_tpsa_exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
@@ -1816,15 +1818,15 @@ end
 """
     mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
-Computes the log of the Poisson bracket of the maps `ma` and `mb`.
+Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`.
 
 ### Input
-- `na` -- Number of TPSAs in map `ma` and map `mb`
-- `ma` -- map `ma`
-- `mb` -- map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{Ptr{RTPSA}}, mb::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid

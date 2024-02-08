@@ -49,15 +49,13 @@ function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Intege
   return slice(t, setup_mono(t, vars, nothing, params), false)
 end
 
+#=
+function getindex(::TPS)
+  return TPS[]
+end
+=#
+
 # --- par --- 
-cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
-cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
-idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
-idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
-seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
-seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
-
-
 """
     par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)::typeof(t)
 
@@ -335,7 +333,7 @@ Extracts the first-order partial derivatives (evaluated at 0) from the Vector of
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
 also be extracted when the `include_params` flag is set to `true`. Note that this function 
 is not calculating anything - just extracting the first-order monomial coefficients already 
-in the `TPS`s..
+in the `TPS`s.
 
 ### Input
 - `m`              -- `Vector` of `TPS`s. to extract the Jacobian from
@@ -366,10 +364,10 @@ end
 """
     jacobian(m::Vector{TPS}; include_params=false)::Matrix{Float64}
 
-Extracts the first-order partial derivatives (evaluated at 0) from the Vector of `TPS`s.. 
+Extracts the first-order partial derivatives (evaluated at 0) from the Vector of `TPS`s. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
 flag is set to `true`. Note that this function is not calculating anything - just extracting 
-the first-order monomial coefficients already in the `TPS`s..
+the first-order monomial coefficients already in the `TPS`s.
 
 ### Input
 - `m`              -- `Vector` of `TPS`s. to extract the Jacobian from
@@ -400,7 +398,7 @@ Extracts the first-order partial derivatives (evaluated at 0) from the Vector of
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
 also be extracted when the `include_params` flag is set to `true`. Note that this function 
 is not calculating anything - just extracting the first-order monomial coefficients already 
-in the `ComplexTPS`s..
+in the `ComplexTPS`s.
 
 ### Input
 - `m`              -- `Vector` of `ComplexTPS`s. to extract the Jacobian from
@@ -431,10 +429,10 @@ end
 """
     jacobian(m::Vector{ComplexTPS}; include_params=false)::Matrix{ComplexF64}
 
-Extracts the first-order partial derivatives (evaluated at 0) from the Vector of `ComplexTPS`s.. 
+Extracts the first-order partial derivatives (evaluated at 0) from the Vector of `ComplexTPS`s. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
 flag is set to `true`. Note that this function is not calculating anything - just extracting 
-the first-order monomial coefficients already in the `ComplexTPS`s..
+the first-order monomial coefficients already in the `ComplexTPS`s.
 
 ### Input
 - `m`              -- `Vector` of `ComplexTPS`s. to extract the Jacobian from

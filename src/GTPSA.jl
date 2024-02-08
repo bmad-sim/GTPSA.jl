@@ -60,344 +60,7 @@ import Base:  +,
 
 using GTPSA_jll, Printf, PrettyTables
 
-export
-  # Constants:
-  NAMSZ,
-  MAD_TPSA, 
-  MAD_TPSA_DEFAULT, 
-  MAD_TPSA_SAME,
-  MAD_DESC_CURR,
-  
-  # 1-to-1 C Structs:
-  RTPSA,
-  CTPSA,
-  Desc,
-
-  # Descriptor:
-  mad_desc_newv,
-  mad_desc_newvp,
-  mad_desc_newvpo,
-  mad_desc_del!,
-  mad_desc_getnv!,
-  mad_desc_maxord,
-  mad_desc_maxlen,
-  mad_desc_gtrunc!,
-  mad_desc_isvalids,
-  mad_desc_isvalidm,
-  mad_desc_isvalidsm,
-  mad_desc_idxs,
-  mad_desc_idxm,
-  mad_desc_idxsm,
-  mad_desc_nxtbyvar,
-  mad_desc_nxtbyord,
-  mad_desc_mono!,
-  mad_desc_info,
-
-  # Monomial:
-  mad_mono_str!,
-  mad_mono_prt!,
-  mad_mono_fill!,
-  mad_mono_copy!,
-  mad_mono_min,
-  mad_mono_max,
-  mad_mono_ord,
-  mad_mono_ordp,
-  mad_mono_ordpf,
-  mad_mono_eq,
-  mad_mono_lt,
-  mad_mono_le,
-  mad_mono_cmp,
-  mad_mono_rcmp,
-  mad_mono_add!,
-  mad_mono_sub!,
-  mad_mono_cat!,
-  mad_mono_rev!,
-  mad_mono_print,
-
-  # TPSA:
-  mad_tpsa_newd,
-  mad_tpsa_new,
-  mad_tpsa_del!,
-  mad_tpsa_desc,
-  mad_tpsa_uid!,
-  mad_tpsa_len,
-  mad_tpsa_nam,
-  mad_tpsa_ord,
-  mad_tpsa_ordv,
-  mad_tpsa_ordn,
-  mad_tpsa_copy!,
-  mad_tpsa_sclord!,
-  mad_tpsa_getord!,
-  mad_tpsa_cutord!,
-  mad_tpsa_maxord!,
-  mad_tpsa_convert!,
-  mad_tpsa_setvar!,
-  mad_tpsa_setval!,
-  mad_tpsa_setnam!,
-  mad_tpsa_clear!,
-  mad_tpsa_isnul,
-  mad_tpsa_mono!,
-  mad_tpsa_idxs,
-  mad_tpsa_idxm,
-  mad_tpsa_idxsm,
-  mad_tpsa_cycle!,
-  mad_tpsa_get0,
-  mad_tpsa_geti,
-  mad_tpsa_gets,
-  mad_tpsa_getm,
-  mad_tpsa_getsm,
-  mad_tpsa_set0!,
-  mad_tpsa_seti!,
-  mad_tpsa_sets!,
-  mad_tpsa_setm!,
-  mad_tpsa_setsm!,
-  mad_tpsa_getv!,
-  mad_tpsa_setv!,
-  mad_tpsa_equ,
-  mad_tpsa_dif!,
-  mad_tpsa_add!,
-  mad_tpsa_sub!,
-  mad_tpsa_mul!,
-  mad_tpsa_div!,
-  mad_tpsa_pow!,
-  mad_tpsa_powi!,
-  mad_tpsa_pown!,
-  mad_tpsa_nrm,
-  mad_tpsa_abs!,
-  mad_tpsa_sqrt!,
-  mad_tpsa_exp!,
-  mad_tpsa_log!,
-  mad_tpsa_sincos!,
-  mad_tpsa_sin!,
-  mad_tpsa_cos!,
-  mad_tpsa_tan!,
-  mad_tpsa_cot!,
-  mad_tpsa_sinc!,
-  mad_tpsa_sincosh!,
-  mad_tpsa_sinh!,
-  mad_tpsa_cosh!,
-  mad_tpsa_tanh!,
-  mad_tpsa_coth!,
-  mad_tpsa_sinhc!,
-  mad_tpsa_asin!,
-  mad_tpsa_acos!,
-  mad_tpsa_atan!,
-  mad_tpsa_acot!,
-  mad_tpsa_asinc!,
-  mad_tpsa_asinh!,
-  mad_tpsa_acosh!,
-  mad_tpsa_atanh!,
-  mad_tpsa_acoth!,
-  mad_tpsa_asinhc!,
-  mad_tpsa_erf!,
-  mad_tpsa_erfc!,
-  mad_tpsa_acc!,
-  mad_tpsa_scl!,
-  mad_tpsa_inv!,
-  mad_tpsa_invsqrt!,
-  mad_tpsa_unit!,
-  mad_tpsa_atan2!,
-  mad_tpsa_hypot!,
-  mad_tpsa_hypot3!,
-  mad_tpsa_integ!,
-  mad_tpsa_deriv!,
-  mad_tpsa_derivm!,
-  mad_tpsa_poisbra!,
-  mad_tpsa_taylor!,
-  mad_tpsa_axpb!,
-  mad_tpsa_axpbypc!,
-  mad_tpsa_axypb!,
-  mad_tpsa_axypbzpc!,
-  mad_tpsa_axypbvwpc!,
-  mad_tpsa_ax2pby2pcz2!,
-  mad_tpsa_axpsqrtbpcx2!,
-  mad_tpsa_logaxpsqrtbpcx2!,
-  mad_tpsa_logxdy!,
-  mad_tpsa_vec2fld!,
-  mad_tpsa_fld2vec!,
-  mad_tpsa_fgrad!,
-  mad_tpsa_liebra!,
-  mad_tpsa_exppb!,
-  mad_tpsa_logpb!,
-  mad_tpsa_mnrm,
-  mad_tpsa_minv!,
-  mad_tpsa_pminv!,
-  mad_tpsa_compose!,
-  mad_tpsa_translate!,
-  mad_tpsa_eval!,
-  mad_tpsa_mconv!,
-  mad_tpsa_print,
-  mad_tpsa_scan,
-  mad_tpsa_scan_hdr,
-  mad_tpsa_scan_coef!,
-  mad_tpsa_debug,
-  mad_tpsa_isvalid,
-  mad_tpsa_init!,
-
-  # CTPSA:
-  mad_ctpsa_newd,
-  mad_ctpsa_new,
-  mad_ctpsa_del!,
-  mad_ctpsa_desc,
-  mad_ctpsa_uid!,
-  mad_ctpsa_len,
-  mad_ctpsa_nam,
-  mad_ctpsa_ord,
-  mad_ctpsa_ordv,
-  mad_ctpsa_ordn,
-  mad_ctpsa_copy!,
-  mad_ctpsa_sclord!,
-  mad_ctpsa_getord!,
-  mad_ctpsa_cutord!,
-  mad_ctpsa_maxord,
-  mad_ctpsa_convert!,
-  mad_ctpsa_setvar!,
-  mad_ctpsa_setvar_r!,
-  mad_ctpsa_setval!,
-  mad_ctpsa_setval_r!,
-  mad_ctpsa_setnam!,
-  mad_ctpsa_clear!,
-  mad_ctpsa_isnul,
-  mad_ctpsa_cplx!,
-  mad_ctpsa_real!,
-  mad_ctpsa_imag!,
-  mad_ctpsa_cabs!,
-  mad_ctpsa_carg!,
-  mad_ctpsa_unit!,
-  mad_ctpsa_rect!,
-  mad_ctpsa_polar!,
-  mad_ctpsa_mono!,
-  mad_ctpsa_idxs,
-  mad_ctpsa_idxm,
-  mad_ctpsa_idxsm,
-  mad_ctpsa_cycle!,
-  mad_ctpsa_get0,
-  mad_ctpsa_geti,
-  mad_ctpsa_gets,
-  mad_ctpsa_getm,
-  mad_ctpsa_getsm,
-  mad_ctpsa_set0!,
-  mad_ctpsa_seti!,
-  mad_ctpsa_sets!,
-  mad_ctpsa_setm!,
-  mad_ctpsa_setsm!,
-  mad_ctpsa_get0_r!,
-  mad_ctpsa_geti_r!,
-  mad_ctpsa_gets_r!,
-  mad_ctpsa_getm_r!,
-  mad_ctpsa_getsm_r!,
-  mad_ctpsa_set0_r!,
-  mad_ctpsa_seti_r!,
-  mad_ctpsa_sets_r!,
-  mad_ctpsa_setm_r!,
-  mad_ctpsa_setsm_r!,
-  mad_ctpsa_getv!,
-  mad_ctpsa_setv!,
-  mad_ctpsa_equ,
-  mad_ctpsa_dif!,
-  mad_ctpsa_add!,
-  mad_ctpsa_sub!,
-  mad_ctpsa_mul!,
-  mad_ctpsa_div!,
-  mad_ctpsa_pow!,
-  mad_ctpsa_powi!,
-  mad_ctpsa_pown!,
-  mad_ctpsa_pown_r!,
-  mad_ctpsa_equt,
-  mad_ctpsa_dift!,
-  mad_ctpsa_tdif!,
-  mad_ctpsa_addt!,
-  mad_ctpsa_subt!,
-  mad_ctpsa_tsub!,
-  mad_ctpsa_mult!,
-  mad_ctpsa_divt!,
-  mad_ctpsa_tdiv!,
-  mad_ctpsa_powt!,
-  mad_ctpsa_tpow!,
-  mad_ctpsa_nrm,
-  mad_ctpsa_conj!,
-  mad_ctpsa_sqrt!,
-  mad_ctpsa_exp!,
-  mad_ctpsa_log!,
-  mad_ctpsa_sincos!,
-  mad_ctpsa_sin!,
-  mad_ctpsa_cos!,
-  mad_ctpsa_tan!,
-  mad_ctpsa_cot!,
-  mad_ctpsa_sinc!,
-  mad_ctpsa_sincosh!,
-  mad_ctpsa_sinh!,
-  mad_ctpsa_cosh!,
-  mad_ctpsa_tanh!,
-  mad_ctpsa_coth!,
-  mad_ctpsa_sinhc!,
-  mad_ctpsa_asin!,
-  mad_ctpsa_acos!,
-  mad_ctpsa_atan!,
-  mad_ctpsa_acot!,
-  mad_ctpsa_asinc!,
-  mad_ctpsa_asinh!,
-  mad_ctpsa_acosh!,
-  mad_ctpsa_atanh!,
-  mad_ctpsa_acoth!,
-  mad_ctpsa_asinhc!,
-  mad_ctpsa_erf!,
-  mad_ctpsa_erfc!,
-  mad_ctpsa_acc!,
-  mad_ctpsa_scl!,
-  mad_ctpsa_inv!,
-  mad_ctpsa_invsqrt!,
-  mad_ctpsa_hypot!,
-  mad_ctpsa_hypot3!,
-  mad_ctpsa_integ!,
-  mad_ctpsa_deriv!,
-  mad_ctpsa_derivm!,
-  mad_ctpsa_poisbra!,
-  mad_ctpsa_taylor!,
-  mad_ctpsa_poisbrat!,
-  mad_ctpsa_tpoisbra!,
-  mad_ctpsa_acc_r!,
-  mad_ctpsa_scl_r!,
-  mad_ctpsa_inv_r!,
-  mad_ctpsa_invsqrt_r!,
-  mad_ctpsa_axpb!,
-  mad_ctpsa_axpbypc!,
-  mad_ctpsa_axypb!,
-  mad_ctpsa_axypbzpc!,
-  mad_ctpsa_axypbvwpc!,
-  mad_ctpsa_ax2pby2pcz2!,
-  mad_ctpsa_axpsqrtbpcx2!,
-  mad_ctpsa_logaxpsqrtbpcx2!,
-  mad_ctpsa_logxdy!,
-  mad_ctpsa_axpb_r!,
-  mad_ctpsa_axpbypc_r!,
-  mad_ctpsa_axypb_r!,
-  mad_ctpsa_axypbzpc_r!,
-  mad_ctpsa_axypbvwpc_r!,
-  mad_ctpsa_ax2pby2pcz2_r!,
-  mad_ctpsa_axpsqrtbpcx2_r!,
-  mad_ctpsa_logaxpsqrtbpcx2_r!,
-  mad_ctpsa_vec2fld!,
-  mad_ctpsa_fld2vec!,
-  mad_ctpsa_fgrad!,
-  mad_ctpsa_liebra!,
-  mad_ctpsa_exppb!,
-  mad_ctpsa_logpb!,
-  mad_ctpsa_mnrm,
-  mad_ctpsa_minv!,
-  mad_ctpsa_pminv!,
-  mad_ctpsa_compose!,
-  mad_ctpsa_translate!,
-  mad_ctpsa_eval!,
-  mad_ctpsa_mconv!,
-  mad_ctpsa_print,
-  mad_ctpsa_scan,
-  mad_ctpsa_scan_hdr,
-  mad_ctpsa_scan_coef!,
-  mad_ctpsa_debug,
-  mad_ctpsa_isvalid,
-  mad_ctpsa_init!,
-
+export  
   # Layer 2 structs + functions NOT in Base:
   Descriptor,
   TPS,
@@ -446,8 +109,6 @@ export
   translate,
   par,
   
-
-
   # Temporaries:
   @FastGTPSA,
   ±,
@@ -469,6 +130,16 @@ include("low_level/desc.jl")
 include("low_level/rtpsa.jl")
 include("low_level/ctpsa.jl")
 
+# Useful type-generic functions:
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
+seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
+seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
+setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble) = (@inline;  mad_tpsa_setm!(t, n, m, a, b))
+setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) = (@inline;  mad_ctpsa_setm!(t, n, m, a, b))
+
 const MAD_TPSA::String = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
 const MAD_TPSA_SAME::Cuchar = 254
@@ -480,7 +151,6 @@ struct Descriptor
   desc::Ptr{Desc}
   function Descriptor(desc::Ptr{Desc})::Descriptor
     d = new(desc)
-    GTPSA.desc_current = d
     return d
   end
 end
@@ -489,6 +159,7 @@ end
 desc_current::Descriptor = Descriptor(MAD_DESC_CURR)   # Current Descriptor
 show_eps::Float64 =  0.0                               # Print epsilon
 show_sparse::Bool = false                              # Use sparse monomial print
+show_header::Bool = false                              # Print a header above each TPS
 
 # Descriptor outer constructors
 """
@@ -501,7 +172,9 @@ Creates a TPSA `Descriptor` with `nv` variables of maximum order `vo` for each.
 - `vo` -- Maximum order of the variables in the TPSA
 """
 function Descriptor(nv::Integer, vo::Integer)::Descriptor
-  return Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
+  d = Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, vo)))
+  GTPSA.desc_current = d
+  return d
 end
 
 """
@@ -519,7 +192,9 @@ function Descriptor(vos::Vector{<:Integer})::Descriptor
   mo = maximum(vos)
   po = 0
   no = vos
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  GTPSA.desc_current = d
+  return d
 end
 
 """
@@ -537,7 +212,9 @@ parameters each with truncation order `po`
 function Descriptor(nv::Integer, vo::Integer, np::Integer, po::Integer)::Descriptor
   mo = max(vo,po)
   no = vcat(Cuchar(vo)*ones(Cuchar,nv), Cuchar(po)*ones(Cuchar,np))
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), no))
+  GTPSA.desc_current = d
+  return d
 end
 
 
@@ -558,7 +235,9 @@ function Descriptor(vos::Vector{<:Integer}, pos::Vector{<:Integer})::Descriptor
   po = maximum(pos)
   mo = max(maximum(vos),po)
   no = vcat(vos,pos)
-  return Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  GTPSA.desc_current = d
+  return d
 end
 
 # Wrapper struct for Ptr{RTPSA}
@@ -572,73 +251,6 @@ mutable struct TPS <: Real
   end
 end
 
-# RTPSA outer constructors
-"""
-    TPS(d::Descriptor)::TPS
-
-Creates a new Truncated Power Series `TPS` based on `d` 
-
-### Input
-- `d` -- `Descriptor`
-"""
-function TPS(d::Descriptor)::TPS
-  return TPS(mad_tpsa_newd(d.desc, MAD_TPSA_DEFAULT))
-end
-
-"""
-    TPS(t1::TPS)::TPS
-
-Copy constructor for `TPS`
-
-### Input
-- `t1` -- `TPS` to create new copy of
-"""
-function TPS(t1::TPS)::TPS
-  t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
-  mad_tpsa_copy!(t1.tpsa, t.tpsa)
-  return t
-end
-
-"""
-    TPS(a::Real; use::Union{TPS,Nothing}=nothing)::TPS
-
-Promotes the scalar `a` to a new `TPS` using the same 
-`Descriptor` as `use`, or the most recently-defined `Descriptor` 
-if `nothing` is provided.
-
-### Input
-- `a`   -- Scalar to create new `TPS` with
-- `use` -- `TPS` to use same `Descriptor` as. Default is `nothing` for most recent `Descriptor`
-"""
-function TPS(a::Real; use::Union{TPS,Nothing}=nothing)::TPS
-  low_TPS(a, use)
-end
-
-function low_TPS(a::Real, use::TPS)::TPS
-  t = zero(use)
-  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
-  return t
-end
-
-function low_TPS(a::Real, use::Nothing)::TPS
-  #error("SOMETHING WENT VERY WRONG!!!")
-  t = TPS()
-  mad_tpsa_set0!(t.tpsa, convert(Float64, 0), convert(Float64,a))
-  return t
-end
-
-"""
-    TPS()
-
-Create a new `TPS` using `GTPSA.desc_current`
-
-WARNING: Mixing `TPS`s from two different `Descriptor`s is not allowed.
-"""
-function TPS()
-  return TPS(GTPSA.desc_current)
-end
-
-
 # Wrapper struct for Ptr{CTPSA}
 mutable struct ComplexTPS <: Number
   tpsa::Ptr{CTPSA}
@@ -650,120 +262,230 @@ mutable struct ComplexTPS <: Number
   end
 end
 
-# ComplexTPS outer constructors
 """
-    ComplexTPS(d::Descriptor)::ComplexTPS
+    TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
 
-Creates a new Complex Truncated Power Series `ComplexTPS` based on `d` 
+Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
+is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
+which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+the `Descriptor` for that TPS will be used.
+
+The constructor can also be used to create a copy of a `TPS` under one `Descriptor` to instead 
+have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
 
 ### Input
-- `d` -- `Descriptor`
+- `ta`  -- Any `Real`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `ret` -- New `TPS` equal to `ta` with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
 """
-function ComplexTPS(d::Descriptor)::ComplexTPS
-  return ComplexTPS(mad_ctpsa_newd(d.desc, MAD_TPSA_DEFAULT))
+function TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
+  return low_TPS(ta, use)
 end
 
-"""
-    ComplexTPS(ct1::ComplexTPS)::ComplexTPS
+# --- Blank TPS ---
+function low_TPS(ta::Nothing, use::Descriptor)
+  return TPS(mad_tpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+end
 
-Copy constructor for `ComplexTPS`
+function low_TPS(ta::Nothing, use::Union{TPS,ComplexTPS})
+  return TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, use.tpsa), MAD_TPSA_SAME))
+end
+
+function low_TPS(ta::Nothing, use::Nothing)
+  return TPS(mad_tpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+end
+
+# --- Copy ctor ---
+function low_TPS(t1::TPS, use::Nothing)
+  t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
+  mad_tpsa_copy!(t1.tpsa, t.tpsa)
+  return t
+end
+
+# --- Change descriptor ---
+function low_TPS(t1::TPS, use::Descriptor)
+  return change(t1, use)
+end
+
+function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
+  return change(t1, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa).d)))
+end
+
+# --- promote real to TPS ---
+function low_TPS(a::Real, use::Nothing)
+  t = TPS(mad_tpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+  mad_tpsa_set0!(t.tpsa, convert(Float64, 0), convert(Float64,a))
+  return t
+end
+
+function low_TPS(a::Real, use::Union{TPS,ComplexTPS})
+  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, use.tpsa), MAD_TPSA_SAME))
+  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
+  return t
+end
+
+function low_TPS(a::Real, use::Descriptor)
+  t = TPS(mad_tpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
+  return t
+end
+
+# -----------------------
+"""
+    ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS 
+
+Constructor to create a new `ComplexTPS` equal to the number `cta`. If `cta` is a `ComplexTPS`, this 
+is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
+which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+the `Descriptor` for that TPS will be used.
+
+The constructor can also be used to create a copy of a `ComplexTPS` under one `Descriptor` to instead 
+have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
 
 ### Input
-- `ct1` -- `ComplexTPS` to create new copy of
+- `cta`  -- Any `Number`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `ret` -- New `ComplexTPS` equal to `cta` with removal of invalid monomials if `cta` is a `TPS`/`ComplexTPS` and a new `Descriptor` is specified
 """
-function ComplexTPS(ct1::ComplexTPS)::ComplexTPS
+function ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+  return low_ComplexTPS(cta, use)
+end
+
+# For some reason I need to explicitly define this:
+ComplexTPS(t::ComplexTPS; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing) = low_ComplexTPS(t,use)
+
+# --- Blank ComplexTPS ---
+function low_ComplexTPS(cta::Nothing, use::Descriptor)
+  return ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+end
+
+function low_ComplexTPS(cta::Nothing, use::Union{TPS,ComplexTPS})
+  return ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
+end
+
+function low_ComplexTPS(cta::Nothing, use::Nothing)
+  return ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+end
+
+# --- Copy ctor ---
+function low_ComplexTPS(ct1::ComplexTPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
   mad_ctpsa_copy!(ct1.tpsa, ct.tpsa)
   return ct
 end
 
-"""
-    ComplexTPS(t1::TPS)::ComplexTPS
-
-Creates a new copy of `TPS` promoted to a `ComplexTPS`
-
-### Input
-- `t1` -- `TPS` to create new `ComplexTPS` from
-"""
-function ComplexTPS(t1::TPS)::ComplexTPS
+function low_ComplexTPS(t1::TPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
   return ct
 end
 
-"""
-    ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
+# --- Change descriptor ---
+function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Descriptor)
+  return change(t1, use)
+end
 
-Creates a new `ComplexTPS` equal to `t1 + im*t2`
+function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Union{TPS,ComplexTPS})
+  return change(t1, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa).d)))
+end
 
-### Input
-- `t1` -- Real part of `ComplexTPS` as a `TPS` 
-- `t2` -- Imaginary part of `ComplexTPS` as a `TPS` 
-"""
-function ComplexTPS(t1::TPS, t2::TPS)::ComplexTPS
+# --- promote number to ComplexTPS ---
+function low_ComplexTPS(a::Union{Real,Complex}, use::Nothing)
+  ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  return ct
+end
+
+function low_ComplexTPS(a::Union{Real,Complex}, use::Union{TPS,ComplexTPS})
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  return ct
+end
+
+function low_ComplexTPS(a::Union{Real,Complex}, use::Descriptor)
+  ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  return ct
+end
+
+# -----------------------
+
+# Special real argument ctors
+function ComplexTPS(ta::Real, tb::Real; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+  low_ComplexTPS(ta, tb, use)
+end
+
+function low_ComplexTPS(t1::TPS, t2::TPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(t1.tpsa, t2.tpsa, ct.tpsa)
   return ct
 end
 
-function ComplexTPS(t1::TPS, a::Real)::ComplexTPS
-  ct = ComplexTPS(t1)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, im*a))
+function low_ComplexTPS(t1::TPS, a::Real, use::Nothing)
+  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
+  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, complex(0,a)))
   return ct
 end
 
-function ComplexTPS(a::Real, t1::TPS)::ComplexTPS
+function low_ComplexTPS(a::Real, t1::TPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(Base.unsafe_convert(Ptr{RTPSA}, C_NULL), t1.tpsa, ct.tpsa)
   mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
-"""
-    ComplexTPS(a::Number; use::Union{TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
-
-Promotes the scalar `a` to a new `ComplexTPS` using the same
-`Descriptor` as `use`
-
-### Input
-- `a`    -- Scalar to create new `ComplexTPS` with
-- `use`  -- `TPS`/`ComplexTPS` to use same `Descriptor` as. Default is `nothing` for most recent `Descriptor`
-"""
-function ComplexTPS(a::Number; use::Union{TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
-  return low_ComplexTPS(a, use)
-end
-
-function low_ComplexTPS(a::Number, use::ComplexTPS)::ComplexTPS
-  ct = zero(use)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, a))
+function low_ComplexTPS(a::Real, b::Real, use::Nothing)
+  ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
   return ct
 end
 
-function low_ComplexTPS(a::Number, use::TPS)::ComplexTPS
+function low_ComplexTPS(a::Real, b::Real, use::Descriptor)
+  ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  return ct
+end
+
+function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
   return ct
 end
 
-# WARNING: THIS FUNCTION SHOULD NEVER BE REACHED INTERNALLY!!!!
-function low_ComplexTPS(a::Number, use::Nothing)::ComplexTPS
-  #error("SOMETHING WENT VERY WRONG!!!")
-  ct = ComplexTPS()
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+function low_ComplexTPS(ta::TPS, tb::TPS, use::Descriptor)
+  ct = change(ta, use, type=ComplexTPS)
+  change!(ct, tb, 1, im)
   return ct
 end
 
-"""
-    ComplexTPS()
-
-Create a new `ComplexTPS` using `GTPSA.desc_current`
-
-WARNING: Mixing `ComplexTPS`s from two different `Descriptor`s is not allowed.
-"""
-function ComplexTPS()
-  return ComplexTPS(GTPSA.desc_current)
+function low_ComplexTPS(ta::TPS, b::Real, use::Descriptor)
+  ct = change(ta, use, type=ComplexTPS)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, complex(0,b)))
+  return ct
 end
 
+function low_ComplexTPS(a::Real, tb::TPS, use::Descriptor)
+  ct = change(tb, use, type=ComplexTPS, scl2=im)
+  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  return ct
+end
+
+function low_ComplexTPS(ta::TPS, tb::TPS, use::Union{TPS,ComplexTPS})
+  return low_ComplexTPS(ta, tb, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
+end
+
+function low_ComplexTPS(ta::TPS, b::Real, use::Union{TPS,ComplexTPS})
+  return low_ComplexTPS(ta, b, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
+end
+
+function low_ComplexTPS(a::Real, tb::TPS, use::Union{TPS,ComplexTPS})
+  return low_ComplexTPS(a, tb, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
+end
 
 # --- Variable/parameter generators ---
 
@@ -780,7 +502,7 @@ Default value is the most recently-defined `Descriptor`.
 - `x` -- `Vector` containing unit `TPS`s corresponding to each variable
 """
 function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
-  t1 = TPS(d)
+  t1 = TPS(use=d)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
   if nv < 1
@@ -790,7 +512,7 @@ function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   t1[1] = 1.0
   x[1] = t1
   for i=2:nv
-    t = TPS(d)
+    t = TPS(use=d)
     mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     x[i] = t
   end
@@ -810,7 +532,7 @@ Default value is the most recently-defined `Descriptor`.
 - `k` -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
 function params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
-  t1 = TPS(d)
+  t1 = TPS(use=d)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
   np = desc.np
@@ -821,7 +543,7 @@ function params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   mad_tpsa_seti!(t1.tpsa, Cint(nv+1), 0.0, 1.0)
   k[1] = t1
   for i=nv+2:nv+np
-    t = TPS(d)
+    t = TPS(use=d)
     mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     k[i-nv] = t
   end
@@ -842,7 +564,7 @@ Default value is the most recently-defined `Descriptor`.
 - `x` -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
 function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
-  ct1 = ComplexTPS(d)
+  ct1 = ComplexTPS(use=d)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
   if nv < 1
@@ -852,7 +574,7 @@ function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1[1] = 1.0
   x[1] = ct1
   for i=2:nv
-    ct = ComplexTPS(d)
+    ct = ComplexTPS(use=d)
     mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
     x[i] = ct
   end
@@ -872,7 +594,7 @@ Default value is the most recently-defined `Descriptor`.
 - `k` -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
 function complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
-  ct1 = ComplexTPS(d)
+  ct1 = ComplexTPS(use=d)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
   np = desc.np
@@ -883,7 +605,7 @@ function complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   mad_ctpsa_seti!(ct1.tpsa, Cint(nv+1), ComplexF64(0.0), ComplexF64(1.0))
   k[1] = ct1
   for i=nv+2:nv+np
-    ct = ComplexTPS(d)
+    ct = ComplexTPS(use=d)
     mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
     k[i-nv] = ct
   end
@@ -976,13 +698,13 @@ end
 
 # Variable/parameter:
 function low_mono(d::Descriptor, v::Integer, param::Nothing, params::Nothing)::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   mad_tpsa_seti!(t.tpsa, Cint(v), 0.0, 1.0)
   return t
 end
 
 function low_mono(d::Descriptor, v::Nothing, param::Integer, params::Nothing)::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   desc = unsafe_load(mad_tpsa_desc(t.tpsa))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
   mad_tpsa_seti!(t.tpsa, Cint(param) + nv, 0.0, 1.0)
@@ -991,34 +713,34 @@ end
 
 # Default to scalar value if nothing passed
 function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Nothing)::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   t[0] = 1.0
   return t
 end
 
 # Monomial by order:
 function low_mono(d::Descriptor, v::Vector{<:Integer}, param::Nothing, params::Nothing)::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   t[v...] = 1.0
   return t
 end
 
 # Monomial by sparse monomial:
 function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   t[v..., params=params] = 1.0
   return t
 end
 
 function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   # Need to create array of orders with length nv + np
   t[v...] = 1.0
   return t
 end
 
 function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
-  t = TPS(d)
+  t = TPS(use=d)
   t[params=params] = 1.0
   return t
 end
@@ -1074,6 +796,33 @@ function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Intege
   return ords, n
 end
 
+# Generic function to make new copy of TPS with different descriptor
+function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t1), scl2::Number=1)
+  # Quick check if actually changing
+  if Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d) == newd.desc
+    return type(t1)
+  end
+  t = type(use=newd)
+  change!(t, t1, 0, scl2)
+  return t
+end
+
+function change!(t::Union{TPS,ComplexTPS},t1::Union{TPS,ComplexTPS}, scl1::Number=0, scl2::Number=1)
+  desc =  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  nv = desc.nv
+  np = desc.np
+  coef = Ref{numtype(t1)}()
+  mono = Vector{Cuchar}(undef, np+nv)
+  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
+  while idx >= 0
+    # if valid monomial in new descriptor:
+    if convert(Bool, mad_desc_isvalidm(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d), np+nv, mono))
+      setm!(t.tpsa, np+nv, mono, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
+    end
+    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+  end
+end
+
 include("getset.jl")
 include("show.jl")
 include("operators.jl")
@@ -1092,14 +841,14 @@ Complex{TPS}(t1::TPS) = complex(t1)
 Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
 Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
 Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)=#
-Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex{TPS}(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
-Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587)")
+Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex{TPS}(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
+Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
 
 
 promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = TPS

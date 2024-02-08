@@ -2537,12 +2537,16 @@ end
 """
     mad_ctpsa_vec2fld!(na::Cint, a::Ptr{CTPSA}, mc::Vector{Ptr{CTPSA}})
 
-???
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the vector field (Hamilton's 
+equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 
 ### Input
-- `na`
-- `a`
-- `mc`
+- `na`  -- Number of TPSA in `mc` consistent with number of variables in `a`
+- `a`   -- Hamiltonian as a TPSA
+
+### Output
+- `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
 function mad_ctpsa_vec2fld!(na::Cint, a::Ptr{CTPSA}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ptr{CTPSA}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2552,12 +2556,16 @@ end
 """
     mad_ctpsa_fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}}, c::Ptr{CTPSA})
 
-???
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the Hamiltonian one obtains 
+from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 
 ### Input
-- `na`
-- `ma`
-- `c`
+- `na`  -- Number of TPSA in `ma` consistent with number of variables in `c`
+- `ma`  -- Vector field 
+
+### Output
+- `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
 function mad_ctpsa_fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}}, c::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{Ptr{CTPSA}}, c::Ptr{CTPSA})::Cvoid
@@ -2567,13 +2575,15 @@ end
 """
     mad_ctpsa_fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})
 
-???
+Calculates `dot(ma, grad(b))`
 
 ### Input
-- `na`
-- `ma`
-- `b`
-- `c`
+- `na` -- Length of `ma` consistent with number of variables in `b`
+- `ma` -- Vector of TPSA
+- `b`  -- TPSA
+
+### Output
+- `c`  -- `dot(ma, grad(b))`
 """
 function mad_ctpsa_fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})
   @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA})::Cvoid
@@ -2583,15 +2593,16 @@ end
 """
     mad_ctpsa_liebra!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
-Computes the Lie bracket of the maps `ma` and `mb`.
+Computes the Lie bracket of the vector fields `ma` and `mb`, defined as 
+sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
 
 ### Input
-- `na` -- Number of TPSAs in map `ma` and map `mb`
-- `ma` -- Map `ma`
-- `mb` -- Map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_liebra!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2601,15 +2612,16 @@ end
 """
     mad_ctpsa_exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
-Computes the exponential of the Poisson bracket of the maps `ma` and `mb`.
+Computes the exponential of fgrad of the vector fields `ma` and `mb`,
+literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
 
 ### Input
-- `na` -- Number of TPSAs in Map `ma` and map `mb`
-- `ma` -- Map `ma`
-- `mb` -- Map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
@@ -2619,15 +2631,15 @@ end
 """
     mad_ctpsa_logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
 
-Computes the log of the Poisson bracket of the maps `ma` and `mb`.
+Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`.
 
 ### Input
-- `na` -- Number of TPSAs in Map `ma` and map `mb`
-- `ma` -- Map `ma`
-- `mb` -- Map `mb`
+- `na` -- Length of `ma` and `mb`
+- `ma` -- Vector of TPSA `ma`
+- `mb` -- Vector of TPSA `mb`
 
 ### Output
-- `mc` -- Destination map `mc`
+- `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
   @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid

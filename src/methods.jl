@@ -57,6 +57,7 @@ integ!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_i
 
 """
     integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
 
 Integrates `t1` wrt the variable `var`. Integration wrt 
 parameters is not allowed, and integration wrt higher order 
@@ -321,10 +322,47 @@ liebra!(na::Cint, m1::Vector{Ptr{CTPSA}}, m2::Vector{Ptr{CTPSA}}, m3::Vector{Ptr
 """
     lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
 
-Computes the Lie bracket of the vector functions `A` and `F`
-eq 3.42 3.43 in Etienne's book
+Computes the Lie bracket of the vector functions `A` and `F`, defined over N variables as 
+`Σᵢᴺ Aᵢ (∂F/∂xᵢ) - Fᵢ (∂A/∂xᵢ)`
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> A = [-x[2], x[1]]
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+
+
+julia> F = [-x[1]^2, 2*x[1]*x[2]]
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      2      2   0
+-------------------------------------------------
+   2:   2.0000000000000000e+00      2      1   1
+
+
+julia> lb(A,F)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:   4.0000000000000000e+00      2      1   1
+-------------------------------------------------
+   2:   3.0000000000000000e+00      2      2   0
+   2:  -2.0000000000000000e+00      2      0   2
+```
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
+  descA = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(A.tpsa).d))
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  if length(A) != descA.nv || length(F) != descF.nv
+    error("Vector length != number of variables in the GTPSA")
+  end
   A1, F1 = promote(A, F)
   m1 = map(t->t.tpsa, A1)  
   m2 = map(t->t.tpsa, F1) 
@@ -340,6 +378,30 @@ vec2fld!(na::Cint, ctpsa::Ptr{CTPSA}, m::Vector{Ptr{CTPSA}}) = (@inline; mad_ctp
 
 """
     getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
+
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), calculates the vector field (Hamilton's 
+equations) from the passed Hamiltonian, defined as `[∂h/∂p₁, -∂h/∂q₁, ...]`
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> h = (x[1]^2 + x[2]^2)/2
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+
+
+julia> getvectorfield(h)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+```
 """
 function getvectorfield(h::Union{TPS,ComplexTPS})::Vector{<:typeof(h)}
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(h.tpsa).d))
@@ -358,30 +420,94 @@ fld2vec!(na::Cint, ma::Vector{Ptr{RTPSA}}, tpsa::Ptr{RTPSA}) = (@inline; mad_tps
 fld2vec!(na::Cint, ma::Vector{Ptr{CTPSA}},  ctpsa::Ptr{CTPSA}) = (@inline; mad_ctpsa_fld2vec!(na, ma, ctpsa))
 
 """
-    gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
+    gethamiltonian(F::Vector{<:Union{TPS,ComplexTPS}})
+
+Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
+conjugate variables are consecutive (q₁, p₁, q₂, p₂, ...), this function calculates the Hamiltonian 
+from a vector field `F` that can be obtained from a Hamiltonian (e.g. by `getvectorfield`). Explicitly, 
+`∫ F₁ dp₁ - ∫ F₂ dq₁ + ... + ∫ F₂ₙ₋₁ dpₙ - ∫ F₂ₙ dqₙ `
+
+# Example
+```julia-repl
+julia> d = Descriptor(2,10); x = vars();
+
+julia> h = (x[1]^2 + x[2]^2)/2
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+
+
+julia> F = getvectorfield(h)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:  -1.0000000000000000e+00      1      0   1
+-------------------------------------------------
+   2:   1.0000000000000000e+00      1      1   0
+
+
+julia> gethamiltonian(F)
+TPS:
+ Coefficient                Order   Exponent
+  5.0000000000000000e-01      2      2   0
+  5.0000000000000000e-01      2      0   2
+```
 """
-function gethamiltonian(m::Vector{<:Union{TPS,ComplexTPS}})
-  h = zero(m[1])
-  m1 = map(t->t.tpsa, m)
+function gethamiltonian(F::Vector{<:Union{TPS,ComplexTPS}})
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  if length(F) != descF.nv
+    error("Vector length != number of variables in the GTPSA")
+  end
+  h = zero(F[1])
+  m1 = map(t->t.tpsa, F)
   fld2vec!(Cint(length(m)), m1, h.tpsa)
   return h
 end
 
 
-# --- exp([ma, .]) mb ---
+# --- exp(F . grad) m ---
 exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_exppb!(na, ma, mb, mc))
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
 """
-    exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+
+Calculates `exp(F⋅∇)m = m + F⋅∇m + (F⋅∇)²m/2! + ...`
+
+# Example
+
+```julia-repl
+julia> d = Descriptor(2,10); x = vars()[1]; p = vars()[2];
+
+julia> time = 0.01; k = 2; m = 0.01;
+
+julia> h = p^2/(2m) + 1/2*k*x^2;
+
+julia> hf = getvectorfield(h);
+
+julia> map = exppb(-time*hf, [x, p])
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:   9.9001665555952290e-01      1      1   0
+   1:   9.9666999841313930e-01      1      0   1
+-------------------------------------------------
+   2:  -1.9933399968262787e-02      1      1   0
+   2:   9.9001665555952378e-01      1      0   1
+```
 """
-function exppb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  ma1, mb1 = promote(ma, mb)
+function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  if length(F) != descF.nv
+    error("Vector length != number of variables in the GTPSA")
+  end
+  ma1, mb1 = promote(F, m)
   m1 = map(t->t.tpsa, ma1) 
   m2 = map(t->t.tpsa, mb1) 
   mc = zero.(ma1)
   m3 = map(t->t.tpsa, mc)
-  GC.@preserve ma1 mb1 exppb!(Cint(length(ma)), m1, m2, m3)  
+  GC.@preserve ma1 mb1 exppb!(Cint(length(F)), m1, m2, m3)  
   return mc
 end
 
@@ -393,6 +519,11 @@ logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{
     logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
 """
 function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+  descma = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma.tpsa).d))
+  descmb = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mb.tpsa).d))
+  if length(ma) != descma.nv || length(mb) != descmb.nv
+    error("Vector length != number of variables in the GTPSA")
+  end
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
   m2 = map(t->t.tpsa, mb1) 
@@ -407,12 +538,18 @@ fgrad!(na::Cint, ma::Vector{Ptr{RTPSA}}, b::Ptr{RTPSA}, c::Ptr{RTPSA}) = (@inlin
 fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA}) = (@inline; mad_ctpsa_fgrad!(na, ma, b, c))
 
 """
-    fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
+    fgrad(F::Vector{<:Union{TPS,ComplexTPS}}, g::Union{TPS,ComplexTPS})
+
+Calculates `F⋅∇g`.
 """
-function fgrad(ma::Vector{<:Union{TPS,ComplexTPS}}, b::Union{TPS,ComplexTPS})
-  type = promote_type(typeof(ma[1]), typeof(b))
-  ma1 = convert(Vector{type},  ma)
-  b1 = convert(type, b)
+function fgrad(F::Vector{<:Union{TPS,ComplexTPS}}, g::Union{TPS,ComplexTPS})
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  if length(F) != descF.nv
+    error("Vector length != number of variables in the GTPSA")
+  end
+  type = promote_type(typeof(F[1]), typeof(g))
+  ma1 = convert(Vector{type},  F)
+  b1 = convert(type, g)
   m1 = map(t->t.tpsa, ma1) 
   c = zero(b1)
   GC.@preserve ma1 fgrad!(Cint(length(ma)), m1, b1.tpsa, c.tpsa)  
@@ -425,6 +562,9 @@ mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mnrm(na, ma)
 
 """
     norm(ma::Vector{<:Union{TPS,ComplexTPS}})
+
+Calculates the norm of the map `ma`, defined as `sum(norm.(ma))` or the 
+sum of the absolute value of all coefficients in each TPS.
 """
 function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
   return mnrm(Cint(length(ma)), map(x->x.tpsa, ma))
@@ -436,8 +576,37 @@ minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_
 
 """
     inv(ma::Vector{<:Union{TPS,ComplexTPS}})
+
+Inverts the map `ma` such that `ma ∘ inv(ma) = 1` in the variables.
+
+# Example
+
+```julia-repl
+
+julia> d = Descriptor(2,10); x = vars()[1]; p = vars()[2];
+
+julia> time = 0.01; k = 2; m = 0.01;
+
+julia> h = p^2/(2m) + 1/2*k*x^2;
+
+julia> hf = getvectorfield(h);
+
+julia> map = exppb(-time*hf, [x, p]);
+
+julia> map ∘ inv(map)
+2-element Vector{TPS}:
+  Out  Coefficient                Order   Exponent
+-------------------------------------------------
+   1:   1.0000000000000000e+00      1      1   0
+-------------------------------------------------
+   2:   1.0000000000000002e+00      1      0   1
+```
 """
 function inv(ma::Vector{<:Union{TPS,ComplexTPS}})
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
+  if length(ma) != desc.nv
+    error("Map length != number of variables in the GTPSA")
+  end
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
   mc1 = map(x->x.tpsa, mc)
@@ -451,8 +620,15 @@ pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{
 
 """
     pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+
+Partially-inverts the map `ma`, inverting only the variables specified by index
+in `vars`.
 """
 function pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
+  if length(ma) != desc.nv
+    error("Map length != number of variables in the GTPSA")
+  end
   mc = zero.(ma)
   ma1 = map(x->x.tpsa, ma)
   mc1 = map(x->x.tpsa, mc)
@@ -467,15 +643,17 @@ end
 compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_compose!(na, ma, nb, mb, mc))
 compose!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_compose!(na, ma, nb, mb, mc))
 
-"""
-    ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-"""
 function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+  na = Cint(length(ma))
+  nb = Cint(length(mb))
+  # Ensure mb is length = input
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
+  if desc.nv + desc.np != nb
+    error("Not enough input arguments")
+  end
   ma1, mb1 = promote(ma, mb)
   m1 = map(t->t.tpsa, ma1) 
   m2 = map(t->t.tpsa, mb1) 
-  na = Cint(length(ma))
-  nb = Cint(length(mb))
   mc = Vector{typeof(ma1[1])}(undef, na)
   for i in eachindex(mc)
     mc[i] = zero(ma1[1])
@@ -490,6 +668,8 @@ compose = ∘
 # --- translate ---
 """
     translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
+
+Translates the expansion point of the Vector of TPSs `m` by `x`.
 """
 function translate(m::Vector{TPS}, x::Vector{<:Real})::Vector{TPS}
   na = Cint(length(m))
@@ -504,6 +684,8 @@ end
 
 """
     translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
+
+Translates the expansion point of the Vector of TPSs `m` by `x`.
 """
 function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTPS}
   na = Cint(length(m))
@@ -514,11 +696,4 @@ function translate(m::Vector{ComplexTPS}, x::Vector{<:Number})::Vector{ComplexTP
   mc1 = map(x->x.tpsa, mc)
   mad_ctpsa_translate!(na, ma1, nb, tb, mc1)
   return mc
-end
-
-# --- change descriptor ---
-function change(ts::Pair{<:Union{TPS,ComplexTPS},<:Union{TPS,ComplexTPS}})
-  d1 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.first.tpsa).d))
-  d2 = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ts.second.tpsa).d))
-
 end

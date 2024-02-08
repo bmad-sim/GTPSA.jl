@@ -1,4 +1,4 @@
-# All Overloaded Functions
+# [All Overloaded Functions](@id all)
 The following functions from Base have been overloaded for operations with `TPS`/`ComplexTPS`, and also maps:
 ```
 +, -, *, /, ^, ∘, inv, atan, hypot, abs, sqrt, exp, log, 

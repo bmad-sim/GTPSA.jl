@@ -1,4 +1,4 @@
-# `Descriptor`
+# [`Descriptor`](@id descriptor)
 *Defines the number of variables, number of parameters, and order(s) for each in the GTPSA*
 ## Syntax
 ```

@@ -1,4 +1,4 @@
-# `vars`, `params`
+# [`vars`, `params`](@id varsparams)
 *Creates a vector of TPSs corresponding to each variable/parameter in the GTPSA*
 ## Syntax
 ```
