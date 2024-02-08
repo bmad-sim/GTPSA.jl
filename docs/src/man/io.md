@@ -3,9 +3,9 @@
 There are three non-constant global variables which can be set to customize the printed output of TPSs:
 
 ```julia
-show_eps::Float64 =  0.0                               # Print epsilon
-show_sparse::Bool = false                              # Use sparse monomial print
-show_header::Bool = false                              # Print a header above each TPS
+show_eps::Float64 =  0.0     # Print epsilon
+show_sparse::Bool = false    # Use sparse monomial print
+show_header::Bool = false    # Print a header above each TPS
 ```
 
 **`show_eps`** defines the value below which the absolute value of a monomial coefficient is NOT printed
