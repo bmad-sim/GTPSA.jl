@@ -24,4 +24,4 @@ However, if only 1st order terms are retained in the expressions for ``M_1`` and
 M_2(M_1(x)) = 3(x+2) = 3x + 6
 ```
 
-This shows that by neglecting the 2nd order term in `M_2`, we obtain 0th and 1st order errors in the composition. These errors can be traced to the finite 0th order term in `M_1`. This is referred to as *feed-down*, and is a problem when our GTPSA map has a 0th order term. One way of solving this problem is to use a coordinate system ``\tilde{x} = x+2``for ``M_1``; using such a coordinate system elevates our map to a DA map.
+This shows that by neglecting the 2nd order term in ``M_2``, we obtain 0th and 1st order errors in the composition. These errors can be traced to the finite 0th order term in ``M_1``. This is referred to as *feed-down*, and is a problem when our GTPSA map has a 0th order term. One way of solving this problem is to use a coordinate system ``\tilde{x} = x+2``for ``M_1``; using such a coordinate system elevates our map to a DA map.
