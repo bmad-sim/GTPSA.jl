@@ -358,8 +358,8 @@ julia> lb(A,F)
 ```
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
-  descA = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(A.tpsa).d))
-  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  descA = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(A[1].tpsa).d))
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(A) != descA.nv || length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
   end
@@ -455,7 +455,7 @@ TPS:
 ```
 """
 function gethamiltonian(F::Vector{<:Union{TPS,ComplexTPS}})
-  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
   end
@@ -498,7 +498,7 @@ julia> map = exppb(-time*hf, [x, p])
 ```
 """
 function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
-  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
   end
@@ -519,8 +519,8 @@ logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{
     logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
 """
 function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  descma = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma.tpsa).d))
-  descmb = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mb.tpsa).d))
+  descma = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
+  descmb = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mb[1].tpsa).d))
   if length(ma) != descma.nv || length(mb) != descmb.nv
     error("Vector length != number of variables in the GTPSA")
   end
@@ -543,7 +543,7 @@ fgrad!(na::Cint, ma::Vector{Ptr{CTPSA}}, b::Ptr{CTPSA}, c::Ptr{CTPSA}) = (@inlin
 Calculates `F⋅∇g`.
 """
 function fgrad(F::Vector{<:Union{TPS,ComplexTPS}}, g::Union{TPS,ComplexTPS})
-  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F.tpsa).d))
+  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
   end

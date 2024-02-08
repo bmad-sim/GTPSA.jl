@@ -156,10 +156,6 @@ x = vars(d);
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/taylormap.jl`. 
 
-## GTPSA with Variables and Parameters
-
-
-
 ## Promotion of `TPS` to `ComplexTPS`
 
 `TPS`s and `ComplexTPS`s can be mixed freely without concern. Any time an operation with a `TPS` and a `ComplexTPS` or a `Complex` number occurs, the result will be a `ComplexTPS`. A `ComplexTPS` can be converted back to a `TPS` using the `real` and `imag` operators.
