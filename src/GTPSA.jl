@@ -137,6 +137,8 @@ idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, 
 idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
 seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
 seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
+setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble) = (@inline;  mad_tpsa_setm!(t, n, m, a, b))
+setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) = (@inline;  mad_ctpsa_setm!(t, n, m, a, b))
 
 const MAD_TPSA::String = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
@@ -778,8 +780,8 @@ function change!(t::Union{TPS,ComplexTPS},t1::Union{TPS,ComplexTPS}, scl1::Numbe
   idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(newd.desc, np+nv, mono))
-      seti!(t.tpsa, idx, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
+    if convert(Bool, mad_desc_isvalidm(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d), np+nv, mono))
+      setm!(t.tpsa, np+nv, mono, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
     end
     idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
   end
