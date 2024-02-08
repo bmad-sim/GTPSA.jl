@@ -13,6 +13,7 @@ makedocs(
                  "man/definitions.md", 
                  "man/descriptor.md", 
                  "man/tps.md",
+                 "man/complextps.md",
                  "man/varsparams.md",
                  "man/monoindex.md",
                  "man/mono.md",

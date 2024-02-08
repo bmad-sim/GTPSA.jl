@@ -317,10 +317,12 @@ end
 
 # -----------------------
 
-
-function ComplexTPS(cta::Union{ComplexTPS,TPS,Real,Complex,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
+function ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
   return low_ComplexTPS(cta, use)
 end
+
+# For some reason I need to explicitly define this:
+ComplexTPS(t::ComplexTPS; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing) = low_ComplexTPS(t,use)
 
 # --- Blank ComplexTPS ---
 function low_ComplexTPS(cta::Nothing, use::Descriptor)

@@ -648,7 +648,7 @@ function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,Complex
   nb = Cint(length(mb))
   # Ensure mb is length = input
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
-  if desc.nv != nb
+  if desc.nv + desc.np != nb
     error("Not enough input arguments")
   end
   ma1, mb1 = promote(ma, mb)

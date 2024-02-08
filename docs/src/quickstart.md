@@ -30,7 +30,7 @@ These `TPS`s can then be manipulated just like any other mathematical quantity i
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
-A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS(use=d)` respectively. 
+A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS(use=d)` respectively. If `use` is not explicitly passed, then the global `GTPSA.desc_current`, which is set each time a new `Descriptor` is defined, will be used.
 
 When a TPS contains a lot of variables, the default output showing each variable exponent can be larger than the screen can show. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
@@ -155,6 +155,10 @@ x = vars(d);
 ```
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/taylormap.jl`. 
+
+## GTPSA with Variables and Parameters
+
+
 
 ## Promotion of `TPS` to `ComplexTPS`
 

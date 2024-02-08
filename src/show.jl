@@ -76,6 +76,7 @@ function format(t::TPS; coloffset=0)
   nv = desc.nv
   np = desc.np
   nn = desc.nn
+
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
 
@@ -147,6 +148,14 @@ end
 function show(io::IO, t::TPS)
   out, formatters = format(t)
   println(io, "TPS:")
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  extralines = 0
+  if GTPSA.show_header
+    println(io, "-----------------------")
+    show_GTPSA_info(io, desc)
+    println(io, "-----------------------")
+    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+  end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
     println(io, " Coefficient                Order   Monomial")
@@ -154,7 +163,7 @@ function show(io::IO, t::TPS)
     println(io, " Coefficient                Order   Exponent")
   end
   # Remove two lines from display size
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
 
@@ -236,13 +245,19 @@ function show(io::IO, t::ComplexTPS)
   out, formatters = format(t)
   println(io, "ComplexTPS:")
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nn = desc.nn
+  extralines = 0
+  if GTPSA.show_header
+    println(io, "-----------------------")
+    show_GTPSA_info(io, desc)
+    println(io, "-----------------------")
+    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+  end
   if GTPSA.show_sparse
     println(io, " Real                     Imag                       Order   Monomial")
   else
     println(io, " Real                     Imag                       Order   Exponent")
   end
-  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
+  pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
 show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
@@ -283,13 +298,21 @@ function show_map(io::IO, m::Vector{TPS})
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  extralines=0
+  if GTPSA.show_header
+    println(io, "-----------------------")
+    show_GTPSA_info(io, desc)
+    println(io, "-----------------------")
+    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+  end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
     println(io, "  Out  Coefficient                Order   Monomial")
   else
     println(io, "  Out  Coefficient                Order   Exponent")
   end
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
 function show_map(io::IO,  m::Vector{ComplexTPS})  
@@ -327,6 +350,14 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  extralines=0
+  if GTPSA.show_header
+    println(io, "-----------------------")
+    show_GTPSA_info(io, desc)
+    println(io, "-----------------------")
+    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+  end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
     println(io, "  Out  Real                     Imag                       Order   Monomial")
@@ -334,5 +365,5 @@ function show_map(io::IO,  m::Vector{ComplexTPS})
     println(io, "  Out  Real                     Imag                       Order   Exponent")
   end
   
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4,displaysize(io)[2]),vlines=[])
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
