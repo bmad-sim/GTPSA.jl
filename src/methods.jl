@@ -309,7 +309,7 @@ TPS:
 ```
 """
 function pb(f::Union{TPS, ComplexTPS}, g::Union{TPS, ComplexTPS})
-  t = zero_promote(f,g)
+  t = promote_type(typeof(f),typeof(g))(use=f)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(f.tpsa).d))
   poisbra!(f.tpsa,g.tpsa,t.tpsa, desc.nv)
   return t
