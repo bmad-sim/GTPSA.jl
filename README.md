@@ -20,13 +20,15 @@ See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` wi
 To use `GTPSA.jl`, in the Julia REPL run
 
 ```
-] add https://github.com/bmad-sim/GTPSA.jl.git
+import Pkg;
+Pkg.add("GTPSA")
 ```
 
 For developers,
 
 ```
-] dev https://github.com/bmad-sim/GTPSA.jl.git
+import Pkg;
+Pkg.develop("GTPSA")
 ```
 
 ## Basic Usage
