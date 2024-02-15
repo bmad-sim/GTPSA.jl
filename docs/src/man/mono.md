@@ -2,16 +2,12 @@
 *Creates a TPS corresponding to a specific monomial*
 ## Syntax
 ```
-m = mono(var_idx)
-m = mono(param=param_idx)
+m = mono(var_idx [, use=(descriptor|tps|complextps)])
+m = mono(param=param_idx [, use=(descriptor|tps|complextps)])
 
-m = mono(orders)
+m = mono(orders [, use=(descriptor|tps|complextps)])
 
-m = mono(vars_sparse_mono)
-m = mono(params=params_sparse_mono)
-m = mono(vars_sparse_mono, params=params_sparse_mono)
-
-m = mono(..., use=descriptor)
+m = mono([vars_sparse_mono] [, params=params_sparse_mono] [, use=(descriptor|tps|complextps)])
 ```
 
 ## Description
@@ -25,27 +21,23 @@ m = mono(..., use=descriptor)
 
 #### Indexing by Order
 
-`m = mono(orders)` creates a `TPS` equal to the monomial specified by the indexing-by-order array `orders` and the `Descriptor` in `GTPSA.desc_current`
+`m = mono(orders)` creates a `TPS` equal to the monomial specified by the indexing-by-order vector `orders` and the `Descriptor` in `GTPSA.desc_current`
 
 ------
 
 #### Indexing by Sparse Monomial
 
-`m = mono(vars_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial array `vars_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
-
-`m = mono(params=params_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial array `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
-
-`m = mono(vars_sparse_mono, params=params_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial arrays `vars_sparse_mono` and `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
+`m = mono(vars_sparse_mono, params=params_sparse_mono)` creates a `TPS` equal to the monomial specified by the indexing-by-sparse monomial vector `vars_sparse_mono` and `params_sparse_mono` and the `Descriptor` in `GTPSA.desc_current`
 
 ------
 
-### Optional Argument
+### Optional Keyword Argument
 
-`m = mono(..., use=descriptor)` creates a mono using any of the above methods but using the `Descriptor` specified in `use`
+`use=(descriptor|tps|complextps)` creates a mono using any of the above methods but using the `Descriptor` specified by `use`
 
 ## Examples
 ```@repl desc
-using GTPSA; GTPSA.show_sparse = false;#hide
+using GTPSA; GTPSA.show_sparse = false;  GTPSA.show_header=false;#hide
 d1 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
 x1 = mono(1)
 k1 = mono(param=1)

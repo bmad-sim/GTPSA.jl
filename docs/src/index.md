@@ -20,14 +20,14 @@ See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` wi
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
 
-```
-] add https://github.com/bmad-sim/GTPSA.jl.git
+```julia
+import Pkg; Pkg.add("GTPSA")
 ```
 
 For developers,
 
-```
-] dev https://github.com/bmad-sim/GTPSA.jl.git
+```julia
+import Pkg; Pkg.develop("GTPSA")
 ```
 
 ## Basic Usage
@@ -41,7 +41,7 @@ using GTPSA
 d = Descriptor(2, 6);
 
 # Get the TPSs corresponding to each variable based on the Descriptor
-x = vars(d);
+x = vars();
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
 f = cos(x[1]) + 1im*sin(x[2])

@@ -17,7 +17,7 @@ show_header::Bool = false    # Print a header above each TPS
 ## Examples
 
 ```@repl
-using GTPSA; GTPSA.show_sparse=false #hide
+using GTPSA; GTPSA.show_sparse = false; GTPSA.show_header=false; #hide
 d = Descriptor(100, 1, 10, 1)
 x = vars() # Doesn't fit on screen
 GTPSA.show_sparse = true;

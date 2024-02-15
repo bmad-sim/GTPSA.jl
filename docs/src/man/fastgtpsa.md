@@ -7,9 +7,10 @@ Here's an example of `@FastGTPSA` in action:
 
 ```@repl
 using GTPSA, BenchmarkTools
+GTPSA.show_sparse = false; GTPSA.show_header=false; # hide
 
 d = Descriptor(3, 5);
-x = vars(d);
+x = vars(use=d);
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 

@@ -266,8 +266,9 @@ end
     TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
 
 Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
-is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
-which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `ta`.
+If `ta` is not a `TPS`, then the `Descriptor` used will by default be `GTPSA.desc_current`. The `Descriptor` 
+for the constructed `TPS` can be set using `use`. If a `TPS` or `ComplexTPS` is passed to `use`, 
 the `Descriptor` for that TPS will be used.
 
 The constructor can also be used to create a copy of a `TPS` under one `Descriptor` to instead 
@@ -275,7 +276,7 @@ have a different `Descriptor`. In this case, invalid monomials under the new `De
 
 ### Input
 - `ta`  -- Any `Real`
-- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa TPS`, else uses `GTPSA.desc_current`
 
 ### Output
 - `ret` -- New `TPS` equal to `ta` with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
@@ -336,9 +337,10 @@ end
 """
     ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS 
 
-Constructor to create a new `ComplexTPS` equal to the number `cta`. If `cta` is a `ComplexTPS`, this 
-is equivalent to a copy constructor. The result will have the `Descriptor` specified in `use`, 
-which if nothing is passed will be `GTPSA.desc_current`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+Constructor to create a new `ComplexTPS` equal to the number `cta`. If `cta` is a `ComplexTPS` (or `TPS`), this 
+is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `cta`. If `cta` 
+is not a `TPS` or`ComplexTPS`, then the `Descriptor` used will by default be `GTPSA.desc_current`. The `Descriptor` 
+for the constructed `ComplexTPS` can be set using `use`. If a `TPS` or `ComplexTPS` is passed to `use`, 
 the `Descriptor` for that TPS will be used.
 
 The constructor can also be used to create a copy of a `ComplexTPS` under one `Descriptor` to instead 
@@ -346,7 +348,7 @@ have a different `Descriptor`. In this case, invalid monomials under the new `De
 
 ### Input
 - `cta`  -- Any `Number`
-- `use` -- (Optional) specify which `Descriptor` to use, default is `GTPSA.desc_current`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `cta` if `cta <: Union{TPS,ComplexTPS}`, else uses `GTPSA.desc_current`
 
 ### Output
 - `ret` -- New `ComplexTPS` equal to `cta` with removal of invalid monomials if `cta` is a `TPS`/`ComplexTPS` and a new `Descriptor` is specified
@@ -490,19 +492,19 @@ end
 # --- Variable/parameter generators ---
 
 """
-    vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
+    vars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
 
-Returns `TPS`s corresponding to the variables for the `Descriptor`.
-Default value is the most recently-defined `Descriptor`.
+Returns `TPS`s corresponding to the variables for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
 
 ### Input
-- `d` -- TPSA `Descriptor`
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `x` -- `Vector` containing unit `TPS`s corresponding to each variable
+- `x`   -- `Vector` containing unit `TPS`s corresponding to each variable
 """
-function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
-  t1 = TPS(use=d)
+function vars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+  t1 = TPS(use=use)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
   if nv < 1
@@ -512,7 +514,7 @@ function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   t1[1] = 1.0
   x[1] = t1
   for i=2:nv
-    t = TPS(use=d)
+    t = TPS(use=use)
     mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     x[i] = t
   end
@@ -520,19 +522,19 @@ function vars(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
 end
 
 """
-    params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
+    params(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
 
-Returns `TPS`s corresponding to the parameters for the `Descriptor`.
-Default value is the most recently-defined `Descriptor`.
+Returns `TPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
 
 ### Input
-- `d` -- TPSA `Descriptor`
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `k` -- `Vector` containing unit `TPS`s corresponding to each parameter
+- `k`   -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
-function params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
-  t1 = TPS(use=d)
+function params(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+  t1 = TPS(use=use)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
   np = desc.np
@@ -543,7 +545,7 @@ function params(d::Descriptor=GTPSA.desc_current)::Vector{TPS}
   mad_tpsa_seti!(t1.tpsa, Cint(nv+1), 0.0, 1.0)
   k[1] = t1
   for i=nv+2:nv+np
-    t = TPS(use=d)
+    t = TPS(use=use)
     mad_tpsa_seti!(t.tpsa, Cint(i), 0.0, 1.0)
     k[i-nv] = t
   end
@@ -552,19 +554,19 @@ end
 
 
 """
-    complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
+    complexvars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
 
-Returns `ComplexTPS`s corresponding to the variables for the `Descriptor`.
-Default value is the most recently-defined `Descriptor`.
+Returns `ComplexTPS`s corresponding to the variables for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
 
 ### Input
-- `d` -- TPSA `Descriptor`
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `x` -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
+- `x`   -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
-function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
-  ct1 = ComplexTPS(use=d)
+function complexvars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+  ct1 = ComplexTPS(use=use)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
   if nv < 1
@@ -574,7 +576,7 @@ function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1[1] = 1.0
   x[1] = ct1
   for i=2:nv
-    ct = ComplexTPS(use=d)
+    ct = ComplexTPS(use=use)
     mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
     x[i] = ct
   end
@@ -582,19 +584,19 @@ function complexvars(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
 end
 
 """
-    complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
+    complexparams(;d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
 
-Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor`.
-Default value is the most recently-defined `Descriptor`.
+Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
 
 ### Input
-- `d` -- TPSA `Descriptor`
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `k` -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
+- `k`   -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
-function complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
-  ct1 = ComplexTPS(use=d)
+function complexparams(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+  ct1 = ComplexTPS(use=use)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
   np = desc.np
@@ -605,7 +607,7 @@ function complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
   mad_ctpsa_seti!(ct1.tpsa, Cint(nv+1), ComplexF64(0.0), ComplexF64(1.0))
   k[1] = ct1
   for i=nv+2:nv+np
-    ct = ComplexTPS(use=d)
+    ct = ComplexTPS(use=use)
     mad_ctpsa_seti!(ct.tpsa, Cint(i), ComplexF64(0.0), ComplexF64(1.0))
     k[i-nv] = ct
   end
@@ -692,18 +694,18 @@ TPS:
    1.0000000000000000e+00    2        1    0    0    0    1
 ```
 """
-function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Descriptor=GTPSA.desc_current)::TPS
+function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::TPS
   return low_mono(use, v, param, params)
 end
 
 # Variable/parameter:
-function low_mono(d::Descriptor, v::Integer, param::Nothing, params::Nothing)::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::TPS
   t = TPS(use=d)
   mad_tpsa_seti!(t.tpsa, Cint(v), 0.0, 1.0)
   return t
 end
 
-function low_mono(d::Descriptor, v::Nothing, param::Integer, params::Nothing)::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::TPS
   t = TPS(use=d)
   desc = unsafe_load(mad_tpsa_desc(t.tpsa))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
@@ -712,41 +714,41 @@ function low_mono(d::Descriptor, v::Nothing, param::Integer, params::Nothing)::T
 end
 
 # Default to scalar value if nothing passed
-function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Nothing)::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::TPS
   t = TPS(use=d)
   t[0] = 1.0
   return t
 end
 
 # Monomial by order:
-function low_mono(d::Descriptor, v::Vector{<:Integer}, param::Nothing, params::Nothing)::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::TPS
   t = TPS(use=d)
   t[v...] = 1.0
   return t
 end
 
 # Monomial by sparse monomial:
-function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
   t = TPS(use=d)
   t[v..., params=params] = 1.0
   return t
 end
 
-function low_mono(d::Descriptor, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::TPS
   t = TPS(use=d)
   # Need to create array of orders with length nv + np
   t[v...] = 1.0
   return t
 end
 
-function low_mono(d::Descriptor, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
   t = TPS(use=d)
   t[params=params] = 1.0
   return t
 end
 
 # Throw error if no above use cases satisfied:
-function low_mono(d::Descriptor, v, param, params)
+function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 

@@ -44,7 +44,7 @@ hessian(..., include_params=true);  hessian!(..., include_params=true);
 ```@repl
 using GTPSA; #hide
 d = Descriptor(2,10);
-x = vars(d);
+x = vars(use=d);
 f = x[1] + 2*x[2] + 3*x[1]^2 + 4*x[1]*x[2] + 5*x[2]^2;
 g = 5*x[1] + 4*x[2] + 3*x[1]^2 + 2*x[1]*x[2] + x[2]^2;
 grad = gradient(f)

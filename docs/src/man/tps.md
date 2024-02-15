@@ -3,12 +3,7 @@
 ```TPS <: Real```
 ## Syntax
 ```
-t = TPS()
-t = TPS(real)
-
-t = TPS(..., use=descriptor)
-t = TPS(..., use=tps)
-t = TPS(..., use=complextps)
+t = TPS([real] [, use=(descriptor|tps|complextps)])
 ```
 
 ## Description
@@ -16,13 +11,11 @@ t = TPS(..., use=complextps)
 
 `t = TPS(real)` creates a new `TPS` equal to `real` using the `Descriptor` in `GTPSA.desc_current`
 
-### Optional Argument
+### Optional Keyword Argument
 
-`t = TPS(..., use=descriptor)` creates a new `TPS` using any of the above methods, but having a `Descriptor` equal to that specified in `use`
+`use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed. Invalid monomials will be removed if necessary
 
-`t = TPS(..., use=tps)` creates a new `TPS` using any of the above methods, but having a `Descriptor` equal to that used by the passed `TPS`
-
-`t = TPS(..., use=complextps)` creates a new `TPS` using any of the above methods, but having a `Descriptor` equal to that used by the passed  `ComplexTPS`
+`use=(tps|complextps)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
 
 
 ## Examples

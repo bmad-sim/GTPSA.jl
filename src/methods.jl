@@ -94,7 +94,7 @@ alternatively any monomial specified by indexing-by-order OR indexing-by-sparse 
 ```julia-repl
 julia> d = Descriptor(1,5,1,5);
 
-julia> x1 = vars(d)[1]; k1 = params(d)[1];
+julia> x1 = vars(use=d)[1]; k1 = params(use=d)[1];
 
 julia> deriv(x1*k1, 1)
 TPS:
@@ -239,7 +239,7 @@ is negative, will cut monomials with orders at and below `abs(order)`.
 ```julia-repl
 julia> d = Descriptor(1,10);
 
-julia> x = vars(d);
+julia> x = vars(use=d);
 
 julia> cutord(sin(x[1]), 5)
 TPS:
@@ -280,7 +280,7 @@ of the scalar functions `f` and `g`. The Poisson bracket of two functions `{f, g
 ```julia-repl
 julia> d = Descriptor(4,10);
 
-julia> x = vars(d);
+julia> x = vars(use=d);
 
 julia> f = (x[1]^2 + x[2]^2)/2 + (x[3]^2 + x[4]^2)/2;
 

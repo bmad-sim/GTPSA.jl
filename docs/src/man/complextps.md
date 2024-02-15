@@ -3,14 +3,9 @@
 ```ComplexTPS <: Number```
 ## Syntax
 ```
-ct = ComplexTPS()
-ct = ComplexTPS(number)
+ct = ComplexTPS([number] [, use=(descriptor|tps|complextps)])
 
-ct = ComplexTPS(real1, real2)
-
-ct = ComplexTPS(..., use=descriptor)
-ct = ComplexTPS(..., use=tps)
-ct = ComplexTPS(..., use=complextps)
+ct = ComplexTPS([real1, real2] [, use=(descriptor|tps|complextps)])
 ```
 
 ## Description
@@ -21,13 +16,11 @@ ct = ComplexTPS(..., use=complextps)
 
 `ct = ComplexTPS(real1, real2)` creates a new `ComplexTPS` equal to `complex(real1, real2)` using the `Descriptor` in `GTPSA.desc_current`
 
-### Optional Argument
+### Optional Keyword Argument
 
-`ct = ComplexTPS(..., use=descriptor)` creates a new `ComplexTPS` using any of the above methods, but having a `Descriptor` equal to that specified in `use`
+`use=descriptor` creates a new `ComplexTPS` having a `Descriptor` equal to that passed. Invalid monomials will be removed if necessary
 
-`ct = ComplexTPS(..., use=tps)` creates a new `ComplexTPS` using any of the above methods, but having a `Descriptor` equal to that used by the passed `TPS`
-
-`ct = ComplexTPS(..., use=complextps)` creates a new `ComplexTPS` using any of the above methods, but having a `Descriptor` equal to that used by the passed  `ComplexTPS`
+`use=(tps|complextps)` creates a new `ComplexTPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
 
 
 
