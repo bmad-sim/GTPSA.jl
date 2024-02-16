@@ -358,9 +358,8 @@ julia> lb(A,F)
 ```
 """
 function lb(A::Vector{<:Union{TPS,ComplexTPS}}, F::Vector{<:Union{TPS,ComplexTPS}})
-  descA = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(A[1].tpsa).d))
-  descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
-  if length(A) != descA.nv || length(F) != descF.nv
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(A[1].tpsa).d))
+  if length(A) != desc.nv || length(F) != desc.nv
     error("Vector length != number of variables in the GTPSA")
   end
   A1, F1 = promote(A, F)
@@ -471,9 +470,10 @@ exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
 """
-    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
 
-Calculates `exp(F⋅∇)m = m + F⋅∇m + (F⋅∇)²m/2! + ...`
+Calculates `exp(F⋅∇)m = m + F⋅∇m + (F⋅∇)²m/2! + ...`. If `m` is not provided, it is assumed 
+to be the identity. 
 
 # Example
 
@@ -497,7 +497,7 @@ julia> map = exppb(-time*hf, [x, p])
    2:   9.9001665555952378e-01      1      0   1
 ```
 """
-function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}})
+function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
   descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
@@ -516,20 +516,37 @@ logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{
 logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_logpb!(na, ma, mb, mc))
 
 """
-    logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
+    logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
+
+Given a final map `mf` and initial map `mi`, this function calculates the vector field `F`
+such that `mf=exp(F⋅∇)mi`. If `mi` is not provided, it is assumed to be the identity.
+
+```julia-repl
+julia> d = Descriptor(2,10); x = vars()[1]; p = vars()[2];
+
+julia> time = 0.01; k = 2; m = 0.01;
+
+julia> h = p^2/(2m) + 1/2*k*x^2;
+
+julia> hf = getvectorfield(h);
+
+julia> map = exppb(-time*hf);
+
+julia> logpb(map) == -time*hf
+true
+```
 """
-function logpb(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  descma = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
-  descmb = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mb[1].tpsa).d))
-  if length(ma) != descma.nv || length(mb) != descmb.nv
+function logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(mf)))
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mf[1].tpsa).d))
+  if length(mf) != desc.nv || length(mi) != desc.nv
     error("Vector length != number of variables in the GTPSA")
   end
-  ma1, mb1 = promote(ma, mb)
+  ma1, mb1 = promote(mf, mi)
   m1 = map(t->t.tpsa, ma1) 
   m2 = map(t->t.tpsa, mb1) 
   mc = zero.(ma1)
   m3 = map(t->t.tpsa, mc)
-  GC.@preserve ma1 mb1 logpb!(Cint(length(ma)), m1, m2, m3)  
+  GC.@preserve ma1 mb1 logpb!(Cint(length(mf)), m1, m2, m3)  
   return mc
 end
 

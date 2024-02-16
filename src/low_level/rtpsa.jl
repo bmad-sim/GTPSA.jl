@@ -1818,7 +1818,8 @@ end
 """
     mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
 
-Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`.
+Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`; the result 
+is the vector field `F` used to evolve to `ma` from `mb`.
 
 ### Input
 - `na` -- Length of `ma` and `mb`
