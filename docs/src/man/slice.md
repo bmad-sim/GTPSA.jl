@@ -35,8 +35,7 @@ f = par(tps, param=param_idx)
 
 f = par(tps, orders)
 
-f = par(tps, vars_sparse_mono)
-f = par(tps, vars_sparse_mono, params=params_sparse_mono)
+f = par(tps [, vars_sparse_mono] [, params=params_sparse_mono])
 ```
 
 ### Description

@@ -2,18 +2,14 @@
 *Extracts specific partial derivatives from a TPS*
 ## Syntax
 ```
-grad = gradient(f)
-gradient!(grad, f)
+grad = gradient(f [, include_params=bool])
+gradient!(grad, f [, include_params=bool])
 
-J = jacobian(F)
-jacobian!(J, F)
+J = jacobian(F [, include_params=bool])
+jacobian!(J, F [, include_params=bool])
 
-H = hessian(f)
-hessian!(H, f)
-
-gradient(..., include_params=true); gradient!(..., include_params=true);
-jacobian(..., include_params=true); jacobian!(..., include_params=true);
-hessian(..., include_params=true);  hessian!(..., include_params=true);
+H = hessian(f [, include_params=bool])
+hessian!(H, f [, include_params=bool])
 ```
 
 ## Description

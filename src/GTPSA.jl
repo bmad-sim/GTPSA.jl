@@ -60,6 +60,7 @@ import Base:  +,
               show
 
 import LinearAlgebra: norm
+import SpecialFunctions: erf, erfc
 
 using GTPSA_jll, Printf, PrettyTables
 
