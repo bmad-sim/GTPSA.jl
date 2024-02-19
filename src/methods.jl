@@ -56,14 +56,14 @@ integ!(tpsa1::Ptr{RTPSA},  tpsa::Ptr{RTPSA}, var::Cint) = (@inline; mad_tpsa_int
 integ!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_integ!(ctpsa1, ctpsa, var))
 
 """
-    integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
-    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+    integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
+    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)
 
 Integrates `t1` wrt the variable `var`. Integration wrt 
 parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)::typeof(t1)
+function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
   t = zero(t1)
   integ!(t1.tpsa, t.tpsa, Cint(var))
   return t
@@ -153,13 +153,13 @@ function deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pai
 end
 
 # Variable/parameter:
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)
   t = zero(t1)
   deriv!(t1.tpsa, t.tpsa, convert(Cint, v))
   return t
 end
 
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)
   t = zero(t1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
@@ -168,19 +168,19 @@ function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params
 end
 
 # Default to first variable if nothing passed:
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)
   return low_deriv(t1, 1, nothing, nothing)
 end
 
 # Monomial by order:
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)
   t = zero(t1)
   derivm!(t1.tpsa, t.tpsa, Cint(length(v)), convert(Vector{Cuchar}, v))
   return t
 end
 
 # Monomial by sparse monomial:
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v,params=params)
@@ -188,7 +188,7 @@ function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integ
   return t
 end
 
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,v)
@@ -196,7 +196,7 @@ function low_deriv(t1::Union{TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integ
   return t
 end
 
-function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::typeof(t1)
+function low_deriv(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})
   t = zero(t1)
   # Need to create array of orders with length nv + np
   ords, n = pairs_to_m(t1,Pair{Int,Int}[],params=params)
@@ -215,22 +215,22 @@ end
 # Low-level equivalent calls for TPS and ComplexTPS:
 getord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cuchar) = (@inline;  mad_tpsa_getord!(tpsa1, tpsa, order))
 getord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cuchar) = (@inline;  mad_ctpsa_getord!(ctpsa1, ctpsa, order))
-cutord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cuchar) = (@inline;  mad_tpsa_cutord!(tpsa1, tpsa, order))
-cutord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cuchar) = (@inline;  mad_ctpsa_cutord!(ctpsa1, ctpsa, order))
+cutord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cint) = (@inline;  mad_tpsa_cutord!(tpsa1, tpsa, order))
+cutord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cint) = (@inline;  mad_ctpsa_cutord!(ctpsa1, ctpsa, order))
 
 """
-    getord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
+    getord(t1::Union{TPS, ComplexTPS}, order::Integer)
 
 Extracts one homogenous polynomial from `t1` of the given order.
 """
-function getord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
+function getord(t1::Union{TPS, ComplexTPS}, order::Integer)
   t = zero(t1)
   getord!(t1.tpsa, t.tpsa, convert(Cuchar, order))
   return t
 end
 
 """
-    cutord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
+    cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
 
 Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`.
@@ -255,8 +255,11 @@ TPS:
    2.7557319223985893e-06    9        9
 ```
 """
-function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)::typeof(t1)
+function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
   t = zero(t1)
+  if order == 0
+    return t
+  end
   cutord!(t1.tpsa, t.tpsa, convert(Cint, order))
   return t
 end
@@ -636,12 +639,12 @@ pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{
 pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint}) = (@inline; mad_ctpsa_pminv!(na, ma, mc, select))
 
 """
-    pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+    ptinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
 
 Partially-inverts the map `ma`, inverting only the variables specified by index
 in `vars`.
 """
-function pinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
+function ptinv(ma::Vector{<:Union{TPS,ComplexTPS}}, vars::Vector{<:Integer})
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(ma[1].tpsa).d))
   if length(ma) != desc.nv
     error("Map length != number of variables in the GTPSA")

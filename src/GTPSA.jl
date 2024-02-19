@@ -40,6 +40,7 @@ import Base:  +,
               asech ,
               acoth ,
               zero  ,
+              one   ,
               real  ,
               imag  ,
               conj  ,
@@ -57,7 +58,8 @@ import Base:  +,
               !=,
               isequal,
               show
-  
+
+import LinearAlgebra: norm
 
 using GTPSA_jll, Printf, PrettyTables
 
@@ -71,7 +73,7 @@ export
   asinc ,
   asinhc,
   erf   ,
-  erfc ,
+  erfc  ,
   norm,
   polar,
   rect, 
@@ -106,9 +108,10 @@ export
   exppb,
   logpb,
   fgrad,
-  pinv,
+  ptinv,
   translate,
   par,
+  scalar,
   
   # Temporaries:
   @FastGTPSA,
@@ -805,6 +808,11 @@ function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t
   if Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d) == newd.desc
     return type(t1)
   end
+
+  # THE NUMBER OF VARIABLES and PARAMETERS MUST AGREE!!!
+  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).nv == unsafe_load(newd.desc).nv || error("Number of variables in GTPSAs do not agree!")
+  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).np == unsafe_load(newd.desc).np || error("Number of parameters in GTPSAs do not agree!")
+
   t = type(use=newd)
   change!(t, t1, 0, scl2)
   return t
@@ -854,9 +862,9 @@ Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an Abs
 Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
 
 
-promote_rule(::Type{TPS}, ::Union{Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = TPS
-promote_rule(::Type{ComplexTPS}, ::Union{Type{Complex},Type{AbstractFloat}, Type{Integer}, Type{Rational}, Type{AbstractIrrational}}) = ComplexTPS
-promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
+promote_rule(::Type{TPS}, ::Union{Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = TPS
+promote_rule(::Type{ComplexTPS}, ::Union{Type{Complex{<:Real}},Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = ComplexTPS
+promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex{<:Real}}}) = ComplexTPS
 
 # Handle bool which is special for some reason
 +(t::TPS, z::Complex{Bool}) = t + Complex{Int}(z)
@@ -869,5 +877,4 @@ promote_rule(::Type{TPS}, ::Union{Type{ComplexTPS}, Type{Complex}}) = ComplexTPS
 /(z::Complex{Bool}, t::TPS) = Complex{Int}(z) / t
 ^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
 ^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
-
 end

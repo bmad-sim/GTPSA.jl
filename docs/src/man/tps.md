@@ -13,10 +13,9 @@ t = TPS([real] [, use=(descriptor|tps|complextps)])
 
 ### Optional Keyword Argument
 
-`use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed. Invalid monomials will be removed if necessary
+`use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed. The number of variables/parameters in the GTPSAs must agree, and if so then invalid monomials will be removed if necessary.
 
-`use=(tps|complextps)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
-
+`use=(tps|complextps)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`. The number of variables/parameters in the GTPSAs must agree, and if so then invalid monomials will be removed if necessary.
 
 ## Examples
 ```@repl desc
