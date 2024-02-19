@@ -15,7 +15,7 @@ GTPSA provides several advantages over current Julia AD packages:
 4. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
 5. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
 
-See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 56 inputs and 4 outputs. **We observed GTPSA to be nearly x4 faster than ForwardDiff to 2nd order, and x19 faster to 3rd order in our [example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/taylormap.jl).**
+See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs. **We observed GTPSA to be nearly x3 faster than ForwardDiff to 2nd order, and x15 faster to 3rd order in our example.**
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
