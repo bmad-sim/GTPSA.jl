@@ -1179,8 +1179,8 @@ end
   h2 = hessian(map[2],include_params=true)
   h3 = hessian(map[3],include_params=true)
   h4 = hessian(map[4],include_params=true)
-  h4 = hessian(map[5],include_params=true)
-  h4 = hessian(map[6],include_params=true)
+  h5 = hessian(map[5],include_params=true)
+  h6 = hessian(map[6],include_params=true)
 
 
   @test all(abs.(j - jFD) .< tol)
