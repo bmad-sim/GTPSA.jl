@@ -10,7 +10,7 @@ Truncated Power Series Algebra (TPSA) performs forward-mode automatic differenta
 GTPSA provides several advantages over current Julia AD packages:
 
 1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has similar performance at 1st-order
-2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of ``f(x_1,x_2)`` to 2nd order in ``x_1`` and 6th order in ``x_2`` is done trivially in GTPSA
+2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is done trivially in GTPSA
 3. **Complex Numbers**: GTPSA natively supports complex numbers, and allows for mixing of complex and real truncated power series
 4. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
 5. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
