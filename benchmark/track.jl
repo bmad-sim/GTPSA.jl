@@ -38,13 +38,13 @@ function track_qf(z0, k1, hkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(hkick))}(undef, length(z0))
   lbend=0.1
 
-  L  =  0.5/(1.0+z0[6])
-  h  =  -L*(z0[2]^2+k1*z0[1]^2+ z0[4]^2-k1*z0[3]^2)/(1.0+z0[6])/2.0
-  z[1] =  cos(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
-  z[2] =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[1]+cos(sqrt(k1)*L)*z0[2]+hkick+lbend*z0[6]
-  z[3] =  cosh(sqrt(k1)*L)*z0[3]+1/sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
-  z[4] =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[3]+cosh(sqrt(k1)*L)*z0[4]
-  z[5] =  z0[5]+h-lbend*z[1]
+  L  = @FastGTPSA 0.5/(1.0+z0[6])
+  h  = @FastGTPSA -L*(z0[2]^2+k1*z0[1]^2+ z0[4]^2-k1*z0[3]^2)/(1.0+z0[6])/2.0
+  z[1] = @FastGTPSA cos(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
+  z[2] = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[1]+cos(sqrt(k1)*L)*z0[2]+hkick+lbend*z0[6]
+  z[3] = @FastGTPSA cosh(sqrt(k1)*L)*z0[3]+1/sqrt(k1)*sinh(sqrt(k1)*L)*z0[4]
+  z[4] = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[3]+cosh(sqrt(k1)*L)*z0[4]
+  z[5] = @FastGTPSA z0[5]+h-lbend*z[1]
   z[6] = +z0[6]
   return z
 end
@@ -52,13 +52,13 @@ end
 function track_qd(z0, k1, vkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(vkick))}(undef, length(z0))
 
-  L  =  0.5/(1.0+z0[6])
-  h  =  -L*(z0[2]^2-k1*z0[1]^2+z0[4]^2+k1*z0[3]^2)/(1.0+z0[6])/2.0
-  z[1] =  cosh(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
-  z[2] =  sqrt(k1)*sinh(sqrt(k1)*L)*z0[1]+cosh(sqrt(k1)*L)*z0[2]
-  z[3] =  cos(sqrt(k1)*L)*z0[3]+1/sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
-  z[4] =  -sqrt(k1)*sin(sqrt(k1)*L)*z0[3]+cos(sqrt(k1)*L)*z0[4]+vkick 
-  z[5] =  z0[5]+h
+  L  = @FastGTPSA 0.5/(1.0+z0[6])
+  h  = @FastGTPSA -L*(z0[2]^2-k1*z0[1]^2+z0[4]^2+k1*z0[3]^2)/(1.0+z0[6])/2.0
+  z[1] = @FastGTPSA cosh(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
+  z[2] = @FastGTPSA sqrt(k1)*sinh(sqrt(k1)*L)*z0[1]+cosh(sqrt(k1)*L)*z0[2]
+  z[3] = @FastGTPSA cos(sqrt(k1)*L)*z0[3]+1/sqrt(k1)*sin(sqrt(k1)*L)*z0[4]
+  z[4] = @FastGTPSA -sqrt(k1)*sin(sqrt(k1)*L)*z0[3]+cos(sqrt(k1)*L)*z0[4]+vkick 
+  z[5] = @FastGTPSA z0[5]+h
   z[6] = +z0[6]
   return z
 end
@@ -67,11 +67,11 @@ function track_drift(z0)
   z = Vector{eltype(z0)}(undef, length(z0))
 
   L = 0.75
-  z[1] =  z0[1]+z0[2]*L/(1.0+z0[6])
+  z[1] = @FastGTPSA z0[1]+z0[2]*L/(1.0+z0[6])
   z[2] = +z0[2]
-  z[3] =  z0[3]+z0[4]*L/(1.0+z0[6])
+  z[3] = @FastGTPSA z0[3]+z0[4]*L/(1.0+z0[6])
   z[4] = +z0[4]
-  z[5] =  z0[5]-L*((z0[2]^2)+(z0[4]^2))/(1.0+z0[6])^2/2.0
+  z[5] = @FastGTPSA z0[5]-L*((z0[2]^2)+(z0[4]^2))/(1.0+z0[6])^2/2.0
   z[6] = +z0[6] 
   return z
 end
@@ -84,7 +84,7 @@ function track_cav(z0)
   z[3] = +z0[3]
   z[4] = +z0[4]
   z[5] = +z0[5]
-  z[6] =  z0[6]+0.0001*z0[5]
+  z[6] = @FastGTPSA z0[6]+0.0001*z0[5]
   return z
 end
 
@@ -92,9 +92,9 @@ function track_sextupole(z0, k2l)
   z = Vector{promote_type(eltype(z0),typeof(k2l))}(undef, length(z0))
   
   z[1] = +z0[1]
-  z[2] =  z0[2]-k2l*(z0[1]^2-z0[3]^2)
+  z[2] = @FastGTPSA z0[2]-k2l*(z0[1]^2-z0[3]^2)
   z[3] = +z0[3]
-  z[4] =  z0[4]+k2l*2.0*z0[1]*z0[3]
+  z[4] = @FastGTPSA z0[4]+k2l*2.0*z0[1]*z0[3]
   z[5] = +z0[5]
   z[6] = +z0[6]
   return z
