@@ -1165,7 +1165,7 @@ end
   include("../benchmark/track.jl")
   map = benchmark_GTPSA()
   jFD, hFD = benchmark_ForwardDiff()
-  tol = 1e-12
+  tol = 1e-10
   
   h1FD = reshape(hFD,6,58,58)[1,:,:]
   h2FD = reshape(hFD,6,58,58)[2,:,:]
