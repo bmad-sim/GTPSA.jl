@@ -1156,13 +1156,13 @@ end
 
 @testset "Type stability" begin
   include("type_stable.jl")
-  include("../benchmark/taylormap.jl")
+  include("../benchmark/track.jl")
   @test_opt type_stable_test()
   @test_opt benchmark_GTPSA()
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
-  include("../benchmark/taylormap.jl")
+  include("../benchmark/track.jl")
   map = benchmark_GTPSA()
   jFD, hFD = benchmark_ForwardDiff()
   tol = 1e-12
