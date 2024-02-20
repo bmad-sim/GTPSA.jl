@@ -7,29 +7,29 @@ using BenchmarkTools: @btime, @benchmark
 # 3rd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
 # GTPSA:                  271.137 ms 
-# ForwardDiff:          4.027 s       
+# ForwardDiff:          4.004 s       
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
 # GTPSA:                  415.567 ms 
-# ForwardDiff:          3.984 s      
+# ForwardDiff:          3.916 s     
 #
 # 2nd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
 # GTPSA:                    8.599 ms 
-# ForwardDiff:             23.608 ms 
+# ForwardDiff:             23.984 ms
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
 # GTPSA:                   17.141 ms 
-# ForwardDiff:             23.692 ms 
+# ForwardDiff:             23.391 ms 
 #
 # 1st Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
 # GTPSA:                  327.458 μs 
-# ForwardDiff:            188.500 μs 
+# ForwardDiff:            189.417 μs 
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
 # GTPSA:                  707.916 μs 
-# ForwardDiff:            161.750 μs 
+# ForwardDiff:            161.833 μs 
 #
 # Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS, so it can be
 # inserted into functions while still maintaining generic code, as shown here
@@ -119,7 +119,7 @@ function track_ring(z0, k1=0.36, k2l=1.2, kick=zeros(50))
 end
 
 function benchmark_GTPSA()
-  d = Descriptor(6,2,52,2)
+  d = Descriptor(6,3,52,3)
   z = vars()
   k = params()
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
@@ -127,7 +127,7 @@ function benchmark_GTPSA()
 end
 
 function benchmark_ForwardDiff()
-  m(z) = track_ring([z[1], z[2], z[3], z[4], z[5], z[6]], 0.36+z[5], 1.2+z[6], z[7:end])
+  m(z) = track_ring([z[1], z[2], z[3], z[4], z[5], z[6]], 0.36+z[7], 1.2+z[8], z[9:end])
   j = Array{Float64}(undef,6,58)
   h = Array{Float64}(undef,348,58)
   #c = Array{Float64}(undef,20184,58)
