@@ -9,14 +9,13 @@ t = TPS([real] [, use=(descriptor|tps|complextps)])
 ## Description
 `t = TPS()` creates a new `TPS` with all coefficients equal to zero using the `Descriptor` in `GTPSA.desc_current`
 
-`t = TPS(real)` creates a new `TPS` equal to `real` using the `Descriptor` in `GTPSA.desc_current`
+`t = TPS(real)` creates a new `TPS` equal to `real`. If `real` is a `TPS`, then its `Descriptor` is used (equivalent to a copy constructor). Else, the `Descriptor` in `GTPSA.desc_current` is used
 
 ### Optional Keyword Argument
 
-`use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed. Invalid monomials will be removed if necessary
+`use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed
 
 `use=(tps|complextps)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
-
 
 ## Examples
 ```@repl desc

@@ -1,6 +1,5 @@
 using Test, JET
 using SpecialFunctions
-const SF = SpecialFunctions
 using GTPSA
 import GTPSA: Desc, RTPSA, CTPSA
 
@@ -272,9 +271,9 @@ end
   @test norm(imag(t) - imag(v)) < tol
   @test norm(conj(t) - conj(v)) < tol
   @test norm(sinhc(t/pi) - sinh(v)/v) < tol
-  @test norm(GTPSA.erf(t) - SF.erf(v)) < tol
-  @test norm(GTPSA.erfc(t) - SF.erfc(v)) < tol
-  @test norm(-im*GTPSA.erf(t*im) - SF.erfi(v)) < tol
+  @test norm(erf(t) - erf(v)) < tol
+  @test norm(erfc(t) - erfc(v)) < tol
+  @test norm(-im*erf(t*im) - erfi(v)) < tol
   
   @test norm(atan(t3,t2) - atan(3,2)) < tol
   @test norm(atan(t3,2) - atan(3,2)) < tol
@@ -356,9 +355,9 @@ end
   @test norm(imag(t) - imag(v)) < tol
   @test norm(conj(t) - conj(v)) < tol
   @test norm(sinhc(t/pi) - sinh(v)/v) < tol
-  @test norm(GTPSA.erf(t) - SF.erf(v)) < tol
-  @test norm(GTPSA.erfc(t) - SF.erfc(v)) < tol
-  @test norm(-im*GTPSA.erf(t*im) - SF.erfi(v)) < tol
+  @test norm(erf(t) - erf(v)) < tol
+  @test norm(erfc(t) - erfc(v)) < tol
+  @test norm(-im*erf(t*im) - erfi(v)) < tol
   @test norm(hypot(ct2,ct3) - hypot(2+2im,3+3im)) < tol
   @test norm(hypot(2+2im,ct3) - hypot(2+2im,3+3im)) < tol
   @test norm(hypot(ct2,3+3im) - hypot(2+2im,3+3im)) < tol
@@ -456,8 +455,8 @@ end
   @test norm(acoth(1/t) - atanh(t)) < tol
   @test norm(asinc(t/pi) - asin(t)/t) < tol
   @test norm(asinhc(t/pi) - asinh(t)/t) < tol
-  @test norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)) < tol
-  @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
+  @test norm(erfc(t) - 1 + erf(t)) < tol
+  @test norm(erf(-t) + erf(t)) < tol
   @test norm(angle(t)) < tol
   @test norm(complex(t) - t) < tol
   @test norm(complex(t,t) - (t+im*t)) < tol
@@ -510,8 +509,8 @@ end
   @test norm(asinc(t/pi) - asin(t)/t) < tol
   @test norm(asinhc(t/pi) - asinh(t)/t) < tol
   
-  @test norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t)) < tol
-  @test norm(GTPSA.erf(-t) + GTPSA.erf(t)) < tol
+  @test norm(erfc(t) - 1 + erf(t)) < tol
+  @test norm(erf(-t) + erf(t)) < tol
   @test norm(angle(t) - atan(imag(t),real(t))) < tol
   @test norm(complex(t) - t) < tol
 end
@@ -897,9 +896,9 @@ end
   @test @FastGTPSA(norm(imag(t) - imag(v))) < tol
   @test @FastGTPSA(norm(conj(t) - conj(v))) < tol
   @test @FastGTPSA(norm(sinhc(t/pi) - sinh(v)/v)) < tol
-  @test @FastGTPSA(norm(GTPSA.erf(t) - SF.erf(v))) < tol
-  @test @FastGTPSA(norm(GTPSA.erfc(t) - SF.erfc(v))) < tol
-  @test @FastGTPSA(norm(-im*GTPSA.erf(t*im) - SF.erfi(v))) < tol
+  @test @FastGTPSA(norm(erf(t) - erf(v))) < tol
+  @test @FastGTPSA(norm(erfc(t) - erfc(v))) < tol
+  @test @FastGTPSA(norm(-im*erf(t*im) - erfi(v))) < tol
   @test @FastGTPSA(norm(atan(t3,t2) - atan(3,2))) < tol
   @test @FastGTPSA(norm(atan(t3,2) - atan(3,2))) < tol
   @test @FastGTPSA(norm(atan(3,t2) - atan(3,2))) < tol
@@ -981,9 +980,9 @@ end
   @test @FastGTPSA(norm(imag(t) - imag(v))) < tol
   @test @FastGTPSA(norm(conj(t) - conj(v))) < tol
   @test @FastGTPSA(norm(sinhc(t/pi) - sinh(v)/v)) < tol
-  @test @FastGTPSA(norm(GTPSA.erf(t) - SF.erf(v))) < tol
-  @test @FastGTPSA(norm(GTPSA.erfc(t) - SF.erfc(v))) < tol
-  @test @FastGTPSA(norm(-im*GTPSA.erf(t*im) - SF.erfi(v))) < tol
+  @test @FastGTPSA(norm(erf(t) - erf(v))) < tol
+  @test @FastGTPSA(norm(erfc(t) - erfc(v))) < tol
+  @test @FastGTPSA(norm(-im*erf(t*im) - erfi(v))) < tol
   @test @FastGTPSA(norm(hypot(ct2,ct3) - hypot(2+2im,3+3im))) < tol
   @test @FastGTPSA(norm(hypot(2+2im,ct3) - hypot(2+2im,3+3im))) < tol
   @test @FastGTPSA(norm(hypot(ct2,3+3im) - hypot(2+2im,3+3im))) < tol
@@ -1088,8 +1087,8 @@ end
   @test @FastGTPSA(norm(acoth(1/t) - atanh(t))) < tol
   @test @FastGTPSA(norm(asinc(t/pi) - asin(t)/t)) < tol
   @test @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t)) < tol
-  @test @FastGTPSA(norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t))) < tol
-  @test @FastGTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t))) < tol
+  @test @FastGTPSA(norm(erfc(t) - 1 + erf(t))) < tol
+  @test @FastGTPSA(norm(erf(-t) + erf(t))) < tol
   @test @FastGTPSA(norm(angle(t))) < tol
   @test @FastGTPSA(norm(complex(t) - t)) < tol
   @test @FastGTPSA(norm(complex(t,t) - (t+im*t))) < tol
@@ -1142,8 +1141,8 @@ end
   @test @FastGTPSA(norm(asinc(t/pi) - asin(t)/t)) < tol
   @test @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t)) < tol
   
-  @test @FastGTPSA(norm(GTPSA.erfc(t) - 1 + GTPSA.erf(t))) < tol
-  @test @FastGTPSA(norm(GTPSA.erf(-t) + GTPSA.erf(t))) < tol
+  @test @FastGTPSA(norm(erfc(t) - 1 + erf(t))) < tol
+  @test @FastGTPSA(norm(erf(-t) + erf(t))) < tol
   @test @FastGTPSA(norm(angle(t) - atan(imag(t),real(t)))) < tol
   @test @FastGTPSA(norm(complex(t) - t)) < tol
 
@@ -1157,27 +1156,31 @@ end
 
 @testset "Type stability" begin
   include("type_stable.jl")
-  include("../benchmark/taylormap.jl")
+  include("../benchmark/track.jl")
   @test_opt type_stable_test()
   @test_opt benchmark_GTPSA()
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
-  include("../benchmark/taylormap.jl")
+  include("../benchmark/track.jl")
   map = benchmark_GTPSA()
   jFD, hFD = benchmark_ForwardDiff()
-  tol = 1e-12
+  tol = 1e-10
   
-  h1FD = reshape(hFD,4,56,56)[1,:,:]
-  h2FD = reshape(hFD,4,56,56)[2,:,:]
-  h3FD = reshape(hFD,4,56,56)[3,:,:]
-  h4FD = reshape(hFD,4,56,56)[4,:,:]
+  h1FD = reshape(hFD,6,58,58)[1,:,:]
+  h2FD = reshape(hFD,6,58,58)[2,:,:]
+  h3FD = reshape(hFD,6,58,58)[3,:,:]
+  h4FD = reshape(hFD,6,58,58)[4,:,:]
+  h5FD = reshape(hFD,6,58,58)[5,:,:]
+  h6FD = reshape(hFD,6,58,58)[6,:,:]
 
   j = jacobian(map,include_params=true)
   h1 = hessian(map[1],include_params=true)
   h2 = hessian(map[2],include_params=true)
   h3 = hessian(map[3],include_params=true)
   h4 = hessian(map[4],include_params=true)
+  h5 = hessian(map[5],include_params=true)
+  h6 = hessian(map[6],include_params=true)
 
 
   @test all(abs.(j - jFD) .< tol)
@@ -1185,6 +1188,8 @@ end
   @test all(abs.(h2 - h2FD) .< tol)
   @test all(abs.(h3 - h3FD) .< tol)
   @test all(abs.(h4 - h4FD) .< tol)
+  @test all(abs.(h5 - h5FD) .< tol)
+  @test all(abs.(h6 - h6FD) .< tol)
 end
 
 @testset "Compare with MAD" begin

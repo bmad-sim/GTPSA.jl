@@ -1,20 +1,21 @@
 # GTPSA.jl
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bmad-sim.github.io/GTPSA.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bmad-sim.github.io/GTPSA.jl/dev/)
 [![Build Status](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://mad.web.cern.ch/mad/releases/madng/html/mad_mod_diffalg.html), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders in the variables. 
 
-Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a fast monomial indexing function for propagating the partial derivatives, gives `GTPSA.jl` similar performance as `ForwardDiff.jl` to 1st-order, but significantly faster performance for 2nd-order calculations and above.
+Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a highly optimized monomial indexing function/storage for propagating the partial derivatives, gives `GTPSA.jl` similar performance as `ForwardDiff.jl` to 1st-order, but significantly faster performance for 2nd-order calculations and above.
 
 GTPSA provides several advantages over current Julia AD packages:
 
-1. **Speed**: By directly using the power series expansions, `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has similar performance at 1st-order
-2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is done trivially in GTPSA
+1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has similar performance at 1st-order
+2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of ``f(x_1,x_2)`` to 2nd order in ``x_1`` and 6th order in ``x_2`` is done trivially in GTPSA
 3. **Complex Numbers**: GTPSA natively supports complex numbers, and allows for mixing of complex and real truncated power series
-4. **All Taylor Coefficients Stored**: GTPSA implements an efficient monomial coefficient indexing function for high speed even with TPSs having a large number of variables to high orders
-5. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
-6. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
+4. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
+5. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
 
-See the `benchmark/taylormap.jl` example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 56 inputs and 4 outputs. **We observed GTPSA to be nearly x4 faster than ForwardDiff to 2nd order, and x19 faster to 3rd order in our [example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/taylormap.jl).**
+See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs. **We observed GTPSA to be nearly x3 faster than ForwardDiff to 2nd order, and x15 faster to 3rd order in our example.**
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run

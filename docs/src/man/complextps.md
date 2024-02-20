@@ -12,17 +12,15 @@ ct = ComplexTPS([real1, real2] [, use=(descriptor|tps|complextps)])
 
 `ct = ComplexTPS()` creates a new `ComplexTPS` with all coefficients equal to zero using the `Descriptor` in `GTPSA.desc_current`
 
-`ct = ComplexTPS(number)` creates a new `ComplexTPS` equal to `number` using the `Descriptor` in `GTPSA.desc_current`
+`ct = ComplexTPS(number)` creates a new `ComplexTPS` equal to `number`. If `number` is a `TPS`/`ComplexTPS`, then its `Descriptor` is used (equivalent to a copy constructor). Else, the `Descriptor` in `GTPSA.desc_current` is used
 
-`ct = ComplexTPS(real1, real2)` creates a new `ComplexTPS` equal to `complex(real1, real2)` using the `Descriptor` in `GTPSA.desc_current`
+`ct = ComplexTPS(real1, real2)` creates a new `ComplexTPS` equal to `complex(real1, real2)`. If `real1` or `real2` is a `TPS` then its `Descriptor` is used. Else, the `Descriptor` in `GTPSA.desc_current` is used
 
 ### Optional Keyword Argument
 
-`use=descriptor` creates a new `ComplexTPS` having a `Descriptor` equal to that passed. Invalid monomials will be removed if necessary
+`use=descriptor` creates a new `ComplexTPS` having a `Descriptor` equal to that passed
 
 `use=(tps|complextps)` creates a new `ComplexTPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
-
-
 
 ## Examples
 ```@repl desc

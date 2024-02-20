@@ -7,6 +7,19 @@ function zero(ct::ComplexTPS)::ComplexTPS
   return ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
 end
 
+# --- one ---
+function one(t::TPS)::TPS
+  t = TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
+  mad_tpsa_set0!(t.tpsa, 0.0, 1.0)
+  return t
+end
+
+function one(ct::ComplexTPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
+  mad_ctpsa_set0!(t.tpsa, ComplexF64(0.0), ComplexF64(1.0))
+  return ct
+end
+
 # --- Unary ---
 # TPS:
 function +(t1::TPS)::TPS

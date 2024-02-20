@@ -6,6 +6,8 @@ d = Descriptor(num_vars, var_order)
 d = Descriptor(var_orders)
 d = Descriptor(num_vars, var_order, num_params, param_order)   
 d = Descriptor(var_orders, param_orders)  
+
+GTPSA.desc_current = d
 ```
 
 ## Description
@@ -19,7 +21,8 @@ d = Descriptor(var_orders, param_orders)
 
 -----
 
-A `Descriptor` defines all information about the GTPSA, including the number of variables and parameters, and the truncation orders for each variable and parameter. Before any operations using TPSs, a `Descriptor` must be defined. Each time a new `Descriptor` is created, the non-constant global variable `GTPSA.desc_current` is set. If a `Descriptor` is not explicitly (or implicitly in a TPS copy constructor) passed to the TPS Constructors, `GTPSA.desc_current` will be used by default. This non-constant global can be set by the user throughout a program using multiple `Descriptor`s.
+`GTPSA.desc_current` is a global variable that is set each time a user creates a new `Descriptor`, and can also be set manually by a user. `GTPSA.desc_current` defines the `Descriptor` to use when that information is not explicitly (or implicitly in a TPS copy constructor) available, e.g. when calling `TPS(a)` where `a` is not a `TPS`. This also allows one to use general `Number` commands like `convert(TPS, a)` and `zeros(TPS, 6)`.
+
 
 ## Examples
 ```@repl desc

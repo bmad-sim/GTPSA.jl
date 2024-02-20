@@ -29,7 +29,8 @@ kc = complexparams([use=(descriptor|tps|complextps)])
 
 ## Examples
 ```@repl desc
-using GTPSA; GTPSA.show_sparse = false;   GTPSA.show_header=false;#hide
+using GTPSA; GTPSA.show_sparse = false; #hide
+GTPSA.show_header=true
 d1 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
 x1 = vars()
 k1 = params()

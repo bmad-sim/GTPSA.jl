@@ -12,6 +12,6 @@ integ
 lb
 logpb
 pb
-pinv
+ptinv
 translate
 ```

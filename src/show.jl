@@ -71,39 +71,39 @@ function show(io::IO, m::MonoDisplay)
   end
 end
 
-function format(t::TPS; coloffset=0)
+function format(t::TPS; coloffset=0, max_nn=-1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
   nn = desc.nn
 
+  if max_nn == -1
+    max_nn = nn
+  end
+
   v = Ref{Cdouble}()
   mono = Vector{UInt8}(undef, nn)
 
   if !GTPSA.show_sparse
-    if np > 0
-      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+nn)) # Coefficient, order, spacing, exponents
-    else
-      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+nn)) # Coefficient, order, spacing, exponents
-    end
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+max_nn)) # Coefficient, order, spacing, exponents
     idx = Cint(-1)
     idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
       if abs(v[]) > GTPSA.show_eps
         if np > 0
-          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])...])
+          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])... repeat([nothing], max_nn-nn)...])
         else
-          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono)...])
+          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono)... nothing repeat([nothing], max_nn-nn)...])
         end
       end
       idx = mad_tpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
       if np > 0
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)...])
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)... repeat([nothing], max_nn-nn)...])
       else
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nn)...])
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nn)... nothing repeat([nothing], max_nn-nn)...])
       end
     end
     formatters = (ft_printf("%23.16le", [coloffset+1]), ft_printf("%2i", coloffset+2:length(out[1,:])), ft_nonothing)
@@ -167,39 +167,39 @@ function show(io::IO, t::TPS)
 end
 
 
-function format(t::ComplexTPS; coloffset=0)
+function format(t::ComplexTPS; coloffset=0, max_nn=-1)
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
   nv = desc.nv
   np = desc.np
   nn = desc.nn
+  if max_nn == -1
+    max_nn = nn
+  end
+
   v = Ref{ComplexF64}()
   mono = Vector{UInt8}(undef, nn)
 
   # sparse monomial or order output
   if !GTPSA.show_sparse
-    if np > 0
-      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+1+nn)) # First col is coefficient, rest are orders
-    else
-      out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+nn)) # First col is coefficient, rest are orders
-    end
+    out = Matrix{Any}(undef, 0, (coloffset+1+1+1+1+1+1+max_nn)) # First col is coefficient, rest are orders
     idx = Cint(-1)
     idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
       if abs(v[]) > GTPSA.show_eps
         if np > 0
-          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])...])
+          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])... repeat([nothing], max_nn-nn)...])
         else
-          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono)...])
+          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono)... nothing repeat([nothing], max_nn-nn)...])
         end
       end
       idx = mad_ctpsa_cycle!(t.tpsa, idx, nn, mono, v)
     end
     if size(out)[1] == 0
       if np > 0
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)...])
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)... repeat([nothing], max_nn-nn)...])
       else
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nn)...])
+        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nn)... nothing repeat([nothing], max_nn-nn)...])
       end
     end
     formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+3:length(out[1,:])), ft_nonothing)
@@ -260,22 +260,47 @@ function show(io::IO, t::ComplexTPS)
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
-show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
-show(io::IO, ::MIME"text/plain", m::Vector{<:Union{TPS,ComplexTPS}}) = show_map(io, m)
+show(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}) = show_vec(io, m)
+show(io::IO, ::MIME"text/plain", m::Vector{<:Union{TPS,ComplexTPS}}) = show_vec(io, m)
 
-function show_map(io::IO, m::Vector{TPS})
+function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
   N = length(m)
   if N < 1
-    print(io, "TPS[]")
+    print(io, "$(eltype(m))[]")
     return
   end
-  println(io, N, "-element Vector{TPS}:")
+  println(io, N, "-element $(typeof(m)):")
   for i in eachindex(m)
     if !isassigned(m, i)
-      println(io, "\n\tAtleast one TPS in the Vector is undefined!")
+      println(io, "\n\tAtleast one $(eltype(m)) is undefined!")
       return
     end
   end
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  diffdescs = false
+  for i in eachindex(m)
+    if desc != unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
+      println(io, "WARNING: Atleast one $(eltype(m)) has a different Descriptor!")
+      diffdescs = true
+    end
+  end
+  extralines=0
+  if GTPSA.show_header
+    if diffdescs
+      println(io, "Cannot show GTPSA header (non-unique Descriptor).")
+    else
+      println(io, "-----------------------")
+      show_GTPSA_info(io, desc)
+      println(io, "-----------------------")
+      extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+    end
+  end
+  show_map(io, m, extralines)
+end
+
+# WARNING: only_vars should ONLY be set by developers who know what they're doing!
+function show_map(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, extralines=0, only_vars=false)
+  N = only_vars ? min(unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d)).nv,length(m)) : length(m)
   tf_GTPSA = TextFormat(up_right_corner     = '-',
                        up_left_corner      = '-',
                        bottom_left_corner  = ' ',
@@ -289,81 +314,39 @@ function show_map(io::IO, m::Vector{TPS})
                        row                 = '-',
                        hlines              = [])#,
                        #vlines             =[]);
+
+
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  max_nn = desc.nv + desc.np
+  for i in eachindex(m)
+    curdesc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
+    if only_vars && (desc.nv != curdesc.nv)
+      error("Cannot use only_vars = true for vector with TPSs having different number of variables")
+    end
+    max_nn = max(max_nn, curdesc.nv+curdesc.np)
+  end
   hlines = Int[0]
-  out, formatters = format(m[1], coloffset=1)
+  out, formatters = format(m[1], coloffset=1, max_nn=max_nn)
   out[:,1] .= 1
   for i=2:N
     push!(hlines, length(out[:,1]))
-    tmpout, __ = format(m[i],coloffset=1)
+    tmpout, __ = format(m[i],coloffset=1, max_nn=max_nn)
     tmpout[:,1] .= i
     out = vcat(out, tmpout)
   end
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
-  extralines=0
-  if GTPSA.show_header
-    println(io, "-----------------------")
-    show_GTPSA_info(io, desc)
-    println(io, "-----------------------")
-    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
-  end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
-    println(io, "  Out  Coefficient                Order   Monomial")
+    if eltype(m) == TPS
+      println(io, "  Out  Coefficient                Order   Monomial")
+    else # ComplexTPS
+      println(io, "  Out  Real                     Imag                       Order   Monomial")
+    end
   else
-    println(io, "  Out  Coefficient                Order   Exponent")
-  end
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
-end
-
-function show_map(io::IO,  m::Vector{ComplexTPS})  
-  N = length(m)
-  if N < 1
-    print(io, "ComplexTPS[]")
-    return
-  end
-  println(io, N, "-element Vector{ComplexTPS}:")
-  for i in eachindex(m)
-    if !isassigned(m, i)
-      println(io, "\n\tAtleast one ComplexTPS in the Vector is undefined!")
-      return
+    if eltype(m) == TPS
+      println(io, "  Out  Coefficient                Order   Exponent")
+    else
+      println(io, "  Out  Real                     Imag                       Order   Exponent")
     end
   end
-  tf_GTPSA = TextFormat(up_right_corner     = '-',
-                       up_left_corner      = '-',
-                       bottom_left_corner  = ' ',
-                       bottom_right_corner = ' ',
-                       up_intersection     = '-',
-                       left_intersection   = '-',
-                       right_intersection  = ' ',
-                       middle_intersection = ' ',
-                       bottom_intersection = ' ',
-                       column              = ' ',
-                       row                 = '-',
-                       hlines              = [])#,
-                       #vlines              = :all);
-  hlines = Int[0]
-  out, formatters = format(m[1], coloffset=1)
-  out[:,1] .= 1
-  for i=2:N
-    push!(hlines, length(out[:,1]))
-    tmpout, __ = format(m[i],coloffset=1)
-    tmpout[:,1] .= i
-    out = vcat(out, tmpout)
-  end
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
-  extralines=0
-  if GTPSA.show_header
-    println(io, "-----------------------")
-    show_GTPSA_info(io, desc)
-    println(io, "-----------------------")
-    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
-  end
-  # Check if sparse monomial or exponent:
-  if GTPSA.show_sparse
-    println(io, "  Out  Real                     Imag                       Order   Monomial")
-  else
-    println(io, "  Out  Real                     Imag                       Order   Exponent")
-  end
-  
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
