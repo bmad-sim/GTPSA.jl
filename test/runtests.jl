@@ -1167,16 +1167,20 @@ end
   jFD, hFD = benchmark_ForwardDiff()
   tol = 1e-12
   
-  h1FD = reshape(hFD,4,56,56)[1,:,:]
-  h2FD = reshape(hFD,4,56,56)[2,:,:]
-  h3FD = reshape(hFD,4,56,56)[3,:,:]
-  h4FD = reshape(hFD,4,56,56)[4,:,:]
+  h1FD = reshape(hFD,6,58,58)[1,:,:]
+  h2FD = reshape(hFD,6,58,58)[2,:,:]
+  h3FD = reshape(hFD,6,58,58)[3,:,:]
+  h4FD = reshape(hFD,6,58,58)[4,:,:]
+  h5FD = reshape(hFD,6,58,58)[5,:,:]
+  h6FD = reshape(hFD,6,58,58)[6,:,:]
 
   j = jacobian(map,include_params=true)
   h1 = hessian(map[1],include_params=true)
   h2 = hessian(map[2],include_params=true)
   h3 = hessian(map[3],include_params=true)
   h4 = hessian(map[4],include_params=true)
+  h4 = hessian(map[5],include_params=true)
+  h4 = hessian(map[6],include_params=true)
 
 
   @test all(abs.(j - jFD) .< tol)
@@ -1184,6 +1188,8 @@ end
   @test all(abs.(h2 - h2FD) .< tol)
   @test all(abs.(h3 - h3FD) .< tol)
   @test all(abs.(h4 - h4FD) .< tol)
+  @test all(abs.(h5 - h5FD) .< tol)
+  @test all(abs.(h6 - h6FD) .< tol)
 end
 
 @testset "Compare with MAD" begin
