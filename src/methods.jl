@@ -261,6 +261,19 @@ function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
   return t
 end
 
+# --- scalar ---
+
+"""
+    scalar(t::Union{TPS,ComplexTPS})
+
+Extracts the scalar part of the TPS. Equivalent to `t[0]` but 
+this can be easily broadcasted.
+"""
+function scalar(t::Union{TPS,ComplexTPS})
+  return t[0]
+end
+
+
 # --- Poisson bracket ---
 # Low-level calls
 poisbra!(tpsa1::Ptr{RTPSA}, tpsa2::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, nv::Cint) = (@inline; mad_tpsa_poisbra!(tpsa1, tpsa2, tpsa, nv))

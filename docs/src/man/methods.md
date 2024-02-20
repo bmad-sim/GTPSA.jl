@@ -13,5 +13,6 @@ lb
 logpb
 pb
 ptinv
+scalar
 translate
 ```
