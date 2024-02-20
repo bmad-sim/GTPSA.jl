@@ -256,8 +256,6 @@ end
 Cuts the TPSA off at the given order and above, or if `ord` is negative, will cut orders below 
 `abs(ord)` (e.g. if `ord` = -3, then orders 0-3 are cut off).
 
-DANGER!!! As of GTPSA_jll v1.1.4, if ord is 0, memory is corrupted!!!
-
 ### Input
 - `t`   -- Source complex TPSA
 - `ord` -- Cut order: `0..-ord` or `ord..mo`

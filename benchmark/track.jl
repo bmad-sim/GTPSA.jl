@@ -132,7 +132,7 @@ function benchmark_ForwardDiff()
   h = Array{Float64}(undef,348,58)
   #c = Array{Float64}(undef,20184,58)
   ForwardDiff.jacobian!(j, m, zeros(58))
-  #ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(58))
+  ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(58))
   #ForwardDiff.jacobian!(c, z->ForwardDiff.jacobian(z->ForwardDiff.jacobian(z->m(z), z), z), zeros(58))
   return j, h #, c
 end

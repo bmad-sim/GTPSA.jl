@@ -257,9 +257,6 @@ TPS:
 """
 function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
   t = zero(t1)
-  if order == 0
-    return t
-  end
   cutord!(t1.tpsa, t.tpsa, convert(Cint, order))
   return t
 end
