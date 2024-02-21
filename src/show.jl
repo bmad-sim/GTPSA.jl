@@ -265,11 +265,13 @@ show(io::IO, ::MIME"text/plain", m::Vector{<:Union{TPS,ComplexTPS}}) = show_vec(
 
 function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
   N = length(m)
+  lines_used=Ref{Int}(0)
   if N < 1
     print(io, "$(eltype(m))[]")
     return
   end
   println(io, N, "-element $(typeof(m)):")
+  lines_used[] += 1
   for i in eachindex(m)
     if !isassigned(m, i)
       println(io, "\n\tAtleast one $(eltype(m)) is undefined!")
@@ -282,25 +284,28 @@ function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
     if desc != unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
       println(io, "WARNING: Atleast one $(eltype(m)) has a different Descriptor!")
       diffdescs = true
+      lines_used[] += 1
     end
   end
-  extralines=0
   if GTPSA.show_header
     if diffdescs
       println(io, "Cannot show GTPSA header (non-unique Descriptor).")
+      lines_used[] += 1
     else
       println(io, "-----------------------")
       show_GTPSA_info(io, desc)
       println(io, "-----------------------")
-      extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
+      lines_used[] += 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
     end
   end
-  show_map(io, m, extralines)
+  show_map!(io, m, lines_used)
 end
 
 # WARNING: only_vars should ONLY be set by developers who know what they're doing!
-function show_map(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, extralines=0, only_vars=false)
+# Same for varnames!
+function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=Ref{Int}(0), only_vars=false, varnames=1:length(m))
   N = only_vars ? min(unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d)).nv,length(m)) : length(m)
+  length(varnames)== N  || error("invalid varnames length")
   tf_GTPSA = TextFormat(up_right_corner     = '-',
                        up_left_corner      = '-',
                        bottom_left_corner  = ' ',
@@ -327,14 +332,16 @@ function show_map(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, extralines=0, only
   end
   hlines = Int[0]
   out, formatters = format(m[1], coloffset=1, max_nn=max_nn)
-  out[:,1] .= 1
+
+  out[:,1] .= varnames[1]
   for i=2:N
     push!(hlines, length(out[:,1]))
     tmpout, __ = format(m[i],coloffset=1, max_nn=max_nn)
-    tmpout[:,1] .= i
+    tmpout[:,1] .= varnames[i]
     out = vcat(out, tmpout)
   end
   # Check if sparse monomial or exponent:
+  !get(io, :limit, false) || lines_used[] < displaysize(io)[1]-5 || (println(io, "\t⋮"); return)
   if GTPSA.show_sparse
     if eltype(m) == TPS
       println(io, "  Out  Coefficient                Order   Monomial")
@@ -348,5 +355,8 @@ function show_map(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, extralines=0, only
       println(io, "  Out  Real                     Imag                       Order   Exponent")
     end
   end
-  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
+  lines_used[] += 1
+  !get(io, :limit, false) || lines_used[] < displaysize(io)[1]-5 || (println(io, "\t⋮"); return)
+  pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-2-lines_used[],displaysize(io)[2]),vlines=[])
+  lines_used[] += length(out[:,1])+N # each border is a line
 end

@@ -8,15 +8,15 @@ function zero(ct::ComplexTPS)::ComplexTPS
 end
 
 # --- one ---
-function one(t::TPS)::TPS
-  t = TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
+function one(t1::TPS)::TPS
+  t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
   mad_tpsa_set0!(t.tpsa, 0.0, 1.0)
   return t
 end
 
-function one(ct::ComplexTPS)::ComplexTPS
-  ct = ComplexTPS(mad_ctpsa_new(ct.tpsa, MAD_TPSA_SAME))
-  mad_ctpsa_set0!(t.tpsa, ComplexF64(0.0), ComplexF64(1.0))
+function one(ct1::ComplexTPS)::ComplexTPS
+  ct = ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
+  mad_ctpsa_set0!(ct.tpsa, ComplexF64(0.0), ComplexF64(1.0))
   return ct
 end
 
