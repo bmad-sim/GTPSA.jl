@@ -9,7 +9,7 @@ to expressions while still maintaining type-generic code.
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3,5); x = vars(use=d);
+julia> d = Descriptor(3,5); x = vars(d);
 
 julia> @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
   2.114 μs (10 allocations: 160 bytes)

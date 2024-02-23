@@ -497,7 +497,7 @@ end
 # --- Variable/parameter generators ---
 
 """
-    vars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+    vars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
 
 Returns `TPS`s corresponding to the variables for the `Descriptor` specified by `use`.
 Default value is `GTPSA.desc_current`.
@@ -508,7 +508,7 @@ Default value is `GTPSA.desc_current`.
 ### Output
 - `x`   -- `Vector` containing unit `TPS`s corresponding to each variable
 """
-function vars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+function vars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
   t1 = TPS(use=use)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
@@ -527,7 +527,7 @@ function vars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector
 end
 
 """
-    params(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+    params(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
 
 Returns `TPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
 Default value is `GTPSA.desc_current`.
@@ -538,7 +538,7 @@ Default value is `GTPSA.desc_current`.
 ### Output
 - `k`   -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
-function params(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+function params(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
   t1 = TPS(use=use)
   desc = unsafe_load(mad_tpsa_desc(t1.tpsa))
   nv = desc.nv
@@ -559,7 +559,7 @@ end
 
 
 """
-    complexvars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+    complexvars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the variables for the `Descriptor` specified by `use`.
 Default value is `GTPSA.desc_current`.
@@ -570,7 +570,7 @@ Default value is `GTPSA.desc_current`.
 ### Output
 - `x`   -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
-function complexvars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+function complexvars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1 = ComplexTPS(use=use)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv
@@ -589,7 +589,7 @@ function complexvars(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current):
 end
 
 """
-    complexparams(;d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
+    complexparams(d::Descriptor=GTPSA.desc_current)::Vector{ComplexTPS}
 
 Returns `ComplexTPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
 Default value is `GTPSA.desc_current`.
@@ -600,7 +600,7 @@ Default value is `GTPSA.desc_current`.
 ### Output
 - `k`   -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
-function complexparams(;use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+function complexparams(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
   ct1 = ComplexTPS(use=use)
   desc = unsafe_load(mad_ctpsa_desc(ct1.tpsa))
   nv = desc.nv

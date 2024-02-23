@@ -10,7 +10,7 @@ using GTPSA, BenchmarkTools
 GTPSA.show_sparse = false; GTPSA.show_header=false; # hide
 
 d = Descriptor(3, 5);
-x = vars(use=d);
+x = vars(d);
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 

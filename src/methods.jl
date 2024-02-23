@@ -94,7 +94,7 @@ alternatively any monomial specified by indexing-by-order OR indexing-by-sparse 
 ```julia-repl
 julia> d = Descriptor(1,5,1,5);
 
-julia> x1 = vars(use=d)[1]; k1 = params(use=d)[1];
+julia> x1 = vars(d)[1]; k1 = params(d)[1];
 
 julia> deriv(x1*k1, 1)
 TPS:
@@ -239,7 +239,7 @@ is negative, will cut monomials with orders at and below `abs(order)`.
 ```julia-repl
 julia> d = Descriptor(1,10);
 
-julia> x = vars(use=d);
+julia> x = vars(d);
 
 julia> cutord(sin(x[1]), 5)
 TPS:
@@ -293,7 +293,7 @@ of the scalar functions `f` and `g`. The Poisson bracket of two functions `{f, g
 ```julia-repl
 julia> d = Descriptor(4,10);
 
-julia> x = vars(use=d);
+julia> x = vars(d);
 
 julia> f = (x[1]^2 + x[2]^2)/2 + (x[3]^2 + x[4]^2)/2;
 
@@ -483,7 +483,7 @@ exppb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{
 exppb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_exppb!(na, ma, mb, mc))
 
 """
-    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
+    exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(first(F)))
 
 Calculates `exp(F⋅∇)m = m + F⋅∇m + (F⋅∇)²m/2! + ...`. If `m` is not provided, it is assumed 
 to be the identity. 
@@ -510,7 +510,7 @@ julia> map = exppb(-time*hf, [x, p])
    2:   9.9001665555952378e-01      1      0   1
 ```
 """
-function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
+function exppb(F::Vector{<:Union{TPS,ComplexTPS}}, m::Vector{<:Union{TPS,ComplexTPS}}=vars(first(F)))
   descF = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(F[1].tpsa).d))
   if length(F) != descF.nv
     error("Vector length != number of variables in the GTPSA")
@@ -529,7 +529,7 @@ logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{
 logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_logpb!(na, ma, mb, mc))
 
 """
-    logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(F)))
+    logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(first(F)))
 
 Given a final map `mf` and initial map `mi`, this function calculates the vector field `F`
 such that `mf=exp(F⋅∇)mi`. If `mi` is not provided, it is assumed to be the identity.
@@ -549,7 +549,7 @@ julia> logpb(map) == -time*hf
 true
 ```
 """
-function logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(use=first(mf)))
+function logpb(mf::Vector{<:Union{TPS,ComplexTPS}}, mi::Vector{<:Union{TPS,ComplexTPS}}=vars(first(mf)))
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(mf[1].tpsa).d))
   if length(mf) != desc.nv || length(mi) != desc.nv
     error("Vector length != number of variables in the GTPSA")
@@ -590,6 +590,7 @@ end
 mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Float64 = mad_tpsa_mnrm(na, ma)
 mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::ComplexF64 = mad_ctpsa_mnrm(na, ma)
 
+#=
 """
     norm(ma::Vector{<:Union{TPS,ComplexTPS}})
 
@@ -599,7 +600,7 @@ sum of the absolute value of all coefficients in each TPS.
 function norm(ma::Vector{<:Union{TPS,ComplexTPS}})
   return mnrm(Cint(length(ma)), map(x->x.tpsa, ma))
 end
-
+=#
 # --- map inversion ---
 minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_minv!(na, ma, mc))
 minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_minv!(na, ma, mc))

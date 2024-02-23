@@ -72,7 +72,7 @@ Extracts a polynomial from the TPS containing the specified monomial, and remove
 
 # Examples: Variable/Parameter Index:
 ```julia-repl
-julia> d = Descriptor(5, 10, 2, 10); x = vars(use=d); k = params(use=d);
+julia> d = Descriptor(5, 10, 2, 10); x = vars(d); k = params(d);
 
 julia> f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5]*k[1] + 6*x[3] + 5
 TPS:

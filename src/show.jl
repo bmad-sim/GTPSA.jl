@@ -342,6 +342,7 @@ function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=R
   end
   # Check if sparse monomial or exponent:
   !get(io, :limit, false) || lines_used[] < displaysize(io)[1]-5 || (println(io, "\t⋮"); return)
+  cols = length(out[1,:])
   if GTPSA.show_sparse
     if eltype(m) == TPS
       println(io, "  Out  Coefficient                Order   Monomial")
@@ -351,12 +352,17 @@ function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=R
   else
     if eltype(m) == TPS
       println(io, "  Out  Coefficient                Order   Exponent")
+      cols += 105
     else
       println(io, "  Out  Real                     Imag                       Order   Exponent")
+      cols += 108
     end
   end
   lines_used[] += 1
   !get(io, :limit, false) || lines_used[] < displaysize(io)[1]-5 || (println(io, "\t⋮"); return)
   pretty_table(io, out,tf=tf_GTPSA,formatters=(ft_printf("%3i:",1), formatters...),show_header=false, alignment=:l, hlines=hlines, body_hlines_format=('-','-','-','-'),display_size=(displaysize(io)[1]-2-lines_used[],displaysize(io)[2]),vlines=[])
   lines_used[] += length(out[:,1])+N # each border is a line
+  if cols >= displaysize(io)[2] #&& !(lines_used[]+1 < displaysize(io)[1]-5) 
+    lines_used[] += 1
+  end
 end

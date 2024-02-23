@@ -517,8 +517,8 @@ end
 
 @testset "Indexing" begin
   d = Descriptor(3,10,2,10)
-  v = vars(use=d)
-  p = params(use=d)
+  v = vars(d)
+  p = params(d)
   tol = 1e-18
 
   f = sin(v[1])

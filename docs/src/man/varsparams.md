@@ -2,11 +2,11 @@
 *Creates a vector of TPSs corresponding to each variable/parameter in the GTPSA*
 ## Syntax
 ```
-x  = vars([use=(descriptor|tps|complextps)])
-xc = complexvars([use=(descriptor|tps|complextps)])
+x  = vars([(descriptor|tps|complextps)])
+xc = complexvars([(descriptor|tps|complextps)])
 
-k  = params([use=(descriptor|tps|complextps)])
-kc = complexparams([use=(descriptor|tps|complextps)])
+k  = params([(descriptor|tps|complextps)])
+kc = complexparams([(descriptor|tps|complextps)])
 ```
 
 ## Description
@@ -20,11 +20,11 @@ kc = complexparams([use=(descriptor|tps|complextps)])
 
 `k = complexparams()` creates a vector of `ComplexTPS`s corresponding to each of the parameters in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
 
-### Optional Keyword Argument
+### Optional Argument
 
-`use=descriptor` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the passed `Descriptor`
+`descriptor` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the passed `Descriptor`
 
-`use=(tps|complextps)` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the `Descriptor` of the passed `TPS` or `ComplexTPS`
+`(tps|complextps)` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the `Descriptor` of the passed `TPS` or `ComplexTPS`
 
 
 ## Examples
@@ -37,7 +37,7 @@ k1 = params()
 d2 = Descriptor(2, 5, 1, 5); # 2 vars, 1 param, all to order 5
 x2 = vars()
 k2 = params()
-k1 = params(use=d1)
+k1 = params(d1)
 ```
 
 ## Documentation

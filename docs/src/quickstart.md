@@ -21,7 +21,7 @@ using GTPSA #hide
 d = Descriptor([4, 1]);
 
 # Returns a Vector of each variable as a TPS
-x = vars(use=d) 
+x = vars(d) 
 ```
 
 These `TPS`s can then be manipulated just like any other mathematical quantity in Julia:
@@ -37,7 +37,7 @@ When a TPS contains a lot of variables, the default output showing each variable
 ```@example
 using GTPSA #hide
 d = Descriptor(10, 10);
-x = vars(use=d);
+x = vars(d);
 
 GTPSA.show_sparse = true;
 g = sin(x[1]*x[3]^2) + cos(x[2]*x[7]);
@@ -95,7 +95,7 @@ The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their 
 using GTPSA #hide
 # 2nd Order TPSA with 100 variables
 d = Descriptor(100, 2);
-x = vars(use=d);
+x = vars(d);
 
 out = cumsum(x);
 
@@ -116,7 +116,7 @@ Parts of a TPS with certain variable orders can be extracted by slicing the TPS.
 ```@example slice
 using GTPSA;  #hide
 d = Descriptor(5, 10);
-x = vars(use=d);
+x = vars(d);
 
 f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5] + 6*x[3] + 5;
 g = f[2,:,1];
@@ -147,7 +147,7 @@ The macro `@FastGTPSA` can be used to speed up evaluation of expressions that co
 using GTPSA, BenchmarkTools
 
 d = Descriptor(3, 5);
-x = vars(use=d);
+x = vars(d);
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 
