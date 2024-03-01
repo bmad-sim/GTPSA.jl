@@ -31,6 +31,7 @@ end
 function show(io::IO, d::Descriptor)
   println(io, "GTPSA Descriptor")
   println(io, "-----------------------")
+  d.desc == C_NULL && (println(io, "Null"); return)
   desc = unsafe_load(d.desc)
   show_GTPSA_info(io, desc)
 end
