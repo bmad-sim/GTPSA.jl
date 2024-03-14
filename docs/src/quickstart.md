@@ -4,21 +4,21 @@ A `Descriptor` defines all information about the GTPSA, including the number of 
 
 ```@example desc
 using GTPSA #hide
-# Descriptor for 2 variables with max order 10 for each
+# 2 variables with max truncation order 10
 d1 = Descriptor(2, 10)     
 ```
 
 ```@example desc
-# Descriptor for 3 variables with orders 1, 2, 3 respectively
-d2 = Descriptor([1, 2, 3])
+# 3 variables with individual truncation orders 1, 2, 3 and max truncation order 6
+d2 = Descriptor([1, 2, 3], 6)
 ```
 
 ## Calculating a TPS
-After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, to calculate the Taylor series for ``f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}`` to 4th order in ``x_1`` and but only 1st order in ``x_2``:
+After defining a `Descriptor` for the TPSA, the variables (which themselves are represented as `TPS`s) can be obtained using `vars` or `complexvars`. For example, to calculate the Taylor series for ``f(x_1,x_2) = \cos{(x_1)} + \sqrt{1+x_2}`` to 4th order in ``x_1`` and but only 1st order in ``x_2`` (up to maximally 1 + 4 = 5th order):
 
 ```@example 1
-using GTPSA #hide
-d = Descriptor([4, 1]);
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false;#hide
+d = Descriptor([4, 1], 5);
 
 # Returns a Vector of each variable as a TPS
 x = vars(d) 
@@ -35,7 +35,7 @@ A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be creat
 When a TPS contains a lot of variables, the default output showing each variable exponent can be larger than the screen can show. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
 ```@example
-using GTPSA #hide
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false;#hide
 d = Descriptor(10, 10);
 x = vars(d);
 
@@ -60,7 +60,7 @@ Individual monomial coefficients in a TPS `t` can be get/set with two methods of
 These two methods of indexing are best shown with an example:
 
 ```@example
-using GTPSA; GTPSA.show_sparse=false; #hide
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false;#hide
 # Example of indexing by order -----------
 d = Descriptor(3, 10);
 t = TPS(use=d); # Create zero TPS based on d
@@ -75,7 +75,7 @@ print(t)
 ```
 
 ```@example 
-using GTPSA #hide
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false; #hide
 # Example of indexing by sparse monomial -----------
 d = Descriptor(3, 10);
 t = TPS(use=d); # Create zero TPS based on d
@@ -92,7 +92,7 @@ print(t)
 The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a TPS/Vector of TPSs. Note that these functions are not actually calculating anything - at this point the TPS should already have been propagated through the system, and these functions are just extracting the corresponding partial derivatives.
 
 ```@example
-using GTPSA #hide
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false; #hide
 # 2nd Order TPSA with 100 variables
 d = Descriptor(100, 2);
 x = vars(d);
@@ -114,7 +114,7 @@ hessian!(h1, out[1]);
 Parts of a TPS with certain variable orders can be extracted by slicing the TPS. When indexing by order, a colon (`:`) can be used in place for a variable order to include all orders of that variable. If the last specified index is a colon, then the rest of the variable indices are assumed to be colons:
 
 ```@example slice
-using GTPSA;  #hide
+using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false; #hide
 d = Descriptor(5, 10);
 x = vars(d);
 

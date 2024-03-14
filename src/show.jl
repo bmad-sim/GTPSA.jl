@@ -1,36 +1,43 @@
 
 # --- print ---
 function show_GTPSA_info(io::IO, desc::Desc)
+  mo = desc.mo
   nv = desc.nv
   np = desc.np
   nn = desc.nn
+  po = desc.po
   no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
   no = convert(Vector{Int}, no_)
+  @printf(io, "%-18s %i\n", "Maximum order: ", mo)
+  lines_used = 1
   if nv > 0
     @printf(io, "%-18s %i\n", "# Variables: ", nv)
-    if all(no[1] .== no[1:nv])
-      @printf(io, "%-18s %i\n", "Variable order: ", no[1])
-    else
+    lines_used += 1
+    if !(all(no[1] .== no[1:nv]))
       @printf(io, "%-18s", "Variable orders: ")
       print(io, no[1:nv])
       print(io, "\n")
+      lines_used += 1
     end
   end
   if np > 0
+    @printf(io, "%-18s %i\n", "Parameter order: ", po)
     @printf(io, "%-18s %i\n", "# Parameters: ", np)
-    if all(no[nv+1] .== no[nv+1:end])
-      @printf(io, "%-18s %i\n", "Parameter order: ", no[nv+1])
-    else
+    lines_used += 2
+    if !(all(no[nv+1] .== no[nv+1:end]))
       @printf(io, "%-18s", "Parameter orders: ")
       print(io, no[nv+1:end])
       print(io, "\n")
+      lines_used += 1
     end
   end
+  return lines_used
 end
 
 function show(io::IO, d::Descriptor)
   println(io, "GTPSA Descriptor")
   println(io, "-----------------------")
+  d.desc == C_NULL && (println(io, "Null"); return)
   desc = unsafe_load(d.desc)
   show_GTPSA_info(io, desc)
 end
@@ -152,9 +159,8 @@ function show(io::IO, t::TPS)
   extralines = 0
   if GTPSA.show_header
     println(io, "-----------------------")
-    show_GTPSA_info(io, desc)
+    extralines += 2 + show_GTPSA_info(io, desc)
     println(io, "-----------------------")
-    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
   end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
@@ -248,9 +254,8 @@ function show(io::IO, t::ComplexTPS)
   extralines = 0
   if GTPSA.show_header
     println(io, "-----------------------")
-    show_GTPSA_info(io, desc)
+    extralines += 2 + show_GTPSA_info(io, desc)
     println(io, "-----------------------")
-    extralines = 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
   end
   if GTPSA.show_sparse
     println(io, " Real                     Imag                       Order   Monomial")
@@ -293,9 +298,8 @@ function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
       lines_used[] += 1
     else
       println(io, "-----------------------")
-      show_GTPSA_info(io, desc)
+      lines_used[] += 2 + show_GTPSA_info(io, desc)
       println(io, "-----------------------")
-      lines_used[] += 2 + (desc.nv > 0 ? 2 : 0) + (desc.np > 0 ? 2 : 0)
     end
   end
   show_map!(io, m, lines_used)
