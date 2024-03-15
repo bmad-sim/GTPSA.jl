@@ -309,36 +309,68 @@ end
 
 
 """
-    mad_ctpsa_setvar!(t::Ptr{CTPSA}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)
+    mad_ctpsa_setvar!(t::Ptr{CTPSA}, v::ComplexF64, iv::Cint, scl_::ComplexF64)
 
-Sets the 0th and 1st order values for the variables.
+    Sets the 0th and 1st order values for the specified variable, and sets the rest of the variables to 0
 
   ### Input
-  - `t`    -- Real TPSA
+  - `t`    -- TPSA
   - `v`    -- 0th order value (coefficient)
-  - `iv_`  -- (Optional) Variable index, optional if order of TPSA is 0 (behaves like `mad_ctpsa_setval` then)
+  - `iv`   -- Variable index
   - `scl_` -- 1st order variable value (typically will be 1)
   """
-function mad_ctpsa_setvar!(t::Ptr{CTPSA}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_setvar(t::Ptr{CTPSA}, v::ComplexF64, iv_::Cint, scl_::ComplexF64)::Cvoid
+function mad_ctpsa_setvar!(t::Ptr{CTPSA}, v::ComplexF64, iv::Cint, scl_::ComplexF64)
+  @ccall MAD_TPSA.mad_ctpsa_setvar(t::Ptr{CTPSA}, v::ComplexF64, iv::Cint, scl_::ComplexF64)::Cvoid
 end
 
 """
-    mad_ctpsa_setvar_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
+    mad_ctpsa_setprm!(t::Ptr{CTPSA}, v::ComplexF64, ip::Cint)
 
-Sets the 0th and 1st order values for the variables. Equivalent to `mad_ctpsa_setvar` but without complex-by-value arguments.
+Sets the 0th and 1st order values for the specified parameter, and sets the rest of the variables/parameters to 0. 
+The 1st order value `scl_` of a parameter is always 1.
+
+### Input
+- `t`    -- TPSA
+- `v`    -- 0th order value (coefficient)
+- `ip`   -- Parameter index (e.g. iv = 1 is nn-nv+1)
+"""
+function mad_ctpsa_setprm!(t::Ptr{CTPSA}, v::ComplexF64, ip::Cint)
+  @ccall MAD_TPSA.mad_ctpsa_setprm(t::Ptr{CTPSA}, v::ComplexF64, ip::Cint)::Cvoid
+end
+
+"""
+    mad_ctpsa_setvar_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
+
+Sets the 0th and 1st order values for the specified variable. Equivalent to `mad_ctpsa_setvar` but without complex-by-value arguments.
 
 ### Input
 - `t`       -- Complex TPSA
 - `v_re`    -- Real part of 0th order value
 - `v_im`    -- Imaginary part of 0th order value
-- `iv_`     -- (Optional) Variable index, optional if order of TPSA is 0 (behaves `like mad_ctpsa_setval` then)
+- `iv`      -- Variable index
 - `scl_re_` -- (Optional) Real part of 1st order variable value
 - `scl_im_` -- (Optional)Imaginary part of 1st order variable value
 """
-function mad_ctpsa_setvar_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv_::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
+function mad_ctpsa_setvar_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
+  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
 end
+
+"""
+    mad_ctpsa_setprm_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, ip::Cint)
+
+Sets the 0th and 1st order values for the specified parameter. Equivalent to `mad_ctpsa_setprm` but without complex-by-value arguments.
+The 1st order value `scl_` of a parameter is always 1.
+
+### Input
+- `t`       -- Complex TPSA
+- `v_re`    -- Real part of 0th order value
+- `v_im`    -- Imaginary part of 0th order value
+- `ip`      -- Parameter index
+"""
+function mad_ctpsa_setprm_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, ip::Cint)
+  @ccall MAD_TPSA.mad_ctpsa_setprm_r(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble, ip::Cint)::Cvoid
+end
+
 
 """
     mad_ctpsa_setval!(t::Ptr{CTPSA}, v::ComplexF64)
@@ -2666,37 +2698,41 @@ end
 
 
 """
-    mad_ctpsa_minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
+    mad_ctpsa_minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mc::Vector{Ptr{CTPSA}})
 
-Inverts the map.
+Inverts the map. To include the parameters in the inversion, `na` = `nn` and the output map 
+length only need be `nb` = `nv`.
 
 ### Input
-- `na` -- Number of TPSAs in the map
+- `na` -- Input map length (should be `nn` to include parameters)
 - `ma` -- Map `ma`
+- `nb` -- Output map length (generally = `nv`)
 
 ### Output
-- `mc` -- Inversion of Map `ma`
+- `mc` -- Inversion of map `ma`
 """
-function mad_ctpsa_minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}})
-  @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
+function mad_ctpsa_minv!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mc::Vector{Ptr{CTPSA}})
+  @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{Ptr{CTPSA}}, nb::Cint, mc::Ptr{Ptr{CTPSA}})::Cvoid
 end
 
 
 """
-    mad_ctpsa_pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint})
+    mad_ctpsa_pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint})
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
+To include the parameters in the inversion, `na` = `nn` and the output map length only need be `nb` = `nv`.
 
 ### Input
-- `na`     -- Number of TPSAs in `ma`
-- `ma`     -- Map `ma`
-- `select` -- Array of 0s or 1s defining which variables to do inverse on (atleast same size as na)
+- `na` -- Input map length (should be `nn` to include parameters)
+- `ma` -- Map `ma`
+- `nb` -- Output map length (generally = `nv`)
+- `select` -- Array of 0s or 1s defining which variables to do inverse on (atleast same size as na)'
 
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_ctpsa_pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint})
-  @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}}, select::Ptr{Cint})::Cvoid
+function mad_ctpsa_pminv!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mc::Vector{Ptr{CTPSA}}, select::Vector{Cint})
+  @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{Ptr{CTPSA}}, nb::Cint, mc::Ptr{Ptr{CTPSA}}, select::Ptr{Cint})::Cvoid
 end
 
 

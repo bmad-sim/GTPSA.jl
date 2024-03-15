@@ -309,18 +309,33 @@ end
 
 
 """
-    mad_tpsa_setvar!(t::Ptr{RTPSA}, v::Cdouble, iv_::Cint, scl_::Cdouble)
+    mad_tpsa_setvar!(t::Ptr{RTPSA}, v::Cdouble, iv::Cint, scl_::Cdouble)
 
-Sets the 0th and 1st order values for the variables, and sets the rest of the variables to 0
+Sets the 0th and 1st order values for the specified variable, and sets the rest of the variables/parameters to 0
 
 ### Input
 - `t`    -- TPSA
 - `v`    -- 0th order value (coefficient)
-- `iv_`  -- Variable index, optional if order of TPSA is 0 (behaves like `mad_tpsa_setval` then)
+- `iv`   -- Variable index
 - `scl_` -- 1st order variable value (typically will be 1)
 """
-function mad_tpsa_setvar!(t::Ptr{RTPSA}, v::Cdouble, iv_::Cint, scl_::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{RTPSA}, v::Cdouble, iv_::Cint, scl_::Cdouble)::Cvoid
+function mad_tpsa_setvar!(t::Ptr{RTPSA}, v::Cdouble, iv::Cint, scl_::Cdouble)
+  @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{RTPSA}, v::Cdouble, iv::Cint, scl_::Cdouble)::Cvoid
+end
+
+"""
+    mad_tpsa_setprm!(t::Ptr{RTPSA}, v::Cdouble, ip::Cint)
+
+Sets the 0th and 1st order values for the specified parameter, and sets the rest of the variables/parameters to 0. 
+The 1st order value `scl_` of a parameter is always 1.
+
+### Input
+- `t`    -- TPSA
+- `v`    -- 0th order value (coefficient)
+- `ip`   -- Parameter index (e.g. iv = 1 is nn-nv+1)
+"""
+function mad_tpsa_setprm!(t::Ptr{RTPSA}, v::Cdouble, ip::Cint)
+  @ccall MAD_TPSA.mad_tpsa_setprm(t::Ptr{RTPSA}, v::Cdouble, ip::Cint)::Cvoid
 end
 
 """
@@ -1854,37 +1869,41 @@ end
 
 
 """
-    mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
+    mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mc::Vector{Ptr{RTPSA}})
 
-Inverts the map.
+Inverts the map. To include the parameters in the inversion, `na` = `nn` and the output map 
+length only need be `nb` = `nv`.
 
 ### Input
-- `na` -- Number of TPSAs in the map
-- `ma` -- map `ma`
+- `na` -- Input map length (should be `nn` to include parameters)
+- `ma` -- Map `ma`
+- `nb` -- Output map length (generally = `nv`)
 
 ### Output
 - `mc` -- Inversion of map `ma`
 """
-function mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}})
-  @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}})::Cvoid
+function mad_tpsa_minv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mc::Vector{Ptr{RTPSA}})
+  @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mc::Ptr{Ptr{RTPSA}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
+    mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
+To include the parameters in the inversion, `na` = `nn` and the output map length only need be `nb` = `nv`.
 
 ### Input
-- `na`     -- Number of TPSAs in ma
-- `ma`     -- map `ma`
+- `na` -- Input map length (should be `nn` to include parameters)
+- `ma` -- Map `ma`
+- `nb` -- Output map length (generally = `nv`)
 - `select` -- Array of 0s or 1s defining which variables to do inverse on (atleast same size as na)'
 
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
-  @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{Ptr{RTPSA}}, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})::Cvoid
+function mad_tpsa_pminv!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mc::Vector{Ptr{RTPSA}}, select::Vector{Cint})
+  @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{Ptr{RTPSA}}, nb::Cint, mc::Ptr{Ptr{RTPSA}}, select::Ptr{Cint})::Cvoid
 end
 
 
