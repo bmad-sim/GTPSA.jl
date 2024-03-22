@@ -283,7 +283,7 @@ function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
       return
     end
   end
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
   diffdescs = false
   for i in eachindex(m)
     if desc != unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
@@ -308,7 +308,7 @@ end
 # WARNING: only_vars should ONLY be set by developers who know what they're doing!
 # Same for varnames!
 function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=Ref{Int}(0), only_vars=false, varnames=1:length(m))
-  N = only_vars ? min(unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d)).nv,length(m)) : length(m)
+  N = only_vars ? min(unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d)).nv,length(m)) : length(m)
   length(varnames)== N  || error("invalid varnames length")
   tf_GTPSA = TextFormat(up_right_corner     = '-',
                        up_left_corner      = '-',
@@ -325,7 +325,7 @@ function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=R
                        #vlines             =[]);
 
 
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[1].tpsa).d))
+  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
   max_nn = desc.nv + desc.np
   for i in eachindex(m)
     curdesc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
@@ -335,7 +335,7 @@ function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=R
     max_nn = max(max_nn, curdesc.nv+curdesc.np)
   end
   hlines = Int[0]
-  out, formatters = format(m[1], coloffset=1, max_nn=max_nn)
+  out, formatters = format(first(m), coloffset=1, max_nn=max_nn)
 
   out[:,1] .= varnames[1]
   for i=2:N

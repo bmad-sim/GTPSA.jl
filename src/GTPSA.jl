@@ -91,6 +91,8 @@ export
   gradient!,
   jacobian,
   jacobian!,
+  jacobiant,
+  jacobiant!,
   hessian,
   hessian!,
   

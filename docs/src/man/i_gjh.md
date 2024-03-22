@@ -8,6 +8,9 @@ gradient!(grad, f [, include_params=bool])
 J = jacobian(F [, include_params=bool])
 jacobian!(J, F [, include_params=bool])
 
+Jt = jacobiant(F [, include_params=bool])
+jacobiant!(Jt, F [, include_params=bool])
+
 H = hessian(f [, include_params=bool])
 hessian!(H, f [, include_params=bool])
 ```
@@ -23,6 +26,12 @@ hessian!(H, f [, include_params=bool])
 `J = jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as ``J_{ij} = \frac{\partial F_i}{\partial x_j}``
 
 `jacobian!(J, F)` fills the `J` matrix in-place with the Jacobian extracted from the vector of TPSs `F`
+
+------
+
+`Jt = jacobiant(F)` extracts the transpose of the Jacobian matrix from the vector of TPSs `F`, with the Jacobian defined as ``J_{ij} = \frac{\partial F_i}{\partial x_j}``
+
+`jacobiant!(Jt, F)` fills the `Jt` matrix in-place with the transpose of the Jacobian extracted from the vector of TPSs `F`
 
 ------
 
@@ -54,6 +63,8 @@ gradient
 gradient!
 jacobian
 jacobian!
+jacobiant
+jacobiant!
 hessian
 hessian!
 ```
