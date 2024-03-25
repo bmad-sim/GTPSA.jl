@@ -3,19 +3,22 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bmad-sim.github.io/GTPSA.jl/dev/)
 [![Build Status](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://mad.web.cern.ch/mad/releases/madng/html/mad_mod_diffalg.html), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders in the variables. 
+## Overview
 
-Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a highly optimized monomial indexing function/storage for propagating the partial derivatives, gives `GTPSA.jl` similar performance as `ForwardDiff.jl` to 1st-order, but significantly faster performance for 2nd-order calculations and above.
+This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://mad.web.cern.ch/mad/releases/madng/html/mad_mod_diffalg.html), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders. 
+
+Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a highly optimized monomial indexing function/storage for propagating the partial derivatives, makes `GTPSA.jl` significantly faster for 2nd-order calculations and above (for 1st-order
+calculations the performance is similar to `ForwardDiff.jl`).
+See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs, GTPSA was nearly x3 faster than ForwardDiff to 2nd order, and x15 faster to 3rd order.
 
 GTPSA provides several advantages over current Julia AD packages:
 
 1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has similar performance at 1st-order
-2. **Custom Orders in Individual Variables**: For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is done trivially in GTPSA
-3. **Complex Numbers**: GTPSA natively supports complex numbers, and allows for mixing of complex and real truncated power series
+2. **Custom Orders in Individual Variables**: Other packages use a single maximum order for all variables. With GTPSA, the
+maximum order can be set differently for different variables. For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is possible.
+3. **Complex Numbers**: GTPSA natively supports complex numbers and allows for mixing of complex and real truncated power series
 4. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters is very advantageous in analysis
-5. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development
-
-See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs. **We observed GTPSA to be nearly x3 faster than ForwardDiff to 2nd order, and x15 faster to 3rd order in our example.**
+5. **Fast JIT Compilation**: Because most of the "heavy-lifting" is done in the precompiled C library, the JIT compilation for `GTPSA.jl` is fast, easing iterative REPL development.
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
@@ -42,12 +45,14 @@ d = Descriptor(2, 6)
 
 # Get the TPSs corresponding to each variable based on the Descriptor
 x = vars()
+# `x` is now a vector with `x[1]` corresponding to the first variable and `x[2]` corresponding to the second variable.
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
 f = cos(x[1]) + im*sin(x[2])
+# This creates a new TPS called `f`.
 ```
 
-`f` itself is a TPS. Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` then gives the output
+Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` gives the output
 
 ```
 ComplexTPS:
@@ -61,9 +66,10 @@ ComplexTPS:
  -1.3888888888888887e-03   0.0000000000000000e+00      6      6   0
 ```
 
-For more details, including TPSs with custom orders in individual variables, see [the documentation](https://bmad-sim.github.io/GTPSA.jl/).
-
-Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) written by the developers of the GTPSA library for more details.
+For more details, including using TPSs with differing maximum order for each variables, see the [GTPSA documentation](https://bmad-sim.github.io/GTPSA.jl/).
 
 ## Acknowledgements
-We thank Laurent Deniau, the creator of GTPSA, for very detailed and lengthy discussions on using his C library. 
+Much thanks must be given to Laurent Deniau, the creator of the C GTPSA library, for his time and great patience in explaining his code. 
+
+Advanced users are referred to [this paper](https://inspirehep.net/files/286f2ab60e1e7c372cec485337ab5eb6) discussing
+the inner workings of the C GTPSA library.
