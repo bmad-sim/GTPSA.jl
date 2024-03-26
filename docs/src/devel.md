@@ -1,4 +1,12 @@
 # For Developers
+
+Developers may fork [the GTPSA.jl repo](https://github.com/bmad-sim/GTPSA.jl) and then `dev` their forked repo in the REPL. For example, if my Github username is `githubuser`, then after forking GTPSA.jl I would run in the REPL:
+
+```julia
+import Pkg
+Pkg.develop(url="https://github.com/githubuser/GTPSA.jl")
+```
+
 The package consists of two layers: a low-level layer written in Julia that is 1-to-1 with the GTPSA C code, and a high-level, user-friendly layer that cleans up the notation for manipulating TPSAs, manages temporaries generated during evaluation, and properly manages the memory in C when variables go out of scope in Julia. The low-level functions, which are exported for developer usage at the moment, are listed below.
 
 The C code consists of three C structs: `desc`, `tpsa`, and `ctpsa`. The low-level Julia-equivalent, 1-to-1 structs are respectively `Desc`, `RTPSA`, and `CTPSA`. C pointers `Ptr` to these structs are wrapped by the high-level structs `Descriptor`, `TPSA`, and `ComplexTPSA` respectively.
