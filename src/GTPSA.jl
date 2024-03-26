@@ -85,6 +85,7 @@ export
   complexvars,
   complexparams,
   mono,
+  complexmono,
 
   # Convenience getters:
   gradient,
@@ -742,60 +743,64 @@ TPS:
 ```
 """
 function mono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::TPS
-  return low_mono(use, v, param, params)
+  return low_mono(TPS, use, v, param, params)
+end
+
+function complexmono(v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing, use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::ComplexTPS
+  return low_mono(ComplexTPS, use, v, param, params)
 end
 
 # Variable/parameter:
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::TPS
-  t = TPS(use=d)
-  mad_tpsa_seti!(t.tpsa, Cint(v), 0.0, 1.0)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::T
+  t = T(use=d)
+  seti!(t.tpsa, Cint(v), convert(numtype(T), 0.0), convert(numtype(T), 1.0))
   return t
 end
 
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::T
+  t = T(use=d)
   desc = unsafe_load(mad_tpsa_desc(t.tpsa))
   nv = desc.nv # TOTAL NUMBER OF VARS!!!!
-  mad_tpsa_seti!(t.tpsa, Cint(param) + nv, 0.0, 1.0)
+  seti!(t.tpsa, Cint(param) + nv, convert(numtype(T), 0.0), convert(numtype(T), 1.0))
   return t
 end
 
 # Default to scalar value if nothing passed
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::T
+  t = T(use=d)
   t[0] = 1.0
   return t
 end
 
 # Monomial by order:
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Integer}, param::Nothing, params::Nothing)::T
+  t = T(use=d)
   t[v...] = 1.0
   return t
 end
 
 # Monomial by sparse monomial:
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::T
+  t = T(use=d)
   t[v..., params=params] = 1.0
   return t
 end
 
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Vector{<:Pair{<:Integer,<:Integer}}, param::Nothing, params::Nothing)::T
+  t = T(use=d)
   # Need to create array of orders with length nv + np
   t[v...] = 1.0
   return t
 end
 
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::TPS
-  t = TPS(use=d)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::T
+  t = T(use=d)
   t[params=params] = 1.0
   return t
 end
 
 # Throw error if no above use cases satisfied:
-function low_mono(d::Union{Descriptor,TPS,ComplexTPS}, v, param, params)
+function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 

@@ -3,6 +3,11 @@ numtype(ct::ComplexTPS) = ComplexF64
 numtype(::Type{TPS}) = Float64
 numtype(::Type{ComplexTPS}) = ComplexF64
 
+lowtype(t::TPS) = Ptr{RTPSA}
+lowtype(ct::ComplexTPS) = Ptr{CTPSA}
+lowtype(::Type{TPS}) = Ptr{RTPSA}
+lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
+
 # --- Setters ---
 function setindex!(t::TPS, v::Real, ords::Integer...)
   mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
