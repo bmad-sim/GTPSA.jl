@@ -129,35 +129,37 @@ end
 
 
 """
-    mad_ctpsa_nam(t::Ptr{CTPSA})::Cstring
+    mad_ctpsa_nam(t::Ptr{CTPSA}, nam_::Cstring)::Cstring
 
-Get the name of the TPSA.
+Get the name of the TPSA, and will optionally set if `nam_ != null`
 
 ### Input
-- `t`    -- Complex TPSA
+- `t`    -- TPSA
+- `nam_` -- Optional name to set the TPSA
 
 ### Output
 - `ret`  -- Name of CTPSA (Null terminated in C)
 """
-function mad_ctpsa_nam(t::Ptr{CTPSA})::Cstring
-  ret = @ccall MAD_TPSA.mad_ctpsa_nam(t::Ptr{CTPSA})::Cstring
+function mad_ctpsa_nam(t::Ptr{CTPSA}, nam_::Cstring)::Cstring
+  ret = @ccall MAD_TPSA.mad_ctpsa_nam(t::Ptr{CTPSA}, nam_::Cstring)::Cstring
   return ret
 end
 
 
 """
-    mad_ctpsa_ord(t::Ptr{CTPSA})::Cuchar
+    mad_ctpsa_ord(t::Ptr{CTPSA}, hi_::Bool)::Cuchar
 
-Gets the TPSA order.
+Gets the TPSA maximum order, or `hi` if `hi_` is true.
 
 ### Input
-- `t`   -- Complex TPSA
+- `t`   -- TPSA
+- `hi_` -- Set `true` if `hi` is returned, else `mo` is returned
 
 ### Output
 - `ret` -- Order of TPSA
 """
-function mad_ctpsa_ord(t::Ptr{CTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ptr{CTPSA})::Cuchar
+function mad_ctpsa_ord(t::Ptr{CTPSA}, hi_::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ptr{CTPSA}, hi_::Bool)::Cuchar
   return ret
 end
 
@@ -179,25 +181,6 @@ function mad_ctpsa_ordv(t::Ptr{CTPSA}, ts::Ptr{CTPSA}...)::Cuchar
   return mo
 end
 
-
-"""
-    mad_ctpsa_ordn(n::Cint, t::Vector{Ptr{CTPSA}})::Cuchar
-
-Returns the max order of all TPSAs in `t`.
-
-### Input
-- `n`  -- Number of TPSAs
-- `t`  -- Array of TPSAs 
-
-### Output
-- `mo` -- Maximum order of all TPSAs
-"""
-function mad_ctpsa_ordn(n::Cint, t::Vector{Ptr{CTPSA}})::Cuchar
-  mo = @ccall MAD_TPSA.mad_ctpsa_ordn(n::Cint, t::Ptr{Ptr{CTPSA}})::Cuchar
-  return mo
-end
-
-
 """
     mad_ctpsa_copy!(t::Ptr{CTPSA}, r::Ptr{CTPSA})
 
@@ -215,7 +198,7 @@ end
 
 
 """
-    mad_ctpsa_sclord!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Cuchar, prm::Cuchar)
+    mad_ctpsa_sclord!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Bool, prm::Bool)
 
 Scales all coefficients by order. If `inv == 0`, scales coefficients by order (derivation), else scales coefficients 
 by 1/order (integration).
@@ -228,8 +211,8 @@ by 1/order (integration).
 ### Output
 - `r`   -- Destination complex TPSA
 """
-function mad_ctpsa_sclord!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Cuchar, prm::Cuchar)
-  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Cuchar, prm::Cuchar)::Cvoid
+function mad_ctpsa_sclord!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Bool, prm::Bool)
+  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ptr{CTPSA}, r::Ptr{CTPSA}, inv::Bool, prm::Bool)::Cvoid
 end
 
 
@@ -265,6 +248,15 @@ Cuts the TPSA off at the given order and above, or if `ord` is negative, will cu
 """
 function mad_ctpsa_cutord!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, ord::Cint)
   @ccall MAD_TPSA.mad_ctpsa_cutord(t::Ptr{CTPSA}, r::Ptr{CTPSA}, ord::Cint)::Cvoid
+end
+
+"""
+    mad_ctpsa_clrord!(t::Ptr{CTPSA}, ord::Cuchar)
+
+    ???
+"""
+function mad_ctpsa_clrord!(t::Ptr{CTPSA}, ord::Cuchar)
+  @ccall MAD_TPSA.mad_ctpsa_clrord(t::Ptr{CTPSA}, ord::Cuchar)::Cvoid
 end
 
 """
@@ -386,6 +378,15 @@ function mad_ctpsa_setval!(t::Ptr{CTPSA}, v::ComplexF64)
 end
 
 """
+    mad_ctpsa_update!(t::Ptr{CTPSA}, eps_::Cdouble)
+
+    ???
+"""
+function mad_ctpsa_update!(t::Ptr{CTPSA}, eps_::Cdouble)
+  ret = @ccall MAD_TPSA.mad_ctpsa_update(t::Ptr{CTPSA}, eps_::Cdouble)::Bool
+end
+
+"""
     mad_ctpsa_setval_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble)
 
 Sets the scalar part of the TPSA to `v` and all other values to 0 (sets the TPSA order to 0).
@@ -401,20 +402,6 @@ function mad_ctpsa_setval_r!(t::Ptr{CTPSA}, v_re::Cdouble, v_im::Cdouble)
 end
 
 """
-    mad_ctpsa_setnam!(t::Ptr{CTPSA}, nam::Cstring)
-
-Sets the name of the CTPSA.
-
-### Input
-- `t`   -- Complex TPSA
-- `nam` -- Name to set for CTPSA
-"""
-function mad_ctpsa_setnam!(t::Ptr{CTPSA}, nam::Cstring)
-  @ccall MAD_TPSA.mad_ctpsa_setnam(t::Ptr{CTPSA}, nam::Cstring)::Cvoid
-end
-
-
-"""
     mad_ctpsa_clear!(t::Ptr{CTPSA})
 
 Clears the TPSA (reset to 0)
@@ -428,7 +415,7 @@ end
 
 
 """
-    mad_ctpsa_isnul(t::Ptr{CTPSA})::Cuchar
+    mad_ctpsa_isnul(t::Ptr{CTPSA})::Bool
 
 Checks if TPSA is 0 or not
 
@@ -438,8 +425,8 @@ Checks if TPSA is 0 or not
 ### Output
 - `ret`  -- True or false
 """
-function mad_ctpsa_isnul(t::Ptr{CTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_isnul(t::Ptr{CTPSA})::Cuchar
+function mad_ctpsa_isnul(t::Ptr{CTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isnul(t::Ptr{CTPSA})::Bool
   return ret
 end
 
@@ -527,18 +514,18 @@ end
 
 
 """ 
-    mad_ctpsa_unit!(t::Ptr{CTPSA}, r::Ptr{CTPSA})
+    mad_ctpsa_unit!(a::Ptr{CTPSA}, c::Ptr{CTPSA})
 
-Interpreting TPSA `a` vector, gets the "unit vector", e.g. `r = t/norm(t)`. May be useful for checking for convergence.
+Interpreting TPSA as a vector, gets the "unit vector", e.g. `c = a/norm(a)`. May be useful for checking for convergence.
 
 ### Input
-- `t` -- Source TPSA `x`
+- `a` -- Source TPSA `a`
 
 ### Output
-- `r` -- Destination TPSA `r`
+- `c` -- Destination TPSA `c`
 """
-function mad_ctpsa_unit!(t::Ptr{CTPSA}, r::Ptr{CTPSA})
-  @ccall MAD_TPSA.mad_ctpsa_unit(t::Ptr{CTPSA}, r::Ptr{CTPSA})::Cvoid
+function mad_ctpsa_unit!(a::Ptr{CTPSA}, c::Ptr{CTPSA})
+  @ccall MAD_TPSA.mad_ctpsa_unit(a::Ptr{CTPSA}, c::Ptr{CTPSA})::Cvoid
 end
 
 
@@ -833,6 +820,51 @@ function mad_ctpsa_setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF6
   @ccall MAD_TPSA.mad_ctpsa_setm(t::Ptr{CTPSA}, n::Cint, m::Ptr{Cuchar}, a::ComplexF64, b::ComplexF64)::Cvoid
 end
 
+"""
+    mad_ctpsa_cpy0!(t::Ptr{CTPSA}, r::Ptr{CTPSA})
+
+    ???
+"""
+function mad_ctpsa_cpy0!(t::Ptr{CTPSA}, r::Ptr{CTPSA})
+  @ccall MAD_TPSA.mad_ctpsa_cpy0(t::Ptr{CTPSA}, r::Ptr{CTPSA})::Cvoid
+end
+
+"""
+    mad_ctpsa_cpyi!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)
+
+    ???
+"""
+function mad_ctpsa_cpyi!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)
+  @ccall MAD_TPSA.mad_ctpsa_cpyi(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)::Cvoid
+end
+
+"""
+    mad_ctpsa_cpys!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)
+
+    ???
+"""
+function mad_ctpsa_cpys!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)
+  @ccall MAD_TPSA.mad_ctpsa_cpys(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)::Cvoid
+end
+
+"""
+    mad_ctpsa_cpym!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar})
+
+    ???
+"""
+function mad_ctpsa_cpym!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar})
+  @ccall MAD_TPSA.mad_ctpsa_cpym(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Ptr{Cuchar})::Cvoid
+end
+
+"""
+    mad_ctpsa_cpysm!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cint})
+
+    ???
+"""
+function mad_ctpsa_cpysm!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cint})
+  @ccall MAD_TPSA.mad_ctpsa_cpysm(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Ptr{Cint})::Cvoid
+end
+
 
 """
     mad_ctpsa_setsm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)
@@ -1042,7 +1074,7 @@ end
 
 
 """
-    mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})
+    mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})::Cint
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
 a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`). 
@@ -1054,9 +1086,11 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
+- `ret` -- Copied length
 """
-function mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_getv(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_getv(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cint
+  return ret
 end
 
 
@@ -1071,14 +1105,18 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `i` -- Starting index of monomials to set coefficients
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
+
+### Output
+- `ret` -- Copied length
 """
-function mad_ctpsa_setv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_setv(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_setv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64})::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_setv(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cint
+  return ret
 end
 
 
 """
-    mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Cuchar
+    mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Bool
 
 Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
 
@@ -1090,8 +1128,8 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 ### Output
 - `ret`   - True if `a == b` within `tol_`
 """
-function mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Cuchar
+function mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_equ(a::Ptr{CTPSA}, b::Ptr{CTPSA}, tol_::Cdouble)::Bool
   return ret
 end
 
@@ -1255,7 +1293,7 @@ end
 
 
 """
-    mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
+    mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol::Cdouble)::Bool
 
 Checks if the CTPSA `a` is equal to the RTPSA `b` within the specified tolerance `tol_` 
 (internal real-to-complex conversion).
@@ -1268,8 +1306,8 @@ Checks if the CTPSA `a` is equal to the RTPSA `b` within the specified tolerance
 ### Output
 - `ret`   - True if `a == b` within `tol_`
 """
-function mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
+function mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_equt(a::Ptr{CTPSA}, b::Ptr{RTPSA}, tol::Cdouble)::Bool
   return ret
 end
 
@@ -2678,6 +2716,16 @@ function mad_ctpsa_logpb!(na::Cint, ma::Vector{Ptr{CTPSA}}, mb::Vector{Ptr{CTPSA
   @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{Ptr{CTPSA}}, mb::Ptr{Ptr{CTPSA}}, mc::Ptr{Ptr{CTPSA}})::Cvoid
 end
 
+"""
+    mad_ctpsa_mord(na::Cint, ma::Vector{Ptr{CTPSA}}, hi::Bool)::Cuchar
+
+    ???
+"""
+function mad_ctpsa_mord(na::Cint, ma::Vector{Ptr{CTPSA}}, hi::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{Ptr{CTPSA}}, hi::Bool)::Cuchar
+  return ret
+end
+
 
 """
     mad_ctpsa_mnrm(na::Cint, ma::Vector{Ptr{CTPSA}})::Cdouble
@@ -2903,7 +2951,7 @@ function mad_ctpsa_debug(t::Ptr{CTPSA}, name_::Cstring, fnam_::Cstring, line_::C
 end
 
 """
-    mad_ctpsa_isvalid(t::Ptr{CTPSA})::Cuchar
+    mad_ctpsa_isvalid(t::Ptr{CTPSA})::Bool
 
 Sanity check of the TPSA integrity.
 
@@ -2913,8 +2961,8 @@ Sanity check of the TPSA integrity.
 ### Output
 - `ret`  -- True if valid TPSA, false otherwise
 """
-function mad_ctpsa_isvalid(t::Ptr{CTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_isvalid(t::Ptr{CTPSA})::Cuchar
+function mad_ctpsa_isvalid(t::Ptr{CTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isvalid(t::Ptr{CTPSA})::Bool
   return ret
 end
 

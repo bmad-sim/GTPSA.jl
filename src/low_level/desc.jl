@@ -223,7 +223,7 @@ end
 
 
 """
-    mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
+    mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Bool
 
 Checks if monomial as string `s` is valid given maximum order of descriptor.
 
@@ -235,14 +235,14 @@ Checks if monomial as string `s` is valid given maximum order of descriptor.
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Cuchar
+function mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Bool
+  ret = @ccall MAD_TPSA.mad_desc_isvalids(d::Ptr{Desc}, n::Cint, s::Cstring)::Bool
   return ret
 end
 
 
 """
-    mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Vector{Cuchar})::Cuchar
+    mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Vector{Cuchar})::Bool
 
 Checks if monomial as byte array `m` is valid given maximum order of descriptor.
 
@@ -254,14 +254,14 @@ Checks if monomial as byte array `m` is valid given maximum order of descriptor.
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Vector{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Cuchar
+function mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Vector{Cuchar})::Bool
+  ret = @ccall MAD_TPSA.mad_desc_isvalidm(d::Ptr{Desc}, n::Cint, m::Ptr{Cuchar})::Bool
   return ret
 end
 
 
 """
-    mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Vector{Cint})::Cuchar
+    mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Vector{Cint})::Bool
 
 Checks the monomial as sparse monomial `m` (monomial stored as sequence of integers with each pair 
 `[(i,o)]` such that `i` = index, `o` = order) is valid given the maximum order of the descriptor.
@@ -274,8 +274,8 @@ Checks the monomial as sparse monomial `m` (monomial stored as sequence of integ
 ### Output
 - `ret` -- True if valid, false if invalid
 """
-function mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Vector{Cint})::Cuchar
-  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Cuchar
+function mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Vector{Cint})::Bool
+  ret = @ccall MAD_TPSA.mad_desc_isvalidsm(d::Ptr{Desc}, n::Cint, m::Ptr{Cint})::Bool
   return ret
 end
 

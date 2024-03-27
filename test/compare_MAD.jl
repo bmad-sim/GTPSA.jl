@@ -90,7 +90,7 @@ function c_to_jl_type(type_c)
   elseif occursin("ssz_t", type_c)
     type_jl = type_jl * "Cint"
   elseif occursin("log_t", type_c)
-    type_jl = type_jl * "Cuchar"
+    type_jl = type_jl * "Bool"
   elseif occursin("str_t", type_c)
     type_jl = type_jl * "Cstring"
   elseif occursin("idx_t", type_c)
@@ -320,7 +320,7 @@ function compare_MAD()
   io = IOBuffer()
 
   try
-    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_mono.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_mono.h", io)
     println(io_out, "mad_mono.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_mono.h")
@@ -337,7 +337,7 @@ function compare_MAD()
 
 
   try
-    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_desc.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_desc.h", io)
     println(io_out, "mad_desc.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_desc.h")
@@ -354,7 +354,7 @@ function compare_MAD()
 
 
   try
-    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_tpsa.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_tpsa.h", io)
     println(io_out, "mad_tpsa.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_tpsa.h")
@@ -370,7 +370,7 @@ function compare_MAD()
   compare(fun_decs_c, fun_decs_jl)
 
   try
-    Downloads.download("https://raw.githubusercontent.com/MethodicalAcceleratorDesign/MAD/dev/src/mad_ctpsa.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_ctpsa.h", io)
     println(io_out, "mad_ctpsa.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_ctpsa.h")

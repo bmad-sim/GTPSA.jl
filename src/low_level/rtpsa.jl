@@ -129,35 +129,37 @@ end
 
 
 """
-    mad_tpsa_nam(t::Ptr{RTPSA})::Cstring
+    mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
 
-Get the name of the TPSA.
+Get the name of the TPSA, and will optionally set if `nam_ != null`
 
 ### Input
 - `t`    -- TPSA
+- `nam_` -- Name to set the TPSA
 
 ### Output
 - `ret`  -- Name of RTPSA (null terminated in C)
 """
-function mad_tpsa_nam(t::Ptr{RTPSA})::Cstring
-  ret = @ccall MAD_TPSA.mad_tpsa_nam(t::Ptr{RTPSA})::Cstring
+function mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
+  ret = @ccall MAD_TPSA.mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
   return ret
 end
 
 
 """
-    mad_tpsa_ord(t::Ptr{RTPSA})::Cuchar
+    mad_tpsa_ord(t::Ptr{RTPSA}, hi_::Bool)::Cuchar
 
-Gets the TPSA order.
+Gets the TPSA maximum order, or `hi` if `hi_` is true.
 
 ### Input
 - `t`   -- TPSA
+- `hi_` -- Set `true` if `hi` is returned, else `mo` is returned
 
 ### Output
 - `ret` -- Order of TPSA
 """
-function mad_tpsa_ord(t::Ptr{RTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_ord(t::Ptr{RTPSA})::Cuchar
+function mad_tpsa_ord(t::Ptr{RTPSA}, hi_::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_ord(t::Ptr{RTPSA}, hi_::Bool)::Cuchar
   return ret
 end
 
@@ -181,24 +183,6 @@ end
 
 
 """
-    mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
-
-Returns the max order of all TPSAs in `t`.
-
-### Input
-- `n`  -- Number of TPSAs
-- `t`  -- Array of TPSAs 
-
-### Output
-- `mo` -- Maximum order of all TPSAs
-"""
-function mad_tpsa_ordn(n::Cint, t::Vector{Ptr{RTPSA}})::Cuchar
-  mo = @ccall MAD_TPSA.mad_tpsa_ordn(n::Cint, t::Ptr{Ptr{RTPSA}})::Cuchar
-  return mo
-end
-
-
-"""
     mad_tpsa_copy!(t::Ptr{RTPSA}, r::Ptr{RTPSA})
 
 Makes a copy of the TPSA `t` to `r`.
@@ -215,7 +199,7 @@ end
 
 
 """
-    mad_tpsa_sclord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Cuchar, prm::Cuchar)
+    mad_tpsa_sclord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Bool, prm::Bool)
 
 Scales all coefficients by order. If `inv == 0`, scales coefficients by order (derivation), else 
 scales coefficients by 1/order (integration).
@@ -228,8 +212,8 @@ scales coefficients by 1/order (integration).
 ### Output
 - `r`   -- Destination TPSA
 """
-function mad_tpsa_sclord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Cuchar, prm::Cuchar)
-  @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Cuchar, prm::Cuchar)::Cvoid
+function mad_tpsa_sclord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Bool, prm::Bool)
+  @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{RTPSA}, r::Ptr{RTPSA}, inv::Bool, prm::Bool)::Cvoid
 end
 
 
@@ -265,6 +249,15 @@ Cuts the TPSA off at the given order and above, or if `ord` is negative, will cu
 """
 function mad_tpsa_cutord!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, ord::Cint)
   @ccall MAD_TPSA.mad_tpsa_cutord(t::Ptr{RTPSA}, r::Ptr{RTPSA}, ord::Cint)::Cvoid
+end
+
+"""
+    mad_tpsa_clrord!(t::Ptr{RTPSA}, ord::Cuchar)
+
+    ???
+"""
+function mad_tpsa_clrord!(t::Ptr{RTPSA}, ord::Cuchar)
+  @ccall MAD_TPSA.mad_tpsa_clrord(t::Ptr{RTPSA}, ord::Cuchar)::Cvoid
 end
 
 """
@@ -351,18 +344,13 @@ function mad_tpsa_setval!(t::Ptr{RTPSA}, v::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setval(t::Ptr{RTPSA}, v::Cdouble)::Cvoid
 end
 
-
 """
-    mad_tpsa_setnam!(t::Ptr{RTPSA}, nam::Cstring)
+    mad_tpsa_update!(t::Ptr{RTPSA}, eps_::Cdouble)
 
-Sets the name of the RTPSA.
-
-### Input
-- `t`   -- TPSA
-- `nam` -- Name to set for RTPSA
+    ???
 """
-function mad_tpsa_setnam!(t::Ptr{RTPSA}, nam::Cstring)
-  @ccall MAD_TPSA.mad_tpsa_setnam(t::Ptr{RTPSA}, nam::Cstring)::Cvoid
+function mad_tpsa_update!(t::Ptr{RTPSA}, eps_::Cdouble)
+  ret = @ccall MAD_TPSA.mad_tpsa_update(t::Ptr{RTPSA}, eps_::Cdouble)::Bool
 end
 
 
@@ -380,7 +368,7 @@ end
 
 
 """
-    mad_tpsa_isnul(t::Ptr{RTPSA})::Cuchar
+    mad_tpsa_isnul(t::Ptr{RTPSA})::Bool
 
 Checks if TPSA is 0 or not
 
@@ -390,8 +378,8 @@ Checks if TPSA is 0 or not
 ### Output
 - `ret`  -- True or false
 """
-function mad_tpsa_isnul(t::Ptr{RTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_isnul(t::Ptr{RTPSA})::Cuchar
+function mad_tpsa_isnul(t::Ptr{RTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_tpsa_isnul(t::Ptr{RTPSA})::Bool
   return ret
 end
 
@@ -674,9 +662,54 @@ function mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Cdouble, b:
   @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
+"""
+    mad_tpsa_cpy0!(t::Ptr{RTPSA}, r::Ptr{RTPSA})
+
+    ???
+"""
+function mad_tpsa_cpy0!(t::Ptr{RTPSA}, r::Ptr{RTPSA})
+  @ccall MAD_TPSA.mad_tpsa_cpy0(t::Ptr{RTPSA}, r::Ptr{RTPSA})::Cvoid
+end
 
 """
-    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
+    mad_tpsa_cpyi!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)
+
+    ???
+"""
+function mad_tpsa_cpyi!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)
+  @ccall MAD_TPSA.mad_tpsa_cpyi(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)::Cvoid
+end
+
+"""
+    mad_tpsa_cpys!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)
+
+    ???
+"""
+function mad_tpsa_cpys!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)
+  @ccall MAD_TPSA.mad_tpsa_cpys(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)::Cvoid
+end
+
+"""
+    mad_tpsa_cpym!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
+
+    ???
+"""
+function mad_tpsa_cpym!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
+  @ccall MAD_TPSA.mad_tpsa_cpym(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cvoid
+end
+
+"""
+    mad_tpsa_cpysm!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cint})
+
+    ???
+"""
+function mad_tpsa_cpysm!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cint})
+  @ccall MAD_TPSA.mad_tpsa_cpysm(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Ptr{Cint})::Cvoid
+end
+
+
+"""
+    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})::Cint
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
 a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`). 
@@ -688,9 +721,11 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
+- `ret` -- Copied length
 """
-function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)
-  @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
+function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cint
+  return ret
 end
 
 
@@ -705,14 +740,18 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `i` -- Starting index of monomials to set coefficients
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
+
+### Output
+- `ret` -- Copied length
 """
 function mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
-  @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
+  ret = @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cint
+  return ret
 end
 
 
 """
-    mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
+    mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Bool
 
 Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
 
@@ -724,8 +763,8 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 ### Output
 - `ret`   - True if `a == b` within `tol_`
 """
-function mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Cuchar
+function mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_tpsa_equ(a::Ptr{RTPSA}, b::Ptr{RTPSA}, tol_::Cdouble)::Bool
   return ret
 end
 
@@ -1406,19 +1445,19 @@ end
 
 
 """
-    mad_tpsa_unit!(x::Ptr{RTPSA}, r::Ptr{RTPSA})
+    mad_tpsa_unit!(a::Ptr{RTPSA}, c::Ptr{RTPSA})
 
-Interpreting TPSA as a vector, gets the "unit vector", e.g. `r = x/norm(x)`. 
+Interpreting TPSA as a vector, gets the "unit vector", e.g. `c = a/norm(a)`. 
 May be useful for checking for convergence.
 
 ### Input
-- `x` -- Source TPSA `x`
+- `a` -- Source TPSA `a`
 
 ### Output
-- `r` -- Destination TPSA `r`
+- `c` -- Destination TPSA `c`
 """
-function  mad_tpsa_unit!(x::Ptr{RTPSA}, r::Ptr{RTPSA})
-  @ccall MAD_TPSA.mad_tpsa_unit(x::Ptr{RTPSA}, r::Ptr{RTPSA})::Cvoid
+function  mad_tpsa_unit!(a::Ptr{RTPSA}, c::Ptr{RTPSA})
+  @ccall MAD_TPSA.mad_tpsa_unit(a::Ptr{RTPSA}, c::Ptr{RTPSA})::Cvoid
 end
 
 
@@ -1849,6 +1888,16 @@ function mad_tpsa_logpb!(na::Cint, ma::Vector{Ptr{RTPSA}}, mb::Vector{Ptr{RTPSA}
 end
 
 
+"""
+    mad_tpsa_mord(na::Cint, ma::Vector{Ptr{RTPSA}}, hi::Bool)::Cuchar
+
+    ???
+"""
+function mad_tpsa_mord(na::Cint, ma::Vector{Ptr{RTPSA}}, hi::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_mord(na::Cint, ma::Ptr{Ptr{RTPSA}}, hi::Bool)::Cuchar
+  return ret
+end
+
 
 """
     mad_tpsa_mnrm(na::Cint, ma::Vector{Ptr{RTPSA}})::Cdouble
@@ -2074,7 +2123,7 @@ function mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Ci
 end
 
 """
-    mad_tpsa_isvalid(t::Ptr{RTPSA})::Cuchar
+    mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
 
 Sanity check of the TPSA integrity.
 
@@ -2084,8 +2133,8 @@ Sanity check of the TPSA integrity.
 ### Output
 - `ret`  -- True if valid TPSA, false otherwise
 """
-function mad_tpsa_isvalid(t::Ptr{RTPSA})::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_isvalid(t::Ptr{RTPSA})::Cuchar
+function mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
   return ret
 end
 
