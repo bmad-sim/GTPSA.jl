@@ -118,6 +118,7 @@ export
   scalar,
   setGTPSA!,
   getGTPSA,
+  clear!,
   
   # Temporaries:
   @FastGTPSA,

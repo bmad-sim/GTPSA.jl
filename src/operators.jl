@@ -1,3 +1,12 @@
+# -- clear --
+function clear!(t::TPS)
+  mad_tpsa_clear!(t.tpsa)
+end
+
+function clear!(t::ComplexTPS)
+  mad_ctpsa_clear!(t.tpsa)
+end
+
 # -- zero -- 
 function zero(t::TPS)::TPS
   return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
