@@ -286,7 +286,7 @@ function show_vec(io::IO, m::Vector{<:Union{TPS,ComplexTPS}})
   desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
   diffdescs = false
   for i in eachindex(m)
-    if desc != unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
+    if !diffdescs && desc != unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
       println(io, "WARNING: Atleast one $(eltype(m)) has a different Descriptor!")
       diffdescs = true
       lines_used[] += 1
@@ -330,7 +330,9 @@ function show_map!(io::IO, m::Vector{<:Union{TPS,ComplexTPS}}, lines_used::Ref=R
   for i in eachindex(m)
     curdesc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(m[i].tpsa).d))
     if only_vars && (desc.nv != curdesc.nv)
-      error("Cannot use only_vars = true for vector with TPSs having different number of variables")
+      println(io, "Cannot print $(typeof(m)): unable to resolve GTPSA Descriptor.")
+      lines_used[]+=1
+      return
     end
     max_nn = max(max_nn, curdesc.nv+curdesc.np)
   end
