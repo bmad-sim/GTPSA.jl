@@ -6,7 +6,7 @@ sin, cos, tan, csc, sec, cot, sinc, sinh, cosh, tanh, csch,
 sech, coth, asin, acos, atan, acsc, asec, acot, asinh, acosh, 
 atanh, acsch, asech, acoth, zero, one, real, imag, conj, angle, 
 complex, promote_rule, getindex, setindex!, ==, <, >, <=, >=, 
-!=, isequal, show
+!=, isequal, show, copy!
 ```
 
 `GTPSA.jl` overloads (and exports) the following functions from the corresponding packages:

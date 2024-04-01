@@ -1,5 +1,6 @@
 # [TPS and Map Methods](@id tpsmapmethods)
 ```@docs
+clear!
 cutord
 deriv
 evaluate

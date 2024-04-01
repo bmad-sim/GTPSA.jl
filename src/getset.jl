@@ -9,46 +9,119 @@ lowtype(::Type{TPS}) = Ptr{RTPSA}
 lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
 
 # --- Setters ---
-function setindex!(t::TPS, v::Real, ords::Integer...)
-  mad_tpsa_setm!(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), 0.0, convert(Cdouble, v))
+seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) = mad_tpsa_seti!(t, i, a, b)
+seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  mad_ctpsa_seti!(t, i, a, b)
+setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Float64, b::Float64) = mad_tpsa_setm!(t, n, m, a, b)
+setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) = mad_ctpsa_setm!(t, n, m, a, b)
+setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Float64, b::Float64)= mad_tpsa_setsm!(t, n, m, a, b)
+setsm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)= mad_ctpsa_setsm!(t, n, m, a, b)
+
+# Flat index: Integer...
+# Monomial: Vector{<:Integer}, Tuple{Vararg{<:Integer}}
+# Sparse Monomial: Pair{<:Integer,<:Integer}... , Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Pair{<:Integer,<:Integer}}}
+const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Pair{<:Integer,<:Integer}}}}
+const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{<:Integer}}}
+const TPSIndexType = Union{Integer,
+                           MIndexType,
+                           SMIndexType}
+
+# All
+function setindex!(t::Union{TPS,ComplexTPS}, v::Number, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+  lowset!(t, v, idx, param, params)
 end
 
-function setindex!(t::TPS, v::Real, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
+# To override Base number.jl
+#setindex!(t::Union{ComplexTPS, TPS}, v::Number, idx::Integer) = lowset!(t, v, tuple(idx), nothing, nothing)
+
+# Flat index
+function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,<:Integer}, param::Union{Nothing,<:Integer}, params::Nothing)
+  if !xor(isempty(i), isnothing(param))
+    error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
+  end
+
+  if isnothing(param)
+    seti!(t.tpsa, Cint(i), (numtype(t))(0), (numtype(t))(v))
+  else
+    nv = numvars(t)
+    seti!(t.tpsa, Cint(nv+param), (numtype(t))(0), (numtype(t))(v))
+  end
+end
+
+# Monomial
+function lowset!(t::Union{TPS,ComplexTPS}, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
+  setm!(t.tpsa, convert(Cint, length(ords)), collect(Cuchar, ords), (numtype(t))(0), (numtype(t))(v))
+end
+
+# By sparse monomial
+function lowset!(t::Union{TPS,ComplexTPS}, v::Number, vars::SMIndexType, param::Nothing, params::Union{SMIndexType,Nothing})
   sm, n = pairs_to_sm(t, vars, params=params)
-  mad_tpsa_setsm!(t.tpsa, n, sm, 0.0, convert(Cdouble, v))
+  setsm!(t.tpsa, n, sm, (numtype(t))(0), (numtype(t))(v))
 end
 
-function setindex!(ct::ComplexTPS, v::Number, ords::Integer...)
-  mad_ctpsa_setm!(ct.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]), convert(ComplexF64, 0), convert(ComplexF64, v))
+# Sparse monomial with nothing for vars
+function lowset!(t::Union{TPS,ComplexTPS}, v::Number, vars::Nothing, param::Nothing, params::SMIndexType)
+  sm, n = pairs_to_sm(t, Pair{Int,Int}[], params=params)
+  setsm!(t.tpsa, n, sm, (numtype(t))(0), (numtype(t))(v))
 end
 
-function setindex!(ct::ComplexTPS, v::Number, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  sm, n = pairs_to_sm(ct, vars, params=params)
-  mad_ctpsa_setsm!(ct.tpsa, n, sm, convert(ComplexF64, 0), convert(ComplexF64, v))
-end
+# In case someone forgets tuple:
+lowset!(t, v, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 
 
 # --- Getters ---
+geti(t::Ptr{RTPSA}, i::Cint) = mad_tpsa_geti(t, i)
+geti(t::Ptr{CTPSA}, i::Cint) = mad_ctpsa_geti(t, i)
 getm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = mad_tpsa_getm(t, n, m)
 getm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = mad_ctpsa_getm(t, n, m)
 getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})= mad_tpsa_getsm(t, n, m)
 getsm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint})= mad_ctpsa_getsm(t, n, m)
 
-function getindex(t::Union{TPS,ComplexTPS}, ords::Integer...)
-  return getm(t.tpsa, convert(Cint, length(ords)), convert(Vector{Cuchar}, [ords...]))
+# All
+function getindex(t::Union{TPS,ComplexTPS}, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+  lowget(t, idx, param, params)
 end
 
-function getindex(t::Union{TPS,ComplexTPS}, vars::Pair{<:Integer, <:Integer}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  # use sparse monomial getter
+# To override Base number.jl
+getindex(t::Union{ComplexTPS, TPS}, idx::Integer) = lowget(t, idx, nothing, nothing)
+
+# Flat index
+function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,<:Integer}, param::Union{Nothing,<:Integer}, params::Nothing)
+  if !xor(isempty(i), isnothing(param))
+    error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
+  end
+
+  if isnothing(param)
+    return geti(t.tpsa, Cint(i))
+  else
+    nv = numvars(t)
+    return geti(t.tpsa, Cint(nv+param))
+  end
+end
+
+# Monomial
+function lowget(t::Union{TPS,ComplexTPS}, ords::MIndexType, param::Nothing, params::Nothing)
+  return getm(t.tpsa, convert(Cint, length(ords)), collect(Cuchar, ords))
+end
+
+# By sparse monomial
+function lowget(t::Union{TPS,ComplexTPS}, vars::SMIndexType, param::Nothing, params::Union{SMIndexType,Nothing})
   sm, n = pairs_to_sm(t, vars, params=params)
   return getsm(t.tpsa, n, sm)
 end
 
+# Sparse monomial with nothing for vars
+function lowget(t::Union{TPS,ComplexTPS}, vars::Nothing, param::Nothing, params::SMIndexType)
+  sm, n = pairs_to_sm(t, Pair{Int,Int}[], params=params)
+  return getsm(t.tpsa, n, sm)
+end
+
+lowget(t, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
+
+
+
+# --- Slicing (getter) ---
+#=
 function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
-  #=
-  if !(ords[1:end-1] isa Tuple{Vararg{Integer}})
-    error("Invalid monomial index: colon must appear at end.")
-  end=#
   return slice(t, setup_mono(t,ords,nothing,nothing), false)
 end
 
@@ -57,11 +130,6 @@ function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Intege
 end
 
 getindex(t::Union{TPS,ComplexTPS}) = t
-
-#=
-function getindex(::TPS)
-  return TPS[]
-end
 =#
 
 # --- par --- 
@@ -149,8 +217,7 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, param
 end
 
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::Vector{Cuchar}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
-  nv = desc.nv # TOTAL NUMBER OF VARS!!!!
+  nv = numvars(t1) # TOTAL NUMBER OF VARS!!!!
   par_mono = ones(Cuchar, param+nv+1).*0xff
   par_mono[nv+param] = 0x1
   return par_mono
@@ -164,7 +231,7 @@ end
 # Monomial by order:
 # This one should ALWAYS be called by par or splicing colon IS in the tuple or vector somewhere
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Tuple{Vararg{Union{<:Integer,<:Colon}}},Vector{<:Any}}, param::Nothing, params::Nothing)::Vector{Cuchar}
-  return [replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v)...]
+  return collect(replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v))
 end
 
 # By definition, sparse monomial makes everything else zero. SO if we reach this, it is automatically
@@ -195,9 +262,8 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
 end
 
 function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
-  nv = desc.nv # TOTAL NUMBER OF VARS!!!!
-  np = desc.np
+  nv = numvars(t1)
+  np = numparams(t1)
   t = zero(t1)
   v = Cint(length(par_mono))
   coef = Ref{numtype(t)}()
@@ -247,10 +313,9 @@ in the TPS.
 - `result`         -- Preallocated `Vector` to fill with the gradient of the TPS
 """
 function gradient!(result::Vector{<:Union{Float64,ComplexF64}}, t::Union{TPS,ComplexTPS}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  n = desc.nv
+  n = numvars(t)
   if include_params
-    n += desc.np
+    n += numparams(t)
   end
   if length(result) != n
     error("Incorrect size for result")
@@ -274,10 +339,9 @@ first-order monomial coefficients already in the TPS.
 - `grad`           -- Gradient of the TPS
 """
 function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  n = desc.nv
+  n = numvars(t)
   if include_params
-    n += desc.np
+    n += numparams(t)
   end
   grad = Vector{numtype(t)}(undef, n)
   getv!(t.tpsa, Cint(1), n, grad)
@@ -301,10 +365,9 @@ in the TPSs.
 - `result`         -- Preallocated matrix to fill with the Jacobian of `m`
 """
 function jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
-  n = desc.nv
+  n = numvars(first(m))
   if include_params
-    n += desc.np
+    n += numparams(first(m))
   end
   if size(result)[2] != n
     error("Incorrect size for result")
@@ -335,10 +398,9 @@ the first-order monomial coefficients already in the TPSs.
 - `J`              -- Jacobian of `m`
 """
 function jacobian(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
-  n = desc.nv
+  n = numvars(first(m))
   if include_params
-    n += desc.np
+    n += numparams(first(m))
   end
   J = Matrix{numtype(first(m))}(undef, length(m), n)
   grad = Vector{numtype(first(m))}(undef, n)
@@ -367,10 +429,9 @@ first-order monomial coefficients already in the TPSs and filling `result`.
 - `result`         -- Preallocated matrix to fill with the transpose of the Jacobian of `m`
 """
 function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
-  n = desc.nv
+  n = numvars(first(m))
   if include_params
-    n += desc.np
+    n += numparams(first(m))
   end
   if size(result)[2] != n
     error("Incorrect size for result")
@@ -398,10 +459,9 @@ first-order monomial coefficients already in the TPSs.
 - `Jt`             -- Transpose of the Jacobian of `m`
 """
 function jacobiant(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(first(m).tpsa).d))
-  n = desc.nv
+  n = numvars(first(m))
   if include_params
-    n += desc.np
+    n += numparams(first(m))
   end
   result = Matrix{numtype(first(m))}(undef, length(m), n)
   jacobiant!(result, m, include_params=include_params)

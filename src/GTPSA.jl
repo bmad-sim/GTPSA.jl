@@ -57,7 +57,8 @@ import Base:  +,
               >=,
               !=,
               isequal,
-              show
+              show,
+              copy!
 
 import LinearAlgebra: norm
 import SpecialFunctions: erf, erfc
@@ -140,16 +141,6 @@ include("low_level/mono.jl")
 include("low_level/desc.jl")
 include("low_level/rtpsa.jl")
 include("low_level/ctpsa.jl")
-
-# Useful type-generic functions:
-cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
-cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
-idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
-idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
-seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) =  (@inline; mad_tpsa_seti!(t, i, a, b))
-seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  (@inline; mad_ctpsa_seti!(t, i, a, b))
-setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble) = (@inline;  mad_tpsa_setm!(t, n, m, a, b))
-setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) = (@inline;  mad_ctpsa_setm!(t, n, m, a, b))
 
 const MAD_TPSA::String = :("libgtpsa")
 const MAD_TPSA_DEFAULT::Cuchar = 255
@@ -538,6 +529,17 @@ function low_ComplexTPS(a::Real, tb::TPS, use::Union{TPS,ComplexTPS})
   return low_ComplexTPS(a, tb, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
 end
 
+# Useful type-generic functions:
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
+getdesc(t::Union{TPS,ComplexTPS}) = Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+numvars(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nv
+numparams(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).np
+numnn(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nn
+
+
 # --- Variable/parameter generators ---
 
 """
@@ -806,14 +808,19 @@ function low_mono(T::Type, d::Union{Descriptor,TPS,ComplexTPS}, v, param, params
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])::Tuple{Vector{Cint}, Cint}
+function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{<:Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
   # WE MUST Order THE VARIABLES !!!
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv # TOTAL NUMBER OF VARS!!!!!!
+  nv = numvars(t)
   numv = Cint(length(vars))
-  nump = Cint(length(params))
-  imin = min(minimum(x->x.first, vars,init=typemax(Int)), minimum(x->x.first+nv, params,init=typemax(Int)))
-  imax = max(maximum(x->x.first, vars,init=0), maximum(x->x.first+nv, params,init=0))
+  if !isnothing(params) 
+    nump = Cint(length(params))
+    imin = min(minimum(x->x.first, vars,init=typemax(Int)), minimum(x->x.first+nv, params,init=typemax(Int)))
+    imax = max(maximum(x->x.first, vars,init=0), maximum(x->x.first+nv, params,init=0))
+  else
+    nump = 0
+    imin = minimum(x->x.first, vars,init=typemax(Int))
+    imax = maximum(x->x.first, vars,init=0)
+  end
   len = imax-imin+1
   sm = zeros(Cint, 2*len)
   sm[1:2:end] = imin:imax
@@ -829,8 +836,7 @@ end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
 function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-  nv = desc.nv
+  nv = numvars(t)
   n = Cint(0)
   if isempty(params)
     n = Cint(maximum(map(x->x.first, vars)))
