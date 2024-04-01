@@ -120,17 +120,24 @@ lowget(t, idx, param, params) = error("Invalid monomial index specified. Please 
 
 
 # --- Slicing (getter) ---
-#=
-function getindex(t::Union{TPS,ComplexTPS}, ords::Union{Integer,Colon}...)
-  return slice(t, setup_mono(t,ords,nothing,nothing), false)
+
+# Vectors (which will be Vector{Any}) must be converted to tuples so SM or M indexing can be resolved:
+const SMColonIndexType = Tuple{Vararg{<:Union{Pair{<:Integer,<:Integer},<:Colon}}}
+const MColonIndexType =Tuple{Vararg{<:Union{<:Integer,<:Colon}}}
+const TPSColonIndexType = Union{Integer, Colon,
+                                MColonIndexType,
+                                SMColonIndexType,
+                                Vector{<:Any}}
+
+function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+  if (v isa Vector)
+    par_mono = setup_mono(t, tuple(v...), param, params)
+  else
+    par_mono = setup_mono(t, v, param, params)
+  end
+  return slice(t, par_mono, false)
 end
 
-function getindex(t::Union{TPS,ComplexTPS}, vars::Union{Pair{<:Integer, <:Integer}, Colon}...; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[])
-  return slice(t, setup_mono(t, vars, nothing, params), false)
-end
-
-getindex(t::Union{TPS,ComplexTPS}) = t
-=#
 
 # --- par --- 
 """
@@ -200,16 +207,21 @@ TPS:
   3.0000000000000000e+00      7      2   1   1   2   1   |   0   0
 ```
 """
-function par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
-  if (v isa Vector) && !(last(v) isa Colon)
-    par_mono = setup_mono(t, tuple(v...,:), param, params)
+function par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+  if (v isa Vector)
+    tmpv = tuple(v...)
+    if tmpv isa MColonIndexType # because par-ing, must add colon
+      par_mono = setup_mono(t, tuple(tmpv...,:), param, params)
+    else
+      par_mono = setup_mono(t, tmpv, param, params)
+    end
   else
     par_mono = setup_mono(t, v, param, params)
   end
   return slice(t, par_mono)
 end
 
-# Variable/parameter:
+# Flat index:
 function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
   par_mono = ones(Cuchar, v+1).*0xff
   par_mono[v] = 0x1
@@ -222,37 +234,32 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, param
   par_mono[nv+param] = 0x1
   return par_mono
 end
-#=
-# Default to scalar part as TPS if nothing passed:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Nothing)::Vector{Cuchar}
-  return [0x0]
-end
-=#
+
 # Monomial by order:
 # This one should ALWAYS be called by par or splicing colon IS in the tuple or vector somewhere
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Tuple{Vararg{Union{<:Integer,<:Colon}}},Vector{<:Any}}, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::MColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
   return collect(replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v))
 end
 
 # By definition, sparse monomial makes everything else zero. SO if we reach this, it is automatically
 # assumed that everything else is colon except those explictly made ix_var=>0
 # Monomial by sparse monomial:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}},  Tuple{Vararg{Union{Pair{<:Integer,<:Integer},<:Colon}}}}, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::SMColonIndexType, param::Nothing, params::SMIndexType)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),params=params,zero_mono=false)
-  return [ords..., 0xff]
+  return vcat(ords, 0xff)
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Union{Pair{<:Integer,<:Integer},<:Colon}}}}, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::SMColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),zero_mono=false)
-  return [ords..., 0xff]
+  return vcat(ords, 0xff)
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::Vector{<:Pair{<:Integer,<:Integer}})::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::SMIndexType)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___ = pairs_to_m(t1,Pair{Int,Int}[],params=params,zero_mono=false)
-  return [ords..., 0xff]
+  return vcat(ords, 0xff)
 end
 
 
@@ -280,10 +287,9 @@ function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
           tmp = zeros(Cuchar, np+nv)
           tmp[invalid_idxs] .= mono[invalid_idxs]
           tmp[v+1:end] .= mono[v+1:end]
-          t[tmp...] = coef[]
+          t[tmp] = coef[]
         else
-          t[mono...] = coef[]
-          
+          t[mono] = coef[]
         end
       end
     end
@@ -405,7 +411,7 @@ function jacobian(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
   J = Matrix{numtype(first(m))}(undef, length(m), n)
   grad = Vector{numtype(first(m))}(undef, n)
   for i=1:length(m)
-    mad_tpsa_getv!(m[i].tpsa, Cint(1), n, grad)
+    getv!(m[i].tpsa, Cint(1), n, grad)
     J[i,:] = grad
   end
   return J

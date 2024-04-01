@@ -835,7 +835,7 @@ function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integ
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Vector{<:Pair{<:Integer,<:Integer}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
   nv = numvars(t)
   n = Cint(0)
   if isempty(params)
