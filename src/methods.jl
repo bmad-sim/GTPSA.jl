@@ -2,12 +2,12 @@
 eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Float64}, tc::Vector{Float64}) = mad_tpsa_eval!(na, ma, nb, tb, tc)
 eval!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64}) = mad_ctpsa_eval!(na, ma, nb, tb, tc)
 
-function evaluate!(tc::Vector{<:Number}, m::Vector{<:Union{TPS,ComplexTPS}}, tb::Vector{<:Number}; work_low::Vector{lowtype(eltype(m))}=Vector{lowtype(eltype(m))}(undef, length(m)))
+function evaluate!(tc::Vector{<:Number}, m::Vector{T}, tb::Vector{<:Number}; work_low::Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}=Vector{lowtype(T)}(undef, length(m))) where {T<:Union{TPS,ComplexTPS}}
   na = Cint(length(m))
   nb = Cint(length(tb))
   @assert na == nb "Vector lengths for TPSs and evaluation point disagree"
   @assert length(tc) == nb "Output vector length disagrees with input vector length"
-
+  
 
 end
 
@@ -17,7 +17,7 @@ end
 
 Evaluates `m` at the point `x`.
 """
-function evaluate(m::Vector{<:Union{TPS,ComplexTPS}, x::Vector{<:Number})
+function evaluate(m::Vector{<:Union{TPS,ComplexTPS}}, x::Vector{<:Number})
   na = Cint(length(m))
   ma = map(t->t.tpsa, m)
   nb = Cint(length(x))
