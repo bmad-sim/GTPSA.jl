@@ -343,18 +343,20 @@ for each TPS in the map (depending on output type), to pass to the low-level C c
 They are correspondingly referred to as `outx_low`, `m2x_low`, and `m1x_low`. These three temporaries containers 
 can be optionally passed as a tuple in `work_low`, and must satisfy the following requirements:
 
+```
 work_low[1] = outx_low   # Length >= length(m) = length(m2)
 work_low[2] = m2x_low    # Length >= length(m2) = length(m)
 work_low[3] = m1x_low    # Length >= length(m1)
+```
 
 If promotion is occuring, then one of the input vectors must be promoted to `ComplexTPS`. A vector of pre-allocated 
 `ComplexTPS`s can optionally provided as the first argument in the `work_prom` tuple, and has the requirement:
 
 If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
-work_prom[1] = m1x_prom  # Length >= length(m1), Vector{ComplexTPS}
+`work_prom[1] = m1x_prom  # Length >= length(m1), Vector{ComplexTPS}`
 
 else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
-work_prom[1] = m2x_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}
+`work_prom[1] = m2x_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
 
 Note that the `ComplexTPS`s in the vectors must be allocated and have the same `Descriptor`.
 """
