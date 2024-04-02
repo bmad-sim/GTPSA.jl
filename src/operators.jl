@@ -1,13 +1,13 @@
-# -- clear --
-function clear!(t::TPS)
-  mad_tpsa_clear!(t.tpsa)
+# --- copy ---
+function copy!(t::TPS, t1::TPS)
+  mad_tpsa_copy!(t1.tpsa, t.tpsa)
 end
 
-function clear!(t::ComplexTPS)
-  mad_ctpsa_clear!(t.tpsa)
+function copy!(ct::ComplexTPS, ct1::ComplexTPS)
+  mad_ctpsa_copy!(ct1.tpsa, ct.tpsa)
 end
 
-# -- zero -- 
+# --- zero ---
 function zero(t::TPS)::TPS
   return TPS(mad_tpsa_new(t.tpsa, MAD_TPSA_SAME))
 end
