@@ -103,12 +103,12 @@ export
 
   # Methods:
   evaluate, evaluate!,
-  compose,
+  compose, compose!,
   integ, ∫, integ!, ∫!,
   deriv, ∂, deriv!, ∂!,
   getord, getord!,
   cutord, cutord!,
-  translate,
+  translate, translate!,
   par,
   scalar,
   setGTPSA!,
