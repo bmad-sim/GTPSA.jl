@@ -9,7 +9,7 @@
 7. **[Monomial Indexing](@ref monoindex)**: Get/set individual monomial coefficients
 8. **[`mono`](@ref mono)**: Creates a TPS corresponding to a specific monomial
 9. **[Slicing and `par`](@ref slice)**: Indexing a specific polynomial within the TPS
-10. **[TPS and Map Methods](@ref tpsmapmethods)**: Integrate, differentiate, poisson bracket, map (partial) inversion, etc.
+10. **[TPS Methods](@ref tpsmethods)**: Integrate, differentiate, composition, evaluation, etc.
 11. **[`@FastGTPSA`](@ref fastgtpsa)**: Speed up evaluation of expressions containing TPSs, transparent to other types
 12. **[I/O](@ref io)**: Reading/writing TPSs
 13. **[All Overloaded Functions](@ref all)**: List of all overloaded Base functions and more 

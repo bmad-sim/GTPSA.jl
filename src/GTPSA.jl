@@ -80,6 +80,7 @@ export
   polar,
   rect, 
   clear!,
+  complex!,
 
   # Monomial as TPS creators:
   vars,
@@ -101,20 +102,12 @@ export
   
 
   # Methods:
-  evaluate,
+  evaluate, evaluate!,
   compose,
-  integ, ∫,
-  deriv, ∂,
-  getord,
-  cutord,
-  pb,
-  lb,
-  getvectorfield,
-  gethamiltonian,
-  exppb,
-  logpb,
-  fgrad,
-  ptinv,
+  integ, ∫, integ!, ∫!,
+  deriv, ∂, deriv!, ∂!,
+  getord, getord!,
+  cutord, cutord!,
   translate,
   par,
   scalar,

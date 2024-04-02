@@ -1,19 +1,19 @@
-# [TPS and Map Methods](@id tpsmapmethods)
+# [TPS Methods](@id tpsmethods)
 ```@docs
 clear!
+complex!
+compose!
 cutord
+cutord!
 deriv
+deriv!
 evaluate
-exppb
-fgrad
-gethamiltonian
+evaluate!
 getord
-getvectorfield
+getord!
 integ
-lb
-logpb
-pb
-ptinv
+integ!
 scalar
 translate
+translate!
 ```

@@ -15,7 +15,7 @@ complex, promote_rule, getindex, setindex!, ==, <, >, <=, >=,
 
 `GTPSA.jl` also provides the following functions NOT included in Base or any of the above packages:
 ```
-unit, sinhc, asinc, asinhc, polar, rect 
+unit, sinhc, asinc, asinhc, polar, rect
 ```
 
 If there is a mathematical function in Base which you'd like and is not included in the above list, feel free to submit an [issue](https://github.com/bmad-sim/GTPSA.jl/issues).

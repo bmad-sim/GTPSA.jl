@@ -1,12 +1,3 @@
-# --- clear ---
-function clear!(t::TPS)
-  mad_tpsa_clear!(t.tpsa)
-end
-
-function clear!(t::ComplexTPS)
-  mad_ctpsa_clear!(t.tpsa)
-end
-
 # --- copy ---
 function copy!(t::TPS, t1::TPS)
   mad_tpsa_copy!(t1.tpsa, t.tpsa)
