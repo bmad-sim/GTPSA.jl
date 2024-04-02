@@ -1,11 +1,23 @@
 # --- Evaluate ---
+eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Float64}, tc::Vector{Float64}) = mad_tpsa_eval!(na, ma, nb, tb, tc)
+eval!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64}) = mad_ctpsa_eval!(na, ma, nb, tb, tc)
+
+function evaluate!(tc::Vector{<:Number}, m::Vector{<:Union{TPS,ComplexTPS}}, tb::Vector{<:Number}; work_low::Vector{lowtype(eltype(m))}=Vector{lowtype(eltype(m))}(undef, length(m)))
+  na = Cint(length(m))
+  nb = Cint(length(tb))
+  @assert na == nb "Vector lengths for TPSs and evaluation point disagree"
+  @assert length(tc) == nb "Output vector length disagrees with input vector length"
+
+
+end
+
 # TPS:
 """
     evaluate(m::Vector{TPS}, x::Vector{<:Real})::Vector{Float64}
 
 Evaluates `m` at the point `x`.
 """
-function evaluate(m::Vector{TPS}, x::Vector{<:Real})::Vector{Float64}
+function evaluate(m::Vector{<:Union{TPS,ComplexTPS}, x::Vector{<:Number})
   na = Cint(length(m))
   ma = map(t->t.tpsa, m)
   nb = Cint(length(x))
@@ -79,8 +91,8 @@ derivm!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, n::Cint, ords::Vector{Cuchar}) = (@
 derivm!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, n::Cint, ords::Vector{Cuchar}) = (@inline; mad_ctpsa_derivm!(ctpsa1, ctpsa, n, ords))
 
 """
-    deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
-    ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+    deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+    ∂(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
 alternatively any monomial specified by indexing-by-order OR indexing-by-sparse monomial.
@@ -148,7 +160,7 @@ TPS:
    1.0000000000000000e+00    0        0    0
 ```
 """
-function deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+function deriv(t1::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer}}, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
   return low_deriv(t1, v, param, params)
 end
 

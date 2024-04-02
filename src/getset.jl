@@ -1,13 +1,3 @@
-numtype(t::TPS) = Float64
-numtype(ct::ComplexTPS) = ComplexF64
-numtype(::Type{TPS}) = Float64
-numtype(::Type{ComplexTPS}) = ComplexF64
-
-lowtype(t::TPS) = Ptr{RTPSA}
-lowtype(ct::ComplexTPS) = Ptr{CTPSA}
-lowtype(::Type{TPS}) = Ptr{RTPSA}
-lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
-
 # --- Setters ---
 seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble) = mad_tpsa_seti!(t, i, a, b)
 seti!(t::Ptr{CTPSA}, i::Cint, a::ComplexF64, b::ComplexF64) =  mad_ctpsa_seti!(t, i, a, b)
@@ -16,17 +6,8 @@ setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) =
 setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Float64, b::Float64)= mad_tpsa_setsm!(t, n, m, a, b)
 setsm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)= mad_ctpsa_setsm!(t, n, m, a, b)
 
-# Flat index: Integer...
-# Monomial: Vector{<:Integer}, Tuple{Vararg{<:Integer}}
-# Sparse Monomial: Pair{<:Integer,<:Integer}... , Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Pair{<:Integer,<:Integer}}}
-const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{<:Pair{<:Integer,<:Integer}}}}
-const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{<:Integer}}}
-const TPSIndexType = Union{Integer,
-                           MIndexType,
-                           SMIndexType}
-
 # All
-function setindex!(t::Union{TPS,ComplexTPS}, v::Number, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+function setindex!(t::Union{TPS,ComplexTPS}, v::Number, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   lowset!(t, v, idx, param, params)
 end
 
@@ -34,8 +15,8 @@ end
 #setindex!(t::Union{ComplexTPS, TPS}, v::Number, idx::Integer) = lowset!(t, v, tuple(idx), nothing, nothing)
 
 # Flat index
-function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,<:Integer}, param::Union{Nothing,<:Integer}, params::Nothing)
-  if !xor(isempty(i), isnothing(param))
+function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
+  if !xor(isnothing(i), isnothing(param))
     error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
   end
 
@@ -77,16 +58,20 @@ getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})= mad_tpsa_getsm(t, n, m)
 getsm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint})= mad_ctpsa_getsm(t, n, m)
 
 # All
-function getindex(t::Union{TPS,ComplexTPS}, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
-  lowget(t, idx, param, params)
+function getindex(t::Union{TPS,ComplexTPS}, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+  #println(typeof(t))
+  #println(typeof(idx))
+  #println(typeof(param))
+  #println(typeof(params))
+  return lowget(t, idx, param, params)
 end
 
 # To override Base number.jl
 getindex(t::Union{ComplexTPS, TPS}, idx::Integer) = lowget(t, idx, nothing, nothing)
 
 # Flat index
-function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,<:Integer}, param::Union{Nothing,<:Integer}, params::Nothing)
-  if !xor(isempty(i), isnothing(param))
+function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
+  if !xor(isnothing(i), isnothing(param))
     error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
   end
 
@@ -118,18 +103,16 @@ end
 lowget(t, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 
 
-
 # --- Slicing (getter) ---
 
 # Vectors (which will be Vector{Any}) must be converted to tuples so SM or M indexing can be resolved:
-const SMColonIndexType = Tuple{Vararg{<:Union{Pair{<:Integer,<:Integer},<:Colon}}}
-const MColonIndexType =Tuple{Vararg{<:Union{<:Integer,<:Colon}}}
-const TPSColonIndexType = Union{Integer, Colon,
-                                MColonIndexType,
+const SMColonIndexType = Tuple{Vararg{Union{Pair{<:Integer,<:Integer},Colon}}}
+const MColonIndexType =Tuple{Vararg{Union{Integer,Colon}}}
+const TPSColonIndexType = Union{MColonIndexType,
                                 SMColonIndexType,
                                 Vector{<:Any}}
 
-function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
   if (v isa Vector)
     par_mono = setup_mono(t, tuple(v...), param, params)
   else
@@ -138,15 +121,30 @@ function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{<
   return slice(t, par_mono, false)
 end
 
+# For flat indexing:
+function getindex(t::Union{TPS,ComplexTPS}, v::Integer, c::Colon)
+  par_mono = setup_mono(t, v, nothing, nothing)
+  return slice(t, par_mono,false)
+end
+
+function getindex(t::Union{TPS,ComplexTPS}, c::Colon; param::Union{Integer,Nothing}=nothing)
+  if isnothing(param)
+    return t
+  else
+    par_mono = setup_mono(t, nothing, param, nothing)
+    return slice(t, par_mono,false)
+  end
+end
+
 
 # --- par --- 
 """
-    par(t::Union{TPS,ComplexTPS}, v::Union{Integer, Vector{<:Union{<:Pair{<:Integer,<:Integer},<:Integer, <:Any}}, Tuple{Vararg{Union{<:Integer,Pair{<:Integer,<:Integer},<:Colon}}}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{Vector{<:Pair{<:Integer,<:Integer}}, Nothing}=nothing)
+    par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
 
 Extracts a polynomial from the TPS containing the specified monomial, and removes the monomial.
 
 ### Input
-- `v`      -- An integer (for variable index), an array of orders for each variable (for indexing-by-order), or an array of pairs (sparse monomial)
+- `v`      -- An integer (for variable index), an array/tuple of orders for each variable (for indexing-by-order), or an array/tuple of pairs (sparse monomial)
 - `param`  -- (Keyword argument, optional) An integer for the parameter index
 - `params` -- (Keyword argument, optional) An array of pairs for sparse-monomial indexing
 
@@ -207,7 +205,7 @@ TPS:
   3.0000000000000000e+00      7      2   1   1   2   1   |   0   0
 ```
 """
-function par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Nothing}=nothing; param::Union{<:Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+function par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
   if (v isa Vector)
     tmpv = tuple(v...)
     if tmpv isa MColonIndexType # because par-ing, must add colon
@@ -228,7 +226,7 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, param
   return par_mono
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Integer, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Nothing,Colon}, param::Integer, params::Nothing)::Vector{Cuchar}
   nv = numvars(t1) # TOTAL NUMBER OF VARS!!!!
   par_mono = ones(Cuchar, param+nv+1).*0xff
   par_mono[nv+param] = 0x1
@@ -268,6 +266,9 @@ function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
+idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
+idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
+
 function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
   nv = numvars(t1)
   np = numparams(t1)
@@ -289,7 +290,7 @@ function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
           tmp[v+1:end] .= mono[v+1:end]
           t[tmp] = coef[]
         else
-          t[mono] = coef[]
+          t[idx] = coef[]
         end
       end
     end
