@@ -68,6 +68,7 @@ end
 
 # To override Base number.jl
 getindex(t::Union{ComplexTPS, TPS}, idx::Integer) = lowget(t, idx, nothing, nothing)
+getindex(t::Union{ComplexTPS, TPS}) = t
 
 # Flat index
 function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
