@@ -24,8 +24,8 @@ h = f[(1=>2, 3=>1, :)]  # Colon position is irrelevant in slicing with sparse mo
 When indexing by monomial index, a colon simply needs to be included after the variable index, or just a colon if a parameter is specified:
 
 ```@repl slice
-fx1 = f[1,:]
-fk1 = f[:,param=2]
+fx3 = f[3,:]
+fk1 = f[:,param=1]
 ```
 
 ## `par`
