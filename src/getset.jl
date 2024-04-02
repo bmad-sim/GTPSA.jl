@@ -16,11 +16,11 @@ end
 
 # Flat index
 function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
-  if !xor(isnothing(i), isnothing(param))
+  if isnothing(i) && isnothing(param)
+    return
+  elseif !isnothing(i) && !isnothing(param)
     error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
-  end
-
-  if isnothing(param)
+  elseif isnothing(param)
     seti!(t.tpsa, Cint(i), (numtype(t))(0), (numtype(t))(v))
   else
     nv = numvars(t)
@@ -68,15 +68,14 @@ end
 
 # To override Base number.jl
 getindex(t::Union{ComplexTPS, TPS}, idx::Integer) = lowget(t, idx, nothing, nothing)
-getindex(t::Union{ComplexTPS, TPS}) = t
 
 # Flat index
 function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
-  if !xor(isnothing(i), isnothing(param))
+  if isnothing(i) && isnothing(param)
+    return t
+  elseif !isnothing(i) && !isnothing(param)
     error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
-  end
-
-  if isnothing(param)
+  elseif isnothing(param)
     return geti(t.tpsa, Cint(i))
   else
     nv = numvars(t)
