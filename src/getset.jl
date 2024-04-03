@@ -356,7 +356,7 @@ function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false)  where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -371,7 +371,7 @@ in the TPSs.
 ### Output
 - `result`         -- Preallocated matrix to fill with the Jacobian of `m`
 """
-function jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
@@ -390,7 +390,7 @@ function jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Unio
 end
 
 """
-    jacobian(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    jacobian(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -404,7 +404,7 @@ the first-order monomial coefficients already in the TPSs.
 ### Output
 - `J`              -- Jacobian of `m`
 """
-function jacobian(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobian(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
@@ -419,7 +419,7 @@ function jacobian(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
 end
 
 """
-    jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. Because of Julia's column-major indexing vs. C's row-major, 
@@ -435,7 +435,7 @@ first-order monomial coefficients already in the TPSs and filling `result`.
 ### Output
 - `result`         -- Preallocated matrix to fill with the transpose of the Jacobian of `m`
 """
-function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
@@ -449,7 +449,7 @@ function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Vector{<:Uni
 end
 
 """
-    jacobiant(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    jacobiant(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. Because of Julia's column-major indexing vs. C's row-major, 
@@ -465,7 +465,7 @@ first-order monomial coefficients already in the TPSs.
 ### Output
 - `Jt`             -- Transpose of the Jacobian of `m`
 """
-function jacobiant(m::Vector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobiant(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))

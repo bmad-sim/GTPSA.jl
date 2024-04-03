@@ -29,6 +29,29 @@ function one(ct1::ComplexTPS)::ComplexTPS
   return ct
 end
 
+# --- zeros and ones (taken from Base.array.jl) --- 
+# We overload this because we want each element of the array to be a separate allocated TPS
+for (fname, felt) in ((:zeros, :zero), (:ones, :one))
+  @eval begin
+      $fname(::Type{T}, dims::Base.DimOrInd...) where {T<:Union{TPS,ComplexTPS}} = $fname(T, dims)
+      $fname(::Type{T}, dims::NTuple{N, Union{Integer, Base.OneTo}}) where {T<:Union{TPS,ComplexTPS},N} = $fname(T, map(to_dim, dims))
+      function $fname(::Type{T}, dims::NTuple{N, Integer}) where {T<:Union{TPS,ComplexTPS},N}
+          a = Array{T,N}(undef, dims)
+          for idx in eachindex(a)
+            a[idx] = $felt(T)
+          end
+          return a
+      end
+      function $fname(::Type{T}, dims::Tuple{}) where {T<:Union{TPS,ComplexTPS}}
+          a = Array{T}(undef)
+          for idx in eachindex(a)
+            a[idx] = $felt(T)
+          end
+          return a
+      end
+  end
+end
+
 # --- Unary ---
 # TPS:
 function +(t1::TPS)::TPS
