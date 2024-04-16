@@ -1042,7 +1042,7 @@ end
 
 
 """
-    mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Union{Ptr{ComplexF64},Vector{ComplexF64}})
+    mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v)
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
 a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`). 
@@ -1055,7 +1055,7 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Union{Ptr{ComplexF64},Vector{ComplexF64}})
+function mad_ctpsa_getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v)
   @ccall MAD_TPSA.mad_ctpsa_getv(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
 end
 

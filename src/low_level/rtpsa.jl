@@ -676,7 +676,7 @@ end
 
 
 """
-    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
+    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
 a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`). 

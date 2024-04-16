@@ -300,11 +300,11 @@ function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
 end
 
 # --- gradient, jacobian, hessian getters ---
-getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Union{Ptr{Cdouble},Vector{Cdouble}}) = (@inline; mad_tpsa_getv!(t, i, n, v))
-getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Union{Ptr{ComplexF64},Vector{ComplexF64}}) = (@inline; mad_ctpsa_getv!(t, i, n, v))
+getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v) = (@inline; mad_tpsa_getv!(t, i, n, v))
+getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v) = (@inline; mad_ctpsa_getv!(t, i, n, v))
 
 """
-    gradient!(result::Vector{<:Union{Float64,ComplexF64}}, t::Union{TPS,ComplexTPS}; include_params=false)
+    gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
 vector in-place. The partial derivatives wrt the parameters will also be extracted 
@@ -317,9 +317,10 @@ in the TPS.
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
-- `result`         -- Preallocated `Vector` to fill with the gradient of the TPS
+- `result`         -- Vector to fill with the gradient of the TPS, must be 1-based indexing
 """
-function gradient!(result::Vector{<:Union{Float64,ComplexF64}}, t::Union{TPS,ComplexTPS}; include_params=false)
+function gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+  Base.require_one_based_indexing(result)
   n = numvars(t)
   if include_params
     n += numparams(t)
@@ -328,6 +329,7 @@ function gradient!(result::Vector{<:Union{Float64,ComplexF64}}, t::Union{TPS,Com
     error("Incorrect size for result")
   end
   getv!(t.tpsa, Cint(1), n, result)
+  return
 end
 
 """
@@ -356,7 +358,7 @@ function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false)  where {N,P,I}
+    jacobian!(result, m; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -365,32 +367,33 @@ is not calculating anything - just extracting the first-order monomial coefficie
 in the TPSs.
 
 ### Input
-- `m`              -- `Vector` of TPSs. to extract the Jacobian from
+- `m`              -- Vector of TPSs to extract the Jacobian from, must be 1-based indexing
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
-- `result`         -- Preallocated matrix to fill with the Jacobian of `m`
+- `result`         -- Matrix to fill with the Jacobian of `m`, must be 1-based indexing
 """
-function jacobian!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+function jacobian!(result, m; include_params=false)
+  Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
-  if size(result)[2] != n
+  if size(result) != (length(m), n)
     error("Incorrect size for result")
   end
-  grad = Vector{numtype(first(m))}(undef, n)
-  # This is not fully in-place technically, bc Julia is column-major and 
-  # filling each row in place without allocating temp would require row-major
-  # So there are allocations for the array grad
-  for i=1:length(m)
-    getv!(m[i].tpsa, Cint(1), n, grad)
-    result[i,:] = grad
+
+
+  for i=1:n
+    for j=1:length(m)
+      result[j,i] = geti(m[j].tpsa, Cint(i))
+    end
   end
+  return
 end
 
 """
-    jacobian(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+    jacobian(m; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -398,49 +401,46 @@ flag is set to `true`. Note that this function is not calculating anything - jus
 the first-order monomial coefficients already in the TPSs.
 
 ### Input
-- `m`              -- `Vector` of TPSs. to extract the Jacobian from
+- `m`              -- Vector of TPSs to extract the Jacobian from, must be 1-based indexing
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
 - `J`              -- Jacobian of `m`
 """
-function jacobian(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+function jacobian(m; include_params=false)
+  Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
   J = Matrix{numtype(first(m))}(undef, length(m), n)
-  grad = Vector{numtype(first(m))}(undef, n)
-  for i=1:length(m)
-    getv!(m[i].tpsa, Cint(1), n, grad)
-    J[i,:] = grad
-  end
+  jacobian!(J, m; include_params=include_params)
   return J
 end
 
 """
-    jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+    jacobiant!(result, m; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
-as the transpose of the Jacobian. Because of Julia's column-major indexing vs. C's row-major, 
-this routine will be slightly faster than using `jacobian!` if the transpose of the Jacobian is 
-needed. The partial derivatives wrt the parameters will  also be extracted when the `include_params` 
-flag is set to `true`. Note that this function is not calculating anything - just extracting the 
-first-order monomial coefficients already in the TPSs and filling `result`.
+as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
+be extracted when the `include_params` flag is set to `true`. Note that this function is 
+not calculating anything - just extracting the first-order monomial coefficients already 
+in the TPSs and filling `result`.
 
 ### Input
-- `m`              -- `Vector` of TPSs. to extract the Jacobian from
+- `m`              -- Vector of TPSs to extract the Jacobian from, must be 1-based indexing
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
-- `result`         -- Preallocated matrix to fill with the transpose of the Jacobian of `m`
+- `result`         -- Matrix to fill with the transpose of the Jacobian of `m`, must be 1-based indexing
 """
-function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+function jacobiant!(result, m; include_params=false)
+  Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
-  if size(result)[2] != n
+  if size(result) != (n, length(m))
     error("Incorrect size for result")
   end
   for i=1:length(m)
@@ -449,34 +449,34 @@ function jacobiant!(result::Matrix{<:Union{Float64,ComplexF64}}, m::Union{Vector
 end
 
 """
-    jacobiant(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+    jacobiant(m; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
-as the transpose of the Jacobian. Because of Julia's column-major indexing vs. C's row-major, 
-this routine will be slightly faster than using `jacobian` if the transpose of the Jacobian is 
-needed. The partial derivatives wrt the parameters will  also be extracted when the `include_params` 
-flag is set to `true`. Note that this function is not calculating anything - just extracting the 
-first-order monomial coefficients already in the TPSs.
+as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
+be extracted when the `include_params` flag is set to `true`. Note that this function is 
+not calculating anything - just extracting the first-order monomial coefficients already 
+in the TPSs.
 
 ### Input
-- `m`              -- `Vector` of TPSs. to extract the Jacobian from
+- `m`              --`Vector of TPSs to extract the Jacobian from, must be 1-based indexing
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
 - `Jt`             -- Transpose of the Jacobian of `m`
 """
-function jacobiant(m::Union{Vector{<:Union{TPS,ComplexTPS}}, SubArray{<:Union{TPS,ComplexTPS},N,P,I,true}}; include_params=false) where {N,P,I}
+function jacobiant(m; include_params=false)
+  Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
-  result = Matrix{numtype(first(m))}(undef, length(m), n)
+  result = Matrix{numtype(first(m))}(undef, n, length(m))
   jacobiant!(result, m, include_params=include_params)
   return result
 end
 
 """
-    hessian!(result::Matrix{<:Union{Float64,ComplexF64}},t::Union{TPS,ComplexTPS}; include_params=false)
+    hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -489,9 +489,10 @@ in the TPS.
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
-- `result`         -- Preallocated matrix to fill with the Hessian of the TPS
+- `result`         -- Matrix to fill with the Hessian of the TPS, must be 1-based indexing
 """
-function hessian!(result::Matrix{<:Union{Float64,ComplexF64}},t::Union{TPS,ComplexTPS}; include_params=false)
+function hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
+  Base.require_one_based_indexing(result)
   d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
   desc = unsafe_load(d)
   n = desc.nv
@@ -507,7 +508,7 @@ function hessian!(result::Matrix{<:Union{Float64,ComplexF64}},t::Union{TPS,Compl
       error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
     end
   end
-  result[:] .= 0.
+  result .= 0.
   idx = Cint(desc.nv+desc.np)
   maxidx = Cint(floor(n*(n+1)/2))+n
   v = Ref{numtype(t)}()
