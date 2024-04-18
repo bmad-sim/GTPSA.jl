@@ -62,7 +62,7 @@ import Base:  +,
               show,
               copy!
 
-import LinearAlgebra: norm
+import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
 
 using GTPSA_jll, Printf, PrettyTables
@@ -83,6 +83,10 @@ export
   rect, 
   clear!,
   complex!,
+  add!,
+  sub!,
+  mul!,
+  div!,
 
   # Monomial as TPS creators:
   vars,
