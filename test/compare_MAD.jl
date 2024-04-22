@@ -39,7 +39,7 @@ function compare(fun_decs_c, fun_decs_jl)
   names_jl = [x.name for x in funs_jl]
   #println.(names_jl)
   used = BitArray(undef, length(names_jl))
-
+  used .= 0
   for fun_c in funs_c
     # println(io_out, "Checking $(fun_c.name)")
     if isempty(findall(x->x==fun_c.name, names_jl))
@@ -168,7 +168,11 @@ function get_c_fun_info(fun)
         continue
       end
     end
-  
+    
+    if isnothing(findfirst(" ", fun[1:curVarEnd]))
+      fun = strip(fun[curVarEnd+1:end])
+      continue
+    end
     # Pointers in type will be added after parsing variable name
     type = fun[1:findfirst(" ", fun[1:curVarEnd])[1]-1]
 
