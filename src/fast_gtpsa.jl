@@ -234,7 +234,7 @@ end
 function ±(t1::TPS, a::Real)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
   mad_tpsa_copy!(t1.tpsa, tpsa)
-  mad_tpsa_set0!(tpsa, 1., convert(Float64,a))
+  mad_tpsa_seti!(tpsa, Cint(0),1., convert(Float64,a))
   return tpsa
 end
 
@@ -258,7 +258,7 @@ function ±(tpsa1::Ptr{RTPSA},t1::TPS)::Ptr{RTPSA}
 end
 
 function ±(tpsa1::Ptr{RTPSA}, a::Real)::Ptr{RTPSA}
-  mad_tpsa_set0!(tpsa1, 1., convert(Float64,a))
+  mad_tpsa_seti!(tpsa1, Cint(0), 1., convert(Float64,a))
   return tpsa1
 end
 
@@ -276,7 +276,7 @@ end
 function ±(ct1::ComplexTPS, a::Number)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
   mad_ctpsa_copy!(ct1.tpsa, ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64,1), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64,1), convert(ComplexF64,a))
   return ctpsa
 end
 
@@ -300,7 +300,7 @@ function ±(ctpsa1::Ptr{CTPSA}, ct1::ComplexTPS)::Ptr{CTPSA}
 end
 
 function ±(ctpsa1::Ptr{CTPSA}, a::Number)::Ptr{CTPSA}
-  mad_ctpsa_set0!(ctpsa1, convert(ComplexF64,1), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ctpsa1, Cint(0), convert(ComplexF64,1), convert(ComplexF64,a))
   return ctpsa1
 end
 
@@ -323,7 +323,7 @@ end
 function ±(t1::TPS, a::Complex)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ctpsa, Cint(0),convert(ComplexF64, 1), convert(ComplexF64, a))
   return ctpsa
 end
 
@@ -334,7 +334,7 @@ end
 function ±(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
   ctpsa = get_ctemp_low!(tpsa1)
   mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ctpsa, Cint(0),convert(ComplexF64, 1), convert(ComplexF64, a))
   rel_rtemp!(tpsa1)
   return ctpsa
 end
@@ -378,14 +378,14 @@ end
 function ∓(t1::TPS, a::Real)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
   mad_tpsa_copy!(t1.tpsa, tpsa)
-  mad_tpsa_set0!(tpsa, 1., convert(Float64, -a))
+  mad_tpsa_seti!(tpsa, Cint(0), 1., convert(Float64, -a))
   return tpsa
 end
 
 function ∓(a::Real, t1::TPS)::Ptr{RTPSA}
   tpsa = get_rtemp!(t1)
   mad_tpsa_scl!(t1.tpsa, -1., tpsa)
-  mad_tpsa_set0!(tpsa, 1., convert(Float64, a))
+  mad_tpsa_seti!(tpsa, Cint(0), 1., convert(Float64, a))
   return tpsa
 end
 
@@ -406,13 +406,13 @@ function ∓(tpsa1::Ptr{RTPSA}, t1::TPS)::Ptr{RTPSA}
 end
 
 function ∓(tpsa1::Ptr{RTPSA}, a::Real)::Ptr{RTPSA}
-  mad_tpsa_set0!(tpsa1, 1., convert(Float64, -a))
+  mad_tpsa_seti!(tpsa1, Cint(0), 1., convert(Float64, -a))
   return tpsa1
 end
 
 function ∓(a::Real, tpsa1::Ptr{RTPSA})::Ptr{RTPSA}
   mad_tpsa_scl!(tpsa1, -1., tpsa1)
-  mad_tpsa_set0!(tpsa1, 1., convert(Float64, a))
+  mad_tpsa_seti!(tpsa1, Cint(0), 1., convert(Float64, a))
   return tpsa1
 end
 
@@ -426,14 +426,14 @@ end
 function ∓(ct1::ComplexTPS, a::Number)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
   mad_ctpsa_copy!(ct1.tpsa, ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1.), convert(ComplexF64, -a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64, 1.), convert(ComplexF64, -a))
   return ctpsa
 end
 
 function ∓(a::Number, ct1::ComplexTPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(ct1)
   mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64,-1.), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64,1.), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64,1.), convert(ComplexF64, a))
   return ctpsa
 end
 
@@ -454,13 +454,13 @@ function ∓(ctpsa1::Ptr{CTPSA}, ct1::ComplexTPS)::Ptr{CTPSA}
 end
 
 function ∓(ctpsa1::Ptr{CTPSA}, a::Number)::Ptr{CTPSA}
-  mad_ctpsa_set0!(ctpsa1, convert(ComplexF64,1.), convert(ComplexF64, -a))
+  mad_ctpsa_seti!(ctpsa1, Cint(0), convert(ComplexF64,1.), convert(ComplexF64, -a))
   return ctpsa1
 end
 
 function ∓(a::Number, ctpsa1::Ptr{CTPSA})::Ptr{CTPSA}
   mad_ctpsa_scl!(ctpsa1, convert(ComplexF64, -1.), ctpsa1)
-  mad_ctpsa_set0!(ctpsa1, convert(ComplexF64, 1.), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ctpsa1, Cint(0), convert(ComplexF64, 1.), convert(ComplexF64, a))
   return ctpsa1
 end
 
@@ -480,7 +480,7 @@ end
 function ∓(t1::TPS, a::Complex)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, -a))
   return ctpsa
 end
 
@@ -488,7 +488,7 @@ function ∓(a::Complex, t1::TPS)::Ptr{CTPSA}
   ctpsa = get_ctemp!(t1)
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   mad_ctpsa_scl!(ctpsa, convert(ComplexF64, -1), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ctpsa,Cint(0), convert(ComplexF64, 1), convert(ComplexF64,a))
   return ctpsa
 end
 
@@ -508,7 +508,7 @@ function ∓(tpsa1::Ptr{RTPSA}, a::Complex)::Ptr{CTPSA}
   ctpsa = get_ctemp_low!(tpsa1)
   mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64, -a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, -a))
   return ctpsa
 end
 
@@ -517,7 +517,7 @@ function ∓(a::Complex, tpsa1::Ptr{RTPSA})::Ptr{CTPSA}
   mad_ctpsa_cplx!(tpsa1, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ctpsa)
   rel_temp!(tpsa1)
   mad_ctpsa_scl!(ctpsa, convert(ComplexF64, -1), ctpsa)
-  mad_ctpsa_set0!(ctpsa, convert(ComplexF64, 1), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ctpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64,a))
   return ctpsa
 end
 function ∓(ctpsa1::Ptr{CTPSA}, t1::TPS)::Ptr{CTPSA}

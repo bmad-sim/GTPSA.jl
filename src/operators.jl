@@ -23,13 +23,13 @@ end
 # --- one ---
 function one(t1::TPS)::TPS
   t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
-  mad_tpsa_set0!(t.tpsa, 0.0, 1.0)
+  mad_tpsa_seti!(t.tpsa, Cint(0), 0.0, 1.0)
   return t
 end
 
 function one(ct1::ComplexTPS)::ComplexTPS
   ct = ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
-  mad_ctpsa_set0!(ct.tpsa, ComplexF64(0.0), ComplexF64(1.0))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), ComplexF64(0.0), ComplexF64(1.0))
   return ct
 end
 
@@ -108,15 +108,15 @@ end
 # isequal, just as Dual Numbers. 
 
 function <(t1::TPS, t2::TPS)::Bool
-  return mad_tpsa_get0(t1.tpsa) < mad_tpsa_get0(t2.tpsa)
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) < mad_tpsa_geti(t2.tpsa, Cint(0))
 end
 
 function <(t1::TPS, a::Real)::Bool
-  return mad_tpsa_get0(t1.tpsa) < a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) < a
 end
 
 function <(a::Real, t1::TPS)::Bool
-  return a < mad_tpsa_get0(t1.tpsa)
+  return a < mad_tpsa_geti(t1.tpsa, Cint(0))
 end
 
 function >(t1::TPS, t2::TPS)::Bool
@@ -132,15 +132,15 @@ function >(a::Real, t1::TPS)::Bool
 end
 
 function <=(t1::TPS, t2::TPS)::Bool
-  return mad_tpsa_get0(t1.tpsa) <= mad_tpsa_get0(t2.tpsa)
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) <= mad_tpsa_geti(t2.tpsa, Cint(0))
 end
 
 function <=(t1::TPS, a::Real)::Bool
-  return mad_tpsa_get0(t1.tpsa) <= a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) <= a
 end
 
 function <=(a::Real, t1::TPS)::Bool
-  return a <= mad_tpsa_get0(t1.tpsa)
+  return a <= mad_tpsa_geti(t1.tpsa, Cint(0))
 end
 
 function >=(t1::TPS, t2::TPS)::Bool
@@ -158,44 +158,44 @@ end
 # Note Complex numbers/TPSs have no defined >, <
 
 function ==(t1::TPS, t2::TPS)::Bool
-  return mad_tpsa_get0(t1.tpsa) == mad_tpsa_get0(t2.tpsa)
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) == mad_tpsa_geti(t2.tpsa, Cint(0))
 end
 
 function ==(t1::TPS, a::Number)::Bool
-  return mad_tpsa_get0(t1.tpsa) == a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) == a
 end
 
 function ==(a::Number,t1::TPS)::Bool
-  return mad_tpsa_get0(t1.tpsa) == a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) == a
 end
 
 # ---
 
 function ==(t1::TPS, a::Complex)::Bool
-  return mad_tpsa_get0(t1.tpsa) == a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) == a
 end
 
 function ==(a::Complex,t1::TPS)::Bool
-  return mad_tpsa_get0(t1.tpsa) == a
+  return mad_tpsa_geti(t1.tpsa, Cint(0)) == a
 end
 
 # ---
 
 
 function ==(ct1::ComplexTPS, ct2::ComplexTPS)::Bool
-  return mad_ctpsa_get0(ct1.tpsa) == mad_ctpsa_get0(ct2.tpsa)
+  return mad_ctpsa_geti(ct1.tpsa, Cint(0)) == mad_ctpsa_geti(ct2.tpsa, Cint(0))
 end
 
 function ==(ct1::ComplexTPS, a::Number)::Bool
-  return mad_ctpsa_get0(ct1.tpsa) == a
+  return mad_ctpsa_geti(ct1.tpsa, Cint(0)) == a
 end
 
 function ==(a::Number, ct1::ComplexTPS)::Bool
-  return mad_ctpsa_get0(ct1.tpsa) == a
+  return mad_ctpsa_geti(ct1.tpsa, Cint(0)) == a
 end
 
 function ==(ct1::ComplexTPS, t1::TPS)::Bool
-  return mad_ctpsa_get0(ct1.tpsa) == mad_tpsa_get0(t1.tpsa)
+  return mad_ctpsa_geti(ct1.tpsa, Cint(0)) == mad_tpsa_geti(t1.tpsa, Cint(0))
 end
 
 function ==(t1::TPS, ct1::ComplexTPS)::Bool
@@ -263,12 +263,10 @@ add!(a::Ptr{CTPSA}, b::Ptr{RTPSA}, c::Ptr{CTPSA}) = mad_ctpsa_addt!(a, b, c)
 add!(t::Union{TPS,ComplexTPS}, t1::Union{TPS,ComplexTPS}, t2::Union{TPS,ComplexTPS}) = add!(t1.tpsa, t2.tpsa, t.tpsa)
 
 # TPS, scalar:
-set0!(t::Ptr{RTPSA}, a::Float64, b::Float64) = mad_tpsa_set0!(t, a, b)
-set0!(t::Ptr{CTPSA}, a::ComplexF64, b::ComplexF64) = mad_ctpsa_set0!(t, a, b)
 
 function add!(t::Union{TPS,ComplexTPS}, t1::Union{TPS,ComplexTPS}, a::Number)
   copy!(t, t1)
-  set0!(t.tpsa, convert(numtype(t), 1), convert(numtype(t), a))
+  seti!(t.tpsa, Cint(0), convert(numtype(t), 1), convert(numtype(t), a))
 end
 
 add!(t::Union{TPS,ComplexTPS}, a::Number, t1::Union{TPS,ComplexTPS}) = add!(t, t1, a)
@@ -306,7 +304,7 @@ sub!(t::Union{TPS,ComplexTPS}, t1::Union{TPS,ComplexTPS}, a::Number) = add!(t, t
 
 function sub!(t::Union{TPS,ComplexTPS}, a::Number, t1::Union{TPS,ComplexTPS})
   scl!(t1.tpsa, convert(numtype(t), -1.), t.tpsa)
-  set0!(t.tpsa, convert(numtype(t), 1.), convert(numtype(t), a))
+  seti!(t.tpsa, Cint(0), convert(numtype(t), 1.), convert(numtype(t), a))
 end
 
 for t = ((TPS,TPS),(TPS,Real),(Real,TPS),(TPS,Complex),(Complex,TPS),(ComplexTPS,TPS),(TPS,ComplexTPS),(ComplexTPS,ComplexTPS),(ComplexTPS, Number), (Number, ComplexTPS))
