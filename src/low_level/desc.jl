@@ -11,25 +11,30 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `nv::Cint`                   -- Number of variables
 - `np::Cint`                   -- Number of parameters
 - `mo::Cuchar`                 -- Max order of both variables AND parameters
-- `po::Cuchar`                 -- Max order of parameterss
-- `to::Cuchar`                 -- Global order of truncation. Note: `ord_t` in gtpsa is `typedef` for `unsigned char` (`Cuchar`)
+- `po::Cuchar`                 -- Max order of parameters
 - `no::Ptr{Cuchar}`            -- Array of orders of each variable (first `nv` entries) and parameters (last `np` entries), length `nn`. Note: In C this is `const`
+
 - `uno::Cint`                  -- User provided array of orders of each variable/parameter (with `mad_desc_newvpo`)
 - `nth::Cint`                  -- Max number of threads or 1
 - `nc::Cuint`                  -- Number of coefficients (max length of TPSA)
+
+- `shared::Ptr{Cint}`          -- counter of shared desc (all tables below except prms)
 - `monos::Ptr{Cuchar}`         -- 'Matrix' storing the monomials (sorted by variable)
 - `ords::Ptr{Cuchar}`          -- Order of each monomial of `To`
 - `prms::Ptr{Cuchar}`          -- Order of parameters in each monomial of `To` (zero = no parameters)
 - `To::Ptr{Ptr{Cuchar}}`       -- Table by orders - pointers to monomials, sorted by order
 - `Tv::Ptr{Ptr{Cuchar}}`       -- Table by vars - pointers to monomials, sorted by variable
 - `ocs::Ptr{Ptr{Cuchar}}`      -- `ocs[t,i]` -> `o` in mul, compute `o` on thread `t 3 <= o <= mo` aterminated with 0
+
 - `ord2idx::Ptr{Cint}`         -- Order to polynomial start index in `To` (i.e. in TPSA `coef`)
 - `tv2to::Ptr{Cint}`           -- Lookup `tv`->`to`
 - `to2tv::Ptr{Cint}`           -- Lookup `to`->`tv`
 - `H::Ptr{Cint}`               -- Indexing matrix in `Tv`
 - `L::Ptr{Ptr{Cint}}`          -- Multiplication indexes `L[oa,ob]`->`L_ord` `L_ord[ia,ib]`->`ic`
 - `L_idx::Ptr{Ptr{Ptr{Cint}}}` -- `L_idx[oa,ob]`->`[start] [split] [end]` idxs in `L`
+
 - `size::Culonglong`           -- Bytes used by `desc`. `Unsigned Long Int`: In 32 bit system is `Int32` but 64 bit is `Int64`. Using `Culonglong` assuming 64 bit
+
 - `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `RTPSA`s already initialized
 - `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `CTPSA`s already initialized
 - `ti::Ptr{Cint}`              -- idx of tmp used by each thread (length = # threads)
@@ -42,13 +47,13 @@ struct Desc
   np::Cint                   
   mo::Cuchar                 
   po::Cuchar                 
-  to::Cuchar                 
   no::Ptr{Cuchar}            
 
   uno::Cint                  
   nth::Cint                  
   nc::Cuint                  
 
+  shared::Ptr{Cint}
   monos::Ptr{Cuchar}         
   ords::Ptr{Cuchar}          
   prms::Ptr{Cuchar}          
@@ -201,24 +206,6 @@ Gets the maximum length of the TPSA given an order.
 function mad_desc_maxlen(d::Ptr{Desc}, mo::Cuchar)::Cint
   ret = @ccall MAD_TPSA.mad_desc_maxlen(d::Ptr{Desc}, mo::Cuchar)::Cint
   return ret
-end
-
-
-"""
-    mad_desc_gtrunc!(d::Ptr{Desc}, to::Cuchar)::Cuchar
-
-Sets the global truncation order `to` of the TPSA, and returns the old global truncation order.
-
-### Input
-- `d`     -- Descriptor
-- `to`    -- New global truncation order
-
-### Output
-- `oldto` -- Old global truncation order
-"""
-function mad_desc_gtrunc!(d::Ptr{Desc}, to::Cuchar)::Cuchar
-  oldto = @ccall MAD_TPSA.mad_desc_gtrunc(d::Ptr{Desc}, to::Cuchar)::Cuchar
-  return oldto
 end
 
 

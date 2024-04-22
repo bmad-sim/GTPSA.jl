@@ -164,6 +164,17 @@ end
 
 
 """
+    mad_mono_eqn(n::Cint, a::Vector{Cuchar}, b::Cuchar)::Bool
+
+???
+"""
+function mad_mono_eqn(n::Cint, a::Vector{Cuchar}, b::Cuchar)::Bool
+  ret = @ccall MAD_TPSA.mad_mono_eqn(n::Cint, a::Ptr{Cuchar}, b::Cuchar)::Bool
+  return ret
+end
+
+
+"""
     mad_mono_eq(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
 
 Checks if the monomial `a` is equal to the monomial `b`.

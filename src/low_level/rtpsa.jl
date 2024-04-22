@@ -5,21 +5,21 @@ This is a 1-to-1 struct for the C definition `tpsa` (real TPSA) in GTPSA.
 
 ### Fields
 - `d::Ptr{Cvoid}`             -- Ptr to tpsa descriptor
-- `uid::Cint`                 -- Special user field for external use (and padding)
-- `mo::Cuchar`                -- max ord (allocated)
 - `lo::Cuchar`                -- lowest used ord
 - `hi::Cuchar`                -- highest used ord
-- `nz::Culonglong`            -- zero/nonzero homogenous polynomials. Note: Int64 if 64 bit compiled C code, else 32 bit
-- `nam::NTuple{NAMSZ,Cuchar}` -- tpsa name max string length 16 NAMSZ
+- `mo::Cuchar`                -- max ord
+- `ao::Cuchar`                -- allocated order
+- `uid::Cint`                 -- Special user field for external use (and padding)
+- `nam::NTuple{NAMSZ,Cuchar}` -- tpsa name max string length 15 chars NAMSZ
 - `coef::Ptr{Cdouble}`        -- warning: must be identical to ctpsa up to coef excluded                                                                                                  
 """
 struct RTPSA
-  d::Ptr{Cvoid}             
-  uid::Cint                 
-  mo::Cuchar                
+  d::Ptr{Cvoid}                                       
   lo::Cuchar                
-  hi::Cuchar                
-  nz::Culonglong           
+  hi::Cuchar     
+  mo::Cuchar  
+  ao::Cuchar
+  uid::Cint            
   nam::NTuple{NAMSZ,Cuchar} 
   coef::Ptr{Cdouble}        
 end
@@ -124,6 +124,18 @@ Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA
 """
 function mad_tpsa_len(t::Ptr{RTPSA})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA})::Cint
+  return ret
+end
+
+
+"""
+    mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
+
+???
+
+"""
+function mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_mo(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
   return ret
 end
 
@@ -345,12 +357,12 @@ function mad_tpsa_setval!(t::Ptr{RTPSA}, v::Cdouble)
 end
 
 """
-    mad_tpsa_update!(t::Ptr{RTPSA}, eps_::Cdouble)
+    mad_tpsa_update!(t::Ptr{RTPSA})
 
     ???
 """
-function mad_tpsa_update!(t::Ptr{RTPSA}, eps_::Cdouble)
-  ret = @ccall MAD_TPSA.mad_tpsa_update(t::Ptr{RTPSA}, eps_::Cdouble)::Bool
+function mad_tpsa_update!(t::Ptr{RTPSA})
+  @ccall MAD_TPSA.mad_tpsa_update(t::Ptr{RTPSA})::Cvoid
 end
 
 
@@ -490,23 +502,6 @@ end
 
 
 """
-    mad_tpsa_get0(t::Ptr{RTPSA})::Cdouble
-
-Gets the 0th order (scalar) value of the TPSA
-
-### Input
-- `t`   -- TPSA
-
-### Output
-- `ret` -- Scalar value of TPSA
-"""
-function mad_tpsa_get0(t::Ptr{RTPSA})::Cdouble
-  ret = @ccall MAD_TPSA.mad_tpsa_get0(t::Ptr{RTPSA})::Cdouble
-  return ret
-end
-
-
-"""
     mad_tpsa_geti(t::Ptr{RTPSA}, i::Cint)::Cdouble
 
 Gets the coefficient of the monomial at index `i`. Generally should use `mad_tpsa_cycle` instead of this.
@@ -581,20 +576,6 @@ function mad_tpsa_getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})::Cdouble
 end
 
 
-"""
-    mad_tpsa_set0!(t::Ptr{RTPSA}, a::Cdouble, b::Cdouble)
-
-Sets the 0th order coefficient (scalar part of TPSA) according to `coef[0] = a*coef[0] + b`. Does not modify other values in TPSA.
-
-### Input
-- `t` -- TPSA
-- `a` -- Scaling of current 0th order value
-- `b` -- Constant added to current 0th order value
-"""
-function mad_tpsa_set0!(t::Ptr{RTPSA}, a::Cdouble, b::Cdouble)
-  @ccall MAD_TPSA.mad_tpsa_set0(t::Ptr{RTPSA}, a::Cdouble, b::Cdouble)::Cvoid
-end
-
 
 """
     mad_tpsa_seti!(t::Ptr{RTPSA}, i::Cint, a::Cdouble, b::Cdouble)
@@ -662,14 +643,6 @@ function mad_tpsa_setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Cdouble, b:
   @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{RTPSA}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
-"""
-    mad_tpsa_cpy0!(t::Ptr{RTPSA}, r::Ptr{RTPSA})
-
-    ???
-"""
-function mad_tpsa_cpy0!(t::Ptr{RTPSA}, r::Ptr{RTPSA})
-  @ccall MAD_TPSA.mad_tpsa_cpy0(t::Ptr{RTPSA}, r::Ptr{RTPSA})::Cvoid
-end
 
 """
     mad_tpsa_cpyi!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)
@@ -709,7 +682,7 @@ end
 
 
 """
-    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)::Cint
+    mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)
 
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
@@ -722,13 +695,10 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
-- `ret` -- Copied length
 """
-function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)::Cint
-  ret = @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cint
-  return ret
+function mad_tpsa_getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v)
+  @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
-
 
 
 """
@@ -741,13 +711,9 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `i` -- Starting index of monomials to set coefficients
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
-
-### Output
-- `ret` -- Copied length
 """
 function mad_tpsa_setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble})
-  ret = @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cint
-  return ret
+  @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
 
 
@@ -2108,7 +2074,7 @@ end
 
 
 """
-    mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})
+    mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
 
 Prints TPSA with all information of data structure.
 
@@ -2118,10 +2084,34 @@ Prints TPSA with all information of data structure.
 - `fnam_`   -- (Optional) File name to print to
 - `line_`   -- (Optional) Line number in file to start at
 - `stream_` -- (Optional) I/O stream to print to, default is `stdout`
+
+### Output
+- `ret` -- ??
 """
-function mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cvoid
+function mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_debug(t::Ptr{RTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+  return ret
 end
+
+
+"""
+    mad_tpsa_prtdensity(stream_::Ptr{Cvoid})
+
+???
+"""
+function mad_tpsa_prtdensity(stream_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_tpsa_prtdensity(stream_::Ptr{Cvoid})::Cvoid
+end
+
+"""
+    mad_tpsa_clrdensity!()::Cvoid
+
+???
+"""
+function mad_tpsa_clrdensity!()::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_clrdensity()::Cvoid
+end
+
 
 """
     mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
@@ -2136,6 +2126,16 @@ Sanity check of the TPSA integrity.
 """
 function mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
+  return ret
+end
+
+"""
+    mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
+
+???
+"""
+function mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
   return ret
 end
 
@@ -2158,3 +2158,4 @@ function mad_tpsa_init!(t::Ptr{RTPSA}, d::Ptr{Desc}, mo::Cuchar)::Ptr{RTPSA}
   t = @ccall MAD_TPSA.mad_tpsa_init(t::Ptr{RTPSA}, d::Ptr{Desc}, mo::Cuchar)::Ptr{RTPSA}
   return t
 end
+
