@@ -1202,8 +1202,6 @@ end
   Comparing mad_tpsa.h to rtpsa.jl...
   mad_ctpsa.h downloaded.
   Comparing mad_ctpsa.h to ctpsa.jl...
-  mad_ctpsa_unit: Variable in C ctpsa_t* t => t::Ptr{CTPSA} not equal to Julia a::Ptr{CTPSA}
-  mad_ctpsa_unit: Variable in C ctpsa_t* r => r::Ptr{CTPSA} not equal to Julia c::Ptr{CTPSA}
   """
   @test compare_MAD() == expected_out
 end
