@@ -60,7 +60,8 @@ import Base:  +,
               !=,
               isequal,
               show,
-              copy!
+              copy!,
+              length
 
 import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
