@@ -61,7 +61,10 @@ import Base:  +,
               isequal,
               show,
               copy!,
-              length
+              length,
+              lastindex,
+              firstindex,
+              rand
 
 import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
