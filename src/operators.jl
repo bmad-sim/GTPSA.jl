@@ -57,6 +57,11 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
 end
 
 # --- rand ---
+"""
+    rand(::Type{T}; use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current) where {T<:Union{TPS,ComplexTPS}}
+
+Generate a `TPS`/`ComplexTPS` with all random coefficients.
+"""
 function rand(::Type{T}; use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current) where {T<:Union{TPS,ComplexTPS}}
   t = T(use=use)
   len = length(t)
