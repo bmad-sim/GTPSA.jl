@@ -1,13 +1,6 @@
 # Julia script to compare current GTPSA.jl with latest
 # MAD_TPSA code from the MAD Git repo:
 # https://github.com/MethodicalAcceleratorDesign/MAD
-#
-# Known accepted disagreements:
-# mad_ctpsa_equt: tol_ in GTPSA.jl is correct vs tol in mad_ctpsa.H
-# mad_ctpsa_unit: C code has two equivalent function declarations with x and t. GTPSA.jl is correct
-# mad_tpsa_ordv: Splats in Julia have names, C they do not, so script will show disagreements
-# mad_ctpsa_ordv: Same as for mad_tpsa_ordv
-
 using Downloads
 
 const io_out = IOBuffer()
@@ -324,7 +317,7 @@ function compare_MAD()
   io = IOBuffer()
 
   try
-    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/dev-tpsa-newlazy/code/mad_mono.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_mono.h", io)
     println(io_out, "mad_mono.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_mono.h")
@@ -341,7 +334,7 @@ function compare_MAD()
 
 
   try
-    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/dev-tpsa-newlazy/code/mad_desc.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_desc.h", io)
     println(io_out, "mad_desc.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_desc.h")
@@ -358,7 +351,7 @@ function compare_MAD()
 
 
   try
-    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/dev-tpsa-newlazy/code/mad_tpsa.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_tpsa.h", io)
     println(io_out, "mad_tpsa.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_tpsa.h")
@@ -374,7 +367,7 @@ function compare_MAD()
   compare(fun_decs_c, fun_decs_jl)
 
   try
-    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/dev-tpsa-newlazy/code/mad_ctpsa.h", io)
+    Downloads.download("https://raw.githubusercontent.com/mattsignorelli/gtpsa/main/code/mad_ctpsa.h", io)
     println(io_out, "mad_ctpsa.h downloaded.")
   catch e
     println(io_out, "Error downloading mad_ctpsa.h")

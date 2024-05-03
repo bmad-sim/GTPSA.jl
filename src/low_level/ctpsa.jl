@@ -129,8 +129,15 @@ end
 """
     mad_ctpsa_mo!(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
 
-???
+Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
+`mo_` should be less than or equal to the allocated order `ao`.
 
+### Input
+- `t`   -- TPSA
+- `mo_` -- Maximum order to set the TPSA
+
+### Output
+- `ret` -- Original `mo` of the TPSA
 """
 function mad_ctpsa_mo!(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
   ret = @ccall MAD_TPSA.mad_ctpsa_mo(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
@@ -263,7 +270,11 @@ end
 """
     mad_ctpsa_clrord!(t::Ptr{CTPSA}, ord::Cuchar)
 
-    ???
+Clears all monomial coefficients of the TPSA at order `ord`
+
+### Input
+- `t` -- TPSA
+- `ord` -- Order to clear monomial coefficients
 """
 function mad_ctpsa_clrord!(t::Ptr{CTPSA}, ord::Cuchar)
   @ccall MAD_TPSA.mad_ctpsa_clrord(t::Ptr{CTPSA}, ord::Cuchar)::Cvoid
@@ -802,7 +813,13 @@ end
 """
     mad_ctpsa_cpyi!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)
 
-    ???
+Copies the monomial coefficient at index `i` in `t` into the 
+same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `i` -- Index of monomial
 """
 function mad_ctpsa_cpyi!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)
   @ccall MAD_TPSA.mad_ctpsa_cpyi(t::Ptr{CTPSA}, r::Ptr{CTPSA}, i::Cint)::Cvoid
@@ -811,7 +828,14 @@ end
 """
     mad_ctpsa_cpys!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)
 
-    ???
+Copies the monomial coefficient at the monomial-as-string-of-order
+`s` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of string
+- `s` -- Monomial as string
 """
 function mad_ctpsa_cpys!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)
   @ccall MAD_TPSA.mad_ctpsa_cpys(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, s::Cstring)::Cvoid
@@ -820,7 +844,14 @@ end
 """
     mad_ctpsa_cpym!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar})
 
-    ???
+Copies the monomial coefficient at the monomial-as-vector-of-orders
+`m` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of monomial `m`
+- `m` -- Monomial as vector of orders
 """
 function mad_ctpsa_cpym!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar})
   @ccall MAD_TPSA.mad_ctpsa_cpym(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Ptr{Cuchar})::Cvoid
@@ -829,7 +860,14 @@ end
 """
     mad_ctpsa_cpysm!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cint})
 
-    ???
+Copies the monomial coefficient at the monomial-as-sparse-monomial
+`m` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of sparse monomial `m`
+- `m` -- Monomial as sparse-monomial
 """
 function mad_ctpsa_cpysm!(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Vector{Cint})
   @ccall MAD_TPSA.mad_ctpsa_cpysm(t::Ptr{CTPSA}, r::Ptr{CTPSA}, n::Cint, m::Ptr{Cint})::Cvoid
@@ -2649,7 +2687,16 @@ end
 """
     mad_ctpsa_mord(na::Cint, ma::Vector{Ptr{CTPSA}}, hi::Bool)::Cuchar
 
-    ???
+If `hi` is false, getting the maximum `mo` among all TPSAs in `ma`. 
+If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
+
+### Input
+- `na` -- Length of map `ma`
+- `ma` -- Map (vector of TPSAs)
+- `hi` -- If `true`, returns maximum `hi`, else returns maximum `mo` of the map
+
+### Output
+- `ret` -- Maximum `hi` of the map if `hi` is `true`, else returns maximum `mo` of the map
 """
 function mad_ctpsa_mord(na::Cint, ma::Vector{Ptr{CTPSA}}, hi::Bool)::Cuchar
   ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{Ptr{CTPSA}}, hi::Bool)::Cuchar
@@ -2881,6 +2928,22 @@ Prints TPSA with all information of data structure.
 """
 function mad_ctpsa_debug(t::Ptr{CTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   ret = @ccall MAD_TPSA.mad_ctpsa_debug(t::Ptr{CTPSA}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+  return ret
+end
+
+"""
+    mad_ctpsa_isval(t::Ptr{CTPSA})::Bool
+
+Sanity check of the TPSA integrity.
+
+### Input
+- `t` -- TPSA to check if valid
+
+### Output
+- `ret`  -- True if valid TPSA, false otherwise
+"""
+function mad_ctpsa_isval(t::Ptr{CTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isval(t::Ptr{CTPSA})::Bool
   return ret
 end
 

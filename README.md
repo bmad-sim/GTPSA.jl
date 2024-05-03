@@ -4,18 +4,14 @@
 [![Build Status](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bmad-sim/GTPSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 ## Overview
-
 This package provides a full-featured Julia interface to the [Generalised Truncated Power Series Algebra (GTPSA) library](https://mad.web.cern.ch/mad/releases/madng/html/mad_mod_diffalg.html), which computes Taylor expansions, or Truncated Power Series (TPSs) of real and complex multivariable functions to arbitrary orders. 
 
-Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a highly optimized monomial indexing function/storage for propagating the partial derivatives, makes `GTPSA.jl` significantly faster for 2nd-order calculations and above (for 1st-order
-calculations the performance is similar to `ForwardDiff.jl`).
-See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs. **In this example, GTPSA was nearly x3 faster than ForwardDiff to 2nd order, and x15 faster to 3rd order.**
+Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the dual-number implementation of `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. This, paired with a highly optimized monomial indexing function/storage for propagating the partial derivatives, makes `GTPSA.jl` significantly faster for 2nd-order calculations and above (for 1st-order calculations the performance is similar to `ForwardDiff.jl`).See the [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) example for a speed comparison of `GTPSA.jl` with `ForwardDiff.jl` in calculating the partial derivatives for a system with 58 inputs and 6 outputs. **In this example, GTPSA was x3.3 faster than ForwardDiff to 2nd order, and x18.5 faster to 3rd order.**
 
 GTPSA provides several advantages over current Julia AD packages:
 
-1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has similar performance at 1st-order
-2. **Custom Orders in Individual Variables**: Other packages use a single maximum order for all variables. With GTPSA, the
-maximum order can be set differently for different variables. For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is possible
+1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has very similar performance at 1st-order
+2. **Custom Orders in Individual Variables**: Other packages use a single maximum order for all variables. With GTPSA, the maximum order can be set differently for individual variables, as well as for a separate part of the monomial. For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is possible
 3. **Complex Numbers**: GTPSA natively supports complex numbers and allows for mixing of complex and real truncated power series
 4. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters can be advantageous in analysis
 
@@ -42,7 +38,7 @@ x = vars()
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
 f = cos(x[1]) + im*sin(x[2])
-# This creates a new TPS called f
+# f is a new ComplexTPS 
 ```
 
 Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` gives the output

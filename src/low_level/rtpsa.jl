@@ -131,8 +131,15 @@ end
 """
     mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
 
-???
+Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
+`mo_` should be less than or equal to the allocated order `ao`.
 
+### Input
+- `t`   -- TPSA
+- `mo_` -- Maximum order to set the TPSA
+
+### Output
+- `ret` -- Original `mo` of the TPSA
 """
 function mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mo(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
@@ -266,7 +273,11 @@ end
 """
     mad_tpsa_clrord!(t::Ptr{RTPSA}, ord::Cuchar)
 
-    ???
+Clears all monomial coefficients of the TPSA at order `ord`
+
+### Input
+- `t` -- TPSA
+- `ord` -- Order to clear monomial coefficients
 """
 function mad_tpsa_clrord!(t::Ptr{RTPSA}, ord::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_clrord(t::Ptr{RTPSA}, ord::Cuchar)::Cvoid
@@ -647,7 +658,13 @@ end
 """
     mad_tpsa_cpyi!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)
 
-    ???
+Copies the monomial coefficient at index `i` in `t` into the 
+same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `i` -- Index of monomial
 """
 function mad_tpsa_cpyi!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)
   @ccall MAD_TPSA.mad_tpsa_cpyi(t::Ptr{RTPSA}, r::Ptr{RTPSA}, i::Cint)::Cvoid
@@ -656,7 +673,14 @@ end
 """
     mad_tpsa_cpys!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)
 
-    ???
+Copies the monomial coefficient at the monomial-as-string-of-order
+`s` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of string
+- `s` -- Monomial as string
 """
 function mad_tpsa_cpys!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)
   @ccall MAD_TPSA.mad_tpsa_cpys(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, s::Cstring)::Cvoid
@@ -665,7 +689,14 @@ end
 """
     mad_tpsa_cpym!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
 
-    ???
+Copies the monomial coefficient at the monomial-as-vector-of-orders
+`m` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of monomial `m`
+- `m` -- Monomial as vector of orders
 """
 function mad_tpsa_cpym!(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar})
   @ccall MAD_TPSA.mad_tpsa_cpym(t::Ptr{RTPSA}, r::Ptr{RTPSA}, n::Cint, m::Ptr{Cuchar})::Cvoid
@@ -1858,7 +1889,16 @@ end
 """
     mad_tpsa_mord(na::Cint, ma::Vector{Ptr{RTPSA}}, hi::Bool)::Cuchar
 
-    ???
+If `hi` is false, getting the maximum `mo` among all TPSAs in `ma`. 
+If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
+
+### Input
+- `na` -- Length of map `ma`
+- `ma` -- Map (vector of TPSAs)
+- `hi` -- If `true`, returns maximum `hi`, else returns maximum `mo` of the map
+
+### Output
+- `ret` -- Maximum `hi` of the map if `hi` is `true`, else returns maximum `mo` of the map
 """
 function mad_tpsa_mord(na::Cint, ma::Vector{Ptr{RTPSA}}, hi::Bool)::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mord(na::Cint, ma::Ptr{Ptr{RTPSA}}, hi::Bool)::Cuchar
@@ -2112,6 +2152,21 @@ function mad_tpsa_clrdensity!()::Cvoid
   @ccall MAD_TPSA.mad_tpsa_clrdensity()::Cvoid
 end
 
+"""
+    mad_tpsa_isval(t::Ptr{RTPSA})::Bool
+
+Sanity check of the TPSA integrity.
+
+### Input
+- `t` -- TPSA to check if valid
+
+### Output
+- `ret`  -- True if valid TPSA, false otherwise
+"""
+function mad_tpsa_isval(t::Ptr{RTPSA})::Bool
+  ret = @ccall MAD_TPSA.mad_tpsa_isval(t::Ptr{RTPSA})::Bool
+  return ret
+end
 
 """
     mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
@@ -2128,6 +2183,7 @@ function mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_isvalid(t::Ptr{RTPSA})::Bool
   return ret
 end
+
 
 """
     mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
