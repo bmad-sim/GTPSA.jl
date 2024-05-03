@@ -5,14 +5,13 @@ setm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}, a::Float64, b::Float64) = mad_t
 setm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64) = mad_ctpsa_setm!(t, n, m, a, b)
 setsm!(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint}, a::Float64, b::Float64)= mad_tpsa_setsm!(t, n, m, a, b)
 setsm!(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)= mad_ctpsa_setsm!(t, n, m, a, b)
+setv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v::Vector{Cdouble}) = mad_tpsa_setv!(t, i, n, v)
+setv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v::Vector{ComplexF64}) = mad_ctpsa_setv!(t, i, n, v)
 
 # All
-function setindex!(t::Union{TPS,ComplexTPS}, v::Number, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+function setindex!(t::Union{TPS,ComplexTPS}, v::Union{AbstractVector{<:Number},Number}, idx::Union{TPSIndexType,AbstractVector{<:Integer},Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   lowset!(t, v, idx, param, params)
 end
-
-# To override Base number.jl
-#setindex!(t::Union{ComplexTPS, TPS}, v::Number, idx::Integer) = lowset!(t, v, tuple(idx), nothing, nothing)
 
 # Flat index
 function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
@@ -25,6 +24,15 @@ function lowset!(t::Union{TPS,ComplexTPS}, v::Number, i::Union{Nothing,Integer},
   else
     nv = numvars(t)
     seti!(t.tpsa, Cint(nv+param), (numtype(t))(0), (numtype(t))(v))
+  end
+end
+
+# Flat index vectorized
+function lowset!(t::Union{TPS,ComplexTPS}, v::AbstractVector{<:Number}, idxs::AbstractVector{<:Integer}, param::Nothing, params::Nothing)
+  Base.require_one_based_indexing(v,idxs)
+  length(v) == length(idxs) || throw(DimensionMismatch("Tried to assign $(length(v)) elements to $(length(idxs)) destinations"))
+  for i=1:length(idxs)
+    seti!(t.tpsa, Cint(idxs[i]), (numtype(t))(0),(numtype(t))(v[i]))
   end
 end
 
@@ -58,7 +66,7 @@ getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})= mad_tpsa_getsm(t, n, m)
 getsm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint})= mad_ctpsa_getsm(t, n, m)
 
 # All
-function getindex(t::Union{TPS,ComplexTPS}, idx::Union{TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
+function getindex(t::Union{TPS,ComplexTPS}, idx::Union{AbstractVector{<:Integer},TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   #println(typeof(t))
   #println(typeof(idx))
   #println(typeof(param))
@@ -83,6 +91,16 @@ function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,Integer}, param::Unio
   end
 end
 
+# Flat index vectorized
+function lowget(t::Union{TPS,ComplexTPS}, idxs::AbstractVector{<:Integer}, param::Nothing, params::Nothing)
+  Base.require_one_based_indexing(idxs)
+  v = Vector{numtype(t)}(undef, length(idxs))
+  for i=1:length(idxs)
+    v[i] = geti(t.tpsa, Cint(idxs[i]))
+  end
+  return v
+end
+
 # Monomial
 function lowget(t::Union{TPS,ComplexTPS}, ords::MIndexType, param::Nothing, params::Nothing)
   return getm(t.tpsa, convert(Cint, length(ords)), collect(Cuchar, ords))
@@ -102,6 +120,20 @@ end
 
 lowget(t, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 
+# --- length ---
+len(t::Ptr{RTPSA}) = mad_tpsa_len(t)
+len(t::Ptr{CTPSA}) = mad_ctpsa_len(t)
+
+"""
+    length(t::Union{TPS,ComplexTPS}
+
+Returns the maximum number of monomials (including the scalar part)
+in the `TPS`/`ComplexTPS` given its `Descriptor`. 
+"""
+length(t::Union{TPS,ComplexTPS}) = len(t.tpsa)
+
+firstindex(t::Union{TPS,ComplexTPS}) = 0
+lastindex(t::Union{TPS,ComplexTPS}) = length(t)-1
 
 # --- Slicing (getter) ---
 

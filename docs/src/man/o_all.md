@@ -6,7 +6,8 @@ sin, cos, tan, csc, sec, cot, sinc, sinh, cosh, tanh, csch,
 sech, coth, asin, acos, atan, acsc, asec, acot, asinh, acosh, 
 atanh, acsch, asech, acoth, zero, zeros, one, ones, real, imag, 
 conj, angle, complex, promote_rule, getindex, setindex!, ==, <, 
->, <=, >=, !=, isequal, show, copy!
+>, <=, >=, !=, isequal, show, copy!, length, lastindex, firstindex,
+rand
 ```
 
 `zeros` and `ones` are overloaded from Base so that allocated `TPS`/`ComplexTPS`s are placed in each element. If we didn't explicity overload these functions, every element would correspond to the exact same heap-allocated TPS, which is problematic when setting individual monomial coefficients of the same TPS.
