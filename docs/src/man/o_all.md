@@ -16,7 +16,7 @@ rand
  **`LinearAlgebra`**: `norm`, `mul!` 
 **`SpecialFunctions`**: `erf`, `erfc`
 
-`GTPSA.jl` also provides the following functions NOT included in Base or any of the above packages:
+`GTPSA.jl` also provides the following functions NOT included in Base or any of the above packages (and not already documented in [TPS Methods](@ref tpsmethods)):
 ```
 add!, sub!, div!, unit, sinhc, asinc, asinhc, polar, rect
 ```
