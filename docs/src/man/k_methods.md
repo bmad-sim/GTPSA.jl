@@ -1,5 +1,7 @@
 # [TPS Methods](@id tpsmethods)
 ```@docs
+clearord
+clearord!
 clear!
 complex!
 compose!

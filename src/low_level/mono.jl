@@ -164,7 +164,18 @@ end
 
 
 """
-    mad_mono_eq(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
+    mad_mono_eqn(n::Cint, a::Vector{Cuchar}, b::Cuchar)::Bool
+
+???
+"""
+function mad_mono_eqn(n::Cint, a::Vector{Cuchar}, b::Cuchar)::Bool
+  ret = @ccall MAD_TPSA.mad_mono_eqn(n::Cint, a::Ptr{Cuchar}, b::Cuchar)::Bool
+  return ret
+end
+
+
+"""
+    mad_mono_eq(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
 
 Checks if the monomial `a` is equal to the monomial `b`.
 
@@ -176,14 +187,14 @@ Checks if the monomial `a` is equal to the monomial `b`.
 ### Output
 - `ret` -- True if the monomials are equal, false if otherwise
 """
-function mad_mono_eq(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+function mad_mono_eq(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
+  ret = @ccall MAD_TPSA.mad_mono_eq(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Bool
   return ret
 end
 
 
 """
-    mad_mono_lt(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
+    mad_mono_lt(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
 
 Checks if monomial `a` is less than monomial `b`.
 
@@ -195,14 +206,14 @@ Checks if monomial `a` is less than monomial `b`.
 ### Output
 - `ret` -- True if `a < b`, false otherwise
 """
-function mad_mono_lt(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+function mad_mono_lt(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
+  ret = @ccall MAD_TPSA.mad_mono_lt(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Bool
   return ret
 end
 
 
 """
-    mad_mono_le(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
+    mad_mono_le(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
 
 Checks if monomial `a` is less than or equal to monomial `b`.
 
@@ -214,8 +225,8 @@ Checks if monomial `a` is less than or equal to monomial `b`.
 ### Output
 - `ret` -- True if `a <= mono_b`, false otherwise
 """
-function mad_mono_le(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Cuchar
+function mad_mono_le(n::Cint, a::Vector{Cuchar}, b::Vector{Cuchar})::Bool
+  ret = @ccall MAD_TPSA.mad_mono_le(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Bool
   return ret
 end
 

@@ -75,19 +75,19 @@ end
 # --- promote real to TPS ---
 function low_TPS(a::Real, use::Nothing)
   t = TPS(mad_tpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_tpsa_set0!(t.tpsa, convert(Float64, 0), convert(Float64,a))
+  mad_tpsa_seti!(t.tpsa, Cint(0), convert(Float64, 0), convert(Float64,a))
   return t
 end
 
 function low_TPS(a::Real, use::Union{TPS,ComplexTPS})
   t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
+  mad_tpsa_seti!(t.tpsa, Cint(0), 0.0, convert(Float64,a))
   return t
 end
 
 function low_TPS(a::Real, use::Descriptor)
   t = TPS(mad_tpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_tpsa_set0!(t.tpsa, 0.0, convert(Float64,a))
+  mad_tpsa_seti!(t.tpsa, Cint(0), 0.0, convert(Float64,a))
   return t
 end
 
@@ -156,19 +156,19 @@ end
 # --- promote number to ComplexTPS ---
 function low_ComplexTPS(a::Union{Real,Complex}, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
 
 function low_ComplexTPS(a::Union{Real,Complex}, use::Union{TPS,ComplexTPS})
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
 
 function low_ComplexTPS(a::Union{Real,Complex}, use::Descriptor)
   ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64,a))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
   return ct
 end
 
@@ -188,32 +188,32 @@ end
 function low_ComplexTPS(t1::TPS, a::Real, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, complex(0,a)))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, complex(0,a)))
   return ct
 end
 
 function low_ComplexTPS(a::Real, t1::TPS, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
   mad_ctpsa_cplx!(Base.unsafe_convert(Ptr{RTPSA}, C_NULL), t1.tpsa, ct.tpsa)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 
 function low_ComplexTPS(a::Real, b::Real, use::Nothing)
   ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
   return ct
 end
 
 function low_ComplexTPS(a::Real, b::Real, use::Descriptor)
   ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
   return ct
 end
 
 function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
   ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
   return ct
 end
 
@@ -225,13 +225,13 @@ end
 
 function low_ComplexTPS(ta::TPS, b::Real, use::Descriptor)
   ct = change(ta, use, type=ComplexTPS)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, complex(0,b)))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, complex(0,b)))
   return ct
 end
 
 function low_ComplexTPS(a::Real, tb::TPS, use::Descriptor)
   ct = change(tb, use, type=ComplexTPS, scl2=im)
-  mad_ctpsa_set0!(ct.tpsa, convert(ComplexF64, 1), convert(ComplexF64, a))
+  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, a))
   return ct
 end
 

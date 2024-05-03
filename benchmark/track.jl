@@ -2,34 +2,35 @@ using GTPSA
 using ForwardDiff
 using BenchmarkTools: @btime, @benchmark
 
-# As of 02/19/2024 (Julia v1.10.1) on Mac M2 Ultra: Comparison with GTPSA for 58 inputs and 6 outputs
+# As of 05/03/2024, Julia v1.10.2 on Mac M2 Ultra: Comparison with GTPSA for 58 inputs and 6 outputs
+# Numbers calculated using BenchmarkTools.@btime
 #
 # 3rd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                  271.137 ms 
-# ForwardDiff:          4.004 s       
+# GTPSA:                    227.111 ms
+# ForwardDiff:            4.212 s
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                  415.567 ms 
-# ForwardDiff:          3.916 s     
+# GTPSA:                    371.465 ms
+# ForwardDiff:            4.096 s  
 #
 # 2nd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                    8.599 ms 
-# ForwardDiff:             23.984 ms
+# GTPSA:                    7.024 ms 
+# ForwardDiff:             23.417 ms
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                   17.141 ms 
-# ForwardDiff:             23.391 ms 
+# GTPSA:                   15.594 ms
+# ForwardDiff:             23.318 ms
 #
 # 1st Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                  327.458 μs 
-# ForwardDiff:            189.417 μs 
+# GTPSA:                  280.542 μs 
+# ForwardDiff:            188.792 μs
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                  707.916 μs 
-# ForwardDiff:            161.833 μs 
+# GTPSA:                  697.625 μs
+# ForwardDiff:            161.125 μs
 #
 # Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS, so it can be
 # inserted into functions while still maintaining generic code, as shown here

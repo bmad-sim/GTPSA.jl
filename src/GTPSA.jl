@@ -118,6 +118,7 @@ export
   deriv, ∂, deriv!, ∂!,
   getord, getord!,
   cutord, cutord!,
+  clearord, clearord!,
   translate, translate!,
   par,
   scalar,

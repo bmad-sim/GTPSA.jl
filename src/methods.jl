@@ -315,6 +315,30 @@ function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
   return t
 end
 
+# --- clearord! ---
+clrord!(t::Ptr{RTPSA}, ord::Cuchar) = mad_tpsa_clrord!(t, ord)
+clrord!(t::Ptr{CTPSA}, ord::Cuchar) = mad_ctpsa_clrord!(t, ord)
+
+"""
+    clearord!(t::Union{TPS,ComplexTPS}, order::Integer)
+
+Clears all monomial coefficients in `t` at order `order`.
+"""
+clearord!(t::Union{TPS,ComplexTPS}, order::Integer) = clrord!(t.tpsa, convert(Cuchar, order))
+
+"""
+    clearord(t1::Union{TPS,ComplexTPS}, order::Integer)
+
+Returns a new TPS equal to `t1` but with all monomial coefficients 
+at the given `order` cleared (set equal to 0).
+"""
+function clearord(t1::Union{TPS,ComplexTPS}, order::Integer)
+  t = zero(t1)
+  copy!(t,t1)
+  clearord!(t,order)
+  return t
+end
+
 
 # --- scalar ---
 """
