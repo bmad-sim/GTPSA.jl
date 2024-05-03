@@ -4,5 +4,5 @@ GTPSA = "b27dd330-f138-47c5-815b-40db9dd9b6e8"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 
 [compat]
-Documenter = "1.1"
-julia = "1.9"
+Documenter = "1.4.1"
+julia = "1.10"
