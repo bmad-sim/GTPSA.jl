@@ -38,6 +38,7 @@ end
 
 # Monomial
 function lowset!(t::Union{TPS,ComplexTPS}, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
+  println("length = ",convert(Cint, length(ords)), ", ords = ", collect(Cuchar, ords))
   setm!(t.tpsa, convert(Cint, length(ords)), collect(Cuchar, ords), (numtype(t))(0), (numtype(t))(v))
 end
 
@@ -150,6 +151,8 @@ function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{I
   else
     par_mono = setup_mono(t, v, param, params)
   end
+  #println(par_mono)
+  #return
   return slice(t, par_mono, false)
 end
 
@@ -301,11 +304,12 @@ end
 idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
 idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
 
+# assums par_mono ends in 0xff.
 function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
   nv = numvars(t1)
   np = numparams(t1)
   t = zero(t1)
-  v = Cint(length(par_mono))
+  v = Cint(length(par_mono)-1)
   coef = Ref{numtype(t)}()
   mono = Vector{Cuchar}(undef, np+nv)
   idx = idxm(t1.tpsa, v, replace(x->x==0xff ? 0x0 : x, par_mono))-Cint(1)

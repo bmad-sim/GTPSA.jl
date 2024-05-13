@@ -2054,8 +2054,8 @@ the header is not printed.
 - `nohdr_`  -- (Optional) If True, no header is printed
 - `stream_` -- (Optional) `FILE` pointer of output stream. Default is `stdout`
 """
-function mad_tpsa_print(t::Ptr{RTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
+function mad_tpsa_print(t::Ptr{RTPSA}, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA}, ""::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
