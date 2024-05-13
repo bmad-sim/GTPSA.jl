@@ -38,7 +38,7 @@ end
 
 # Monomial
 function lowset!(t::Union{TPS,ComplexTPS}, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
-  println("length = ",convert(Cint, length(ords)), ", ords = ", collect(Cuchar, ords))
+  #println("length = ",convert(Cint, length(ords)), ", ords = ", collect(Cuchar, ords))
   setm!(t.tpsa, convert(Cint, length(ords)), collect(Cuchar, ords), (numtype(t))(0), (numtype(t))(v))
 end
 
