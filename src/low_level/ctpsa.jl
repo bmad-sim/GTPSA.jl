@@ -111,18 +111,19 @@ end
 
 
 """
-    mad_ctpsa_len(t::Ptr{CTPSA})::Cint
+    mad_ctpsa_len(t::Ptr{CTPSA}, hi_::Bool)::Cint
 
 Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
 ### Input
 - `t`   -- Complex TPSA
+- `hi_` -- If `true`, returns the length up to the `hi` order in the TPSA, else up to `mo`. Default is false
 
 ### Output
 - `ret` -- Length of CTPSA
 """
-function mad_ctpsa_len(t::Ptr{CTPSA})::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{CTPSA})::Cint
+function mad_ctpsa_len(t::Ptr{CTPSA}, hi_::Bool)::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{CTPSA}, hi_::Bool)::Cint
   return ret
 end
 
@@ -2965,12 +2966,12 @@ end
 
 
 """
-    mad_ctpsa_density(t::Ptr{CTPSA}, eps::Cdouble)::Cdouble
+    mad_ctpsa_density(t::Ptr{CTPSA})::Cdouble
 
 ???
 """
-function mad_ctpsa_density(t::Ptr{CTPSA}, eps::Cdouble)::Cdouble
-  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ptr{CTPSA}, eps::Cdouble)::Cdouble
+function mad_ctpsa_density(t::Ptr{CTPSA})::Cdouble
+  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ptr{CTPSA})::Cdouble
   return ret
 end
 

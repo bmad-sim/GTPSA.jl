@@ -112,18 +112,18 @@ end
 
 
 """
-    mad_tpsa_len(t::Ptr{RTPSA})::Cint
+    mad_tpsa_len(t::Ptr{RTPSA}, hi_::Bool)::Cint
 
 Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
 ### Input
 - `t`   -- TPSA
-
+- `hi_` -- If `true`, returns the length up to the `hi` order in the TPSA, else up to `mo`. Default is false
 ### Output
 - `ret` -- Length of RTPSA
 """
-function mad_tpsa_len(t::Ptr{RTPSA})::Cint
-  ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA})::Cint
+function mad_tpsa_len(t::Ptr{RTPSA}, hi_::Bool)::Cint
+  ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{RTPSA}, hi_::Bool)::Cint
   return ret
 end
 
@@ -2055,7 +2055,7 @@ the header is not printed.
 - `stream_` -- (Optional) `FILE` pointer of output stream. Default is `stdout`
 """
 function mad_tpsa_print(t::Ptr{RTPSA}, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA}, ""::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{RTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
@@ -2186,12 +2186,12 @@ end
 
 
 """
-    mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
+    mad_tpsa_density(t::Ptr{RTPSA})::Cdouble
 
 ???
 """
-function mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
-  ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{RTPSA}, eps::Cdouble)::Cdouble
+function mad_tpsa_density(t::Ptr{RTPSA})::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{RTPSA})::Cdouble
   return ret
 end
 

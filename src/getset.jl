@@ -122,8 +122,8 @@ end
 lowget(t, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 
 # --- length ---
-len(t::Ptr{RTPSA}) = mad_tpsa_len(t)
-len(t::Ptr{CTPSA}) = mad_ctpsa_len(t)
+len(t::Ptr{RTPSA}) = mad_tpsa_len(t,false)
+len(t::Ptr{CTPSA}) = mad_ctpsa_len(t,false)
 
 """
     length(t::Union{TPS,ComplexTPS}

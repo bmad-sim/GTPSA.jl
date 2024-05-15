@@ -342,15 +342,16 @@ end
 
 
 """
-    mad_mono_print(n::Cint, a::Vector{Cuchar}, fp_::Ptr{Cvoid})
+    mad_mono_print(n::Cint, a::Vector{Cuchar}, sep_::Cstring, fp_::Ptr{Cvoid})
 
 Prints the monomial to `stdout`.
 
 ### Input
 - `n`  -- Length of monomial
 - `a`  -- Source monomial to print to `stdout`
+- `sep_` -- Separator string
 - `fp_` -- C `FILE` pointer, if null will print to `stdout`
 """
-function mad_mono_print(n::Cint, a::Vector{Cuchar}, fp_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, fp_::Ptr{Cvoid})::Cvoid
+function mad_mono_print(n::Cint, a::Vector{Cuchar}, sep_::Cstring, fp_::Ptr{Cvoid})
+  @ccall MAD_TPSA.mad_mono_print(n::Cint, a::Ptr{Cuchar}, sep_::Cstring, fp_::Ptr{Cvoid})::Cvoid
 end
