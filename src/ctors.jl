@@ -15,6 +15,7 @@ Default value is `GTPSA.desc_current`.
 - `x`   -- `Vector` containing unit `TPS`s corresponding to each variable
 """
 function vars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   x = Vector{TPS}(undef, nv)
   for i=1:nv
@@ -38,6 +39,7 @@ Default value is `GTPSA.desc_current`.
 - `k`   -- `Vector` containing unit `TPS`s corresponding to each parameter
 """
 function params(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   np = numparams(use)
   k = Vector{TPS}(undef, np)
@@ -63,6 +65,7 @@ Default value is `GTPSA.desc_current`.
 - `x`   -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
 """
 function complexvars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   x = Vector{ComplexTPS}(undef, nv)
   for i=1:nv
@@ -86,6 +89,7 @@ Default value is `GTPSA.desc_current`.
 - `k`   -- `Vector` containing unit `ComplexTPS`s corresponding to each parameter
 """
 function complexparams(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{ComplexTPS}
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   np = numparams(use)
   k = Vector{ComplexTPS}(undef, np)
