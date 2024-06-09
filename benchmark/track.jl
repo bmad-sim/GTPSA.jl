@@ -1,6 +1,8 @@
 using GTPSA
 using ForwardDiff
 using BenchmarkTools: @btime, @benchmark
+using Diffractor: DiffractorForwardBackend
+import AbstractDifferentiation as AD
 
 # As of 05/03/2024, Julia v1.10.2 on Mac M2 Ultra: Comparison with GTPSA for 58 inputs and 6 outputs
 # Numbers calculated using BenchmarkTools.@btime

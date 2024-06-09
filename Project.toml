@@ -3,7 +3,6 @@ uuid = "b27dd330-f138-47c5-815b-40db9dd9b6e8"
 authors = ["Matt Signorelli"]
 version = "0.6.1"
 
-
 [deps]
 GTPSA_jll = "a4739e29-4b97-5c0b-bbcf-46f08034c990"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -19,6 +18,8 @@ julia = "1.9"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Diffractor = "9f5e2b26-1114-432f-b630-d3fe2085c51c"
+AbstractDifferentiation = "c29ec348-61ec-40c8-8164-b8c60e9d9f3d"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
@@ -26,4 +27,4 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Downloads", "ForwardDiff", "BenchmarkTools", "SpecialFunctions", "JET"]
+test = ["Test", "Downloads", "ForwardDiff", "BenchmarkTools", "SpecialFunctions", "JET", "Diffractor", "AbstractDifferentiation"]

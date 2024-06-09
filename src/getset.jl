@@ -535,18 +535,22 @@ function hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
   if include_params
     n += desc.np
   end
+
+  nn = desc.nn
   if size(result) != (n,n)
     error("Incorrect size for result")
   end
   # Check that all vars/params are >= 2nd orders
+  #=
   for i=1:n
     if unsafe_load(desc.no, i) < 0x2
       error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
     end
   end
+  =#
   result .= 0.
-  idx = Cint(desc.nv+desc.np)
-  maxidx = Cint(floor(n*(n+1)/2))+n
+  idx = Cint(desc.nv+desc.np) # start at 2nd order
+  maxidx = Cint(floor(n*(n+1)/2))+n # maximum index to consider
   v = Ref{numtype(t)}()
   mono = Vector{UInt8}(undef, n)
   idx = cycle!(t.tpsa, idx, n, mono, v)
@@ -554,7 +558,7 @@ function hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
     i = findfirst(x->x==0x1, mono)
     if isnothing(i)
       i = findfirst(x->x==0x2, mono)
-      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+      H[i,i] = v[]   # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
     else 
       j = findlast(x->x==0x1, mono)
       H[i,j] = v[]
@@ -586,29 +590,68 @@ function hessian(t::Union{TPS,ComplexTPS}; include_params=false)
   if include_params
     n += desc.np
   end
-  # Check that all vars/params are >= 2nd orders
-  for i=1:n
-    if unsafe_load(desc.no, i) < 0x2
-      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
-    end
-  end
+
+  nn = desc.nn
+
   H = zeros(numtype(t), n, n)
-  idx = Cint(desc.nv+desc.np)
-  maxidx = Cint(floor(n*(n+1)/2))+n
-  v = Ref{numtype(t)}()
-  mono = Vector{UInt8}(undef, n)
-  idx = cycle!(t.tpsa, idx, n, mono, v)
-  while idx > 0 && idx <= maxidx
-    i = findfirst(x->x==0x1, mono)
-    if isnothing(i)
-      i = findfirst(x->x==0x2, mono)
-      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
-    else 
-      j = findlast(x->x==0x1, mono)
-      H[i,j] = v[]
-      H[j,i] = v[]
+
+  # If all variables/variable+parameters are > order 2, then 
+  # the indexing is known beforehand and we can do it slightly faster
+  check = true
+  i = 1
+  while check && i <= n
+    if unsafe_load(desc.no, i) < 0x2
+      check = false
     end
-    idx = cycle!(t.tpsa, idx, n, mono, v)
+    i += 1
+  end
+
+  if check
+    startidx = Cint(desc.nv+desc.np)+1
+    endidx = Cint(floor(n*(n+1)/2))+nn
+    curdiag = 1
+    col = 1
+    for i=startidx:endidx
+      idx = i-nn
+      if idx > curdiag
+        col += 1
+        curdiag += col
+      end
+      row = col-(curdiag-idx)
+      if row==col
+        H[row,col] = 2*t[i]
+      else
+        H[row,col] = t[i]
+        H[col,row] = t[i]
+      end
+    end
+  else
+    # If there are some variables/parameters with TO == 1, we have to do it slow. NBD:    
+    result =H
+    idx = Cint(desc.nv+desc.np) # start at 2nd order
+    v = Ref{numtype(t)}()
+    mono = Vector{UInt8}(undef, nn)
+    idx = cycle!(t.tpsa, idx, nn, mono, v)
+    while idx > 0 
+      if sum(mono) > 0x2
+        return H
+      end
+      i = findfirst(x->x==0x1, mono)
+      if isnothing(i)
+        i = findfirst(x->x==0x2, mono)
+        if i <= n
+          H[i,i] = 2*v[]   # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+        end
+      else 
+        j = findlast(x->x==0x1, mono)
+        if i <= n && j <= n
+          H[i,j] = v[]
+          H[j,i] = v[]
+        end
+      end
+      idx = cycle!(t.tpsa, idx, nn, mono, v)
+    end
+    
   end
   return H
 end
