@@ -539,8 +539,8 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
   result .= 0.
 
-  # If all variables/variable+parameters are > order 2, then 
-  # the indexing is known beforehand and we can do it slightly faster
+  # If all variables/variable+parameters have truncation order > 2, then 
+  # the indexing is known beforehand and we can do it faster
   check = true
   i = 1
   while check && i <= n
@@ -549,44 +549,57 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
     end
     i += 1
   end
-
+  #check=false
   if check
-    startidx = Cint(desc.nv+desc.np)+1
+    idx = Cint(desc.nv+desc.np)
     endidx = Cint(floor(n*(n+1)/2))+nn
     curdiag = 1
     col = 1
-    for i=startidx:endidx
-      idx = i-nn
-      if idx > curdiag
+    v = Ref{numtype(t)}()
+    idx = cycle!(t.tpsa, idx, Cint(0), C_NULL, v)
+    while idx < endidx && idx > 0
+      h_idx = idx-nn
+      while h_idx > curdiag
         col += 1
         curdiag += col
       end
-      row = col-(curdiag-idx)
+      row = col-(curdiag-h_idx)
+      #println("row = ", row, ", col = ", col)
       if row==col
-        result[row,col] = 2*t[i]
+        result[row,col] = 2*v[]
       else
-        result[row,col] = t[i]
-        result[col,row] = t[i]
+        result[row,col] = v[]
+        result[col,row] = v[]
       end
+      idx = cycle!(t.tpsa, idx, Cint(0), C_NULL, v)
     end
   else
-    # If there are some variables/parameters with TO == 1, we have to do it slow. NBD:    
+    # If there are some variables/parameters with TO == 1, we have to do it "slow"
+    # because the indexing of TPSA index -> hessian index can be very complicated.
+    # I saw slow in quotes because it is likely still much faster than the calculation
+    # of the Hessian itself (this is just a getter)  
     idx = Cint(desc.nv+desc.np) # start at 2nd order
     v = Ref{numtype(t)}()
     mono = Vector{UInt8}(undef, nn)
     idx = cycle!(t.tpsa, idx, nn, mono, v)
     while idx > 0 
       if sum(mono) > 0x2
-        return H
+        return result
       end
       i = findfirst(x->x==0x1, mono)
       if isnothing(i)
         i = findfirst(x->x==0x2, mono)
+        if isnothing(i)
+          return result
+        end
         if i <= n
           result[i,i] = 2*v[]   # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
         end
       else 
         j = findlast(x->x==0x1, mono)
+        if isnothing(j)
+          return result
+        end
         if i <= n && j <= n
           result[i,j] = v[]
           result[j,i] = v[]

@@ -27,8 +27,8 @@ const TPSIndexType = Union{Integer,
                            SMIndexType}
 
 
-cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
-cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
 
 # Generic function to make new copy of TPS with different descriptor
 function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t1), scl2::Number=1)
