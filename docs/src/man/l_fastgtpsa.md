@@ -22,3 +22,5 @@ Without using the macro, each time an operation is performed using a TPS, a new 
 The macro `@FastGTPSA` basically tells the code to instead use a permanent, pre-allocated buffer of TPSs to contain the temporaries during evaluation of the expression, so there is no dynamic memory allocation until the result is obtained; the number of allocations is reduced to 1. Furthermore, these temporaries are accessed and deleted in a stack-like manner from the buffer, so that temporaries involved in operations are right next to each other in memory. This ensures minimal cache misses throughout the evaluation of the expression.
 
 The speedup of using the macro can be quite significant. See our [example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl), where we observe a roughly x2.5 speedup.
+
+**WARNING: `@FastGTPSA` in its current state is NOT thread safe! This will be fixed in the near future, where a thread-safe memory pool will be used to draw temporaries from**
