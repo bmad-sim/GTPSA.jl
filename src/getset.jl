@@ -557,7 +557,7 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
     col = 1
     v = Ref{numtype(t)}()
     idx = cycle!(t.tpsa, idx, Cint(0), C_NULL, v)
-    while idx < endidx && idx > 0
+    while idx <= endidx && idx > 0
       h_idx = idx-nn
       while h_idx > curdiag
         col += 1
