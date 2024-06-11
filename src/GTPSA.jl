@@ -101,14 +101,14 @@ export
   complexmono,
 
   # Convenience getters:
-  gradient,
-  gradient!,
-  jacobian,
-  jacobian!,
-  jacobiant,
-  jacobiant!,
-  hessian,
-  hessian!,
+  #gradient,
+  #gradient!,
+  #jacobian,
+  #jacobian!,
+  #jacobiant,
+  #jacobiant!,
+  #hessian,
+  #hessian!,
   
 
   # Methods:

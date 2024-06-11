@@ -511,6 +511,15 @@ function jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=fa
   return result
 end
 
+#=
+"""
+
+"""
+function uniform_hessian!()
+  
+end
+=#
+
 """
     hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
