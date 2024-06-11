@@ -1174,13 +1174,13 @@ end
   h5FD = reshape(hFD,6,58,58)[5,:,:]
   h6FD = reshape(hFD,6,58,58)[6,:,:]
 
-  j = jacobian(map,include_params=true)
-  h1 = hessian(map[1],include_params=true)
-  h2 = hessian(map[2],include_params=true)
-  h3 = hessian(map[3],include_params=true)
-  h4 = hessian(map[4],include_params=true)
-  h5 = hessian(map[5],include_params=true)
-  h6 = hessian(map[6],include_params=true)
+  j = GTPSA.jacobian(map,include_params=true)
+  h1 = GTPSA.hessian(map[1],include_params=true)
+  h2 = GTPSA.hessian(map[2],include_params=true)
+  h3 = GTPSA.hessian(map[3],include_params=true)
+  h4 = GTPSA.hessian(map[4],include_params=true)
+  h5 = GTPSA.hessian(map[5],include_params=true)
+  h6 = GTPSA.hessian(map[6],include_params=true)
 
 
   @test all(abs.(j - jFD) .< tol)

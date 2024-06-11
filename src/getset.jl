@@ -340,7 +340,7 @@ getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v) = (@inline; mad_tpsa_getv!(t, i, n, v)
 getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v) = (@inline; mad_ctpsa_getv!(t, i, n, v))
 
 """
-    gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
 vector in-place. The partial derivatives wrt the parameters will also be extracted 
@@ -369,7 +369,7 @@ function gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    gradient(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS. The partial 
 derivatives wrt the parameters will also be extracted when the `include_params` flag is 
@@ -394,7 +394,7 @@ function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -429,7 +429,7 @@ function jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_p
 end
 
 """
-    jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -455,7 +455,7 @@ function jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=fal
 end
 
 """
-    jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -485,7 +485,7 @@ function jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_
 end
 
 """
-    jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false) where {N,P,I}
+    GTPSA.jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -521,7 +521,7 @@ end
 =#
 
 """
-    hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -621,7 +621,7 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    hessian(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.hessian(t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS.
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 

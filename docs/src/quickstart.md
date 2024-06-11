@@ -110,7 +110,7 @@ print(t)
 ```
 
 ### Gradients, Jacobians, Hessians
-The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a TPS/Vector of TPSs. Note that these functions are not actually calculating anything - at this point the TPS should already have been propagated through the system, and these functions are just extracting the corresponding partial derivatives.
+The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a TPS/Vector of TPSs. Note that these functions are not actually calculating anything - at this point the TPS should already have been propagated through the system, and these functions are just extracting the corresponding partial derivatives. Note that these function names are not exported, because they are commonly used by other automatic differentiation packages.
 
 ```@example
 using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false; #hide
@@ -121,14 +121,14 @@ x = vars(d);
 out = cumsum(x);
 
 # Convenience getters for partial derivative extracting:
-grad1 = gradient(out[1]);
-J = jacobian(out);
-h1 = hessian(out[1]);
+grad1 = GTPSA.gradient(out[1]);
+J = GTPSA.jacobian(out);
+h1 = GTPSA.hessian(out[1]);
 
 # Also in-place getters
-gradient!(grad1, out[1]);
-jacobian!(J, out);
-hessian!(h1, out[1]);
+GTPSA.gradient!(grad1, out[1]);
+GTPSA.jacobian!(J, out);
+GTPSA.hessian!(h1, out[1]);
 ```
 
 ## Slicing a TPS
