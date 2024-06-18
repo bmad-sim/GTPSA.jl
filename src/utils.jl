@@ -37,9 +37,9 @@ function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t
     return type(t1)
   end
 
-  # THE NUMBER OF VARIABLES and PARAMETERS MUST AGREE!!!
-  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).nv == unsafe_load(newd.desc).nv || error("Number of variables in GTPSAs do not agree!")
-  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).np == unsafe_load(newd.desc).np || error("Number of parameters in GTPSAs do not agree!")
+  # THE NUMBER OF VARIABLES + PARAMETERS MUST AGREE!!!
+  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).nn == unsafe_load(newd.desc).nn || error("Number of variables + parameters in GTPSAs do not agree!")
+  #unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).np == unsafe_load(newd.desc).np || error("Number of parameters in GTPSAs do not agree!")
 
   t = type(use=newd)
   change!(t, t1, 0, scl2)
