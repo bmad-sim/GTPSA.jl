@@ -480,7 +480,7 @@ function jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_
     error("Incorrect size for result")
   end
   for i=1:length(m)
-    getv!(m[i].tpsa, Cint(1), n, pointer(result, length(m)*(i-1)+1))
+    getv!(m[i].tpsa, Cint(1), n, pointer(result, n*(i-1)+1))
   end
 end
 
