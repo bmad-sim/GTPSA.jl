@@ -32,22 +32,24 @@ cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_ctpsa_cycle!(t, 
 
 # Generic function to make new copy of TPS with different descriptor
 function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t1), scl2::Number=1)
-  # Quick check if actually changing
-  if Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d) == newd.desc
-    return type(t1)
-  end
-
   # THE NUMBER OF VARIABLES + PARAMETERS MUST AGREE!!!
   unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).nn == unsafe_load(newd.desc).nn || error("Number of variables + parameters in GTPSAs do not agree!")
-  #unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).np == unsafe_load(newd.desc).np || error("Number of parameters in GTPSAs do not agree!")
 
   t = type(use=newd)
   change!(t, t1, 0, scl2)
   return t
 end
 
+change!(t::Union{TPS,ComplexTPS}, a::Number, scl1::Number=0, scl2::Number=1) = (tmp = scl1*t[0]+scl2*a; clear!(t); t[0] = tmp)
+
 function change!(t::Union{TPS,ComplexTPS},t1::Union{TPS,ComplexTPS}, scl1::Number=0, scl2::Number=1)
-  desc =  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  olddesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)
+  newdesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  
+  if olddesc == newdesc
+    copy!(t,t1)
+    return
+  end
   nv = desc.nv
   np = desc.np
   coef = Ref{numtype(t1)}()
@@ -55,7 +57,7 @@ function change!(t::Union{TPS,ComplexTPS},t1::Union{TPS,ComplexTPS}, scl1::Numbe
   idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d), np+nv, mono))
+    if convert(Bool, mad_desc_isvalidm(newdesc, np+nv, mono))
       setm!(t.tpsa, np+nv, mono, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
     end
     idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
