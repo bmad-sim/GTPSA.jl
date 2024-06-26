@@ -128,7 +128,7 @@ function mad_ctpsa_len(t::Ptr{CTPSA}, hi_::Bool)::Cint
 end
 
 """
-    mad_ctpsa_mo!(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
+    mad_ctpsa_mo!(t::Ptr{CTPSA}, mo::Cuchar)::Cuchar
 
 Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 `mo_` should be less than or equal to the allocated order `ao`.
@@ -140,8 +140,8 @@ Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 ### Output
 - `ret` -- Original `mo` of the TPSA
 """
-function mad_ctpsa_mo!(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_mo(t::Ptr{CTPSA}, mo_::Cuchar)::Cuchar
+function mad_ctpsa_mo!(t::Ptr{CTPSA}, mo::Cuchar)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_mo(t::Ptr{CTPSA}, mo::Cuchar)::Cuchar
   return ret
 end
 
