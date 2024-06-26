@@ -11,6 +11,48 @@ function clear!(t::Union{TPS,ComplexTPS})
   clear!(t.tpsa)
 end
 
+# --- setGTPSA! ---
+
+"""
+    setGTPSA!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+
+General function for setting a TPS/ComplexTPS `t` equal to `t1`. If `change` is `true`,
+then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
+long as the number of variables + number of parameters are equal.
+"""
+function setGTPSA!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+  # if just a regular number
+  if !(t1 isa Union{TPS,ComplexTPS})
+    clear!(t)
+    t[0] = t1
+    return
+  end
+
+  olddesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)
+  newdesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+
+  # if not changing descriptors
+  if olddesc == newdesc || !change 
+    copy!(t, t1)
+    return
+  end
+
+  # else we have to get fancy
+  unsafe_load(newdesc).nn == unsafe_load(olddesc).nn || error("Number of variables + parameters in GTPSAs do not agree!")
+  nv = unsafe_load(olddesc).nv
+  np = unsafe_load(newdesc).np
+  coef = Ref{numtype(t1)}()
+  mono = Vector{Cuchar}(undef, np+nv)
+  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
+  while idx >= 0
+    # if valid monomial in new descriptor:
+    if convert(Bool, mad_desc_isvalidm(newdesc, np+nv, mono))
+      setm!(t.tpsa, np+nv, mono, convert(numtype(t), 0), convert(numtype(t), coef[])) # set new tpsa
+    end
+    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+  end
+end
+
 # --- complex! ---
 
 """
