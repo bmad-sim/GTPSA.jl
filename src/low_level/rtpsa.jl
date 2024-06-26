@@ -129,7 +129,7 @@ end
 
 
 """
-    mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
+    mad_tpsa_mo!(t::Ptr{RTPSA}, mo::Cuchar)::Cuchar
 
 Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 `mo_` should be less than or equal to the allocated order `ao`.
@@ -141,8 +141,8 @@ Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 ### Output
 - `ret` -- Original `mo` of the TPSA
 """
-function mad_tpsa_mo!(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
-  ret = @ccall MAD_TPSA.mad_tpsa_mo(t::Ptr{RTPSA}, mo_::Cuchar)::Cuchar
+function mad_tpsa_mo!(t::Ptr{RTPSA}, mo::Cuchar)::Cuchar
+  ret = @ccall MAD_TPSA.mad_tpsa_mo(t::Ptr{RTPSA}, mo::Cuchar)::Cuchar
   return ret
 end
 
