@@ -357,6 +357,18 @@ end
 end
 end
 
+#= --- muladd ---
+# Right now we will only include a*x + b where a and b are scalars and x is TPS/ComplexTPS
+axpb!(a::Cdouble, x::Ptr{RTPSA}, b::Cdouble, r::Ptr{RTPSA}) = mad_tpsa_axpb!(a, x, b, r)
+axpb!(a::ComplexF64, x::Ptr{CTPSA}, b::ComplexF64, r::Ptr{CTPSA}) = mad_tpsa_axpb!(a, x, b, r)
+
+muladd!(t::TPS, a::Real, t1::TPS, b::Real) = axpb!(a, t1.tpsa, b, t.tpsa)
+muladd!(t::ComplexTPS, a::Number, t1::ComplexTPS, b::Number) = axpb!(a, t1.tpsa, b, t.tpsa)
+function muladd!(t::ComplexTPS, a::Number, t1::TPS, b::Number) # promotion
+  mul!(t, a, t1)
+  add!(t, t, b)
+end
+=#
 
 # --- div ---
 div!(a::Ptr{RTPSA}, b::Ptr{RTPSA}, c::Ptr{RTPSA}) = mad_tpsa_div!(a, b, c)

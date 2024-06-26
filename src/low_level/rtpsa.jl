@@ -490,7 +490,7 @@ end
 
 
 """
-    mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble})::Cint
+    mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_, v_)::Cint
 
 Used for scanning through each nonzero monomial in the TPSA. Given a starting index (-1 if starting at 0), will 
 optionally fill monomial `m_` with the monomial at index `i` and the value at `v_` with the monomials coefficient, and 
@@ -506,7 +506,7 @@ return the next NONZERO monomial index in the TPSA. This is useful for building 
 ### Output
 - `i`  -- Index of next nonzero monomial in the TPSA, or -1 if reached the end
 """
-function mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble})::Cint
+function mad_tpsa_cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_, v_)::Cint
   i = @ccall MAD_TPSA.mad_tpsa_cycle(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
   return i
 end

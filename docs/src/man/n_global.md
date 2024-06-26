@@ -18,8 +18,6 @@ show_header::Bool = false    # Print a header above each TPS
 
 -----
 
-Global variables can be get/set using either the standard syntax (e.g. `GTPSA.show_header = true`), or using the helper functions `getGTPSA` and `setGTPSA!`.
-
 ## Examples
 
 ```@repl
@@ -28,7 +26,7 @@ d1 = Descriptor(1, 6);
 x = vars()
 GTPSA.show_sparse = true;
 x
-setGTPSA!("show_sparse", false);
-getGTPSA("show_sparse")
+GTPSA.show_sparse = false;
+GTPSA.show_sparse
 x
 ```

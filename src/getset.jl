@@ -340,7 +340,7 @@ getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v) = (@inline; mad_tpsa_getv!(t, i, n, v)
 getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v) = (@inline; mad_ctpsa_getv!(t, i, n, v))
 
 """
-    gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
 vector in-place. The partial derivatives wrt the parameters will also be extracted 
@@ -369,7 +369,7 @@ function gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    gradient(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS. The partial 
 derivatives wrt the parameters will also be extracted when the `include_params` flag is 
@@ -394,7 +394,7 @@ function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    jacobian!(result, m; include_params=false)
+    GTPSA.jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -409,7 +409,7 @@ in the TPSs.
 ### Output
 - `result`         -- Matrix to fill with the Jacobian of `m`, must be 1-based indexing
 """
-function jacobian!(result, m; include_params=false)
+function jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
@@ -429,7 +429,7 @@ function jacobian!(result, m; include_params=false)
 end
 
 """
-    jacobian(m; include_params=false)
+    GTPSA.jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -443,7 +443,7 @@ the first-order monomial coefficients already in the TPSs.
 ### Output
 - `J`              -- Jacobian of `m`
 """
-function jacobian(m; include_params=false)
+function jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
   Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
@@ -455,7 +455,7 @@ function jacobian(m; include_params=false)
 end
 
 """
-    jacobiant!(result, m; include_params=false)
+    GTPSA.jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -470,7 +470,7 @@ in the TPSs and filling `result`.
 ### Output
 - `result`         -- Matrix to fill with the transpose of the Jacobian of `m`, must be 1-based indexing
 """
-function jacobiant!(result, m; include_params=false)
+function jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
@@ -480,12 +480,12 @@ function jacobiant!(result, m; include_params=false)
     error("Incorrect size for result")
   end
   for i=1:length(m)
-    getv!(m[i].tpsa, Cint(1), n, pointer(result, length(m)*(i-1)+1))
+    getv!(m[i].tpsa, Cint(1), n, pointer(result, n*(i-1)+1))
   end
 end
 
 """
-    jacobiant(m; include_params=false) where {N,P,I}
+    GTPSA.jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -500,7 +500,7 @@ in the TPSs.
 ### Output
 - `Jt`             -- Transpose of the Jacobian of `m`
 """
-function jacobiant(m; include_params=false)
+function jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
   Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
@@ -511,8 +511,17 @@ function jacobiant(m; include_params=false)
   return result
 end
 
+#=
 """
-    hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
+
+"""
+function uniform_hessian!()
+  
+end
+=#
+
+"""
+    GTPSA.hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -527,7 +536,7 @@ in the TPS.
 ### Output
 - `result`         -- Matrix to fill with the Hessian of the TPS, must be 1-based indexing
 """
-function hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
+function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
   Base.require_one_based_indexing(result)
   d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
   desc = unsafe_load(d)
@@ -535,37 +544,84 @@ function hessian!(result,t::Union{TPS,ComplexTPS}; include_params=false)
   if include_params
     n += desc.np
   end
-  if size(result) != (n,n)
-    error("Incorrect size for result")
-  end
-  # Check that all vars/params are >= 2nd orders
-  for i=1:n
-    if unsafe_load(desc.no, i) < 0x2
-      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
-    end
-  end
+  nn = desc.nn
+
   result .= 0.
-  idx = Cint(desc.nv+desc.np)
-  maxidx = Cint(floor(n*(n+1)/2))+n
-  v = Ref{numtype(t)}()
-  mono = Vector{UInt8}(undef, n)
-  idx = cycle!(t.tpsa, idx, n, mono, v)
-  while idx > 0 && idx <= maxidx
-    i = findfirst(x->x==0x1, mono)
-    if isnothing(i)
-      i = findfirst(x->x==0x2, mono)
-      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
-    else 
-      j = findlast(x->x==0x1, mono)
-      H[i,j] = v[]
-      H[j,i] = v[]
+
+  # If all variables/variable+parameters have truncation order > 2, then 
+  # the indexing is known beforehand and we can do it faster
+  check = true
+  i = 1
+  while check && i <= n
+    if unsafe_load(desc.no, i) < 0x2
+      check = false
     end
-    idx = cycle!(t.tpsa, idx, n, mono, v)
+    i += 1
   end
+  #check=false
+  if check
+    idx = Cint(desc.nv+desc.np)
+    endidx = Cint(floor(n*(n+1)/2))+nn
+    curdiag = 1
+    col = 1
+    v = Ref{numtype(t)}()
+    idx = cycle!(t.tpsa, idx, Cint(0), C_NULL, v)
+    while idx <= endidx && idx > 0
+      h_idx = idx-nn
+      while h_idx > curdiag
+        col += 1
+        curdiag += col
+      end
+      row = col-(curdiag-h_idx)
+      #println("row = ", row, ", col = ", col)
+      if row==col
+        result[row,col] = 2*v[]
+      else
+        result[row,col] = v[]
+        result[col,row] = v[]
+      end
+      idx = cycle!(t.tpsa, idx, Cint(0), C_NULL, v)
+    end
+  else
+    # If there are some variables/parameters with TO == 1, we have to do it "slow"
+    # because the indexing of TPSA index -> hessian index can be very complicated.
+    # I saw slow in quotes because it is likely still much faster than the calculation
+    # of the Hessian itself (this is just a getter)  
+    idx = Cint(desc.nv+desc.np) # start at 2nd order
+    v = Ref{numtype(t)}()
+    mono = Vector{UInt8}(undef, nn)
+    idx = cycle!(t.tpsa, idx, nn, mono, v)
+    while idx > 0 
+      if sum(mono) > 0x2
+        return result
+      end
+      i = findfirst(x->x==0x1, mono)
+      if isnothing(i)
+        i = findfirst(x->x==0x2, mono)
+        if isnothing(i)
+          return result
+        end
+        if i <= n
+          result[i,i] = 2*v[]   # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
+        end
+      else 
+        j = findlast(x->x==0x1, mono)
+        if isnothing(j)
+          return result
+        end
+        if i <= n && j <= n
+          result[i,j] = v[]
+          result[j,i] = v[]
+        end
+      end
+      idx = cycle!(t.tpsa, idx, nn, mono, v)
+    end
+  end
+  return result
 end
 
 """
-    hessian(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.hessian(t::Union{TPS,ComplexTPS}; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS.
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -586,29 +642,9 @@ function hessian(t::Union{TPS,ComplexTPS}; include_params=false)
   if include_params
     n += desc.np
   end
-  # Check that all vars/params are >= 2nd orders
-  for i=1:n
-    if unsafe_load(desc.no, i) < 0x2
-      error("Hessian undefined for TPSA with at least one variable/parameter of order < 2")
-    end
-  end
+
   H = zeros(numtype(t), n, n)
-  idx = Cint(desc.nv+desc.np)
-  maxidx = Cint(floor(n*(n+1)/2))+n
-  v = Ref{numtype(t)}()
-  mono = Vector{UInt8}(undef, n)
-  idx = cycle!(t.tpsa, idx, n, mono, v)
-  while idx > 0 && idx <= maxidx
-    i = findfirst(x->x==0x1, mono)
-    if isnothing(i)
-      i = findfirst(x->x==0x2, mono)
-      H[i,i] = v[]*2    # Multiply by 2 because taylor coefficient on diagonal is 1/2!*d2f/dx2
-    else 
-      j = findlast(x->x==0x1, mono)
-      H[i,j] = v[]
-      H[j,i] = v[]
-    end
-    idx = cycle!(t.tpsa, idx, n, mono, v)
-  end
+
+  hessian!(H, t, include_params=include_params)
   return H
 end

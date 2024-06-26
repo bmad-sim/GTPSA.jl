@@ -27,40 +27,9 @@ const TPSIndexType = Union{Integer,
                            SMIndexType}
 
 
-cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{Cdouble}) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
-cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_::Vector{Cuchar}, v_::Ref{ComplexF64}) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
+cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
 
-# Generic function to make new copy of TPS with different descriptor
-function change(t1::Union{TPS,ComplexTPS}, newd::Descriptor; type::Type=typeof(t1), scl2::Number=1)
-  # Quick check if actually changing
-  if Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d) == newd.desc
-    return type(t1)
-  end
-
-  # THE NUMBER OF VARIABLES and PARAMETERS MUST AGREE!!!
-  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).nv == unsafe_load(newd.desc).nv || error("Number of variables in GTPSAs do not agree!")
-  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)).np == unsafe_load(newd.desc).np || error("Number of parameters in GTPSAs do not agree!")
-
-  t = type(use=newd)
-  change!(t, t1, 0, scl2)
-  return t
-end
-
-function change!(t::Union{TPS,ComplexTPS},t1::Union{TPS,ComplexTPS}, scl1::Number=0, scl2::Number=1)
-  desc =  unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
-  nv = desc.nv
-  np = desc.np
-  coef = Ref{numtype(t1)}()
-  mono = Vector{Cuchar}(undef, np+nv)
-  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
-  while idx >= 0
-    # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d), np+nv, mono))
-      setm!(t.tpsa, np+nv, mono, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
-    end
-    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
-  end
-end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
