@@ -53,55 +53,6 @@ function setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false)
   end
 end
 
-"""
-    scaleTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false, scl1::Number=0; scl2::Number=1) 
-
-Sets `t` equal to `scl1*t + scl2*t1`, where the `Descriptor`s can be different 
-if the `change` flag is set to `true`. For `scl1=0, scl2 = 1` this is equivalent 
-to `setTPS!`.
-"""
-function scaleTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false, scl1::Number=0, scl2::Number=1) 
-  # if just a regular number
-  if !(t1 isa Union{TPS,ComplexTPS})
-    tmp = scl1*t[0] + scl2*t1
-    clear!(t)
-    t[0] = tmp
-    return
-  end
-
-  olddesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)
-  newdesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
-
-  # if not changing descriptors
-  if olddesc == newdesc || !change 
-    mul!(t, scl1, t)   # t = t*scl1
-    if isreal(scl2)
-      mul!(t1, t1, scl2) # t1 = t1*scl2
-      add!(t, t1, t)     # t = t + t1
-      div!(t1, t1, scl1) # t1 = t1/scl1 # fixing t1
-    else
-      ctmp = ComplexTPS(use=t)
-      
-    end
-    return
-  end
-
-  # else we have to get fancy
-  unsafe_load(newdesc).nn == unsafe_load(olddesc).nn || error("Number of variables + parameters in GTPSAs do not agree!")
-  nv = unsafe_load(olddesc).nv
-  np = unsafe_load(newdesc).np
-  coef = Ref{numtype(t1)}()
-  mono = Vector{Cuchar}(undef, np+nv)
-  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
-  while idx >= 0
-    # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(newdesc, np+nv, mono))
-      setm!(t.tpsa, np+nv, mono, convert(numtype(t), scl1), convert(numtype(t), scl2*coef[])) # set new tpsa
-    end
-    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
-  end
-end
-
 # --- complex! ---
 
 """

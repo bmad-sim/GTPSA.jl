@@ -226,9 +226,12 @@ function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
 end
 
 function low_ComplexTPS(ta::TPS, tb::TPS, use::Descriptor)
+  ctmp = ComplexTPS(use=use)
   ct = ComplexTPS(use=use)
   setTPS!(ct, ta, change=true)
-  scaleTPS!(ct, tb, change=true, scl1=1, scl2=im)
+  setTPS!(ctmp, tb, change=true)
+  mul!(ctmp, ctmp, complex(0,1))
+  add!(ct, ctmp, ct)
   return ct
 end
 
@@ -241,7 +244,8 @@ end
 
 function low_ComplexTPS(a::Real, tb::TPS, use::Descriptor)
   ct = ComplexTPS(use=use)
-  scaleTPS!(ct, tb, change=true, scl1=0, scl2=im)
+  setTPS!(ct, tb, change=true)
+  mul!(ct,ct,complex(0,1))
   add!(ct, a, ct)
   return ct
 end
