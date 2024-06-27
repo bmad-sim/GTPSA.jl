@@ -122,7 +122,8 @@ export
   translate, translate!,
   par,
   scalar,
-  setGTPSA!,
+  setTPS!,
+  scaleTPS!,
   
   # Temporaries:
   @FastGTPSA,

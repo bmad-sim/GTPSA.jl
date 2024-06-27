@@ -11,16 +11,16 @@ function clear!(t::Union{TPS,ComplexTPS})
   clear!(t.tpsa)
 end
 
-# --- setGTPSA! ---
+# --- setTPS! ---
 
 """
-    setGTPSA!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+    setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
 
 General function for setting a TPS/ComplexTPS `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
 long as the number of variables + number of parameters are equal.
 """
-function setGTPSA!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+function setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
   # if just a regular number
   if !(t1 isa Union{TPS,ComplexTPS})
     clear!(t)
