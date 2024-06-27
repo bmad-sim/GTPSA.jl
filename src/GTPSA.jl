@@ -123,7 +123,6 @@ export
   par,
   scalar,
   setTPS!,
-  scaleTPS!,
   
   # Temporaries:
   @FastGTPSA,
