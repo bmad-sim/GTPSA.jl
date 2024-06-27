@@ -16,7 +16,8 @@ getord!
 integ
 integ!
 scalar
-setGTPSA!
+scaleTPS!
+setTPS!
 translate
 translate!
 ```

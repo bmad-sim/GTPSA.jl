@@ -66,13 +66,13 @@ end
 # --- Change descriptor ---
 function low_TPS(t1::TPS, use::Descriptor)
   t = TPS(use=use)
-  setGTPSA!(t,t1,change=true)
+  setTPS!(t,t1,change=true)
   return t
 end
 
 function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
   t = TPS(use=use)
-  setGTPSA!(t,t1,change=true)
+  setTPS!(t,t1,change=true)
   return t
 end
 
@@ -151,13 +151,13 @@ end
 # --- Change descriptor ---
 function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Descriptor)
   t = ComplexTPS(use=use)
-  setGTPSA!(t, t1, change=true)
+  setTPS!(t, t1, change=true)
   return t
 end
 
 function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Union{TPS,ComplexTPS})
   t = ComplexTPS(use=use)
-  setGTPSA!(t, t1, change=true)
+  setTPS!(t, t1, change=true)
   return t
 end
 
@@ -226,26 +226,22 @@ function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
 end
 
 function low_ComplexTPS(ta::TPS, tb::TPS, use::Descriptor)
-  ctmp = ComplexTPS(use=use)
   ct = ComplexTPS(use=use)
-  setGTPSA!(ct, ta, change=true)
-  setGTPSA!(ctmp, tb, change=true)
-  mul!(ctmp, ctmp, complex(0,1))
-  add!(ct, ctmp, ct)
+  setTPS!(ct, ta, change=true)
+  scaleTPS!(ct, tb, change=true, scl1=1, scl2=im)
   return ct
 end
 
 function low_ComplexTPS(ta::TPS, b::Real, use::Descriptor)
   ct = ComplexTPS(use=use)
-  setGTPSA!(ct, ta, change=true)
+  setTPS!(ct, ta, change=true)
   add!(ct, ct, complex(0,b))
   return ct
 end
 
 function low_ComplexTPS(a::Real, tb::TPS, use::Descriptor)
   ct = ComplexTPS(use=use)
-  setGTPSA!(ct, tb, change=true)
-  mul!(ct,ct,complex(0,1))
+  scaleTPS!(ct, tb, change=true, scl1=0, scl2=im)
   add!(ct, a, ct)
   return ct
 end
