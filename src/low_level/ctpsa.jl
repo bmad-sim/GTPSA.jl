@@ -2841,7 +2841,7 @@ end
 
 
 """
-    mad_ctpsa_print(t::Ptr{CTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
+    mad_ctpsa_print(t::Ptr{CTPSA}, name_ eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
 
 Prints the TPSA coefficients with precision `eps_`. If `nohdr_` is not zero, 
 the header is not printed. 
@@ -2853,7 +2853,7 @@ the header is not printed.
 - `nohdr_`  -- (Optional) If True, no header is printed
 - `stream_` -- (Optional) `FILE` pointer of output stream. Default is `stdout`
 """
-function mad_ctpsa_print(t::Ptr{CTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
+function mad_ctpsa_print(t::Ptr{CTPSA}, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_ctpsa_print(t::Ptr{CTPSA}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
 end
 
