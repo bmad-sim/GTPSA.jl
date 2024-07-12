@@ -15,6 +15,7 @@ getord
 getord!
 integ
 integ!
+lengthTPS
 scalar
 setTPS!
 translate

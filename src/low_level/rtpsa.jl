@@ -148,7 +148,7 @@ end
 
 
 """
-    mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
+    mad_tpsa_nam(t::Ptr{RTPSA}, nam_)::Cstring
 
 Get the name of the TPSA, and will optionally set if `nam_ != null`
 
@@ -159,7 +159,7 @@ Get the name of the TPSA, and will optionally set if `nam_ != null`
 ### Output
 - `ret`  -- Name of RTPSA (null terminated in C)
 """
-function mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
+function mad_tpsa_nam(t::Ptr{RTPSA}, nam_)::Cstring
   ret = @ccall MAD_TPSA.mad_tpsa_nam(t::Ptr{RTPSA}, nam_::Cstring)::Cstring
   return ret
 end

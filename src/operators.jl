@@ -64,7 +64,7 @@ Generate a `TPS`/`ComplexTPS` with all random coefficients.
 """
 function rand(::Type{T}; use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current) where {T<:Union{TPS,ComplexTPS}}
   t = T(use=use)
-  len = length(t)
+  len = lengthTPS(t)
   for i=0:len-1
     t[i] = rand(numtype(T))
   end

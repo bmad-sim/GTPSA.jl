@@ -1,12 +1,12 @@
 # [All Overloaded Functions](@id all)
-The following functions from Base have been overloaded for operations with `TPS`/`ComplexTPS`, and also maps:
+The following functions from Base have been overloaded for operations with `TPS`/`ComplexTPS`:
 ```
 +, -, *, /, ^, ∘, inv, atan, hypot, abs, sqrt, exp, log, 
 sin, cos, tan, csc, sec, cot, sinc, sinh, cosh, tanh, csch, 
 sech, coth, asin, acos, atan, acsc, asec, acot, asinh, acosh, 
 atanh, acsch, asech, acoth, zero, zeros, one, ones, real, imag, 
 conj, angle, complex, promote_rule, getindex, setindex!, ==, <, 
->, <=, >=, !=, isequal, show, copy!, length, lastindex, firstindex,
+>, <=, >=, !=, isequal, show, copy!, lastindex, firstindex,
 rand
 ```
 

@@ -126,12 +126,12 @@ len(t::Ptr{RTPSA}) = mad_tpsa_len(t,false)
 len(t::Ptr{CTPSA}) = mad_ctpsa_len(t,false)
 
 """
-    length(t::Union{TPS,ComplexTPS}
+    lengthTPS(t::Union{TPS,ComplexTPS}
 
 Returns the maximum number of monomials (including the scalar part)
 in the `TPS`/`ComplexTPS` given its `Descriptor`. 
 """
-length(t::Union{TPS,ComplexTPS}) = len(t.tpsa)
+lengthTPS(t::Union{TPS,ComplexTPS}) = len(t.tpsa)
 
 firstindex(t::Union{TPS,ComplexTPS}) = 0
 lastindex(t::Union{TPS,ComplexTPS}) = length(t)-1
@@ -511,14 +511,6 @@ function jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=fa
   return result
 end
 
-#=
-"""
-
-"""
-function uniform_hessian!()
-  
-end
-=#
 
 """
     GTPSA.hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)

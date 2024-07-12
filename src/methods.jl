@@ -529,8 +529,6 @@ function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,Complex
   return mc
 end
 
-compose = ∘
-
 # --- translate ---
 translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Float64}, mc::Vector{Ptr{RTPSA}}) = mad_tpsa_translate!(na, ma, nb, tb, mc)
 translate!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, tb::Vector{ComplexF64}, mc::Vector{Ptr{CTPSA}}) = mad_ctpsa_translate!(na, ma, nb, tb, mc)

@@ -61,7 +61,6 @@ import Base:  +,
               isequal,
               show,
               copy!,
-              length,
               lastindex,
               firstindex,
               rand
@@ -123,6 +122,7 @@ export
   par,
   scalar,
   setTPS!,
+  lengthTPS,
   
   # Temporaries:
   @FastGTPSA,
