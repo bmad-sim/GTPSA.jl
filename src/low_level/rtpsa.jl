@@ -13,7 +13,7 @@ This is a 1-to-1 struct for the C definition `tpsa` (real TPSA) in GTPSA.
 - `nam::NTuple{NAMSZ,Cuchar}` -- tpsa name max string length 15 chars NAMSZ
 - `coef::Ptr{Cdouble}`        -- warning: must be identical to ctpsa up to coef excluded                                                                                                  
 """
-struct RTPSA
+mutable struct RTPSA
   d::Ptr{Cvoid}                                       
   lo::Cuchar                
   hi::Cuchar     
