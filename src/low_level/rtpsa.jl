@@ -13,7 +13,7 @@ This is a 1-to-1 struct for the C definition `tpsa` (real TPSA) in GTPSA.
 - `nam::NTuple{NAMSZ,Cuchar}` -- tpsa name max string length 15 chars NAMSZ
 - `coef::Ptr{Cdouble}`        -- warning: must be identical to ctpsa up to coef excluded                                                                                                  
 """
-mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number 
+mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number 
   d::Ptr{Desc}                                       
   lo::UInt8                
   hi::UInt8     
@@ -24,10 +24,10 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
   coef::Ptr{T}     
   
   # Analog to C code mad_tpsa_newd
-  function TPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
+  function NewTPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
     mo = min(mo, unsafe_load(d).mo)
     sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
-    coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
+    coef = MVector{mo, T}(undef) #@ccall jl_malloc(sz::Csize_t)::Ptr{T}
     ao = mo
     uid = Cint(0)
     nam = (0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
@@ -37,8 +37,8 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
 
     t = new{T}(d, lo, hi, mo, ao, uid, nam, coef)
 
-    f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
-    finalizer(f, t)
+    #f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
+    #finalizer(f, t)
 
     return t
   end
