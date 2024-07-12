@@ -35,7 +35,7 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
     hi = 0x0
     unsafe_store!(coef, T(0))
 
-    t = new{T}(d, lo, hi, mo, ao, uid, name, coef)
+    t = new{T}(d, lo, hi, mo, ao, uid, nam, coef)
 
     f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
     finalizer(f, t)
