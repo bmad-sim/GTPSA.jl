@@ -64,7 +64,8 @@ import Base:  +,
               lastindex,
               firstindex,
               rand,
-              unsafe_convert
+              unsafe_convert,
+              eltype
 
 import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
@@ -151,5 +152,10 @@ include("show.jl")          # Output
 include("operators.jl")     # TPS math overloaded operators/functions
 include("methods.jl")       # Higher-level TPS functions (derivatives, integrals, evaluate, etc)
 include("fast_gtpsa.jl")    # Everything for the @FastGTPSA macro
+
+include("new/tps.jl")
+include("new/operators.jl")
+include("new/getset.jl")
+include("new/show.jl")
 
 end

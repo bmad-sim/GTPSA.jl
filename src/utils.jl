@@ -7,7 +7,7 @@ lowtype(t::TPS) = Ptr{RTPSA}
 lowtype(ct::ComplexTPS) = Ptr{CTPSA}
 lowtype(::Type{TPS}) = Ptr{RTPSA}
 lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
-
+#=
 getdesc(t::Union{TPS,ComplexTPS}) = Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
 numvars(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nv
 numparams(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).np
@@ -18,7 +18,7 @@ numparams(d::Descriptor) = unsafe_load(d.desc).np
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 getdesc(d::Nothing) = nothing
 
-
+=#
 
 const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
 const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{Integer}}}
