@@ -133,6 +133,57 @@ function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
 end
 =#
 
+
+
+"""
+    vars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+
+Returns `TPS`s corresponding to the variables for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `x`   -- `Vector` containing unit `TPS`s corresponding to each variable
+"""
+function newvars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  nv = numvars(use)
+  x = Vector{NewTPS{Float64}}(undef, nv)
+  for i=1:nv
+    t = NewTPS{Float64}(use=use)
+    t[i] = 1.0
+    x[i] = t
+  end
+  return x
+end
+
+"""
+    params(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
+
+Returns `TPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
+Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `k`   -- `Vector` containing unit `TPS`s corresponding to each parameter
+"""
+function newparams(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  nv = numvars(use)
+  np = numparams(use)
+  k = Vector{NewTPS{Float64}}(undef, np)
+  for i=nv+1:nv+np
+    t = NewTPS{Float64}(use=use)
+    t[i] = 1.0
+    k[i-nv] = t
+  end
+  return k
+end
+
 promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Real} = NewTPS{Float64} 
 promote_rule(::Type{NewTPS{Float64}}, ::Type{NewTPS{ComplexF64}}) = NewTPS{ComplexF64}
 promote_rule(::Type{NewTPS{ComplexF64}}, ::Type{T}) where {T<:Number} = NewTPS{ComplexF64}
