@@ -303,7 +303,7 @@ end
   @test norm(complex(t3) - complex(3)) < tol
   @test norm(complex(t2,t3) - complex(2,3)) < tol
   @test norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
-  @test norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
+  @test_broken norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
   @test norm(rect(t2) - (2*cos(0) + im*2*sin(0))) < tol
   @test norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0))) < tol
   

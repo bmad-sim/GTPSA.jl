@@ -71,7 +71,7 @@ end
 
 function -(t1::NewTPS)
   t = zero(t1)
-  scl!(t1, -1., t)
+  mul!(t, -1, t1)
   return t
 end
 
@@ -225,16 +225,17 @@ pow!(c::NewTPS{ComplexF64}, a::NewTPS{Float64},    b::NewTPS{ComplexF64}) = mad_
 
 # TPS, scalar:
 pow!(c::NewTPS{Float64},    a::NewTPS{Float64}, v)    = mad_tpsa_pown!(a, Float64(v), c)
-pow!(c::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, v) = mad_tpsa_pown!(a, ComplexF64(v), c)
+pow!(c::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, v) = mad_ctpsa_pown!(a, ComplexF64(v), c)
 
 pow!(c::NewTPS{Float64},    a::NewTPS{Float64},    v::Integer) = mad_tpsa_powi!(a, Cint(v), c)
-pow!(c::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, v::Integer) = mad_tpsa_powi!(a, Cint(v), c)
+pow!(c::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, v::Integer) = mad_ctpsa_powi!(a, Cint(v), c)
 
+pow!(c::NewTPS{ComplexF64}, a::NewTPS{Float64}, v) = (copy!(c,a); pow!(c, c, v))
 pow!(c::NewTPS, v, a::NewTPS) = (mul!(c, log(v), a); exp!(c,c))
 
-for t =  ((NewTPS,NewTPS),(NewTPS,Number),(Number,NewTPS))
+for t =  ((NewTPS,NewTPS),(NewTPS,Number),(Number,NewTPS),(NewTPS,Integer),(Integer,NewTPS),)
 @eval begin
-function /(t1::$t[1], t2::$t[2])
+function ^(t1::$t[1], t2::$t[2])
   use = $(t[1] == NewTPS ? :t1 : :t2)
   t = (promote_type(typeof(t1),typeof(t2)))(use=use)
   pow!(t, t1, t2)
@@ -246,7 +247,7 @@ end
 
 # --- atan2 ---
 
-atan!(c::NewTPS{Float64}, a::NewTPS{Float64}, b::NewTPS{Float64}) = mad_tpsa_atan2(a, b, c)
+atan!(c::NewTPS{Float64}, a::NewTPS{Float64}, b::NewTPS{Float64}) = mad_tpsa_atan2!(a, b, c)
 
 function atan(t1::NewTPS{Float64}, t2::NewTPS{Float64})
   t = zero(t1)
@@ -272,7 +273,7 @@ end
 # Every function provides in place and out of place version
 # Let's first do all in place. For unary functions we assume input type == output type
 # unless otherwise specified
-for t = (:abs, :unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, 
+for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, 
          :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc)
 @eval begin
 $(Symbol(t,:!))(t::NewTPS{Float64},    t1::NewTPS{Float64})    = $(Symbol("mad_tpsa_",t,:!))(t1, t)
@@ -344,7 +345,7 @@ abs!(t::NewTPS{Float64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_cabs!(t1, t)
 angle!(t::NewTPS{Float64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_carg!(t1, t)
 angle!(t::NewTPS{Float64}, t1::NewTPS{Float64}) = (clear!(t); t1[0] < 0 && (t[0] = pi); return)
 
-for t = (:real,  :imag, :angle)
+for t = (:real,  :imag, :angle, :abs)
 @eval begin
 ($t)(t1::NewTPS) = (t = NewTPS{real(eltype(t1))}(use=t1); $(Symbol(t,:!))(t, t1); return t)
 end

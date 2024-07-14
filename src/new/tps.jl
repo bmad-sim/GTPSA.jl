@@ -14,7 +14,7 @@ with the GTPSA C library definition.
 - `nam::NTuple{NAMSZ,UInt8}` -- TPS name, max string length = GTPSA.NAMSZ = 15 chars
 - `coef::Ptr{T}`             -- An array containing all of the monomial coefficients up to the TPS max order
 """
-mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number 
+mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number
   d::Ptr{Desc}                                            
   lo::UInt8                
   hi::UInt8     
@@ -133,6 +133,14 @@ function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
 end
 =#
 
-promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Real} = NewTPS 
+promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Real} = NewTPS{Float64} 
+promote_rule(::Type{NewTPS{Float64}}, ::Type{NewTPS{ComplexF64}}) = NewTPS{ComplexF64}
 promote_rule(::Type{NewTPS{ComplexF64}}, ::Type{T}) where {T<:Number} = NewTPS{ComplexF64}
 promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Number} = NewTPS{ComplexF64}
+
+promote_rule(::Type{T}, ::Type{NewTPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? NewTPS{Float64} : NewTPS{ComplexF64})
+promote_rule(::Type{T}, ::Type{NewTPS{ComplexF64}}) where {T<:AbstractIrrational} = NewTPS{ComplexF64}
+
+#promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Union{AbstractFloat, Integer, Rational, Irrational}} = NewTPS{Float64}
+#promote_rule(::Type{NewTPS{ComplexF64}}, ::Type{T}) where {T<:Union{Complex{<:Real},AbstractFloat,Integer,Rational,Irrational}} = NewTPS{ComplexF64}
+#promote_rule(::Type{NewTPS{Float64}}, ::Type{Irrational}) = NewTPS{Float64}
