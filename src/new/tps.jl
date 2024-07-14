@@ -1,15 +1,32 @@
+"""
+    `mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number`
+
+Struct representing a truncated power series. The definition here is 1-to-1 
+with the GTPSA C library definition.
+
+### Fields
+- `d::Ptr{Desc}`             -- Ptr to low-level descriptor struct
+- `lo::UInt8`                -- Lowest used order
+- `hi::UInt8`                -- Highest used order
+- `mo::UInt8`                -- Max order
+- `ao::UInt8`                -- Allocated order
+- `uid::Cint`                -- Special user field for external use (and padding)
+- `nam::NTuple{NAMSZ,UInt8}` -- TPS name, max string length = GTPSA.NAMSZ = 15 chars
+- `coef::Ptr{T}`             -- An array containing all of the monomial coefficients up to the TPS max order
+"""
 mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number 
-  d::Ptr{Desc}                                       
+  d::Ptr{Desc}                                            
   lo::UInt8                
   hi::UInt8     
   mo::UInt8  
   ao::UInt8
   uid::Cint            
   nam::NTuple{NAMSZ,UInt8} 
-  coef::Ptr{T}  
+  coef::Ptr{T} # CRITICAL: Flexible array members in C must NOT BE USED! Change [] to * and fix malloc
   
   # Analog to C code mad_tpsa_newd
   function NewTPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
+    d != C_NULL || error("No Descriptor defined!")
     mo = min(mo, unsafe_load(d).mo)
     sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
     coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
@@ -28,20 +45,15 @@ mutable struct NewTPS{T<:Union{Float64,ComplexF64}} <: Number
 
     return t
   end
-#=
-  # Analog to C code mad_tpsa_new
-  function NewTPS{T}(t::NewTPS, mo::UInt8) where {T}
-    return NewTPS{T}(unsafe_load(t.d), mo == MAD_TPSA_SAME ? t.mo : mo)
-  end=#
 end
 
 Base.unsafe_convert(::Type{Ptr{NewTPS{T}}}, t::NewTPS{T}) where {T} = Base.unsafe_convert(Ptr{NewTPS{T}},pointer_from_objref(t))
 Base.eltype(::Type{NewTPS{T}}) where {T} = T
 Base.eltype(::NewTPS{T}) where {T} = T
 
-getdesc(t::NewTPS) = t.d
-getdesc(d::Descriptor) = d.desc
-getdesc(n::Nothing) = GTPSA.desc_current.desc
+getdesc(t::NewTPS) = Descriptor(t.d)
+getdesc(d::Descriptor) = d
+getdesc(n::Nothing) = GTPSA.desc_current
 
 numvars(t::NewTPS) = unsafe_load(t.d).nv
 numvars(d::Descriptor) = unsafe_load(d.desc).nv
@@ -55,12 +67,13 @@ numnn(t::NewTPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
-cycle!(t::NewTPS{Float64},    i, n, m_, v_) = @ccall MAD_TPSA.mad_tpsa_cycle( t::Ptr{NewTPS{Float64}},    i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
-cycle!(t::NewTPS{ComplexF64}, i, n, m_, v_) = @ccall MAD_TPSA.mad_ctpsa_cycle(t::Ptr{NewTPS{ComplexF64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{ComplexF64})::Cint
-
+function NewTPS{T}(;use::Union{Descriptor,NewTPS}=GTPSA.desc_current) where {T<:Number}
+    
+end
 
 """
-    NewTPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::NewTPS
+    NewTPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing)
+    NewTPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}}
 
 Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
 is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `ta`.
@@ -76,24 +89,30 @@ have a different `Descriptor`. In this case, invalid monomials under the new `De
 - `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa TPS`, else uses `GTPSA.desc_current`
 
 ### Output
-- `ret` -- New `TPS` equal to `ta` with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
+- `ret` -- New `TPS` equal to `ta`, with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
 """
-NewTPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing) = low_NewTPS(ta,use)
-NewTPS(ta::NewTPS;                        use::Union{Descriptor,NewTPS,Nothing}=nothing) = low_NewTPS(ta,use)
+NewTPS
+NewTPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_NewTPS(T, ta,use)
+NewTPS{T}(ta::NewTPS;                        use::Union{Descriptor,NewTPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_NewTPS(T, ta,use)
 
-function low_NewTPS(ta, use)
+NewTPS(ta::Number;          use::Union{Descriptor,NewTPS,Nothing}=nothing) = NewTPS{promote_type(Float64,typeof(ta))}(ta, use=use)
+NewTPS(ta::Nothing=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing) = NewTPS{Float64}(ta, use=use)
+NewTPS(ta::NewTPS;          use::Union{Descriptor,NewTPS,Nothing}=nothing) = NewTPS{eltype(ta)}(ta, use=use)
+
+const ComplexNewTPS = NewTPS{ComplexF64}
+
+function low_NewTPS(T, ta, use)
   if ta isa Nothing          # --- Blank TPS ---
-    return NewTPS{Float64}(getdesc(use), use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
+    return NewTPS{T}(getdesc(use).desc, use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
   elseif ta isa NewTPS
     if use isa Nothing       # --- Copy ctor ---
-      t = NewTPS{eltype(ta)}(getdesc(ta), MAD_TPSA_SAME)
+      t = NewTPS{T}(getdesc(ta).desc, MAD_TPSA_SAME)
       copy!(t, ta)
     else                     # --- Change descriptor ---
       error("not implemented yet")
     end
   else                       # --- promote number ---
-    T = promote_type(Float64, typeof(ta))
-    t = NewTPS{T}(getdesc(use), use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
+    t = NewTPS{T}(getdesc(use).desc, use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
     t[0] = ta
   end
   return t
@@ -113,3 +132,7 @@ function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
   return t
 end
 =#
+
+promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Real} = NewTPS 
+promote_rule(::Type{NewTPS{ComplexF64}}, ::Type{T}) where {T<:Number} = NewTPS{ComplexF64}
+promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Number} = NewTPS{ComplexF64}

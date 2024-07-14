@@ -1,14 +1,4 @@
 # --- Setters ---
-seti!( t::NewTPS{Float64}, i, a, b)    = @ccall MAD_TPSA.mad_tpsa_seti( t::Ptr{NewTPS{Float64}}, i::Cint, a::Cdouble,     b::Cdouble)::Cvoid
-setm!( t::NewTPS{Float64}, n, m, a, b) = @ccall MAD_TPSA.mad_tpsa_setm( t::Ptr{NewTPS{Float64}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
-setsm!(t::NewTPS{Float64}, n, m, a, b) = @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{NewTPS{Float64}}, n::Cint, m::Ptr{Cint},   a::Cdouble, b::Cdouble)::Cvoid
-setv!( t::NewTPS{Float64}, i, n, v)    = @ccall MAD_TPSA.mad_tpsa_setv( t::Ptr{NewTPS{Float64}}, i::Cint, n::Cint,        v::Ptr{Float64})::Cvoid
-
-seti!( t::NewTPS{ComplexF64}, i, a, b)    = @ccall MAD_TPSA.mad_ctpsa_seti( t::Ptr{NewTPS{ComplexF64}}, i::Cint, a::ComplexF64,     b::ComplexF64)::Cvoid
-setm!( t::NewTPS{ComplexF64}, n, m, a, b) = @ccall MAD_TPSA.mad_ctpsa_setm( t::Ptr{NewTPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, a::ComplexF64, b::ComplexF64)::Cvoid
-setsm!(t::NewTPS{ComplexF64}, n, m, a, b) = @ccall MAD_TPSA.mad_ctpsa_setsm(t::Ptr{NewTPS{ComplexF64}}, n::Cint, m::Ptr{Cint},   a::ComplexF64, b::ComplexF64)::Cvoid
-setv!( t::NewTPS{ComplexF64}, i, n, v)    = @ccall MAD_TPSA.mad_ctpsa_setv( t::Ptr{NewTPS{ComplexF64}}, i::Cint, n::Cint,        v::Ptr{ComplexF64})::Cvoid
-
 # All
 function setindex!(t::NewTPS, v::Union{AbstractVector{<:Number},Number}, idx::Union{TPSIndexType,AbstractVector{<:Integer},Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   lowset!(t, v, idx, param, params)
@@ -56,85 +46,70 @@ end
 
 # In case someone forgets tuple:
 lowset!(t, v, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
-#=
+
 
 # --- Getters ---
-geti(t::Ptr{RTPSA}, i::Cint) = mad_tpsa_geti(t, i)
-geti(t::Ptr{CTPSA}, i::Cint) = mad_ctpsa_geti(t, i)
-getm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = mad_tpsa_getm(t, n, m)
-getm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = mad_ctpsa_getm(t, n, m)
-getsm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cint})= mad_tpsa_getsm(t, n, m)
-getsm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cint})= mad_ctpsa_getsm(t, n, m)
-
 # All
-function getindex(t::Union{TPS,ComplexTPS}, idx::Union{AbstractVector{<:Integer},TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
-  #println(typeof(t))
-  #println(typeof(idx))
-  #println(typeof(param))
-  #println(typeof(params))
+function getindex(t::NewTPS, idx::Union{AbstractVector{<:Integer},TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   return lowget(t, idx, param, params)
 end
 
 # To override Base number.jl
-getindex(t::Union{ComplexTPS, TPS}, idx::Integer) = lowget(t, idx, nothing, nothing)
+getindex(t::NewTPS, idx::Integer) = lowget(t, idx, nothing, nothing)
 
 # Flat index
-function lowget(t::Union{TPS,ComplexTPS}, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
+function lowget(t::NewTPS, i::Union{Nothing,Integer}, param::Union{Nothing,Integer}, params::Nothing)
   if isnothing(i) && isnothing(param)
     return t
   elseif !isnothing(i) && !isnothing(param)
     error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
   elseif isnothing(param)
-    return geti(t, Cint(i))
+    return geti(t, i)
   else
     nv = numvars(t)
-    return geti(t, Cint(nv+param))
+    return geti(t, nv+param)
   end
 end
 
 # Flat index vectorized
-function lowget(t::Union{TPS,ComplexTPS}, idxs::AbstractVector{<:Integer}, param::Nothing, params::Nothing)
+function lowget(t::NewTPS, idxs::AbstractVector{<:Integer}, param::Nothing, params::Nothing)
   Base.require_one_based_indexing(idxs)
   v = Vector{eltype(t)}(undef, length(idxs))
   for i=1:length(idxs)
-    v[i] = geti(t, Cint(idxs[i]))
+    v[i] = geti(t, idxs[i])
   end
   return v
 end
 
 # Monomial
-function lowget(t::Union{TPS,ComplexTPS}, ords::MIndexType, param::Nothing, params::Nothing)
-  return getm(t, convert(Cint, length(ords)), collect(Cuchar, ords))
+function lowget(t::NewTPS, ords::MIndexType, param::Nothing, params::Nothing)
+  return getm(t, length(ords), collect(Cuchar, ords))
 end
 
 # By sparse monomial
-function lowget(t::Union{TPS,ComplexTPS}, vars::SMIndexType, param::Nothing, params::Union{SMIndexType,Nothing})
+function lowget(t::NewTPS, vars::SMIndexType, param::Nothing, params::Union{SMIndexType,Nothing})
   sm, n = pairs_to_sm(t, vars, params=params)
   return getsm(t, n, sm)
 end
 
 # Sparse monomial with nothing for vars
-function lowget(t::Union{TPS,ComplexTPS}, vars::Nothing, param::Nothing, params::SMIndexType)
+function lowget(t::NewTPS, vars::Nothing, param::Nothing, params::SMIndexType)
   sm, n = pairs_to_sm(t, Pair{Int,Int}[], params=params)
   return getsm(t, n, sm)
 end
 
 lowget(t, idx, param, params) = error("Invalid monomial index specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 
-# --- length ---
-len(t::Ptr{RTPSA}) = mad_tpsa_len(t,false)
-len(t::Ptr{CTPSA}) = mad_ctpsa_len(t,false)
-
 """
-    lengthTPS(t::Union{TPS,ComplexTPS}
+    numcoefs(t::NewTPS)
 
 Returns the maximum number of monomials (including the scalar part)
 in the `TPS`/`ComplexTPS` given its `Descriptor`. 
 """
-lengthTPS(t::Union{TPS,ComplexTPS}) = len(t)
+numcoefs(t::NewTPS) = len(t)
 
-firstindex(t::Union{TPS,ComplexTPS}) = 0
-lastindex(t::Union{TPS,ComplexTPS}) = length(t)-1
+firstindex(t::NewTPS) = 0
+lastindex(t::NewTPS) = numcoefs(t)-1
 
 # --- Slicing (getter) ---
 
@@ -145,24 +120,22 @@ const TPSColonIndexType = Union{MColonIndexType,
                                 SMColonIndexType,
                                 Vector{<:Any}}
 
-function getindex(t::Union{TPS,ComplexTPS}, v::TPSColonIndexType; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+function getindex(t::NewTPS, v::TPSColonIndexType; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
   if (v isa Vector)
     par_mono = setup_mono(t, tuple(v...), param, params)
   else
     par_mono = setup_mono(t, v, param, params)
   end
-  #println(par_mono)
-  #return
   return slice(t, par_mono, false)
 end
 
 # For flat indexing:
-function getindex(t::Union{TPS,ComplexTPS}, v::Integer, c::Colon)
+function getindex(t::NewTPS, v::Integer, c::Colon)
   par_mono = setup_mono(t, v, nothing, nothing)
   return slice(t, par_mono,false)
 end
 
-function getindex(t::Union{TPS,ComplexTPS}, c::Colon; param::Union{Integer,Nothing}=nothing)
+function getindex(t::NewTPS, c::Colon; param::Union{Integer,Nothing}=nothing)
   if isnothing(param)
     return t
   else
@@ -174,7 +147,7 @@ end
 
 # --- par --- 
 """
-    par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+    par(t::NewTPS, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
 
 Extracts a polynomial from the TPS containing the specified monomial, and removes the monomial.
 
@@ -240,7 +213,7 @@ TPS:
   3.0000000000000000e+00      7      2   1   1   2   1   |   0   0
 ```
 """
-function par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+function par(t::NewTPS, v::Union{TPSColonIndexType, Vector{Pair{<:Integer,<:Integer}}, Vector{<:Integer}, Integer, Colon, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
   if (v isa Vector)
     tmpv = tuple(v...)
     if tmpv isa MColonIndexType # because par-ing, must add colon
@@ -255,13 +228,13 @@ function par(t::Union{TPS,ComplexTPS}, v::Union{TPSColonIndexType, Vector{Pair{<
 end
 
 # Flat index:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
   par_mono = ones(Cuchar, v+1).*0xff
   par_mono[v] = 0x1
   return par_mono
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Union{Nothing,Colon}, param::Integer, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::Union{Nothing,Colon}, param::Integer, params::Nothing)::Vector{Cuchar}
   nv = numvars(t1) # TOTAL NUMBER OF VARS!!!!
   par_mono = ones(Cuchar, param+nv+1).*0xff
   par_mono[nv+param] = 0x1
@@ -270,26 +243,26 @@ end
 
 # Monomial by order:
 # This one should ALWAYS be called by par or splicing colon IS in the tuple or vector somewhere
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::MColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::MColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
   return collect(replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v))
 end
 
 # By definition, sparse monomial makes everything else zero. SO if we reach this, it is automatically
 # assumed that everything else is colon except those explictly made ix_var=>0
 # Monomial by sparse monomial:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::SMColonIndexType, param::Nothing, params::SMIndexType)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::SMColonIndexType, param::Nothing, params::SMIndexType)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),params=params,zero_mono=false)
   return vcat(ords, 0xff)
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::SMColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::SMColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___  = pairs_to_m(t1,filter(x->!(x isa Colon), v),zero_mono=false)
   return vcat(ords, 0xff)
 end
 
-function setup_mono(t1::Union{TPS,ComplexTPS}, v::Nothing, param::Nothing, params::SMIndexType)::Vector{Cuchar}
+function setup_mono(t1::NewTPS, v::Nothing, param::Nothing, params::SMIndexType)::Vector{Cuchar}
   # Need to create array of orders with length nv + np
   ords, ___ = pairs_to_m(t1,Pair{Int,Int}[],params=params,zero_mono=false)
   return vcat(ords, 0xff)
@@ -297,23 +270,20 @@ end
 
 
 # Throw error if no above use cases satisfied:
-function setup_mono(t1::Union{TPS,ComplexTPS}, v, param, params)
+function setup_mono(t1::NewTPS, v, param, params)
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
-idxm(t::Ptr{RTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_tpsa_idxm(t, n, m))
-idxm(t::Ptr{CTPSA}, n::Cint, m::Vector{Cuchar}) = (@inline; mad_ctpsa_idxm(t, n, m))
-
 # assums par_mono ends in 0xff.
-function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
+function slice(t1::NewTPS, par_mono::Vector{Cuchar}, par_it=true)
   nv = numvars(t1)
   np = numparams(t1)
   t = zero(t1)
-  v = Cint(length(par_mono)-1)
+  v = length(par_mono)-1
   coef = Ref{eltype(t)}()
   mono = Vector{Cuchar}(undef, np+nv)
-  idx = idxm(t1.tpsa, v, replace(x->x==0xff ? 0x0 : x, par_mono))-Cint(1)
-  idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+  idx = idxm(t1, v, replace(x->x==0xff ? 0x0 : x, par_mono))-1
+  idx = cycle!(t1, idx, np+nv, mono, coef)
   valid_idxs = findall(x->x != 0xff, par_mono)
   invalid_idxs = findall(x->x == 0xff, par_mono[1:min(v,np+nv)])
   while idx >= 0
@@ -330,17 +300,15 @@ function slice(t1::Union{TPS,ComplexTPS}, par_mono::Vector{Cuchar}, par_it=true)
         end
       end
     end
-    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+    idx = cycle!(t1, idx, np+nv, mono, coef)
   end
   return t
 end
 
 # --- gradient, jacobian, hessian getters ---
-getv!(t::Ptr{RTPSA}, i::Cint, n::Cint, v) = (@inline; mad_tpsa_getv!(t, i, n, v))
-getv!(t::Ptr{CTPSA}, i::Cint, n::Cint, v) = (@inline; mad_ctpsa_getv!(t, i, n, v))
 
 """
-    GTPSA.gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient!(result, t::NewTPS; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
 vector in-place. The partial derivatives wrt the parameters will also be extracted 
@@ -355,7 +323,7 @@ in the TPS.
 ### Output
 - `result`         -- Vector to fill with the gradient of the TPS, must be 1-based indexing
 """
-function gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+function gradient!(result, t::NewTPS; include_params=false)
   Base.require_one_based_indexing(result)
   n = numvars(t)
   if include_params
@@ -364,12 +332,12 @@ function gradient!(result, t::Union{TPS,ComplexTPS}; include_params=false)
   if length(result) != n
     error("Incorrect size for result")
   end
-  getv!(t, Cint(1), n, result)
+  getv!(t, 1, n, result)
   return
 end
 
 """
-    GTPSA.gradient(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.gradient(t::NewTPS; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS. The partial 
 derivatives wrt the parameters will also be extracted when the `include_params` flag is 
@@ -383,18 +351,18 @@ first-order monomial coefficients already in the TPS.
 ### Output
 - `grad`           -- Gradient of the TPS
 """
-function gradient(t::Union{TPS,ComplexTPS}; include_params=false)
+function gradient(t::NewTPS; include_params=false)
   n = numvars(t)
   if include_params
     n += numparams(t)
   end
   grad = Vector{eltype(t)}(undef, n)
-  getv!(t, Cint(1), n, grad)
+  getv!(t, 1, n, grad)
   return grad
 end
 
 """
-    GTPSA.jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobian!(result, m::AbstractVector{<:NewTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -409,7 +377,7 @@ in the TPSs.
 ### Output
 - `result`         -- Matrix to fill with the Jacobian of `m`, must be 1-based indexing
 """
-function jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobian!(result, m::AbstractVector{<:NewTPS}; include_params=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
@@ -422,14 +390,14 @@ function jacobian!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_p
 
   for i=1:n
     for j=1:length(m)
-      result[j,i] = geti(m[j].tpsa, Cint(i))
+      result[j,i] = geti(m[j], i)
     end
   end
   return
 end
 
 """
-    GTPSA.jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobian(m::AbstractVector{<:NewTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs. 
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -443,7 +411,7 @@ the first-order monomial coefficients already in the TPSs.
 ### Output
 - `J`              -- Jacobian of `m`
 """
-function jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobian(m::AbstractVector{<:NewTPS}; include_params=false)
   Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
@@ -455,7 +423,7 @@ function jacobian(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=fal
 end
 
 """
-    GTPSA.jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+    GTPSA.jacobiant!(result, m::AbstractVector{<:NewTPS}; include_params=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -470,7 +438,7 @@ in the TPSs and filling `result`.
 ### Output
 - `result`         -- Matrix to fill with the transpose of the Jacobian of `m`, must be 1-based indexing
 """
-function jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobiant!(result, m::AbstractVector{<:NewTPS}; include_params=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
@@ -480,12 +448,12 @@ function jacobiant!(result, m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_
     error("Incorrect size for result")
   end
   for i=1:length(m)
-    getv!(m[i].tpsa, Cint(1), n, pointer(result, n*(i-1)+1))
+    getv!(m[i], 1, n, pointer(result, n*(i-1)+1))
   end
 end
 
 """
-    GTPSA.jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false) where {N,P,I}
+    GTPSA.jacobiant(m::AbstractVector{<:NewTPS}; include_params=false) where {N,P,I}
 
 Extracts the first-order partial derivatives (evaluated at 0) from the Vector of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -500,7 +468,7 @@ in the TPSs.
 ### Output
 - `Jt`             -- Transpose of the Jacobian of `m`
 """
-function jacobiant(m::AbstractVector{<:Union{TPS,ComplexTPS}}; include_params=false)
+function jacobiant(m::AbstractVector{<:NewTPS}; include_params=false)
   Base.require_one_based_indexing(m)
   n = numvars(first(m))
   if include_params
@@ -513,7 +481,7 @@ end
 
 
 """
-    GTPSA.hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.hessian!(result, t::NewTPS; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -528,10 +496,9 @@ in the TPS.
 ### Output
 - `result`         -- Matrix to fill with the Hessian of the TPS, must be 1-based indexing
 """
-function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
+function hessian!(result, t::NewTPS; include_params=false)
   Base.require_one_based_indexing(result)
-  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t).d)
-  desc = unsafe_load(d)
+  desc = unsafe_load(t.d)
   n = desc.nv
   if include_params
     n += desc.np
@@ -552,12 +519,12 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
   end
   #check=false
   if check
-    idx = Cint(desc.nv+desc.np)
-    endidx = Cint(floor(n*(n+1)/2))+nn
+    idx = desc.nv+desc.np
+    endidx = floor(n*(n+1)/2)+nn
     curdiag = 1
     col = 1
     v = Ref{eltype(t)}()
-    idx = cycle!(t, idx, Cint(0), C_NULL, v)
+    idx = cycle!(t, idx, 0, C_NULL, v)
     while idx <= endidx && idx > 0
       h_idx = idx-nn
       while h_idx > curdiag
@@ -572,14 +539,14 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
         result[row,col] = v[]
         result[col,row] = v[]
       end
-      idx = cycle!(t, idx, Cint(0), C_NULL, v)
+      idx = cycle!(t, idx, 0, C_NULL, v)
     end
   else
     # If there are some variables/parameters with TO == 1, we have to do it "slow"
     # because the indexing of TPSA index -> hessian index can be very complicated.
     # I saw slow in quotes because it is likely still much faster than the calculation
     # of the Hessian itself (this is just a getter)  
-    idx = Cint(desc.nv+desc.np) # start at 2nd order
+    idx = desc.nv+desc.np # start at 2nd order
     v = Ref{eltype(t)}()
     mono = Vector{UInt8}(undef, nn)
     idx = cycle!(t, idx, nn, mono, v)
@@ -613,7 +580,7 @@ function hessian!(result, t::Union{TPS,ComplexTPS}; include_params=false)
 end
 
 """
-    GTPSA.hessian(t::Union{TPS,ComplexTPS}; include_params=false)
+    GTPSA.hessian(t::NewTPS; include_params=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS.
 The partial derivatives wrt the parameters will also be extracted when the `include_params` 
@@ -627,9 +594,8 @@ the second-order monomial coefficients already in the TPS.
 ### Output
 - `H`              -- Hessian of the TPS
 """
-function hessian(t::Union{TPS,ComplexTPS}; include_params=false)
-  d = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t).d)
-  desc = unsafe_load(d)
+function hessian(t::NewTPS; include_params=false)
+  desc = unsafe_load(t.d)
   n = desc.nv
   if include_params
     n += desc.np
@@ -640,4 +606,3 @@ function hessian(t::Union{TPS,ComplexTPS}; include_params=false)
   hessian!(H, t, include_params=include_params)
   return H
 end
-=#

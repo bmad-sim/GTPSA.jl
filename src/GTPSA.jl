@@ -139,7 +139,8 @@ export
   __t_polar, __t_rect,
 
 
-  NewTPS
+  NewTPS,
+  ComplexNewTPS
 
 include("low.jl")           # Low level, 1-to-1 Julia-to-C code including C struct definitions
 include("descriptor.jl")    # Descriptor struct and constructors
@@ -154,6 +155,7 @@ include("methods.jl")       # Higher-level TPS functions (derivatives, integrals
 include("fast_gtpsa.jl")    # Everything for the @FastGTPSA macro
 
 include("new/tps.jl")
+include("new/low.jl")
 include("new/operators.jl")
 include("new/getset.jl")
 include("new/show.jl")

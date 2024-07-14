@@ -21,7 +21,7 @@ function format(t::NewTPS; coloffset=0, max_nn=-1)
       numcolumns += 1
     end
     out = Matrix{Any}(undef, 0, numcolumns) # Coefficient(s), order, spacing, exponents
-    idx = Cint(-1)
+    idx = -1
     idx = cycle!(t, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
@@ -68,7 +68,7 @@ function format(t::NewTPS; coloffset=0, max_nn=-1)
       numcolumns += 1
     end
     out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
-    idx = Cint(-1)
+    idx = -1
     idx = cycle!(t.tpsa, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
