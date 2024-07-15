@@ -2564,7 +2564,7 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 - `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
 function mad_ctpsa_vec2fld!(na::Cint, a::NewTPS{ComplexF64}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ptr{NewTPS{ComplexF64}}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ptr{NewTPS{ComplexF64}}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2583,7 +2583,7 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 - `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
 function mad_ctpsa_fld2vec!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, c::NewTPS{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, c::Ptr{NewTPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, c::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2601,7 +2601,7 @@ Calculates `dot(ma, grad(b))`
 - `c`  -- `dot(ma, grad(b))`
 """
 function mad_ctpsa_fgrad!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, b::NewTPS{ComplexF64}, c::NewTPS{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, b::Ptr{NewTPS{ComplexF64}}, c::Ptr{NewTPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, b::Ptr{NewTPS{ComplexF64}}, c::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2620,7 +2620,7 @@ sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
 - `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_liebra!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, mb::Vector{NewTPS{ComplexF64}}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, mb::Ptr{Ptr{NewTPS{ComplexF64}}}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, mb::Ptr{NewTPS{ComplexF64}}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2639,7 +2639,7 @@ literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ..
 - `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_exppb!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, mb::Vector{NewTPS{ComplexF64}}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, mb::Ptr{Ptr{NewTPS{ComplexF64}}}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, mb::Ptr{NewTPS{ComplexF64}}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2658,7 +2658,7 @@ is the vector field `F` used to evolve to `ma` from `mb`.
 - `mc` -- Destination vector of TPSA `mc`
 """
 function mad_ctpsa_logpb!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, mb::Vector{NewTPS{ComplexF64}}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, mb::Ptr{Ptr{NewTPS{ComplexF64}}}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, mb::Ptr{NewTPS{ComplexF64}}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -2676,7 +2676,7 @@ If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
 - `ret` -- Maximum `hi` of the map if `hi` is `true`, else returns maximum `mo` of the map
 """
 function mad_ctpsa_mord(na::Cint, ma::Vector{NewTPS{ComplexF64}}, hi::Bool)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, hi::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, hi::Bool)::Cuchar
   return ret
 end
 
@@ -2694,7 +2694,7 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 - `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
 function mad_ctpsa_mnrm(na::Cint, ma::Vector{NewTPS{ComplexF64}})::Cdouble
-  nrm = @ccall MAD_TPSA.mad_ctpsa_mnrm(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_ctpsa_mnrm(na::Cint, ma::Ptr{NewTPS{ComplexF64}})::Cdouble
   return nrm
 end
 
@@ -2714,7 +2714,7 @@ length only need be `nb` = `nv`.
 - `mc` -- Inversion of map `ma`
 """
 function mad_ctpsa_minv!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nb::Cint, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nb::Cint, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nb::Cint, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2734,7 +2734,7 @@ To include the parameters in the inversion, `na` = `nn` and the output map lengt
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
 function mad_ctpsa_pminv!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nb::Cint, mc::Vector{NewTPS{ComplexF64}}, select::Vector{Cint})
-  @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nb::Cint, mc::Ptr{Ptr{NewTPS{ComplexF64}}}, select::Ptr{Cint})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nb::Cint, mc::Ptr{NewTPS{ComplexF64}}, select::Ptr{Cint})::Cvoid
 end
 
 
@@ -2753,7 +2753,7 @@ Composes two maps.
 - `mc` -- Composition of maps `ma` and `mb`
 """
 function mad_ctpsa_compose!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nb::Cint, mb::Vector{NewTPS{ComplexF64}}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nb::Cint, mb::Ptr{Ptr{NewTPS{ComplexF64}}}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nb::Cint, mb::Ptr{NewTPS{ComplexF64}}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2772,7 +2772,7 @@ Translates the expansion point of the map by the amount `tb`.
 - `mc` -- Map evaluated at the new point translated `tb` from the original evaluation point
 """
 function mad_ctpsa_translate!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nb::Cint, tb::Vector{ComplexF64}, mc::Vector{NewTPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{Ptr{NewTPS{ComplexF64}}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{NewTPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2791,7 +2791,7 @@ Evaluates the map at the point `tb`
 - `tc` -- Values for each TPSA in the map evaluated at the point `tb`
 """
 function mad_ctpsa_eval!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_eval(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_eval(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})::Cvoid
 end
 
 
@@ -2812,7 +2812,7 @@ Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the
 - `mc`   -- Map `mc` with specified conversions 
 """
 function mad_ctpsa_mconv!(na::Cint, ma::Vector{NewTPS{ComplexF64}}, nc::Cint, mc::Vector{NewTPS{ComplexF64}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_mconv(na::Cint, ma::Ptr{Ptr{NewTPS{ComplexF64}}}, nc::Cint, mc::Ptr{Ptr{NewTPS{ComplexF64}}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_mconv(na::Cint, ma::Ptr{NewTPS{ComplexF64}}, nc::Cint, mc::Ptr{NewTPS{ComplexF64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
 

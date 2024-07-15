@@ -427,15 +427,15 @@ else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
 Note that the `ComplexTPS`s in the vectors must be allocated and have the same `Descriptor`.
 """
 function compose!(m::Vector{<:Union{TPS,ComplexTPS}}, m2::Vector{<:Union{TPS,ComplexTPS}}, m1::Vector{<:Union{TPS,ComplexTPS}}; work_low::Union{Nothing,Tuple{Vararg{Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}}}}=nothing, work_prom::Union{Nothing,Tuple{Vararg{Vector{<:ComplexTPS}}}}=nothing)
-  desc = getdesc(first(m))
+  #desc = getdesc(first(m))
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
 
-  @assert n == n2 "Incorrect output length, received length $(length(m)) but need $(length(m2))"
-  @assert numnn(first(m2)) == n1 "Not enough input arguments"
-  @assert !(m === m1) "Cannot compose!(m, m2, m1) with m === m1"
-  @assert eltype(m) == promote_type(eltype(m2),eltype(m1)) "Cannot compose: output vector type $(eltype(m)) must be $(promote_type(eltype(m2),eltype(m1)))"
+  #@assert n == n2 "Incorrect output length, received length $(length(m)) but need $(length(m2))"
+  #@assert numnn(first(m2)) == n1 "Not enough input arguments"
+  #@assert !(m === m1) "Cannot compose!(m, m2, m1) with m === m1"
+  #@assert eltype(m) == promote_type(eltype(m2),eltype(m1)) "Cannot compose: output vector type $(eltype(m)) must be $(promote_type(eltype(m2),eltype(m1)))"
   outT = eltype(m)
 
   if !isnothing(work_low)
@@ -468,14 +468,14 @@ function compose!(m::Vector{<:Union{TPS,ComplexTPS}}, m2::Vector{<:Union{TPS,Com
     if outT != eltype(m1)
       m1x_prom = Vector{ComplexTPS}(undef, n1)
       for i=1:n1  # Allocate
-        @inbounds m1x_prom[i] = ComplexTPS(use=desc)
+        @inbounds m1x_prom[i] = ComplexTPS(use=first(m))
       end
       m2x_prom = nothing
     elseif outT != eltype(m2)
       m1x_prom = nothing
       m2x_prom = Vector{ComplexTPS}(undef, n)
       for i=1:n
-        @inbounds m2x_prom[i] = ComplexTPS(use=desc)
+        @inbounds m2x_prom[i] = ComplexTPS(use=first(m))
       end
     else
       m1x_prom = nothing
