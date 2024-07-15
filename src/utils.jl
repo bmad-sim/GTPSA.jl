@@ -7,12 +7,12 @@ lowtype(t::TPS) = Ptr{RTPSA}
 lowtype(ct::ComplexTPS) = Ptr{CTPSA}
 lowtype(::Type{TPS}) = Ptr{RTPSA}
 lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
-#=
+
 getdesc(t::Union{TPS,ComplexTPS}) = Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
 numvars(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nv
 numparams(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).np
 numnn(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nn
-getdesc(d::Descriptor) = d
+#=getdesc(d::Descriptor) = d
 numvars(d::Descriptor) = unsafe_load(d.desc).nv
 numparams(d::Descriptor) = unsafe_load(d.desc).np
 numnn(d::Descriptor) = unsafe_load(d.desc).nn

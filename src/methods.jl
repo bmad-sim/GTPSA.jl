@@ -118,7 +118,7 @@ function integ!(t::T, t1::T, var::Integer=1) where {T<:Union{TPS,ComplexTPS}}
   return
 end
 
-∫! = integ!
+#∫! = integ!
 
 """
     integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
@@ -134,7 +134,7 @@ function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
   return t
 end
 
-∫ = integ
+# ∫ = integ
 
 # --- Derivative ---
 # Low-level equivalent calls for TPS and ComplexTPS:
@@ -160,7 +160,7 @@ function deriv!(t::T, t1::T, v::Union{TPSIndexType, Nothing}=nothing; param::Uni
   low_deriv!(t, t1, v, param, params)
 end
 
-∂! = deriv!
+# ∂! = deriv!
 
 """
     deriv(t1::Union{TPS,ComplexTPS}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
@@ -282,7 +282,7 @@ function low_deriv(t::T, t1::T, v, param, params) where {T<:Union{TPS,ComplexTPS
   error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
 end
 
-∂ = deriv
+# ∂ = deriv
 
 # --- getord ---
 # Low-level equivalent calls for TPS and ComplexTPS:

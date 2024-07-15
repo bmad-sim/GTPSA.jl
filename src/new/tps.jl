@@ -85,11 +85,11 @@ The constructor can also be used to create a copy of a `TPS` under one `Descript
 have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
 
 ### Input
-- `ta`  -- Any `Real`
-- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa TPS`, else uses `GTPSA.desc_current`
+- `ta`  -- Any `Number`
+- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa NewTPS`, else uses `GTPSA.desc_current`
 
 ### Output
-- `ret` -- New `TPS` equal to `ta`, with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
+- `ret` -- New `NewTPS` equal to `ta`, with removal of invalid monomials if `ta` is a `NewTPS` and a new `Descriptor` is specified
 """
 NewTPS
 NewTPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,NewTPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_NewTPS(T, ta,use)
@@ -103,86 +103,23 @@ const ComplexNewTPS = NewTPS{ComplexF64}
 
 function low_NewTPS(T, ta, use)
   if ta isa Nothing          # --- Blank TPS ---
-    return NewTPS{T}(getdesc(use).desc, use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
+    return NewTPS{T}(getdesc(use).desc, use isa NewTPS ? use.mo : MAD_TPSA_DEFAULT)
   elseif ta isa NewTPS
     if use isa Nothing       # --- Copy ctor ---
-      t = NewTPS{T}(getdesc(ta).desc, MAD_TPSA_SAME)
+      t = NewTPS{T}(getdesc(ta).desc, ta.mo)
       copy!(t, ta)
     else                     # --- Change descriptor ---
-      error("not implemented yet")
+      t = NewTPS{T}(getdesc(use).desc, ta.mo)
+      setTPS!(t, t1, change=true)
+      return t
     end
   else                       # --- promote number ---
-    t = NewTPS{T}(getdesc(use).desc, use isa NewTPS ? MAD_TPSA_SAME : MAD_TPSA_DEFAULT)
+    t = NewTPS{T}(getdesc(use).desc, use isa NewTPS ? use.mo : MAD_TPSA_DEFAULT)
     t[0] = ta
   end
   return t
 end
 
-#=
-# --- Change descriptor ---
-function low_TPS(t1::TPS, use::Descriptor)
-  t = TPS(use=use)
-  setTPS!(t,t1,change=true)
-  return t
-end
-
-function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
-  t = TPS(use=use)
-  setTPS!(t,t1,change=true)
-  return t
-end
-=#
-
-
-
-"""
-    vars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
-
-Returns `TPS`s corresponding to the variables for the `Descriptor` specified by `use`.
-Default value is `GTPSA.desc_current`.
-
-### Input
-- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
-
-### Output
-- `x`   -- `Vector` containing unit `TPS`s corresponding to each variable
-"""
-function newvars(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)
-  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
-  nv = numvars(use)
-  x = Vector{NewTPS{Float64}}(undef, nv)
-  for i=1:nv
-    t = NewTPS{Float64}(use=use)
-    t[i] = 1.0
-    x[i] = t
-  end
-  return x
-end
-
-"""
-    params(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)::Vector{TPS}
-
-Returns `TPS`s corresponding to the parameters for the `Descriptor` specified by `use`.
-Default value is `GTPSA.desc_current`.
-
-### Input
-- `use` -- (Optional) Specify which TPSA `Descriptor` to use, default is `GTPSA.desc_current`
-
-### Output
-- `k`   -- `Vector` containing unit `TPS`s corresponding to each parameter
-"""
-function newparams(use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current)
-  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
-  nv = numvars(use)
-  np = numparams(use)
-  k = Vector{NewTPS{Float64}}(undef, np)
-  for i=nv+1:nv+np
-    t = NewTPS{Float64}(use=use)
-    t[i] = 1.0
-    k[i-nv] = t
-  end
-  return k
-end
 
 promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Real} = NewTPS{Float64} 
 promote_rule(::Type{NewTPS{Float64}}, ::Type{NewTPS{ComplexF64}}) = NewTPS{ComplexF64}

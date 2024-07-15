@@ -15,7 +15,26 @@ function copy!(t::NewTPS{ComplexF64}, t1::NewTPS{Float64})
 end
 
 # --- zero ---
-zero(t::NewTPS) = typeof(t)(getdesc(t).desc, MAD_TPSA_SAME)
+zero(t::NewTPS) = typeof(t)(getdesc(t).desc, t.mo)
+
+function zero(t::AbstractArray{<:NewTPS{<:T}}) where {T}
+  out = similar(t)
+  d = getdesc(first(t))
+  for i in eachindex(out)
+    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
+  end
+  return out
+end
+
+function one(t::AbstractArray{<:NewTPS{<:T}}) where {T}
+  out = similar(t)
+  d = getdesc(first(t))
+  for i in eachindex(out)
+    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
+    out[i][0] = 1
+  end
+  return out
+end
 
 # --- one ---
 function one(t1::NewTPS)
