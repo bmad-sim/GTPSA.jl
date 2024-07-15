@@ -88,9 +88,9 @@ function get_rtemp_low!(desc::Desc)::Ptr{TPS{Float64}}
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
   if tmpidx == DESC_MAX_TMP
     # Run out of temporaries... no choice but to throw error 
-    # Release this thread's temporaries and give warning to run cleartemps()
+    # Release this thread's temporaries and give warning to run cleartemps!()
     unsafe_store!(desc.cti, Cint(0), Threads.threadid())
-    error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps() must be executed.")
+    error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current) must be executed.")
   end
   idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1
   #println("threadid = ", Threads.threadid(), ", getting temp t[", idx,"], incrementing ti[", Threads.threadid(), "] = ", tmpidx, "->", tmpidx+1)
@@ -116,7 +116,7 @@ function get_ctemp_low!(desc::Desc)::Ptr{TPS{ComplexF64}}
   if tmpidx == DESC_MAX_TMP
     # Run out of temporaries... no choice but to throw error
     unsafe_store!(desc.cti, Cint(0), Threads.threadid())
-    error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps() must be executed.")
+    error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current) must be executed.")
   end
   idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1
   ct = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{ComplexF64}}}, desc.ct), idx)
@@ -128,9 +128,9 @@ end
 function rel_temp!(tpsa::Ptr{TPS{Float64}})
   desc = unsafe_load(mad_tpsa_desc(tpsa))
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
-  #sprintln("decrementing ti[", Threads.threadid(), "] = ", tmpidx, "->", tmpidx-1)
+  #println("decrementing ti[", Threads.threadid(), "] = ", tmpidx, "->", tmpidx-1)
   # Decrement tmp idx in Descriptor
-  idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
+  #idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
   #println(unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx), " ?= ", tpsa)
   #@assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
   
@@ -145,6 +145,18 @@ function rel_temp!(ctpsa::Ptr{TPS{ComplexF64}})
   unsafe_store!(desc.cti, tmpidx-Cint(1), Threads.threadid())
   return
 end
+
+function cleartemps!(d::Descriptor=GTPSA.desc_current)
+  desc = unsafe_load(d.desc)
+  for i = 1:Threads.nthreads()
+    unsafe_store!(desc.ti, Cint(0), i)
+    unsafe_store!(desc.cti, Cint(0), i)
+  end
+  return
+end
+
+
+
 
 # --- Unary ---
 # TPS{Float64}:
