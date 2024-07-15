@@ -1,7 +1,8 @@
 using Test, JET
+using BenchmarkTools: BenchmarkTools, @benchmark
 using SpecialFunctions
 using GTPSA
-import GTPSA: Desc, RTPSA, CTPSA
+import GTPSA: Desc
 
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
@@ -839,7 +840,7 @@ end
   @test @FastGTPSA(norm((3+3im)^t2 - (3+3im)^2)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
@@ -1027,7 +1028,7 @@ end
   @test @FastGTPSA(norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
@@ -1147,11 +1148,354 @@ end
   @test @FastGTPSA(norm(complex(t) - t)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
   @test tmpidx == 0
+end
+
+@testset "@FastGTPSA - Allocations" begin
+  BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  ct = ComplexTPS(t)
+  # Set scalar part so both TPSs are 1
+  t[0] = 1
+  ct[0] = 1
+  # Now do operators
+  t1 = t
+  t1[0] = 1
+  t2 = zero(t1)
+  t2[0] = 2
+  t3 = zero(t1)
+  t3[0] = 3
+
+  ct1 = ct
+  ct1[0] = 1 + 1im
+  ct2 = zero(ct1)
+  ct2[0] = 2 + 2im
+  ct3 = zero(ct1)
+  ct3[0] = 3 + 3im
+
+  tol = 1e-14
+
+  # TPS:
+  @test @benchmark(@FastGTPSA(norm($t1 + $t2 - $t3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 + $t1 - $t3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t1 + 2 - $t3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(2 + $t1 - $t3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 - $t2 - $t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 - $t3 - -$t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 - 2 - $t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(2 - $t3 - -$t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 * $t3 - 6))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 * $t2 - 6))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 * 5 - 10))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(5 * $t2 - 10 * $t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t1 / $t2 - 1/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / $t1 - 2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1 / $t2 - 1/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / 3 - 2/3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / $t2 - $t1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / $t2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ $t3 - 8))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 ^ $t2 - 9))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ 3 - 8))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ (1/2) - sqrt(2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ (1/2) - sqrt($t2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(2 ^ $t3 - 8))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(inv($t3) - 1/$t3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(inv($t3) - 1/3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct1 + $ct2 - $ct3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 + $ct1 - $ct3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct1 + (2+2im) - $ct3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((2+2im) + $ct1 - $ct3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 - $ct2 - $ct1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 - $ct3 - -$ct1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 - (2+2im) - $ct1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((2+2im) - $ct3 - -$ct1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 * $ct3 - (2+2im)*(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 * $ct2 - (2+2im)*(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 * 5 - (10+10im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(5 * $ct2 - (10 * $ct1)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct1 / $ct2 - (1+im)/(2+2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 / $ct1 - 2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1 / $ct2 - 1/(2+2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 / 3 - (2+2im)/3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 / $ct2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 ^ $ct3 - (2+2im)^(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 ^ $ct2 - (3+3im)^(2+2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 ^ 3 - (2+2im)^3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 ^ (1/2) - sqrt(2+2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 ^ (1/2) - sqrt($ct2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(2 ^ $ct3 - 2^(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(inv($ct3) - 1/$ct3))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(inv($ct3) - 1/(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t1 + $ct2 - (1 + (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 + $t1 - (1 + (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t1 + (2+2im) - (1 + (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((2+2im) + $t1 - (1 + (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 - $ct2 - (3 - (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct2 - $t3 - ((2+2im) - 3)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t3 - (2+2im) - (3 - (2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((2+2im) - $t3 - ((2+2im) - 3)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 * $ct3 - 2 * (3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 * $t2 - 2 * (3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 * (3+3im) - 2 * (3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((3+3im) * $t2 - 2 * (3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / $ct3 - 2/(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 / $t2 - (3+3im)/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 / (3+3im) - 2/(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((3+3im) / $t2 - (3+3im)/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ $ct3 - 2^(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($ct3 ^ $t2 - (3+3im)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t2 ^ (3+3im) - 2^(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm((3+3im)^$t2 - (3+3im)^2))).allocs == 0
+
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  v = 0.5
+  t[0] = v
+  tol = 1e-14
+  t1 = TPS(t)
+  t1[0] = 1
+  t2 = zero(t1)
+  t2[0] = 2
+  t3 = zero(t1)
+  t3[0] = 3
+
+
+  @test @benchmark(@FastGTPSA(norm(abs(-$t) - abs(-$v) ))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sqrt($t) - sqrt($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp($t) - exp($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log($t) - log($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t) - sin($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos($t) - cos($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tan($t) - tan($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csc($t) - csc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sec($t) - sec($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cot($t) - cot($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinc($t) - sinc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinh($t) - sinh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t) - cosh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tanh($t) - tanh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csch($t) - csch($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sech($t) - sech($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - coth($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asin($t) - asin($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acos($t) - acos($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t) - atan($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsc(1/$t) - acsc(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asec(1/$t) - asec(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acot(1/$t) - acot(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinh($t) - asinh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acosh(1/$t) - acosh(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atanh($t) - atanh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsch(1/$t) - acsch(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asech($t) - asech($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acoth(1/$t) - acoth(1/$v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinc($t/pi) - asin($v)/($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinhc($t/pi) - asinh($v)/($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(zero($t) - zero($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(one($t) + one($t) - zero($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(real($t) - real($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(imag($t) - imag($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(conj($t) - conj($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinhc($t/pi) - sinh($v)/$v))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erf($t) - erf($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erfc($t) - erfc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(-im*erf($t*im) - erfi($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t3,$t2) - atan(3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t3,2) - atan(3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(3,$t2) - atan(3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t3,-$t2) - atan(3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t3,-2) - atan(3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(3,-$t2) - atan(3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-$t3,-$t2) - atan(-3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-$t3,-2) - atan(-3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-3,-$t2) - atan(-3,-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-$t3,$t2) - atan(-3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-$t3,2) - atan(-3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(-3,$t2) - atan(-3,2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($t2) - angle(2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle(-$t2) - angle(-2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($t3) - complex(3)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($t2,$t3) - complex(2,3)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(polar($t2) - (abs(2)+im*atan(0,2))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(polar(-$t1) - (abs(-1)+im*atan(0,-1))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(rect($t2) - (2*cos(0) + im*2*sin(0))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(rect(-$t1) - (-1*cos(0) + im*-1*sin(0))))).allocs == 0
+  
+
+  v = 0.5+0.5im
+  t = ComplexTPS(t)
+  t[0] = v
+  ct1 = ComplexTPS(t)
+  ct1[0] = 1 + 1im
+  ct2 = zero(ct1)
+  ct2[0] = 2 + 2im
+  ct3 = zero(ct1)
+  ct3[0] = 3 + 3im
+  @test @benchmark(@FastGTPSA(norm(abs(-$t) - abs(-$v) ))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sqrt($t) - sqrt($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp($t) - exp($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log($t) - log($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t) - sin($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos($t) - cos($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tan($t) - tan($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csc($t) - csc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sec($t) - sec($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cot($t) - cot($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinc($t) - sinc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinh($t) - sinh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t) - cosh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tanh($t) - tanh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csch($t) - csch($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sech($t) - sech($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - coth($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asin($t) - asin($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acos($t) - acos($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan($t) - atan($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsc($t) - acsc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asec($t) - asec($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acot($t) - acot($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinh($t) - asinh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acosh($t) - acosh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atanh($t) - atanh($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsch($t) - acsch($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asech($t) - asech($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acoth($t) - acoth($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinc($t/pi) - asin($v)/$v))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinhc($t/pi) - asinh($v)/$v))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(zero($t) - zero($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(real($t) - real($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(imag($t) - imag($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(conj($t) - conj($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinhc($t/pi) - sinh($v)/$v))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erf($t) - erf($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erfc($t) - erfc($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(-im*erf($t*im) - erfi($v)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($t2+im*$t3) - angle(2+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($t2-im*$t3) - angle(2-3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle(-$t2-im*$t3) - angle(-2-3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle(-$t2+im*$t3) - angle(-2+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($ct2) - angle(2+2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle(-$ct2) - angle(-2-2im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($ct3) - complex(3+3im)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(polar($ct2) - (abs(2+2im)+im*angle(2+2im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(polar(-$ct1) - (abs(-1-im)+im*angle(-1-im))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(rect($ct2) - (2*cos(2) + im*2*sin(2))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(rect(-$ct1) - (-1*cos(-1) + im*-1*sin(-1))))).allocs == 0
+
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  t[0] = 0.5; t[[1]] = 2; t[[2]] = 3; t[[3]] = 4; t[[4]] = 5; t[[5]] = 6
+
+  tol = 1e-10
+
+  @test @benchmark(@FastGTPSA(norm(sin($t)^2+cos($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/sin($t) - csc($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/cos($t) - sec($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/tan($t) - cot($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t)/cos($t) - tan($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos(2*$t) - cos($t)^2 + sin($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sec($t)^2 - 1 - tan($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t/2) - sqrt((1-cos($t))/2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos($t/2) - sqrt((1+cos($t))/2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sqrt($t^2) - abs($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csc($t)^2 - cot($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp(log($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log(exp($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log(exp($t)) - exp(log($t))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log($t^2) - 2*log($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(5*log($t) - log($t^5)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t*log(5) - log(5^$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinc($t) - sin(pi*$t)/(pi*$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinhc($t/pi) - sinh($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp(im*$t) - cos($t) - im*sin($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(real(exp(im*$t)) - cos($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(imag(exp(im*$t)) - sin($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinh($t) - (exp($t) - exp(-$t))/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t) - (exp($t) + exp(-$t))/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tanh($t) - sinh($t)/cosh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csch($t) - 1/sinh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sech($t) - 1/cosh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - cosh($t)/sinh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - 1/tanh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t)^2 - sinh($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1 - tanh($t)^2 - sech($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t)^2 - 1 - csch($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asin(sin($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acos(cos($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(tan($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsc(1/$t) - asin($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asec(1/$t) - acos($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acot(1/$t) - atan($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinh(sinh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acosh(cosh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atanh(tanh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsch($t) - asinh(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asech($t) - acosh(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acoth(1/$t) - atanh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinc($t/pi) - asin($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinhc($t/pi) - asinh($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erfc($t) - 1 + erf($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erf(-$t) + erf($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($t) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($t,$t) - ($t+im*$t)))).allocs == 0
+
+  t = ComplexTPS(t)
+  t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
+  @test @benchmark(@FastGTPSA(norm(sin($t)^2+cos($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/sin($t) - csc($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/cos($t) - sec($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1/tan($t) - cot($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t)/cos($t) - tan($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos(2*$t) - cos($t)^2 + sin($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sec($t)^2 - 1 - tan($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sin($t/2) - sqrt((1-cos($t))/2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cos($t/2) - sqrt((1+cos($t))/2)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sqrt($t^2) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csc($t)^2 - cot($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp(log($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log(exp($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log(exp($t)) - exp(log($t))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(log($t^2) - 2*log($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(5*log($t) - log($t^5) - 2*pi*im))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm($t*log(5) - log(5^$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinc($t/pi) - sin($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinhc($t/pi) - sinh($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(exp(im*$t) - cos($t) - im*sin($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sinh($t) - (exp($t) - exp(-$t))/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t) - (exp($t) + exp(-$t))/2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(tanh($t) - sinh($t)/cosh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(csch($t) - 1/sinh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(sech($t) - 1/cosh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - cosh($t)/sinh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t) - 1/tanh($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(cosh($t)^2 - sinh($t)^2 - 1))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(1 - tanh($t)^2 - sech($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(coth($t)^2 - 1 - csch($t)^2))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asin(sin($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acos(cos($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atan(tan($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsc($t) - asin(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asec($t) - acos(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acot($t) - atan(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinh(sinh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acosh(cosh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(atanh(tanh($t)) - $t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acsch($t) - asinh(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asech($t) - acosh(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(acoth($t) - atanh(1/$t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinc($t/pi) - asin($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(asinhc($t/pi) - asinh($t)/$t))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erfc($t) - 1 + erf($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(erf(-$t) + erf($t)))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(angle($t) - atan(imag($t),real($t))))).allocs == 0
+  @test @benchmark(@FastGTPSA(norm(complex($t) - $t))).allocs == 0
 end
 
 @testset "Type stability" begin
@@ -1162,7 +1506,7 @@ end
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
-  include("../benchmark/track.jl")
+  include("track.jl")
   map = benchmark_GTPSA()
   jFD, hFD = benchmark_ForwardDiff()
   tol = 1e-10
@@ -1199,9 +1543,10 @@ end
   mad_desc.h downloaded.
   Comparing mad_desc.h to desc.jl...
   mad_tpsa.h downloaded.
-  Comparing mad_tpsa.h to rtpsa.jl...
+  Comparing mad_tpsa.h to TPS{Float64}.jl...
   mad_ctpsa.h downloaded.
   Comparing mad_ctpsa.h to ctpsa.jl...
   """
   @test compare_MAD() == expected_out
 end
+=#

@@ -93,9 +93,9 @@ function c_to_jl_type(type_c)
   elseif occursin("desc_t", type_c)
     type_jl = type_jl * "Desc"
   elseif occursin("ctpsa_t", type_c)
-    type_jl = type_jl * "CTPSA"
+    type_jl = type_jl * "TPS{ComplexF64}"
   elseif occursin("tpsa_t", type_c)
-    type_jl = type_jl * "RTPSA"
+    type_jl = type_jl * "TPS{Float64}"
   elseif occursin("FILE", type_c)
     type_jl = type_jl * "Cvoid"
   elseif occursin("void", type_c)
@@ -361,9 +361,9 @@ function compare_MAD()
   str = String(take!(io))
   fun_decs_c  = get_c_function_declarations(str)
 
-  str = read("../src/low_level/rtpsa.jl", String)
+  str = read("../src/low_level/TPS{Float64}.jl", String)
   fun_decs_jl = get_jl_function_declarations(str)
-  println(io_out, "Comparing mad_tpsa.h to rtpsa.jl...")
+  println(io_out, "Comparing mad_tpsa.h to TPS{Float64}.jl...")
   compare(fun_decs_c, fun_decs_jl)
 
   try

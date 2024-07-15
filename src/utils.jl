@@ -1,25 +1,3 @@
-numtype(t::TPS) = Float64
-numtype(ct::ComplexTPS) = ComplexF64
-numtype(::Type{TPS}) = Float64
-numtype(::Type{ComplexTPS}) = ComplexF64
-
-lowtype(t::TPS) = Ptr{RTPSA}
-lowtype(ct::ComplexTPS) = Ptr{CTPSA}
-lowtype(::Type{TPS}) = Ptr{RTPSA}
-lowtype(::Type{ComplexTPS}) = Ptr{CTPSA}
-
-getdesc(t::Union{TPS,ComplexTPS}) = Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
-numvars(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nv
-numparams(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).np
-numnn(t::Union{TPS,ComplexTPS}) = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)).nn
-#=getdesc(d::Descriptor) = d
-numvars(d::Descriptor) = unsafe_load(d.desc).nv
-numparams(d::Descriptor) = unsafe_load(d.desc).np
-numnn(d::Descriptor) = unsafe_load(d.desc).nn
-getdesc(d::Nothing) = nothing
-
-=#
-
 const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
 const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{Integer}}}
 const TPSIndexType = Union{Integer,
@@ -27,12 +5,8 @@ const TPSIndexType = Union{Integer,
                            SMIndexType}
 
 
-cycle!(t::Ptr{RTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_tpsa_cycle!(t, i, n, m_, v_))
-cycle!(t::Ptr{CTPSA}, i::Cint, n::Cint, m_, v_) = (@inline; mad_ctpsa_cycle!(t, i, n, m_, v_))
-
-
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
+function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
   # WE MUST Order THE VARIABLES !!!
   nv = numvars(t)
   numv = Cint(length(vars))
@@ -59,7 +33,7 @@ function pairs_to_sm(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integ
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::Union{TPS,ComplexTPS}, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
   nv = numvars(t)
   n = Cint(0)
   if isempty(params)
@@ -92,7 +66,7 @@ Complex(a::Real, t1::TPS) = complex(a, t1)
 Complex{TPS}(t1::TPS) = complex(t1) 
 Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
 Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
-Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)=#
+Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)
 Complex(t1::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
 Complex(t1::TPS, t2::TPS) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
 Complex(t1::TPS, a::Real) = error("ComplexTPS can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
@@ -117,3 +91,4 @@ promote_rule(::Type{TPS}, ::Type{T}) where {T<:Number}= ComplexTPS
 /(z::Complex{Bool}, t::TPS) = Complex{Int}(z) / t
 ^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
 ^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
+=#

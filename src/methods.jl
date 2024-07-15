@@ -1,35 +1,35 @@
 # --- clear ---
-clear!(t::Ptr{RTPSA}) = mad_tpsa_clear!(t)
-clear!(t::Ptr{CTPSA}) = mad_ctpsa_clear!(t)
+clear!(t::TPS{Float64})    = mad_tpsa_clear!(t)
+clear!(t::TPS{ComplexF64}) = mad_ctpsa_clear!(t)
 
 """
-    clear!(t::Union{TPS,ComplexTPS})
+    norm(t1::TPS)
 
-Clears the TPS (sets all monomial coefficients to 0).
+Calculates the 1-norm of the `TPS`, which is the sum of 
+the `abs` of all coefficients.
 """
-function clear!(t::Union{TPS,ComplexTPS})
-  clear!(t.tpsa)
-end
+norm(t1::TPS{Float64}) = mad_tpsa_nrm(t1)
+norm(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
 
 # --- setTPS! ---
 
 """
-    setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+    setTPS!(t::TPS, t1::Number; change::Bool=false) 
 
 General function for setting a TPS/ComplexTPS `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
 long as the number of variables + number of parameters are equal.
 """
-function setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false) 
+function setTPS!(t::TPS, t1::Number; change::Bool=false) 
   # if just a regular number
-  if !(t1 isa Union{TPS,ComplexTPS})
+  if !(t1 isa TPS)
     clear!(t)
     t[0] = t1
     return
   end
 
-  olddesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d)
-  newdesc = Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d)
+  olddesc = getdesc(t1)
+  newdesc = getdesc(t)
 
   # if not changing descriptors
   if olddesc == newdesc || !change 
@@ -38,114 +38,74 @@ function setTPS!(t::Union{TPS,ComplexTPS}, t1::Number; change::Bool=false)
   end
 
   # else we have to get fancy
-  unsafe_load(newdesc).nn == unsafe_load(olddesc).nn || error("Number of variables + parameters in GTPSAs do not agree!")
-  nv = unsafe_load(olddesc).nv
-  np = unsafe_load(newdesc).np
-  coef = Ref{numtype(t1)}()
-  mono = Vector{Cuchar}(undef, np+nv)
-  idx = cycle!(t1.tpsa, Cint(-1), np+nv, mono, coef)
+  numnn(t) == numnn(t1) || error("Number of variables + parameters in GTPSAs do not agree!")
+  nn = numnn(t)
+  coef = Ref{eltype(t1)}()
+  mono = Vector{Cuchar}(undef, nn)
+  idx = cycle!(t1, -1, np+nv, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(newdesc, np+nv, mono))
-      setm!(t.tpsa, np+nv, mono, convert(numtype(t), 0), convert(numtype(t), coef[])) # set new tpsa
+    if convert(Bool, mad_desc_isvalidm(newdesc, nn, mono))
+      setm!(t, nn, mono, 0, eltype(t)(coef[])) # set new tpsa
     end
-    idx = cycle!(t1.tpsa, idx, np+nv, mono, coef)
+    idx = cycle!(t1, idx, nn, mono, coef)
   end
 end
 
-# --- complex! ---
 
-"""
-    complex!(ct::ComplexTPS, t::TPS)
-
-Sets the pre-allocated `ComplexTPS` `ct` equal to `t`.
-"""
-function complex!(ct::ComplexTPS, t::TPS)
-  mad_ctpsa_cplx!(t.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
-end
 
 # --- Evaluate ---
-eval!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Float64}, tc::Vector{Float64}) = mad_tpsa_eval!(na, ma, nb, tb, tc)
-eval!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64}) = mad_ctpsa_eval!(na, ma, nb, tb, tc)
+mad_eval!(na, ma::Vector{TPS{Float64}}, nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64},tb), tc)
+mad_eval!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64},tb), tc)
 
 """
-    evaluate!(tc::Vector{<:Number}, m::Vector{T}, tb::Vector{<:Number}; work_low::Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}=Vector{lowtype(T)}(undef, length(m))) where {T<:Union{TPS,ComplexTPS}}
+    evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
 
-Evaluates the vector function `m` at the point `tb`, and fills `tc` with the result. 
-An optional container `work_low` can be provided for containing the low-level TPS 
-structs for zero allocations.    
+Evaluates the vector function `F` at the point `x`, and fills `y` with the result. 
 """
-function evaluate!(tc::Vector{<:Number}, m::Vector{T}, tb::Vector{<:Number}; work_low::Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}=Vector{lowtype(T)}(undef, length(m))) where {T<:Union{TPS,ComplexTPS}}
-  na = Cint(length(m))
-  nb = Cint(length(tb))
-  @assert na == nb "Vector lengths for TPSs and evaluation point disagree"
-  @assert length(tc) == nb "Output vector length disagrees with input vector length"
-  @assert length(work_low) == na "work_low vector length != input vector length"
-  @assert eltype(tc) == numtype(T) "Output vector eltype should be $(numtype(T)), received $(typeof(tc))"
-
-  map!(t->t.tpsa, work_low, m)
-  eval!(na, work_low, nb, tb, tc)
-  return
+function evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+  length(x) == numnn(first(F)) || error("Not enough input arguments")
+  length(y) == length(F) || error("Not enough output arguments")
+  mad_eval!(length(F), F, length(x), x, y)
 end
 
-"""
-    evaluate(m::Vector{T}, tb::Vector{<:Number}) where {T<:Union{TPS,ComplexTPS}}
+evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
 
-Evaluates the vector function `m` at the point `tb`.
-"""
-function evaluate(m::Vector{T}, tb::Vector{<:Number}) where {T<:Union{TPS,ComplexTPS}}
-  na = Cint(length(m))
-  tc = Vector{numtype(T)}(undef, na)
-  evaluate!(tc, m, tb)
-  return tc
-end
 
 # --- Integral ---
-# Low-level equivalent calls for TPS and ComplexTPS:
-integ!(tpsa1::Ptr{RTPSA},  tpsa::Ptr{RTPSA}, var::Cint) = (@inline; mad_tpsa_integ!(tpsa1, tpsa, var))
-integ!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_integ!(ctpsa1, ctpsa, var))
-
 """
-    integ!(t::T, t1::T, var::Integer=1) where {T<:Union{TPS,ComplexTPS}}
-    ∫!(t::T, t1::T, var::Integer=1) where {T<:Union{TPS,ComplexTPS}}
+    integ!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T}
+    ∫!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T}
 
 Integrates `t1` wrt the variable `var` and fills `t` with the result. 
 Integration wrt parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-function integ!(t::T, t1::T, var::Integer=1) where {T<:Union{TPS,ComplexTPS}}
-  integ(t1.tpsa, t.tpsa, Cint(var))
-  return
-end
-
-#∫! = integ!
+integ!(t::TPS{Float64},   t1::TPS{Float64},    var=1) = mad_tpsa_integ!(t1, t, Cint(var))
+integ!(t::TPS{ComplexF64},t1::TPS{ComplexF64}, var=1) = mad_ctpsa_integ!(ctpsa1, ctpsa, Cint(var))
+const ∫! = integ!
 
 """
-    integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
-    ∫(t1::Union{TPS, ComplexTPS}, var::Integer=1)
+    integ(t1::TPS, var::Integer=1)
+    ∫(t1::TPS, var::Integer=1)
 
 Integrates `t1` wrt the variable `var`. Integration wrt 
 parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-function integ(t1::Union{TPS, ComplexTPS}, var::Integer=1)
-  t = zero(t1)
-  integ!(t, t1, var)
-  return t
-end
-
-# ∫ = integ
+integ(t1::TPS, var=1) = (t = zero(t1); integ!(t, t1, var); return t)
+const ∫ = integ
 
 # --- Derivative ---
 # Low-level equivalent calls for TPS and ComplexTPS:
-deriv!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, var::Cint) = (@inline; mad_tpsa_deriv!(tpsa1, tpsa, var))
-deriv!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, var::Cint) = (@inline; mad_ctpsa_deriv!(ctpsa1, ctpsa, var))
-derivm!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, n::Cint, ords::Vector{Cuchar}) = (@inline; mad_tpsa_derivm!(tpsa1, tpsa, n, ords))
-derivm!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, n::Cint, ords::Vector{Cuchar}) = (@inline; mad_ctpsa_derivm!(ctpsa1, ctpsa, n, ords))
+mad_deriv!( t1::TPS{Float64},    t::TPS{Float64},    var) = mad_tpsa_deriv!(t1, t, Cint(var))
+mad_deriv!( t1::TPS{ComplexF64}, t::TPS{ComplexF64}, var) = mad_ctpsa_deriv!(t1, t, Cint(var))
+mad_derivm!(t1::TPS{Float64},    t::TPS{Float64},    n, ords) = mad_tpsa_derivm!(t1, t, Cint(n), convert(Vector{UInt8},ords))
+mad_derivm!(t1::TPS{ComplexF64}, t::TPS{ComplexF64}, n, ords) = mad_ctpsa_derivm!(t1, t, Cint(n), convert(Vector{UInt8}, ords))
 
 """
-    deriv!(t::T, t1::T, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T<:Union{TPS,ComplexTPS}}
-    ∂!(t::T, t1::T, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T<:Union{TPS,ComplexTPS}}
+    deriv!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
+    ∂!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
 alternatively any monomial specified by indexing-by-order OR indexing-by-sparse monomial, and 
@@ -156,15 +116,47 @@ sets `t` equal to the result in-place. See the `deriv` documentation for example
 - `param`  -- (Keyword argument, optional) An integer for the parameter index
 - `params` -- (Keyword argument, optional) Vector/tuple of pairs for sparse-monomial indexing
 """
-function deriv!(t::T, t1::T, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T<:Union{TPS,ComplexTPS}}
+function deriv!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
   low_deriv!(t, t1, v, param, params)
 end
 
-# ∂! = deriv!
+# Variable/parameter:
+low_deriv!(t::TPS{T}, t1::TPS{T}, v::Integer, param::Nothing, params::Nothing) where {T} = mad_deriv!(t1, t, v)
+low_deriv!(t::TPS{T}, t1::TPS{T}, v::Nothing, param::Integer, params::Nothing) where {T} = mad_deriv!(t1, t, param+numvars(t))
+
+# Default to first variable if nothing passed:
+low_deriv!(t::TPS{T}, t1::TPS{T}, v::Nothing, param::Nothing, params::Nothing) where {T} = low_deriv!(t1, 1, nothing, nothing)
+
+# Monomial by order:
+low_deriv!(t::TPS{T}, t1::TPS{T}, v::MIndexType, param::Nothing, params::Nothing) where {T} = mad_derivm!(t1, t, length(v), v)
+
+# Monomial by sparse monomial:
+function low_deriv!(t::TPS{T}, t1::TPS{T}, v::SMIndexType, param::Nothing, params::SMIndexType) where {T}
+  # Need to create array of orders with length nv + np
+  ords, n = pairs_to_m(t1,v,params=params)
+  mad_derivm!(t1, t, n, ords)
+end
+
+function low_deriv!(t::TPS{T}, t1::TPS{T}, v::SMIndexType, param::Nothing, params::Nothing) where {T}
+  # Need to create array of orders with length nv + np
+  ords, n = pairs_to_m(t1,v)
+  mad_derivm!(t1, t, n, ords)
+end
+
+function low_deriv!(t::TPS{T}, t1::TPS{T}, v::Nothing, param::Nothing, params::SMIndexType) where {T}
+  # Need to create array of orders with length nv + np
+  ords, n = pairs_to_m(t1,Pair{Int,Int}[],params=params)
+  mad_derivm!(t1, t, n, ords)
+end
+
+# Throw error if no above use cases satisfied:
+low_deriv(t::TPS{T}, t1::TPS{T}, v, param, params) where {T} = error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
+
+const ∂! = deriv!
 
 """
-    deriv(t1::Union{TPS,ComplexTPS}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
-    ∂(t1::Union{TPS,ComplexTPS}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+    deriv(t1::TPS, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+    ∂(t1::TPS, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
 alternatively any monomial specified by indexing-by-order OR indexing-by-sparse monomial.
@@ -232,101 +224,46 @@ TPS:
    1.0000000000000000e+00    0        0    0
 ```
 """
-function deriv(t1::Union{TPS,ComplexTPS}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
+function deriv(t1::TPS, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)
   t = zero(t1)
   low_deriv!(t, t1, v, param, params)
   return t
 end
 
-# Variable/parameter:
-function low_deriv!(t::T, t1::T, v::Integer, param::Nothing, params::Nothing) where {T<:Union{TPS,ComplexTPS}}
-  deriv!(t1.tpsa, t.tpsa, convert(Cint, v))
-end
-
-function low_deriv!(t::T, t1::T, v::Nothing, param::Integer, params::Nothing) where {T<:Union{TPS,ComplexTPS}}
-  nv = numvars(t1)
-  deriv!(t1.tpsa, t.tpsa, Cint(param)+nv)
-end
-
-# Default to first variable if nothing passed:
-function low_deriv!(t::T, t1::T, v::Nothing, param::Nothing, params::Nothing) where {T<:Union{TPS,ComplexTPS}}
-  low_deriv!(t1, 1, nothing, nothing)
-end
-
-# Monomial by order:
-function low_deriv!(t::T, t1::T, v::MIndexType, param::Nothing, params::Nothing) where {T<:Union{TPS,ComplexTPS}}
-  derivm!(t1.tpsa, t.tpsa, Cint(length(v)), convert(Vector{Cuchar}, v))
-end
-
-# Monomial by sparse monomial:
-function low_deriv!(t::T, t1::T, v::SMIndexType, param::Nothing, params::SMIndexType) where {T<:Union{TPS,ComplexTPS}}
-  # Need to create array of orders with length nv + np
-  ords, n = pairs_to_m(t1,v,params=params)
-  derivm!(t1.tpsa, t.tpsa, n, ords)
-end
-
-function low_deriv!(t::T, t1::T, v::SMIndexType, param::Nothing, params::Nothing) where {T<:Union{TPS,ComplexTPS}}
-  # Need to create array of orders with length nv + np
-  ords, n = pairs_to_m(t1,v)
-  derivm!(t1.tpsa, t.tpsa, n, ords)
-end
-
-function low_deriv!(t::T, t1::T, v::Nothing, param::Nothing, params::SMIndexType) where {T<:Union{TPS,ComplexTPS}}
-  # Need to create array of orders with length nv + np
-  ords, n = pairs_to_m(t1,Pair{Int,Int}[],params=params)
-  derivm!(t1.tpsa, t.tpsa, n, ords)
-end
-
-# Throw error if no above use cases satisfied:
-function low_deriv(t::T, t1::T, v, param, params) where {T<:Union{TPS,ComplexTPS}}
-  error("Invalid monomial specified. Please use ONE of variable/parameter index, index by order, or index by sparse monomial.")
-end
-
-# ∂ = deriv
+const ∂ = deriv
 
 # --- getord ---
-# Low-level equivalent calls for TPS and ComplexTPS:
-getord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cuchar) = (@inline;  mad_tpsa_getord!(tpsa1, tpsa, order))
-getord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cuchar) = (@inline;  mad_ctpsa_getord!(ctpsa1, ctpsa, order))
 
 """
-    getord!(t::T, t1::T, order::Integer) where {T<:Union{TPS,ComplexTPS}}
+    getord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T}
 
 Extracts one homogenous polynomial from `t1` of the given order and 
 fills `t` with the result in-place.
 """
-function getord!(t::T, t1::T, order::Integer) where {T<:Union{TPS,ComplexTPS}}
-  getord!(t1.tpsa, t.tpsa, Cuchar(order))
-end
+getord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = mad_tpsa_getord!(t1, t, UInt8(order))
+getord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = mad_ctpsa_getord!(t1, t, UInt8(order))
 
 """
-    getord(t1::Union{TPS, ComplexTPS}, order::Integer)
+    getord(t1::TPS, order::Integer)
 
 Extracts one homogenous polynomial from `t1` of the given order.
 """
-function getord(t1::Union{TPS, ComplexTPS}, order::Integer)
-  t = zero(t1)
-  getord!(t, t1, order)
-  return t
-end
+getord(t1::TPS, order::Integer) = (t = zero(t1); getord!(t, t1, order); return t)
+
 
 # --- cutord ---
-cutord!(tpsa1::Ptr{RTPSA}, tpsa::Ptr{RTPSA}, order::Cint) = (@inline;  mad_tpsa_cutord!(tpsa1, tpsa, order))
-cutord!(ctpsa1::Ptr{CTPSA}, ctpsa::Ptr{CTPSA}, order::Cint) = (@inline;  mad_ctpsa_cutord!(ctpsa1, ctpsa, order))
-
 """
-    cutord!(t::T, t1::T, order::Integer) where {T<:Union{TPS,ComplexTPS}}
+    cutord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T<:TPS}
 
 Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`. `t` 
 is filled in-place with the result. See the documentation for `cutord` for examples.
 """
-function cutord!(t::T, t1::T, order::Integer) where {T<:Union{TPS,ComplexTPS}}
-  cutord!(t1.tpsa, t.tpsa, convert(Cint, order))
-end
+cutord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = mad_tpsa_cutord!(t1, t, Cint(order))
+cutord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = mad_ctpsa_cutord!(t1, t, Cint(order))
 
 """
-    cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
+    cutord(t1::TPS, order::Integer)
 
 Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`.
@@ -351,227 +288,155 @@ TPS:
    2.7557319223985893e-06    9        9
 ```
 """
-function cutord(t1::Union{TPS, ComplexTPS}, order::Integer)
-  t = zero(t1)
-  cutord!(t, t1, order)
-  return t
-end
+cutord(t1::TPS, order::Integer) = (t = zero(t1); cutord!(t, t1, order); return t)
 
 # --- clearord! ---
-clrord!(t::Ptr{RTPSA}, ord::Cuchar) = mad_tpsa_clrord!(t, ord)
-clrord!(t::Ptr{CTPSA}, ord::Cuchar) = mad_ctpsa_clrord!(t, ord)
-
 """
-    clearord!(t::Union{TPS,ComplexTPS}, order::Integer)
+    clearord!(t::TPS, order::Integer)
 
 Clears all monomial coefficients in `t` at order `order`.
 """
-clearord!(t::Union{TPS,ComplexTPS}, order::Integer) = clrord!(t.tpsa, convert(Cuchar, order))
+clearord!(t::TPS{Float64},    ord::Integer) = mad_tpsa_clrord!(t, UInt8(ord))
+clearord!(t::TPS{ComplexF64}, ord::Integer) = mad_ctpsa_clrord!(t, UInt8(ord))
+
 
 """
-    clearord(t1::Union{TPS,ComplexTPS}, order::Integer)
+    clearord(t1::TPS, order::Integer)
 
 Returns a new TPS equal to `t1` but with all monomial coefficients 
 at the given `order` cleared (set equal to 0).
 """
-function clearord(t1::Union{TPS,ComplexTPS}, order::Integer)
-  t = zero(t1)
-  copy!(t,t1)
-  clearord!(t,order)
-  return t
-end
+clearord(t1::TPS, order::Integer) = (t = zero(t1); copy!(t,t1); clearord!(t,order); return t)
 
 
 # --- scalar ---
 """
-    scalar(t::Union{TPS,ComplexTPS})
+    scalar(t::TPS)
 
 Extracts the scalar part of the TPS. Equivalent to `t[0]` but 
 this can be easily broadcasted.
 """
-function scalar(t::Union{TPS,ComplexTPS})
-  return t[0]
-end
+scalar(t::TPS) = t[0]
 
 # --- composition ---
-compose!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, mb::Vector{Ptr{RTPSA}}, mc::Vector{Ptr{RTPSA}}) = (@inline; mad_tpsa_compose!(na, ma, nb, mb, mc))
-compose!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, mb::Vector{Ptr{CTPSA}}, mc::Vector{Ptr{CTPSA}}) = (@inline; mad_ctpsa_compose!(na, ma, nb, mb, mc))
+mad_compose!(na, ma::Vector{TPS{Float64}},    nb, mb::Vector{TPS{Float64}},    mc::Vector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Vector{TPS{ComplexF64}}, nb, mb::Vector{TPS{ComplexF64}}, mc::Vector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
 
 """
-    compose!(m::Vector{<:Union{TPS,ComplexTPS}}, m2::Vector{<:Union{TPS,ComplexTPS}}, m1::Vector{<:Union{TPS,ComplexTPS}}; work_low::Union{Nothing,Tuple{Vararg{Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}}}}=nothing, work_prom::Union{Nothing,Tuple{Vararg{Vector{<:ComplexTPS}}}}=nothing)
+    compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)compose!(m::Vector{TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
 
-Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`. Promotion is allowed, provided 
-the output vector function `m` has the correct promoted type. 
+Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`. 
+Promotion is allowed, provided the output vector function `m` has the correct type. 
 
-For all compositions, 3 temporary vectors must be generated that contain Ptr{RTPSA} or Ptr{CTPSA}
-for each TPS in the map (depending on output type), to pass to the low-level C composition function in GTPSA. 
-They are correspondingly referred to as `outx_low`, `m2x_low`, and `m1x_low`. These three temporaries containers 
-can be optionally passed as a tuple in `work_low`, and must satisfy the following requirements:
-
-```
-work_low[1] = outx_low   # Length >= length(m) = length(m2)
-work_low[2] = m2x_low    # Length >= length(m2) = length(m)
-work_low[3] = m1x_low    # Length >= length(m1)
-```
-
-If promotion is occuring, then one of the input vectors must be promoted to `ComplexTPS`. A vector of pre-allocated 
-`ComplexTPS`s can optionally provided as the first argument in the `work_prom` tuple, and has the requirement:
+If promotion is occuring, then one of the input vectors must be promoted to 
+`ComplexTPS`. A vector of pre-allocated `ComplexTPS`s can optionally provided 
+in `work_prom`, and has the requirement:
 
 If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
-`work_prom[1] = m1x_prom  # Length >= length(m1), Vector{ComplexTPS}`
+`work_prom = m1_prom  # Length >= length(m1), Vector{ComplexTPS}`
 
 else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
-`work_prom[1] = m2x_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
+`work_prom = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
 
-Note that the `ComplexTPS`s in the vectors must be allocated and have the same `Descriptor`.
+The `ComplexTPS`s in `work_prom` must be defined and have the same `Descriptor`.
 """
-function compose!(m::Vector{<:Union{TPS,ComplexTPS}}, m2::Vector{<:Union{TPS,ComplexTPS}}, m1::Vector{<:Union{TPS,ComplexTPS}}; work_low::Union{Nothing,Tuple{Vararg{Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}}}}=nothing, work_prom::Union{Nothing,Tuple{Vararg{Vector{<:ComplexTPS}}}}=nothing)
-  #desc = getdesc(first(m))
+function compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
 
-  #@assert n == n2 "Incorrect output length, received length $(length(m)) but need $(length(m2))"
-  #@assert numnn(first(m2)) == n1 "Not enough input arguments"
-  #@assert !(m === m1) "Cannot compose!(m, m2, m1) with m === m1"
-  #@assert eltype(m) == promote_type(eltype(m2),eltype(m1)) "Cannot compose: output vector type $(eltype(m)) must be $(promote_type(eltype(m2),eltype(m1)))"
-  outT = eltype(m)
+  # Checks:
+  n == n2 || error("Incorrect output length, received length $(length(m)) but need $(length(m2))")
+  numnn(first(m2)) == n1 || error("Not enough input arguments")
+  !(m === m1) || error("Cannot compose!(m, m2, m1) with m === m1")
+  eltype(m) == promote_type(eltype(m2),eltype(m1)) || error("Cannot compose: output vector type $(eltype(m)) must be $(promote_type(eltype(m2),eltype(m1)))")
 
-  if !isnothing(work_low)
-    outx_low = work_low[1]
-    m2x_low = work_low[2]
-    m1x_low = work_low[3]
-    @assert length(outx_low) >= n "Incorrect length for work_low[1] = outx_low. Received $(length(outx_low)), should be >=$n"
-    @assert length(m2x_low) >= n2 "Incorrect length for work_low[2] = m2x_low. Received $(length(m2x_low)), should be >=$n2"
-    @assert length(m1x_low) >= n1 "Incorrect length for work_low[3] = m1x_low. Received $(length(m1x_low)), should be >=$n1"
-  else
-    outx_low = Vector{lowtype(outT)}(undef, n)
-    m2x_low = Vector{lowtype(outT)}(undef, n)
-    m1x_low = Vector{lowtype(outT)}(undef, n1)
-  end
-
-  if !isnothing(work_prom)
-    if outT != eltype(m1)
-      m1x_prom = work_prom[1]
-      m2x_prom = nothing
-      @assert length(m1x_prom) >= n1 "Incorrect length for work_prom[1] = m1x_prom: Received $(length(m1x_prom)), should be >=$n1"
-    elseif outT != eltype(m2)
-      m1x_prom = nothing
-      m2x_prom = work_prom[1]
-      @assert length(m2x_prom) >= n "Incorrect length for work_prom[1] = m2x_prom: Received $(length(m2x_prom)), should be >=$n"
-    else
-      m1x_prom = nothing
-      m2x_prom = nothing
-    end
-  else
-    if outT != eltype(m1)
-      m1x_prom = Vector{ComplexTPS}(undef, n1)
+  # Check if promoting
+  if eltype(m) != eltype(m1)  # Promoting m1
+    if isnothing(work_prom)
+      m1_prom = Vector{TPS{ComplexF64}}(undef, n1)
       for i=1:n1  # Allocate
-        @inbounds m1x_prom[i] = ComplexTPS(use=first(m))
-      end
-      m2x_prom = nothing
-    elseif outT != eltype(m2)
-      m1x_prom = nothing
-      m2x_prom = Vector{ComplexTPS}(undef, n)
-      for i=1:n
-        @inbounds m2x_prom[i] = ComplexTPS(use=first(m))
+        @inbounds m1_prom[i] = TPS{ComplexF64}(use=first(m))
       end
     else
-      m1x_prom = nothing
-      m2x_prom = nothing
+      @assert length(work_prom) >= n1 "Incorrect length for work_prom = m1_prom: Received $(length(work_prom)), should be >=$n1"
     end
-  end
 
-  # Do the composition, promoting if necessary
-  if outT != eltype(m1) 
-    # Promote to ComplexTPS:
     for i=1:n1
-      @inbounds complex!(m1x_prom[i], m1[i])
+      @inbounds copy!(m1_prom[i], m1[i])
     end
-    map!(t->t.tpsa, m1x_low, m1x_prom)
-  else
-    map!(t->t.tpsa, m1x_low, m1)
-  end
 
-  if outT != eltype(m2)
-    # Promote to ComplexTPS:
+    mad_compose!(-n, m2, n1, m1_prom, m)
+
+  elseif eltype(m) != eltype(m2) # Promoting m2
+    if isnothing(work_prom)
+      m2_prom = Vector{TPS{ComplexF64}}(undef, n)
+      for i=1:n  # Allocate
+        @inbounds m2_prom[i] = TPS{ComplexF64}(use=first(m))
+      end
+    else
+      @assert length(work_prom) >= n "Incorrect length for work_prom = m2_prom: Received $(length(work_prom)), should be >=$n"
+    end
+    
     for i=1:n
-      @inbounds complex!(m2x_prom[i], m2[i])
+      @inbounds copy!(m2_prom[i], m2[i])
     end
-    map!(t->t.tpsa, m2x_low, m2x_prom)
-  else
-    map!(t->t.tpsa, m2x_low, m2)
+
+    mad_compose!(-n, m2_prom, n1, m1, m)
+    
+  else  # No promotion, just do it
+    mad_compose!(-n, m2, n1, m1, m)
   end
-
-  # go low
-  map!(t->t.tpsa, outx_low, m)
-
-  GC.@preserve m1x_prom m2x_prom compose!(Cint(n), m2x_low, Cint(n1), m1x_low, outx_low)
-
-  return
 end
 
-function ∘(ma::Vector{<:Union{TPS,ComplexTPS}}, mb::Vector{<:Union{TPS,ComplexTPS}})
-  na = Cint(length(ma))
-  nb = Cint(length(mb))
-  # Ensure mb is length = input
-  desc = getdesc(first(ma))
-  if numnn(desc) != nb
-    error("Not enough input arguments")
+"""
+    compose(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}})
+
+Composes the vector functions `m2 ∘ m1`
+"""
+function compose(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}})
+  desc = getdesc(first(m2))
+  outT = promote_type(eltype(m2),eltype(m1))
+  n = length(m2)
+  m = Vector{outT}(undef, n)
+  for i=1:n
+    @inbounds m[i] = outT(use=desc)
   end
-  outT = promote_type(eltype(ma),eltype(mb))
-  mc = Vector{outT}(undef, na)
-  for i=1:na
-    @inbounds mc[i] = outT(use=desc)
-  end
-  compose!(mc, ma, mb)
-  return mc
+  compose!(m, m2, m1)
+  return m
 end
+
+∘(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}) = compose(m2, m1)
 
 # --- translate ---
-translate!(na::Cint, ma::Vector{Ptr{RTPSA}}, nb::Cint, tb::Vector{Float64}, mc::Vector{Ptr{RTPSA}}) = mad_tpsa_translate!(na, ma, nb, tb, mc)
-translate!(na::Cint, ma::Vector{Ptr{CTPSA}}, nb::Cint, tb::Vector{ComplexF64}, mc::Vector{Ptr{CTPSA}}) = mad_ctpsa_translate!(na, ma, nb, tb, mc)
+mad_translate!(na, ma::Vector{TPS{Float64}},    nb, tb, mc::Vector{TPS{Float64}})    = mad_tpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), mc)
+mad_translate!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, mc::Vector{TPS{ComplexF64}}) = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), mc)
 
 
 """
-    translate!(mc::Vector{<:T}, ma::Vector{<:T}, tb::Vector{<:Number}) where {T<:Union{TPS,ComplexTPS}}
+    translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
 
-Fills `ma` with the vector function equal to `ma` with its expansion point translated by `tb`.
-
-Two temporary vectors of either `Ptr{RTPSA}` or `Ptr{CTPSA}` must be created, or they can optionally 
-be passed as a tuple to the kwarg `work_low` where
-
-`ma_low` = low corresponding to `ma` = `work_low[1]`
-`mb_low` = low corresponding to `mb` = `work_low[2]`
+Fills `m` with the vector function equal to `m1` with its expansion point translated by `x`.
 """
-function translate!(mc::Vector{<:T}, ma::Vector{<:T}, tb::Vector{<:Number}; work_low::Union{Nothing,Tuple{Vararg{Vector{<:Union{Ptr{RTPSA},Ptr{CTPSA}}}}}}=nothing) where {T<:Union{TPS,ComplexTPS}}
-  desc = getdesc(first(ma))
-  nb = Cint(length(tb))
-  na = Cint(length(ma))
-  numnn(desc) == nb || error("Not enough input arguments")
-  length(mc) == na || error("Output vector length != input vector length")
-  eltype(tb) == numtype(T) || error("Translation vector must have eltype $(numtype(T))")
-  if !isnothing(work_low)
-    ma_low = work_low[1]
-    mc_low = work_low[2]
-  else
-    ma_low = map(t->t.tpsa, ma)
-    mc_low = map(t->t.tpsa, mc)
-  end
-  translate!(na, ma_low, nb, tb, mc_low)
+function translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
+  numnn(first(m1)) == length(x) || error("Not enough input arguments!")
+  length(m) == length(m1) || error("Incorrect output length (should be $(length(m1)), received $(length(m)))")
+  mad_translate!(length(m1), m1, length(x), x, m)
 end
 
 """
-Returns a vector function equal to `ma` with its expansion point translated by `tb`
+    translate(m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
+
+returns a vector function equal to `m1` with its expansion point translated by `x`.
 """
-function translate(ma::Vector{<:T}, tb::Vector{<:Number}) where {T<:Union{TPS,ComplexTPS}}
-  desc = getdesc(first(ma))
-  nc = length(ma)
-  mc = Vector{T}(undef, nc)
-  for i=1:nc
-    mc[i] = T(use=desc)
+function translate(m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
+  n = length(m1)
+  m = Vector{TPS{T}}(undef, n)
+  desc = getdesc(first(m1))
+  for i=1:n
+    @inbounds m[i] = TPS{T}(use=desc)
   end
-  translate!(mc, ma, convert(Vector{numtype(T)}, tb))
-  return mc
+  translate!(m, m1, x)
+  return m
 end

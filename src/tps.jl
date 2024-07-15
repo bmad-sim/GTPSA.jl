@@ -1,27 +1,26 @@
-# Wrapper struct for Ptr{RTPSA}
-mutable struct TPS <: Real
-  tpsa::Ptr{RTPSA}
-  function TPS(t1::Ptr{RTPSA})::TPS
-    t = new(t1)
-    f(x) = mad_tpsa_del!(x.tpsa)
-    finalizer(f,t)
-    return t
-  end
-end
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}},pointer_from_objref(t))
+Base.eltype(::Type{TPS{T}}) where {T} = T
+Base.eltype(::TPS{T}) where {T} = T
 
-# Wrapper struct for Ptr{CTPSA}
-mutable struct ComplexTPS <: Number
-  tpsa::Ptr{CTPSA}
-  function ComplexTPS(ct1::Ptr{CTPSA})::ComplexTPS
-    ct = new(ct1)
-    f(x) = mad_ctpsa_del!(x.tpsa)
-    finalizer(f,ct)
-    return ct
-  end
-end
+getdesc(t::TPS) = Descriptor(t.d)
+getdesc(d::Descriptor) = d
+getdesc(n::Nothing) = GTPSA.desc_current
+
+numvars(t::TPS) = unsafe_load(t.d).nv
+numvars(d::Descriptor) = unsafe_load(d.desc).nv
+numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
+
+numparams(t::TPS) = unsafe_load(t.d).np
+numparams(d::Descriptor) = unsafe_load(d.desc).np
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).np
+
+numnn(t::TPS) = unsafe_load(t.d).nn
+numnn(d::Descriptor) = unsafe_load(d.desc).nn
+numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
 """
-    TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
+    TPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing)
+    TPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}}
 
 Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
 is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `ta`.
@@ -33,231 +32,60 @@ The constructor can also be used to create a copy of a `TPS` under one `Descript
 have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
 
 ### Input
-- `ta`  -- Any `Real`
+- `ta`  -- Any `Number`
 - `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa TPS`, else uses `GTPSA.desc_current`
 
 ### Output
-- `ret` -- New `TPS` equal to `ta` with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
+- `ret` -- New `TPS` equal to `ta`, with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
 """
-function TPS(ta::Union{Real,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::TPS
-  return low_TPS(ta, use)
-end
+TPS
+TPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_TPS(T, ta,use)
+TPS{T}(ta::TPS;                        use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_TPS(T, ta,use)
 
-# --- Blank TPS ---
-function low_TPS(ta::Nothing, use::Descriptor)
-  return TPS(mad_tpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-end
+TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promote_type(Float64,typeof(ta))}(ta, use=use)
+TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
+TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{eltype(ta)}(ta, use=use)
 
-function low_TPS(ta::Nothing, use::Union{TPS,ComplexTPS})
-  return TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, use.tpsa), MAD_TPSA_SAME))
-end
+const ComplexTPS = TPS{ComplexF64}
 
-function low_TPS(ta::Nothing, use::Nothing)
-  return TPS(mad_tpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-end
-
-# --- Copy ctor ---
-function low_TPS(t1::TPS, use::Nothing)
-  t = TPS(mad_tpsa_new(t1.tpsa, MAD_TPSA_SAME))
-  mad_tpsa_copy!(t1.tpsa, t.tpsa)
+function low_TPS(T, ta, use)
+  if ta isa Nothing          # --- Blank TPS ---
+    return TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
+  elseif ta isa TPS
+    if use isa Nothing       # --- Copy ctor ---
+      t = TPS{T}(getdesc(ta).desc, ta.mo)
+      copy!(t, ta)
+    else                     # --- Change descriptor ---
+      t = TPS{T}(getdesc(use).desc, ta.mo)
+      setTPS!(t, t1, change=true)
+      return t
+    end
+  else                       # --- promote number ---
+    t = TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
+    t[0] = ta
+  end
   return t
 end
 
-# --- Change descriptor ---
-function low_TPS(t1::TPS, use::Descriptor)
-  t = TPS(use=use)
-  setTPS!(t,t1,change=true)
-  return t
-end
 
-function low_TPS(t1::TPS, use::Union{TPS,ComplexTPS})
-  t = TPS(use=use)
-  setTPS!(t,t1,change=true)
-  return t
-end
+promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
+promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}
+promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
+promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
 
-# --- promote real to TPS ---
-function low_TPS(a::Real, use::Nothing)
-  t = TPS(mad_tpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_tpsa_seti!(t.tpsa, Cint(0), convert(Float64, 0), convert(Float64,a))
-  return t
-end
+promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:AbstractIrrational} = TPS{ComplexF64}
 
-function low_TPS(a::Real, use::Union{TPS,ComplexTPS})
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(Ptr{RTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_tpsa_seti!(t.tpsa, Cint(0), 0.0, convert(Float64,a))
-  return t
-end
+promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:Rational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:Rational} = TPS{ComplexF64}
 
-function low_TPS(a::Real, use::Descriptor)
-  t = TPS(mad_tpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_tpsa_seti!(t.tpsa, Cint(0), 0.0, convert(Float64,a))
-  return t
-end
+complex(::Type{TPS}) = TPS{ComplexF64}
+complex(::Type{TPS{T}}) where{T} = TPS{ComplexF64}
 
-# -----------------------
-"""
-    ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS 
+eps(::Type{TPS{T}}) where {T} = eps(T)
+floatmin(::Type{TPS{T}}) where {T} = floatmin(T)
+floatmax(::Type{TPS{T}}) where {T} = floatmax(T)
 
-Constructor to create a new `ComplexTPS` equal to the number `cta`. If `cta` is a `ComplexTPS` (or `TPS`), this 
-is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `cta`. If `cta` 
-is not a `TPS` or`ComplexTPS`, then the `Descriptor` used will by default be `GTPSA.desc_current`. The `Descriptor` 
-for the constructed `ComplexTPS` can be set using `use`. If a `TPS` or `ComplexTPS` is passed to `use`, 
-the `Descriptor` for that TPS will be used.
-
-The constructor can also be used to create a copy of a `ComplexTPS` under one `Descriptor` to instead 
-have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
-
-### Input
-- `cta`  -- Any `Number`
-- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `cta` if `cta <: Union{TPS,ComplexTPS}`, else uses `GTPSA.desc_current`
-
-### Output
-- `ret` -- New `ComplexTPS` equal to `cta` with removal of invalid monomials if `cta` is a `TPS`/`ComplexTPS` and a new `Descriptor` is specified
-"""
-function ComplexTPS(cta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
-  return low_ComplexTPS(cta, use)
-end
-
-# For some reason I need to explicitly define this:
-ComplexTPS(t::ComplexTPS; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing) = low_ComplexTPS(t,use)
-
-# --- Blank ComplexTPS ---
-function low_ComplexTPS(cta::Nothing, use::Descriptor)
-  return ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-end
-
-function low_ComplexTPS(cta::Nothing, use::Union{TPS,ComplexTPS})
-  return ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-end
-
-function low_ComplexTPS(cta::Nothing, use::Nothing)
-  return ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-end
-
-# --- Copy ctor ---
-function low_ComplexTPS(ct1::ComplexTPS, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_new(ct1.tpsa, MAD_TPSA_SAME))
-  mad_ctpsa_copy!(ct1.tpsa, ct.tpsa)
-  return ct
-end
-
-function low_ComplexTPS(t1::TPS, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
-  return ct
-end
-
-# --- Change descriptor ---
-function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Descriptor)
-  t = ComplexTPS(use=use)
-  setTPS!(t, t1, change=true)
-  return t
-end
-
-function low_ComplexTPS(t1::Union{TPS,ComplexTPS}, use::Union{TPS,ComplexTPS})
-  t = ComplexTPS(use=use)
-  setTPS!(t, t1, change=true)
-  return t
-end
-
-# --- promote number to ComplexTPS ---
-function low_ComplexTPS(a::Union{Real,Complex}, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
-  return ct
-end
-
-function low_ComplexTPS(a::Union{Real,Complex}, use::Union{TPS,ComplexTPS})
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
-  return ct
-end
-
-function low_ComplexTPS(a::Union{Real,Complex}, use::Descriptor)
-  ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64,a))
-  return ct
-end
-
-# -----------------------
-
-# Special real argument ctors
-function ComplexTPS(ta::Real, tb::Real; use::Union{Descriptor,TPS,ComplexTPS,Nothing}=nothing)::ComplexTPS
-  low_ComplexTPS(ta, tb, use)
-end
-
-function low_ComplexTPS(t1::TPS, t2::TPS, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cplx!(t1.tpsa, t2.tpsa, ct.tpsa)
-  return ct
-end
-
-function low_ComplexTPS(t1::TPS, a::Real, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cplx!(t1.tpsa, Base.unsafe_convert(Ptr{RTPSA}, C_NULL), ct.tpsa)
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, complex(0,a)))
-  return ct
-end
-
-function low_ComplexTPS(a::Real, t1::TPS, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, t1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_cplx!(Base.unsafe_convert(Ptr{RTPSA}, C_NULL), t1.tpsa, ct.tpsa)
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 1), convert(ComplexF64, a))
-  return ct
-end
-
-function low_ComplexTPS(a::Real, b::Real, use::Nothing)
-  ct = ComplexTPS(mad_ctpsa_newd(GTPSA.desc_current.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
-  return ct
-end
-
-function low_ComplexTPS(a::Real, b::Real, use::Descriptor)
-  ct = ComplexTPS(mad_ctpsa_newd(use.desc, MAD_TPSA_DEFAULT))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
-  return ct
-end
-
-function low_ComplexTPS(a::Real, b::Real, use::Union{TPS,ComplexTPS})
-  ct = ComplexTPS(mad_ctpsa_new(Base.unsafe_convert(Ptr{CTPSA}, use.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_seti!(ct.tpsa, Cint(0), convert(ComplexF64, 0), convert(ComplexF64, complex(a,b)))
-  return ct
-end
-
-function low_ComplexTPS(ta::TPS, tb::TPS, use::Descriptor)
-  ctmp = ComplexTPS(use=use)
-  ct = ComplexTPS(use=use)
-  setTPS!(ct, ta, change=true)
-  setTPS!(ctmp, tb, change=true)
-  mul!(ctmp, ctmp, complex(0,1))
-  add!(ct, ctmp, ct)
-  return ct
-end
-
-function low_ComplexTPS(ta::TPS, b::Real, use::Descriptor)
-  ct = ComplexTPS(use=use)
-  setTPS!(ct, ta, change=true)
-  add!(ct, ct, complex(0,b))
-  return ct
-end
-
-function low_ComplexTPS(a::Real, tb::TPS, use::Descriptor)
-  ct = ComplexTPS(use=use)
-  setTPS!(ct, tb, change=true)
-  mul!(ct,ct,complex(0,1))
-  add!(ct, a, ct)
-  return ct
-end
-
-function low_ComplexTPS(ta::TPS, tb::TPS, use::Union{TPS,ComplexTPS})
-  return low_ComplexTPS(ta, tb, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
-end
-
-function low_ComplexTPS(ta::TPS, b::Real, use::Union{TPS,ComplexTPS})
-  return low_ComplexTPS(ta, b, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
-end
-
-function low_ComplexTPS(a::Real, tb::TPS, use::Union{TPS,ComplexTPS})
-  return low_ComplexTPS(a, tb, Descriptor(Base.unsafe_convert(Ptr{Desc}, unsafe_load(use.tpsa))))
-end
+#promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Union{AbstractFloat, Integer, Rational, Irrational}} = TPS{Float64}
+#promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Union{Complex{<:Real},AbstractFloat,Integer,Rational,Irrational}} = TPS{ComplexF64}
+#promote_rule(::Type{TPS{Float64}}, ::Type{Irrational}) = TPS{Float64}

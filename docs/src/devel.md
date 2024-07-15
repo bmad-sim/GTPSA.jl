@@ -9,15 +9,15 @@ Pkg.develop(url="https://github.com/githubuser/GTPSA.jl")
 
 The package consists of two layers: a low-level layer written in Julia that is 1-to-1 with the GTPSA C code, and a high-level, user-friendly layer that cleans up the notation for manipulating TPSAs, manages temporaries generated during evaluation, and properly manages the memory in C when variables go out of scope in Julia. The low-level functions, which are exported for developer usage at the moment, are listed below.
 
-The C code consists of three C structs: `desc`, `tpsa`, and `ctpsa`. The low-level Julia-equivalent, 1-to-1 structs are respectively `Desc`, `RTPSA`, and `CTPSA`. C pointers `Ptr` to these structs are wrapped by the high-level structs `Descriptor`, `TPSA`, and `ComplexTPSA` respectively.
+The C code consists of three C structs: `desc`, `tpsa`, and `ctpsa`. The low-level Julia-equivalent, 1-to-1 structs are respectively `Desc`, `TPS{Float64}`, and `TPS{ComplexF64}`. C pointers `Ptr` to these structs are wrapped by the high-level structs `Descriptor`, `TPSA`, and `ComplexTPSA` respectively.
 
-The low-level structs `Desc`, `RTPSA`, and `CTPSA` contain fields with `Ptr{Cvoid}`; these are pointers to any of the other structs, specified in the documentation. For example, the `d` field in `RTPSA` is a `Ptr{Desc}`. We could not explicitly define `Ptr{Desc}`, because `Desc` likewise has a `Ptr{RTPSA}`, and Julia does not allow for cyclic implicit struct definitions. Therefore, the `Ptr` must be converted to the appropriate low-level Julia struct before safe accessing (documented next to each of the fields).
+The low-level structs `Desc`, `TPS{Float64}`, and `TPS{ComplexF64}` contain fields with `Ptr{Cvoid}`; these are pointers to any of the other structs, specified in the documentation. For example, the `d` field in `TPS{Float64}` is a `Ptr{Desc}`. We could not explicitly define `Ptr{Desc}`, because `Desc` likewise has a `Ptr{TPS{Float64}}`, and Julia does not allow for cyclic implicit struct definitions. Therefore, the `Ptr` must be converted to the appropriate low-level Julia struct before safe accessing (documented next to each of the fields).
 
-For example, to access the `t` array of `RTPSA`s in `Desc` defined by a high-level struct `Descriptor`:
+For example, to access the `t` array of `TPS{Float64}`s in `Desc` defined by a high-level struct `Descriptor`:
 
 ```
 using GTPSA
-import GTPSA: RTPSA, CTPSA, Desc
+import GTPSA: TPS{Float64}, TPS{ComplexF64}, Desc
 
 d = Descriptor(5,8)
 
@@ -25,13 +25,13 @@ d = Descriptor(5,8)
 desc = unsafe_load(d.desc)
 
 # To access the array of 8 temporaries t:
-t_jl = unsafe_wrap(Vector{Ptr{RTPSA}}, Base.unsafe_convert(Ptr{Ptr{RTPSA}}, desc.t), 8)
+t_jl = unsafe_wrap(Vector{Ptr{TPS{Float64}}}, Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), 8)
 ```
 
-First the `Ptr{Ptr{Cvoid}}` is converted to a `Ptr{Ptr{RTPSA}}`, which can then be wrapped in a `Vector{Ptr{RTPSA}}`. Note that calling `unsafe_wrap` uses memory allocation, so it is preferred to use `unsafe_load` for speed-critical applications.To get the first temporary in the array without using `unsafe_wrap`, use:
+First the `Ptr{Ptr{Cvoid}}` is converted to a `Ptr{Ptr{TPS{Float64}}}`, which can then be wrapped in a `Vector{Ptr{TPS{Float64}}}`. Note that calling `unsafe_wrap` uses memory allocation, so it is preferred to use `unsafe_load` for speed-critical applications.To get the first temporary in the array without using `unsafe_wrap`, use:
 
 ```
-t1_jl = unsafe_load(Base.unsafe_convert(Ptr{Ptr{RTPSA}}, desc.t), 1)
+t1_jl = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), 1)
 ```
 
 ## Monomial
@@ -79,9 +79,9 @@ GTPSA.mad_desc_newvpo
 GTPSA.mad_desc_nxtbyord
 GTPSA.mad_desc_nxtbyvar
 ```
-## RTPSA
+## TPS{Float64}
 ```@docs
-GTPSA.RTPSA
+GTPSA.TPS{Float64}
 GTPSA.mad_tpsa_abs!
 GTPSA.mad_tpsa_acc!
 GTPSA.mad_tpsa_acos!
@@ -210,9 +210,9 @@ GTPSA.mad_tpsa_unit!
 GTPSA.mad_tpsa_update!
 GTPSA.mad_tpsa_vec2fld!
 ```
-# CTPSA 
+# TPS{ComplexF64} 
 ```@docs
-GTPSA.CTPSA
+GTPSA.TPS{ComplexF64}
 GTPSA.mad_ctpsa_acc!
 GTPSA.mad_ctpsa_acc_r!
 GTPSA.mad_ctpsa_acos!

@@ -130,7 +130,7 @@ export
   par,
   scalar,
   setTPS!,
-  lengthTPS,
+  numcoefs,
   
   # Temporaries:
   @FastGTPSA,
@@ -142,13 +142,9 @@ export
   __t_inv, __t_atan, __t_abs, __t_sqrt, __t_exp, __t_log, __t_sin, __t_cos, __t_tan, __t_csc, __t_sec, __t_cot, __t_sinc, __t_sinh, __t_cosh,
   __t_tanh, __t_csch, __t_sech, __t_coth, __t_asin, __t_acos, __t_atan, __t_acsc, __t_asec, __t_acot, __t_asinh, __t_acosh, __t_atanh, __t_acsch, 
   __t_asech, __t_acoth, __t_real, __t_imag, __t_conj, __t_angle, __t_complex, __t_sinhc, __t_asinc, __t_asinhc, __t_erf, __t_erfc, __t_norm,
-  __t_polar, __t_rect,
+  __t_polar, __t_rect, __t_zero, __t_one
 
-
-  NewTPS,
-  ComplexNewTPS
-
-include("low.jl")           # Low level, 1-to-1 Julia-to-C code including C struct definitions
+include("low.jl")           # Low level, 1-to-1 Julia-to-C code
 include("descriptor.jl")    # Descriptor struct and constructors
 include("global.jl")        # Global variables
 include("tps.jl")           # TPS/ComplexTPS structs and constructors
@@ -159,15 +155,5 @@ include("show.jl")          # Output
 include("operators.jl")     # TPS math overloaded operators/functions
 include("methods.jl")       # Higher-level TPS functions (derivatives, integrals, evaluate, etc)
 include("fast_gtpsa.jl")    # Everything for the @FastGTPSA macro
-
-include("new/tps.jl")
-include("new/utils.jl")
-include("new/low.jl")
-include("new/operators.jl")
-include("new/getset.jl")
-include("new/show.jl")
-include("new/methods.jl")
-include("new/ctors.jl")
-include("new/fast_gtpsa.jl")
 
 end
