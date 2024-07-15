@@ -59,13 +59,19 @@ import Base:  +,
               >=,
               !=,
               isequal,
+              isless,
+              isinf,
+              isnan,
               show,
               copy!,
               lastindex,
               firstindex,
               rand,
               unsafe_convert,
-              eltype
+              eltype,
+              eps,
+              floatmin,
+              floatmax
 
 import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
@@ -155,6 +161,7 @@ include("methods.jl")       # Higher-level TPS functions (derivatives, integrals
 include("fast_gtpsa.jl")    # Everything for the @FastGTPSA macro
 
 include("new/tps.jl")
+include("new/utils.jl")
 include("new/low.jl")
 include("new/operators.jl")
 include("new/getset.jl")

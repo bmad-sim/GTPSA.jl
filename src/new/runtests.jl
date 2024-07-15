@@ -303,7 +303,7 @@ end
   @test norm(complex(t3) - complex(3)) < tol
   @test norm(complex(t2,t3) - complex(2,3)) < tol
   @test norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
-  @test_broken norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
+  @test norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
   @test norm(rect(t2) - (2*cos(0) + im*2*sin(0))) < tol
   @test norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0))) < tol
   
@@ -517,8 +517,8 @@ end
 
 @testset "Indexing" begin
   d = Descriptor(3,10,2,10)
-  v = vars(d)
-  p = params(d)
+  v = GTPSA.newvars(d)
+  p = GTPSA.newparams(d)
   tol = 1e-18
 
   f = sin(v[1])
@@ -736,7 +736,7 @@ end
 
 
 end
-
+#=
 @testset "@FastGTPSA - Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = NewTPS(use=d)
@@ -1160,10 +1160,10 @@ end
   @test_opt type_stable_test()
   @test_opt benchmark_GTPSA()
 end
-
+=#
 @testset "Taylor map benchmark against ForwardDiff" begin
-  include("../benchmark/track.jl")
-  map = benchmark_GTPSA()
+  include("track.jl")
+  map = benchmark_newGTPSA()
   jFD, hFD = benchmark_ForwardDiff()
   tol = 1e-10
   

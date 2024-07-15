@@ -192,6 +192,16 @@ promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Number} = NewTPS{Comp
 promote_rule(::Type{T}, ::Type{NewTPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? NewTPS{Float64} : NewTPS{ComplexF64})
 promote_rule(::Type{T}, ::Type{NewTPS{ComplexF64}}) where {T<:AbstractIrrational} = NewTPS{ComplexF64}
 
+promote_rule(::Type{T}, ::Type{NewTPS{Float64}}) where {T<:Rational} = (T <: Real ? NewTPS{Float64} : NewTPS{ComplexF64})
+promote_rule(::Type{T}, ::Type{NewTPS{ComplexF64}}) where {T<:Rational} = NewTPS{ComplexF64}
+
+complex(::Type{NewTPS}) = NewTPS{ComplexF64}
+complex(::Type{NewTPS{T}}) where{T} = NewTPS{ComplexF64}
+
+eps(::Type{NewTPS{T}}) where {T} = eps(T)
+floatmin(::Type{NewTPS{T}}) where {T} = floatmin(T)
+floatmax(::Type{NewTPS{T}}) where {T} = floatmax(T)
+
 #promote_rule(::Type{NewTPS{Float64}}, ::Type{T}) where {T<:Union{AbstractFloat, Integer, Rational, Irrational}} = NewTPS{Float64}
 #promote_rule(::Type{NewTPS{ComplexF64}}, ::Type{T}) where {T<:Union{Complex{<:Real},AbstractFloat,Integer,Rational,Irrational}} = NewTPS{ComplexF64}
 #promote_rule(::Type{NewTPS{Float64}}, ::Type{Irrational}) = NewTPS{Float64}

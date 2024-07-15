@@ -97,6 +97,13 @@ end
 end
 end
 
+isless(t1::NewTPS, t2::NewTPS) = t1 < t2
+isinf(t1::NewTPS) = isinf(t1[0])
+isnan(t1::NewTPS) = isnan(t1[0])
+eps(t1::NewTPS) = eltype(t1)
+floatmin(t1::NewTPS) = floatmin(eltype(t1))
+floatmax(t1::NewTPS) = floatmax(eltype(t1))
+
 # --- Compare entire TPS ---
 isequal(t1::NewTPS{Float64},    t2::NewTPS{Float64})    = equ(t1, t2, 0)
 isequal(t1::NewTPS{ComplexF64}, t2::NewTPS{ComplexF64}) = equ(t1, t2, 0)
@@ -315,17 +322,13 @@ asech!(t::NewTPS{T}, t1::NewTPS{T}) where {T} = (inv!(t, t1, 1); acosh!(t, t))
 conj!(t::NewTPS{ComplexF64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_conj!(t1, t)
 conj!(t::NewTPS, t1::NewTPS{Float64}) = copy!(t, t1)
 
-polar!(t::NewTPS{ComplexF64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_polar!(t1, t)
-polar!(t::NewTPS{Float64}, t1::NewTPS{Float64}) = abs!(t,t1)
-
 rect!(t::NewTPS{ComplexF64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_rect!(t1, t)
 rect!(t::NewTPS{Float64}, t1::NewTPS{Float64}) = copy!(t,t1)
 
 # Now let's finally define all out of place versions:
 for t = (:abs, :unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, 
   :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc,
-  :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj,
-  :polar, :rect)
+  :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
 @eval begin
 ($t)(t1::NewTPS) = (t = zero(t1); $(Symbol(t,:!))(t, t1); return t)
 end
@@ -351,166 +354,86 @@ for t = (:real,  :imag, :angle, :abs)
 end
 end
 
-# And finally, complex will always return NewTPS{ComplexF64}:
+# And finally, these will always return NewTPS{ComplexF64}:
+polar!(t::NewTPS{ComplexF64}, t1::NewTPS{ComplexF64}) = mad_ctpsa_polar!(t1, t)
+polar!(t::NewTPS{ComplexF64}, t1::NewTPS{Float64}) = (copy!(t,t1); polar!(t, t) )
+polar(t1::NewTPS) = (t=NewTPS{ComplexF64}(use=t1); polar!(t,t1); return t)
+
+complex(t1::NewTPS) = NewTPS{ComplexF64}(t1)
+complex!(t::NewTPS{ComplexF64}; tre=nothing, tim=nothing) = low_cplx!(t, tre, tim)
+
+# TPS:
+function low_cplx!(t::NewTPS{ComplexF64}, tre::Union{NewTPS{Float64},Nothing}, tim::Union{NewTPS{Float64},Nothing})
+  return mad_ctpsa_cplx!(!isnothing(tre) ? tre : C_NULL, !isnothing(tim) ? tim : C_NULL, t)
+end
+
+# TPS, Number:
+function low_cplx(t::NewTPS{ComplexF64}, tre::Union{NewTPS{Float64},Nothing}, tim::Number)
+  mad_ctpsa_cplx!(!isnothing(tre) ? tre : C_NULL, C_NULL, t)
+  t[0] += complex(0,tim)
+end
+
+# Number, TPS:
+function low_cplx!(t::NewTPS{ComplexF64}, tre::Number, tim::Union{NewTPS{Float64},Nothing})
+  mad_ctpsa_cplx!(C_NULL, !isnothing(tim) ? tim : t)
+  t[0] += tre
+end
+
+# Number, Number
+function low_cplx!(t::NewTPS{ComplexF64}, tre::Number, tim::Number)
+  clear!(t)
+  t[0] = complex(tre, tim)
+end
+
+complex(tre::NewTPS{Float64}, tim::NewTPS{Float64}) = (t = NewTPS{ComplexF64}(use=tre); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::NewTPS{Float64}, tim::Number)          = (t = NewTPS{ComplexF64}(use=tre); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::Number,          tim::NewTPS{Float64}) = (t = NewTPS{ComplexF64}(use=tim); complex!(t, tre=tre, tim=tim); return t)
 
 
+hypot!(r::NewTPS{Float64}, a::NewTPS{Float64}, b::NewTPS{Float64}) = mad_tpsa_hypot!(a, b, r)
+hypot!(r::NewTPS{Float64}, a::NewTPS{Float64}, b::NewTPS{Float64}, c::NewTPS{Float64}) = mad_tpsa_hypot3!(a, b, c, r)
+
+function hypot!(d::NewTPS, a...)
+  clear!(d)
+  for n in a
+    add!(d, d, abs(n)^2)
+  end
+  sqrt!(d,d)
+end
+
+function hypot(a::NewTPS, b::Number...)
+  t = NewTPS{Float64}(use=a)
+  hypot!(t, a, b...)
+  return t
+end
+
+function hypot(a::NewTPS...)
+  t = NewTPS{Float64}(use=a[1])
+  hypot!(t, a...)
+  return t
+end
 #=
-
-function angle(ct1::ComplexTPS)::TPS
-  t = TPS(mad_tpsa_new(Base.unsafe_convert(NewTPS{Float64}, ct1.tpsa), MAD_TPSA_SAME))
-  mad_ctpsa_carg!(ct1.tpsa, t.tpsa)
+function hypot(a::Number, b::NewTPS, c::Number, d::Number...)
+  t = NewTPS{Float64}(use=b)
+  hypot!(t, a, b, c, d...)
   return t
 end
 
-function angle(t1::TPS)::TPS
-  ct = ComplexTPS(t1)
-  t = zero(t1)
-  mad_ctpsa_carg!(ct.tpsa, t.tpsa)
+function hypot(a::Number, b::Number, c::NewTPS, d::Number...)
+  t = NewTPS{Float64}(use=c)
+  hypot!(t,a,b,c,d...)
   return t
-end
-
-function complex(t1::TPS)::ComplexTPS
-  return ComplexTPS(t1)
-end
-
-function complex(ct1::ComplexTPS)::ComplexTPS
-  return ComplexTPS(ct1)
-end
-
-function complex(t1::TPS, t2::TPS)::ComplexTPS
-  return ComplexTPS(t1, t2)
-end
-
-function complex(t1::TPS, a::Real)::ComplexTPS
-  return ComplexTPS(t1, a)
-end
-
-function complex(a::Real, t1::TPS)::ComplexTPS
-  return ComplexTPS(a, t1)
-end
-
-
-@FUNC("unit"  )
-@FUNC("sqrt"  )
-@FUNC("exp"  )
-@FUNC("log"  )
-@FUNC("sin"  )
-@FUNC("cos"  )
-@FUNC("tan"  )
-@FUNC("cot"  )
-@FUNC("sinh"  )
-@FUNC("cosh"  )
-@FUNC("tanh"  )
-@FUNC("coth"  )
-@FUNC("asin"  )
-@FUNC("acos"  )
-@FUNC("atan"  )
-@FUNC("acot"  )
-@FUNC("asinh" )
-@FUNC("acosh" )
-@FUNC("atanh" )
-@FUNC("acoth" )
-@FUNC("erf"  )
-@FUNC("erfc"  )
-
-# sinc in Julia has different definition than GTPSA
-# In Julia: sinc(x) = sin(pi*x)/(pi*x)
-# in C GTPSA: sinc(x) = sin(x)/x
-# To make sinc agree:
-function sinc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_sinc!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
-# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
-function asinc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_asinc!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-function sinhc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_sinhc!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-# asinc is not in Julia, but in C is asinc(x) = asin(x)/x
-# To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
-function asinhc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_scl!(ct1.tpsa, convert(ComplexF64, pi), ct.tpsa)
-  mad_ctpsa_asinhc!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-# These functions are not implemented in the GTPSA C library, so they 
-# are implemented below without creating unnecessary temporaries
-function csc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_sin!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
-end
-
-function sec(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_cos!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
-end
-
-function csch(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_sinh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
-end
-
-function sech(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_cosh!(ct1.tpsa, ct.tpsa)
-  mad_ctpsa_inv!(ct.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  return ct
-end
-
-function acsc(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_asin!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-function asec(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_acos!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-function acsch(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_asinh!(ct.tpsa, ct.tpsa)
-  return ct
-end
-
-function asech(ct1::ComplexTPS)::ComplexTPS
-  ct = zero(ct1)
-  mad_ctpsa_inv!(ct1.tpsa, convert(ComplexF64, 1), ct.tpsa)
-  mad_ctpsa_acosh!(ct.tpsa, ct.tpsa)
-  return ct
 end
 =#
 
 
+#=
+hypot!(r::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, b::NewTPS{ComplexF64}) = mad_ctpsa_hypot!(a, b, r)
 
-#= Skipping hypot for now
+
+hypot!(r::NewTPS{ComplexF64}, a::NewTPS{ComplexF64}, b::NewTPS{ComplexF64}, c::NewTPS{ComplexF64}) = mad_ctpsa_hypot3!(a, b, c, r)
+
+
 function hypot(t1::TPS, t2::TPS)::TPS
   t = zero(t1)
   mad_tpsa_hypot!(t1.tpsa, t2.tpsa, t.tpsa)
