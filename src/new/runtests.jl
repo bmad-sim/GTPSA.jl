@@ -736,7 +736,7 @@ end
 
 
 end
-#=
+
 @testset "@FastGTPSA - Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = NewTPS(use=d)
@@ -839,7 +839,7 @@ end
   @test @FastGTPSA(norm((3+3im)^t2 - (3+3im)^2)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
@@ -1027,7 +1027,7 @@ end
   @test @FastGTPSA(norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
@@ -1147,7 +1147,7 @@ end
   @test @FastGTPSA(norm(complex(t) - t)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   @test ctmpidx == 0
@@ -1160,7 +1160,7 @@ end
   @test_opt type_stable_test()
   @test_opt benchmark_GTPSA()
 end
-=#
+
 @testset "Taylor map benchmark against ForwardDiff" begin
   include("track.jl")
   map = benchmark_newGTPSA()
