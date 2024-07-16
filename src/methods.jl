@@ -319,29 +319,29 @@ this can be easily broadcasted.
 scalar(t::TPS) = t[0]
 
 # --- composition ---
-mad_compose!(na, ma::Vector{TPS{Float64}},    nb, mb::Vector{TPS{Float64}},    mc::Vector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
-mad_compose!(na, ma::Vector{TPS{ComplexF64}}, nb, mb::Vector{TPS{ComplexF64}}, mc::Vector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::AbstractVector{TPS{Float64}},    nb, mb::AbstractVector{TPS{Float64}},    mc::AbstractVector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::AbstractVector{TPS{ComplexF64}}, nb, mb::AbstractVector{TPS{ComplexF64}}, mc::AbstractVector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
 
 """
-    compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)compose!(m::Vector{TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
+    compose!(m, m2, m1; work::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)compose!(m::Vector{TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{TPS{<:Union{Float64,ComplexF64}}}; work::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
 
 Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`. 
 Promotion is allowed, provided the output vector function `m` has the correct type. 
 
 If promotion is occuring, then one of the input vectors must be promoted to 
 `ComplexTPS`. A vector of pre-allocated `ComplexTPS`s can optionally provided 
-in `work_prom`, and has the requirement:
+in `work`, and has the requirement:
 
 If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
-`work_prom = m1_prom  # Length >= length(m1), Vector{ComplexTPS}`
+`work = m1_prom  # Length >= length(m1), Vector{ComplexTPS}`
 
 else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
-`work_prom = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
+`work = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
 
-The `ComplexTPS`s in `work_prom` must be defined and have the same `Descriptor`.
+The `ComplexTPS`s in `work` must be defined and have the same `Descriptor`.
 """
-function compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}; work_prom::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
+function compose!(m, m2, m1; work::Union{Nothing,AbstractVector{TPS{ComplexF64}}}=nothing)
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
@@ -354,13 +354,15 @@ function compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TP
 
   # Check if promoting
   if eltype(m) != eltype(m1)  # Promoting m1
-    if isnothing(work_prom)
+    if isnothing(work)
       m1_prom = Vector{TPS{ComplexF64}}(undef, n1)
       for i=1:n1  # Allocate
         @inbounds m1_prom[i] = TPS{ComplexF64}(use=first(m))
       end
     else
-      @assert length(work_prom) >= n1 "Incorrect length for work_prom = m1_prom: Received $(length(work_prom)), should be >=$n1"
+      Base.require_one_based_indexing(work)
+      m1_prom = work
+      @assert length(work) >= n1 "Incorrect length for work = m1_prom: Received $(length(work)), should be >=$n1"
     end
 
     for i=1:n1
@@ -370,13 +372,15 @@ function compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TP
     mad_compose!(-n, m2, n1, m1_prom, m)
 
   elseif eltype(m) != eltype(m2) # Promoting m2
-    if isnothing(work_prom)
+    if isnothing(work)
       m2_prom = Vector{TPS{ComplexF64}}(undef, n)
       for i=1:n  # Allocate
         @inbounds m2_prom[i] = TPS{ComplexF64}(use=first(m))
       end
     else
-      @assert length(work_prom) >= n "Incorrect length for work_prom = m2_prom: Received $(length(work_prom)), should be >=$n"
+      Base.require_one_based_indexing(work)
+      m2_prom = work
+      @assert length(work) >= n "Incorrect length for work = m2_prom: Received $(length(work)), should be >=$n"
     end
     
     for i=1:n
@@ -391,15 +395,16 @@ function compose!(m::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{<:TP
 end
 
 """
-    compose(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}})
+    compose(m2::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}})
 
 Composes the vector functions `m2 ∘ m1`
 """
-function compose(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}})
+function compose(m2::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}})
+  Base.require_one_based_indexing(m2,m1)
   desc = getdesc(first(m2))
   outT = promote_type(eltype(m2),eltype(m1))
   n = length(m2)
-  m = Vector{outT}(undef, n)
+  m = similar(m2, outT)
   for i=1:n
     @inbounds m[i] = outT(use=desc)
   end

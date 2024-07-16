@@ -2738,7 +2738,7 @@ end
 
 
 """
-    mad_ctpsa_compose!(na::Cint, ma::Vector{TPS{ComplexF64}}, nb::Cint, mb::Vector{TPS{ComplexF64}}, mc::Vector{TPS{ComplexF64}})
+    mad_ctpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
 
 Composes two maps.
 
@@ -2751,7 +2751,7 @@ Composes two maps.
 ### Output
 - `mc` -- Composition of maps `ma` and `mb`
 """
-function mad_ctpsa_compose!(na::Cint, ma::Vector{TPS{ComplexF64}}, nb::Cint, mb::Vector{TPS{ComplexF64}}, mc::Vector{TPS{ComplexF64}})
+function mad_ctpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
   @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
 end
 

@@ -93,8 +93,9 @@ function get_rtemp_low!(desc::Desc)::Ptr{TPS{Float64}}
     error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current) must be executed.")
   end
   idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1
-  #println("threadid = ", Threads.threadid(), ", getting temp t[", idx,"], incrementing ti[", Threads.threadid(), "] = ", tmpidx, "->", tmpidx+1)
+  #println("threadid = ", Threads.threadid(), ", getting temp t[", idx-1,"], incrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx+1)
   t = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx)
+  #@assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == t
   # Increment tmp idx in Descriptor
   unsafe_store!(desc.ti, tmpidx+Cint(1), Threads.threadid())
   return t
@@ -128,11 +129,12 @@ end
 function rel_temp!(tpsa::Ptr{TPS{Float64}})
   desc = unsafe_load(mad_tpsa_desc(tpsa))
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
-  #println("decrementing ti[", Threads.threadid(), "] = ", tmpidx, "->", tmpidx-1)
+  #println("decrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx-1)
   # Decrement tmp idx in Descriptor
   #idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
+  #println(idx)
   #println(unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx), " ?= ", tpsa)
-  #@assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
+ # @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
   
   unsafe_store!(desc.ti, tmpidx-Cint(1), Threads.threadid())
   return
@@ -156,7 +158,14 @@ function cleartemps!(d::Descriptor=GTPSA.desc_current)
 end
 
 
-
+function checktemps(d::Descriptor=GTPSA.desc_current)
+  desc = unsafe_load(d.desc)
+  for i=1:desc.nth
+    unsafe_load(desc.ti, i) == 0 || return false
+    unsafe_load(desc.cti, i) == 0 || return false
+  end
+  return true
+end
 
 # --- Unary ---
 # TPS{Float64}:
@@ -176,7 +185,7 @@ end
 
 function ∓(tpsa::Ptr{TPS{Float64}})::Ptr{TPS{Float64}}
   mad_tpsa_scl!(tpsa, -1., tpsa)
-  return tpsa
+  return tpsa 
 end
 
 # TPS{ComplexF64}:

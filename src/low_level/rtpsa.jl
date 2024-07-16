@@ -1938,7 +1938,7 @@ end
 
 
 """
-    mad_tpsa_compose!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+    mad_tpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
 
 Composes two maps.
 
@@ -1951,7 +1951,7 @@ Composes two maps.
 ### Output
 - `mc` -- Composition of maps `ma` and `mb`
 """
-function mad_tpsa_compose!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+function mad_tpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
   @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 

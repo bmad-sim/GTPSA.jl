@@ -1,3 +1,83 @@
+function show_GTPSA_info(io::IO, d::Descriptor)
+  desc = unsafe_load(d.desc)
+  mo = desc.mo
+  nv = desc.nv
+  np = desc.np
+  nn = desc.nn
+  po = desc.po
+  no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
+  no = convert(Vector{Int}, no_)
+  lines_used = 0
+  if nv > 0
+    @printf(io, "%-18s %i\n", "# Variables: ", nv)
+    lines_used += 1
+    if !(all(no[1] .== no[1:nv]))
+      @printf(io, "%-18s", "Variable orders: ")
+      print(io, no[1:nv])
+      print(io, "\n")
+      lines_used += 1
+    end
+  end
+  @printf(io, "%-18s %i\n", "Maximum order: ", mo)
+  lines_used += 1
+  if np > 0
+    @printf(io, "%-18s %i\n", "# Parameters: ", np)
+    lines_used += 1
+    if !(all(no[nv+1] .== no[nv+1:end]))
+      @printf(io, "%-18s", "Parameter orders: ")
+      print(io, no[nv+1:end])
+      print(io, "\n")
+      lines_used += 1
+    end
+    @printf(io, "%-18s %i\n", "Parameter order: ", po)
+    lines_used += 1
+  end
+  return lines_used
+end
+
+function show(io::IO, d::Descriptor)
+  println(io, "GTPSA Descriptor")
+  println(io, "-----------------------")
+  d.desc == C_NULL && (println(io, "Null"); return)
+  show_GTPSA_info(io, d)
+end
+
+struct MonoDisplay
+  varidxs::Vector{Int}
+  varords::Vector{Int}
+  paramidxs::Vector{Int}
+  paramords::Vector{Int}
+end
+
+function show(io::IO, m::MonoDisplay)
+  subscript(i) = join(Char(0x2080 + d) for d in reverse!(digits(i)))
+  function superscript(i)
+    if i < 0
+        c = [Char(0x207B)]
+    else
+        c = []
+    end
+    for d in reverse(digits(abs(i)))
+        if d == 0 push!(c, Char(0x2070)) end
+        if d == 1 push!(c, Char(0x00B9)) end
+        if d == 2 push!(c, Char(0x00B2)) end
+        if d == 3 push!(c, Char(0x00B3)) end
+        if d > 3 push!(c, Char(0x2070+d)) end
+    end
+    return join(c)
+  end
+  for i=1:length(m.varidxs)
+    varidx = m.varidxs[i]
+    varord = m.varords[i]
+    print(io, "(x" * subscript(varidx) * ")" * superscript(varord) * " ")
+  end
+  for i=1:length(m.paramidxs)
+    paramidx = m.paramidxs[i]
+    paramord = m.paramords[i]
+    print(io, "(k" * subscript(paramidx) * ")" * superscript(paramord) * " ")
+  end
+end
+
 function format(t::TPS; coloffset=0, max_nn=-1)
   nv = numvars(t)
   np = numparams(t)
@@ -122,7 +202,7 @@ function show(io::IO, t::TPS)
   extralines = 0
   if GTPSA.show_header
     println(io, "-----------------------")
-    extralines += 2 + show_GTPSA_info(io, unsafe_load(t.d))
+    extralines += 2 + show_GTPSA_info(io, Descriptor(t.d))
     println(io, "-----------------------")
   end
   # Check if sparse monomial or exponent:
@@ -176,7 +256,7 @@ function show_vec(io::IO, m::Vector{<:TPS})
       lines_used[] += 1
     else
       println(io, "-----------------------")
-      lines_used[] += 2 + show_GTPSA_info(io, unsafe_load(desc))
+      lines_used[] += 2 + show_GTPSA_info(io, Descriptor(desc))
       println(io, "-----------------------")
     end
   end
