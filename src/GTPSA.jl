@@ -82,7 +82,8 @@ export
   # Layer 2 structs + functions NOT in Base:
   Descriptor,
   TPS,
-  ComplexTPS,
+  TPS64,
+  ComplexTPS64,
   unit  ,
   sinhc ,
   asinc ,
@@ -150,7 +151,7 @@ include("global.jl")        # Global variables
 include("tps.jl")           # TPS/ComplexTPS structs and constructors
 include("utils.jl")         # Utility functions including changing Descriptor of TPS
 include("ctors.jl")         # Convenience constructors (vars, params, mono)
-include("getset.jl")        # Indexing/slicing TPS, par, convenience getters (gradient, jacobian, hessian)
+include("getset.jl")        # Indexing/slicinCg TPS, par, convenience getters (gradient, jacobian, hessian)
 include("show.jl")          # Output
 include("operators.jl")     # TPS math overloaded operators/functions
 include("methods.jl")       # Higher-level TPS functions (derivatives, integrals, evaluate, etc)

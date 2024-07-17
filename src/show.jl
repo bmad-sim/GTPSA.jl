@@ -198,7 +198,7 @@ end
 
 function show(io::IO, t::TPS)
   out, formatters = format(t)
-  println(io, "TPS:")
+  println(io, "$(typeof(t)):")
   extralines = 0
   if GTPSA.show_header
     println(io, "-----------------------")

@@ -68,7 +68,7 @@ end
 
 # --- rand ---
 """
-    rand(::Type{T}; use::Union{Descriptor,TPS,ComplexTPS}=GTPSA.desc_current) where {T<:Union{TPS,ComplexTPS}}
+    rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T<:TPS}
 
 Generate a `TPS`/`ComplexTPS` with all random coefficients.
 """

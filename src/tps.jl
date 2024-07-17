@@ -46,7 +46,8 @@ TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promo
 TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
 TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{eltype(ta)}(ta, use=use)
 
-const ComplexTPS = TPS{ComplexF64}
+const TPS64 = TPS{Float64}
+const ComplexTPS64 = TPS{ComplexF64}
 
 function low_TPS(T, ta, use)
   if ta isa Nothing          # --- Blank TPS ---

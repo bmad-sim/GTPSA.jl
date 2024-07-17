@@ -131,10 +131,10 @@ function rel_temp!(tpsa::Ptr{TPS{Float64}})
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
   #println("decrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx-1)
   # Decrement tmp idx in Descriptor
-  #idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
+  idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
   #println(idx)
   #println(unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx), " ?= ", tpsa)
- # @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
+  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
   
   unsafe_store!(desc.ti, tmpidx-Cint(1), Threads.threadid())
   return
@@ -767,7 +767,7 @@ end
 # Fallbacks
 # All other types should just be *
 ⨰(a, b) = (@inline; *(a,b))
-⨰(a, b, c, xs...) = (@inline; Base.afoldl(⨰, (⨰)((⨰)(a,b),c), xs...))
+#⨰(a, b, c, xs...) = (@inline; Base.afoldl(⨰, (⨰)((⨰)(a,b),c), xs...))
 
 # --- div ---
 # TPS{Float64}:

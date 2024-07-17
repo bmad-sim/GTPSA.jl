@@ -318,6 +318,9 @@ this can be easily broadcasted.
 """
 scalar(t::TPS) = t[0]
 
+# fallback for non TPS types 
+scalar(t::Number) = t[1]
+
 # --- composition ---
 mad_compose!(na, ma::AbstractVector{TPS{Float64}},    nb, mb::AbstractVector{TPS{Float64}},    mc::AbstractVector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 mad_compose!(na, ma::AbstractVector{TPS{ComplexF64}}, nb, mb::AbstractVector{TPS{ComplexF64}}, mc::AbstractVector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
