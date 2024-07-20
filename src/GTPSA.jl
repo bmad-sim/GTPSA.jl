@@ -148,7 +148,7 @@ export
 include("low.jl")           # Low level, 1-to-1 Julia-to-C code
 include("descriptor.jl")    # Descriptor struct and constructors
 include("global.jl")        # Global variables
-include("tps.jl")           # TPS/ComplexTPS structs and constructors
+include("tps.jl")           # TPS/ComplexTPS64 structs and constructors
 include("utils.jl")         # Utility functions including changing Descriptor of TPS
 include("ctors.jl")         # Convenience constructors (vars, params, mono)
 include("getset.jl")        # Indexing/slicinCg TPS, par, convenience getters (gradient, jacobian, hessian)

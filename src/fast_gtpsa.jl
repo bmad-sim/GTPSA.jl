@@ -19,7 +19,7 @@ julia> @btime @FastGTPSA \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*i
 ```
 """
 macro FastGTPSA(expr)
-  return :(to_TPS($(to_temp_form(esc(expr)))))
+  return :(to_TPS($(to_temp_form(munge_expr(esc(expr))))))
 end 
 
 function to_TPS(tpsa::Ptr{TPS{Float64}})::TPS{Float64}
@@ -69,6 +69,26 @@ function to_temp_form(expr)
       str = "__t_" * string(expr.args[i])
       expr.args[i] = Symbol(str)
     end
+  end
+
+  return expr
+end
+
+function munge_expr(expr::Expr; inplace::Bool = false)
+  if !inplace; expr = deepcopy(expr); end
+
+  # Munge :(+, a, b, c, d) to be :(+, (+, a, b, c), d)
+  if expr.head == :call && (expr.args[1] == :+ || expr.args[1] == :*) && length(expr.args) > 3
+    # println("Found +*")
+    stub = deepcopy(expr)
+    pop!(stub.args)  # d removed in above exprample
+    expr.args = [expr.args[1], stub, expr.args[end]]
+  end
+
+  # Recursively call this routine for each element in args array if the arg is an Expr.
+  for arg in expr.args
+    # println("In: " * string(arg))
+    if typeof(arg) == Expr; arg = munge_expr(arg, inplace = true); end
   end
 
   return expr
@@ -131,10 +151,10 @@ function rel_temp!(tpsa::Ptr{TPS{Float64}})
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
   #println("decrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx-1)
   # Decrement tmp idx in Descriptor
-  idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
+  #idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx
   #println(idx)
   #println(unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx), " ?= ", tpsa)
-  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
+  #@assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), idx) == tpsa
   
   unsafe_store!(desc.ti, tmpidx-Cint(1), Threads.threadid())
   return
@@ -458,7 +478,7 @@ end
 
 # All other types should just be +
 ±(a, b) =(@inline; +(a,b))
-±(a, b, c, xs...) = (@inline; Base.afoldl(±, (±)((±)(a,b),c), xs...))
+#±(a, b, c, xs...) = (@inline; Base.afoldl(±, (±)((±)(a,b),c), xs...))
 
 
 # --- sub ---

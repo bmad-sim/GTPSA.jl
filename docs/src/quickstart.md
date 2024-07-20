@@ -30,7 +30,7 @@ These `TPS`s can then be manipulated just like any other mathematical quantity i
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
-A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS(use=d)` respectively. If `use` is not explicitly passed, then the global `GTPSA.desc_current`, which is set each time a new `Descriptor` is defined, will be used.
+A blank `TPS` or `ComplexTPS64`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS64(use=d)` respectively. If `use` is not explicitly passed, then the global `GTPSA.desc_current`, which is set each time a new `Descriptor` is defined, will be used.
 
 When a TPS contains a lot of variables, the default output showing each variable exponent can be larger than the screen can show. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
@@ -162,7 +162,7 @@ print(h)
 
 ## `@FastGTPSA` Macro
 
-The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
+The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS64`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
 
 ```@repl
 using GTPSA, BenchmarkTools
@@ -177,6 +177,6 @@ x = vars(d);
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/track.jl`. 
 
-## Promotion of `TPS` to `ComplexTPS`
+## Promotion of `TPS` to `ComplexTPS64`
 
-`TPS`s and `ComplexTPS`s can be mixed freely without concern. Any time an operation with a `TPS` and a `ComplexTPS` or a `Complex` number occurs, the result will be a `ComplexTPS`. A `ComplexTPS` can be converted back to a `TPS` using the `real` and `imag` operators.
+`TPS`s and `ComplexTPS64`s can be mixed freely without concern. Any time an operation with a `TPS` and a `ComplexTPS64` or a `Complex` number occurs, the result will be a `ComplexTPS64`. A `ComplexTPS64` can be converted back to a `TPS` using the `real` and `imag` operators.

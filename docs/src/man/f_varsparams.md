@@ -2,29 +2,29 @@
 *Creates a vector of TPSs corresponding to each variable/parameter in the GTPSA*
 ## Syntax
 ```
-x  = vars([(descriptor|tps|complextps)])
-xc = complexvars([(descriptor|tps|complextps)])
+x  = vars([(descriptor|tps|ComplexTPS64)])
+xc = complexvars([(descriptor|tps|ComplexTPS64)])
 
-k  = params([(descriptor|tps|complextps)])
-kc = complexparams([(descriptor|tps|complextps)])
+k  = params([(descriptor|tps|ComplexTPS64)])
+kc = complexparams([(descriptor|tps|ComplexTPS64)])
 ```
 
 ## Description
 `x = vars()` creates a vector of `TPS`s corresponding to each of the variables in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
 
-`x = complexvars()` creates a vector of `ComplexTPS`s corresponding to each of the variables in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
+`x = complexvars()` creates a vector of `ComplexTPS64`s corresponding to each of the variables in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
 
 ------
 
 `k = params()` creates a vector of `TPS`s corresponding to each of the parameters in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
 
-`k = complexparams()` creates a vector of `ComplexTPS`s corresponding to each of the parameters in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
+`k = complexparams()` creates a vector of `ComplexTPS64`s corresponding to each of the parameters in the GTPSA defined by the `Descriptor` in `GTPSA.desc_current`
 
 ### Optional Argument
 
-`descriptor` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the passed `Descriptor`
+`descriptor` creates a vector of `TPS`/`ComplexTPS64`s corresponding to each of the variables/parameters in the GTPSA defined by the passed `Descriptor`
 
-`(tps|complextps)` creates a vector of `TPS`/`ComplexTPS`s corresponding to each of the variables/parameters in the GTPSA defined by the `Descriptor` of the passed `TPS` or `ComplexTPS`
+`(tps|ComplexTPS64)` creates a vector of `TPS`/`ComplexTPS64`s corresponding to each of the variables/parameters in the GTPSA defined by the `Descriptor` of the passed `TPS` or `ComplexTPS64`
 
 
 ## Examples

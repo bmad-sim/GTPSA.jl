@@ -310,14 +310,14 @@ function show_map!(io::IO, m::Vector{<:TPS}, lines_used::Ref=Ref{Int}(0), only_v
   if GTPSA.show_sparse
     if eltype(m) == TPS{Float64}
       println(io, "  Out  Coefficient                Order   Monomial")
-    else # ComplexTPS
+    elseif eltype(m) == TPS{ComplexF64}
       println(io, "  Out  Real                     Imag                       Order   Monomial")
     end
   else
     if eltype(m) == TPS{Float64}
       println(io, "  Out  Coefficient                Order   Exponent")
       cols += 105
-    else
+    elseif eltype(m) == TPS{ComplexF64}
       println(io, "  Out  Real                     Imag                       Order   Exponent")
       cols += 108
     end

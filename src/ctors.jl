@@ -51,14 +51,14 @@ end
 """
     complexvars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
 
-Returns a vector of `ComplexTPS`s corresponding to the variables for the 
+Returns a vector of `ComplexTPS64`s corresponding to the variables for the 
 `Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
 
 ### Input
 - `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `x`   -- `Vector` containing unit `ComplexTPS`s corresponding to each variable
+- `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each variable
 """
 function complexvars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
@@ -75,14 +75,14 @@ end
 """
     complexparams(use::Union{Descriptor,TPS}=GTPSA.desc_current)
 
-Returns a vector of `ComplexTPS`s corresponding to the parameters for the 
+Returns a vector of `ComplexTPS64`s corresponding to the parameters for the 
 `Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
 
 ### Input
 - `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
 
 ### Output
-- `x`   -- `Vector` containing unit `ComplexTPS`s corresponding to each parameters
+- `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each parameters
 """
 function complexparams(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")

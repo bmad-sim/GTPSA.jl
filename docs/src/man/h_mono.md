@@ -2,12 +2,12 @@
 *Creates a TPS corresponding to a specific monomial*
 ## Syntax
 ```
-m = mono(orders [, use=(descriptor|tps|complextps)])
+m = mono(orders [, use=(descriptor|tps|ComplexTPS64)])
 
-m = mono([vars_sparse_mono] [, params=params_sparse_mono] [, use=(descriptor|tps|complextps)])
+m = mono([vars_sparse_mono] [, params=params_sparse_mono] [, use=(descriptor|tps|ComplexTPS64)])
 
-m = mono(idx [, use=(descriptor|tps|complextps)])
-m = mono(param=param_idx [, use=(descriptor|tps|complextps)])
+m = mono(idx [, use=(descriptor|tps|ComplexTPS64)])
+m = mono(param=param_idx [, use=(descriptor|tps|ComplexTPS64)])
 
 m = complexmono(...)
 ```
@@ -35,13 +35,13 @@ m = complexmono(...)
 
 ### Optional Keyword Argument
 
-`use=(descriptor|tps|complextps)` creates a mono using any of the above methods but using the `Descriptor` specified by `use`
+`use=(descriptor|tps|ComplexTPS64)` creates a mono using any of the above methods but using the `Descriptor` specified by `use`
 
 ------
 
 ### Complex Monomial
 
-`complexmono` will create a `ComplexTPS` using any of the above methods without the overhead of creating a `TPS` and converting it to a `ComplexTPS`
+`complexmono` will create a `ComplexTPS64` using any of the above methods without the overhead of creating a `TPS` and converting it to a `ComplexTPS64`
 
 ## Examples
 ```@repl desc

@@ -70,7 +70,7 @@ end
 """
     rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T<:TPS}
 
-Generate a `TPS`/`ComplexTPS` with all random coefficients.
+Generate a `TPS`/`ComplexTPS64` with all random coefficients.
 """
 function rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T<:TPS}
   t = T(use=use)
@@ -204,13 +204,13 @@ end
 
 
 #= --- muladd ---
-# Right now we will only include a*x + b where a and b are scalars and x is TPS/ComplexTPS
+# Right now we will only include a*x + b where a and b are scalars and x is TPS/ComplexTPS64
 axpb!(a::Cdouble, x::TPS{Float64}, b::Cdouble, r::TPS{Float64}) = mad_tpsa_axpb!(a, x, b, r)
 axpb!(a::ComplexF64, x::TPS{ComplexF64}, b::ComplexF64, r::TPS{ComplexF64}) = mad_tpsa_axpb!(a, x, b, r)
 
 muladd!(t::TPS, a::Real, t1::TPS, b::Real) = axpb!(a, t1.tpsa, b, t.tpsa)
-muladd!(t::ComplexTPS, a::Number, t1::ComplexTPS, b::Number) = axpb!(a, t1.tpsa, b, t.tpsa)
-function muladd!(t::ComplexTPS, a::Number, t1::TPS, b::Number) # promotion
+muladd!(t::ComplexTPS64, a::Number, t1::ComplexTPS64, b::Number) = axpb!(a, t1.tpsa, b, t.tpsa)
+function muladd!(t::ComplexTPS64, a::Number, t1::TPS, b::Number) # promotion
   mul!(t, a, t1)
   add!(t, t, b)
 end
@@ -510,8 +510,8 @@ function norm(t1::TPS)::Float64
 end
 
 
-# ComplexTPS:
-function hypot(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+# ComplexTPS64:
+function hypot(ct1::ComplexTPS64, ct2::ComplexTPS64)::TPS
   t1 = TPS(mad_tpsa_new(Base.unsafe_convert(TPS{Float64}, ct1.tpsa), MAD_TPSA_SAME))
   t = zero(t1)
   mad_ctpsa_cabs!(ct1.tpsa, t1.tpsa)
@@ -520,7 +520,7 @@ function hypot(ct1::ComplexTPS, ct2::ComplexTPS)::TPS
   return t
 end
 
-function hypot(ct1::ComplexTPS, a::Number)::TPS
+function hypot(ct1::ComplexTPS64, a::Number)::TPS
   t1 = TPS(mad_tpsa_new(Base.unsafe_convert(TPS{Float64}, ct1.tpsa), MAD_TPSA_SAME)) 
   t = zero(t1)
   t[0] = abs(a)
@@ -529,11 +529,11 @@ function hypot(ct1::ComplexTPS, a::Number)::TPS
   return t
 end
 
-function hypot(a::Number, ct1::ComplexTPS)::TPS
+function hypot(a::Number, ct1::ComplexTPS64)::TPS
   return hypot(ct1, a)
 end
 
-function hypot(ct1::ComplexTPS, ct2::ComplexTPS, ct3::ComplexTPS)::TPS
+function hypot(ct1::ComplexTPS64, ct2::ComplexTPS64, ct3::ComplexTPS64)::TPS
   t1 = TPS(mad_tpsa_new(Base.unsafe_convert(TPS{Float64}, ct1.tpsa), MAD_TPSA_SAME))
   t2 = zero(t1)
   t3 = zero(t1)
@@ -545,7 +545,7 @@ function hypot(ct1::ComplexTPS, ct2::ComplexTPS, ct3::ComplexTPS)::TPS
   return t
 end
 
-function hypot(ct1::ComplexTPS, ct2::ComplexTPS, a::Number)::TPS
+function hypot(ct1::ComplexTPS64, ct2::ComplexTPS64, a::Number)::TPS
   t1 = TPS(mad_tpsa_new(Base.unsafe_convert(TPS{Float64}, ct1.tpsa), MAD_TPSA_SAME))
   t2 = zero(t1)
   t3 = zero(t1)
@@ -557,15 +557,15 @@ function hypot(ct1::ComplexTPS, ct2::ComplexTPS, a::Number)::TPS
   return t
 end
 
-function hypot(ct1::ComplexTPS, a::Number, ct2::ComplexTPS)::TPS
+function hypot(ct1::ComplexTPS64, a::Number, ct2::ComplexTPS64)::TPS
   return hypot(ct1, ct2, a)
 end
 
-function hypot(a::Number, ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+function hypot(a::Number, ct1::ComplexTPS64, ct2::ComplexTPS64)::TPS
   return hypot(ct1, ct2, a)
 end
 
-function hypot(ct1::ComplexTPS, a::Number, b::Number)::TPS
+function hypot(ct1::ComplexTPS64, a::Number, b::Number)::TPS
   t1 = TPS(mad_tpsa_new(Base.unsafe_convert(TPS{Float64}, ct1.tpsa), MAD_TPSA_SAME))
   t2 = zero(t1)
   t3 = zero(t1)
@@ -577,37 +577,37 @@ function hypot(ct1::ComplexTPS, a::Number, b::Number)::TPS
   return t
 end
 
-function hypot(a::Number, ct1::ComplexTPS, b::Number)::TPS
+function hypot(a::Number, ct1::ComplexTPS64, b::Number)::TPS
   return hypot(ct1, a, b)
 end
 
-function hypot(a::Number, b::Number, ct1::ComplexTPS)::TPS
+function hypot(a::Number, b::Number, ct1::ComplexTPS64)::TPS
   return hypot(ct1, a, b)
 end
 
 """
-    norm(t1::ComplexTPS)::Float64
+    norm(t1::ComplexTPS64)::Float64
 
-Calculates the 1-norm of the `ComplexTPS`, which is the sum of 
+Calculates the 1-norm of the `ComplexTPS64`, which is the sum of 
 the `abs` of all coefficients.
 """
-function norm(ct1::ComplexTPS)::Float64
+function norm(ct1::ComplexTPS64)::Float64
   return mad_ctpsa_nrm(ct1.tpsa)
 end
 
-# Hypot mixing ComplexTPS and TPS w/o unnecessary temporaries
-function hypot(ct1::ComplexTPS, t1::TPS)::TPS
+# Hypot mixing ComplexTPS64 and TPS w/o unnecessary temporaries
+function hypot(ct1::ComplexTPS64, t1::TPS)::TPS
   t = zero(t1)
   mad_ctpsa_cabs!(ct1.tpsa, t.tpsa)
   mad_ctpsa_hypot!(t.tpsa, t1.tpsa, t.tpsa)
   return t
 end
 
-function hypot(t1::TPS, ct1::ComplexTPS)::TPS
+function hypot(t1::TPS, ct1::ComplexTPS64)::TPS
   return hypot(ct1, t1)
 end
 
-function hypot(ct1::ComplexTPS, ct2::ComplexTPS, t1::TPS)::TPS
+function hypot(ct1::ComplexTPS64, ct2::ComplexTPS64, t1::TPS)::TPS
   t2 = zero(t1)
   t3 = zero(t1)
   t = zero(t1)
@@ -617,15 +617,15 @@ function hypot(ct1::ComplexTPS, ct2::ComplexTPS, t1::TPS)::TPS
   return t
 end
 
-function hypot(ct1::ComplexTPS, t1::TPS, ct2::ComplexTPS)::TPS
+function hypot(ct1::ComplexTPS64, t1::TPS, ct2::ComplexTPS64)::TPS
   return hypot(ct1, ct2, t1)
 end
 
-function hypot(t1::TPS, ct1::ComplexTPS, ct2::ComplexTPS)::TPS
+function hypot(t1::TPS, ct1::ComplexTPS64, ct2::ComplexTPS64)::TPS
   return hypot(ct1, ct2, t1)
 end
 
-function hypot(ct1::ComplexTPS, t1::TPS, t2::TPS)::TPS
+function hypot(ct1::ComplexTPS64, t1::TPS, t2::TPS)::TPS
   t3 = zero(t1)
   t = zero(t1)
   mad_ctpsa_cabs!(ct1.tpsa, t3.tpsa)
@@ -633,15 +633,15 @@ function hypot(ct1::ComplexTPS, t1::TPS, t2::TPS)::TPS
   return t
 end
 
-function hypot(t1::TPS, ct1::ComplexTPS, t2::TPS)::TPS
+function hypot(t1::TPS, ct1::ComplexTPS64, t2::TPS)::TPS
   return hypot(ct1, t1, t2)
 end
 
-function hypot(t1::TPS, t2::TPS, ct1::ComplexTPS)::TPS
+function hypot(t1::TPS, t2::TPS, ct1::ComplexTPS64)::TPS
   return hypot(ct1, t1, t2)
 end
 
-function hypot(ct1::ComplexTPS, t1::TPS, a::Number)::TPS
+function hypot(ct1::ComplexTPS64, t1::TPS, a::Number)::TPS
   t2 = zero(t1)
   t3 = zero(t1)
   t3[0] = abs(a)
@@ -651,23 +651,23 @@ function hypot(ct1::ComplexTPS, t1::TPS, a::Number)::TPS
   return t
 end
 
-function hypot(t1::TPS, ct1::ComplexTPS, a::Number)::TPS
+function hypot(t1::TPS, ct1::ComplexTPS64, a::Number)::TPS
   return hypot(ct1, t1, a)
 end
 
-function hypot(ct1::ComplexTPS, a::Number, t1::TPS)::TPS
+function hypot(ct1::ComplexTPS64, a::Number, t1::TPS)::TPS
   return hypot(ct1, t1, a)
 end
 
-function hypot(t1::TPS, a::Number, ct1::ComplexTPS)::TPS
+function hypot(t1::TPS, a::Number, ct1::ComplexTPS64)::TPS
   return hypot(ct1, t1, a)
 end
 
-function hypot(a::Number, ct1::ComplexTPS, t1::TPS)::TPS
+function hypot(a::Number, ct1::ComplexTPS64, t1::TPS)::TPS
   return hypot(ct1, t1, a)
 end
 
-function hypot(a::Number, t1::TPS, ct1::ComplexTPS)::TPS
+function hypot(a::Number, t1::TPS, ct1::ComplexTPS64)::TPS
   return hypot(ct1, t1, a)
 end
 =#

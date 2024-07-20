@@ -32,7 +32,7 @@ using BenchmarkTools: @btime, @benchmark
 # GTPSA:                  697.625 μs
 # ForwardDiff:            161.125 μs
 #
-# Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS, so it can be
+# Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS64, so it can be
 # inserted into functions while still maintaining generic code, as shown here
  
 function track_qf(z0, k1, hkick)

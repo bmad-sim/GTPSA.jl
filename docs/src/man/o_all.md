@@ -1,5 +1,5 @@
 # [All Overloaded Functions](@id all)
-The following functions from Base have been overloaded for operations with `TPS`/`ComplexTPS`:
+The following functions from Base have been overloaded for operations with `TPS`/`ComplexTPS64`:
 ```
 +, -, *, /, ^, ∘, inv, atan, hypot, abs, sqrt, exp, log, 
 sin, cos, tan, csc, sec, cot, sinc, sinh, cosh, tanh, csch, 
@@ -10,7 +10,7 @@ conj, angle, complex, promote_rule, getindex, setindex!, ==, <,
 rand
 ```
 
-`zeros` and `ones` are overloaded from Base so that allocated `TPS`/`ComplexTPS`s are placed in each element. If we didn't explicity overload these functions, every element would correspond to the exact same heap-allocated TPS, which is problematic when setting individual monomial coefficients of the same TPS.
+`zeros` and `ones` are overloaded from Base so that allocated `TPS`/`ComplexTPS64`s are placed in each element. If we didn't explicity overload these functions, every element would correspond to the exact same heap-allocated TPS, which is problematic when setting individual monomial coefficients of the same TPS.
 
 `GTPSA.jl` overloads (and exports) the following functions from the corresponding packages:
  **`LinearAlgebra`**: `norm`, `mul!` 

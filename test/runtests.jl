@@ -7,7 +7,7 @@ import GTPSA: Desc
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = TPS(use=d)
-  ct = ComplexTPS(t)
+  ct = ComplexTPS64(t)
 
   # Basics
   @test isequal(t , 0)
@@ -172,7 +172,7 @@ import GTPSA: Desc
   @test norm(inv(t3) - 1/t3) < tol
   @test norm(inv(t3) - 1/3) < tol
 
-  # ComplexTPS:
+  # ComplexTPS64:
   @test norm(ct1 + ct2 - ct3) < tol
   @test norm(ct2 + ct1 - ct3) < tol
   @test norm(ct1 + (2+2im) - ct3) < tol
@@ -199,7 +199,7 @@ import GTPSA: Desc
   @test norm(inv(ct3) - 1/ct3) < tol
   @test norm(inv(ct3) - 1/(3+3im)) < tol
 
-  # Promotion of TPS to ComplexTPS
+  # Promotion of TPS to ComplexTPS64
   @test norm(t1 + ct2 - (1 + (2+2im))) < tol
   @test norm(ct2 + t1 - (1 + (2+2im))) < tol
   @test norm(t1 + (2+2im) - (1 + (2+2im))) < tol
@@ -310,9 +310,9 @@ end
   
 
   v = 0.5+0.5im
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = v
-  ct1 = ComplexTPS(t)
+  ct1 = ComplexTPS64(t)
   ct1[0] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
@@ -382,7 +382,7 @@ end
   @test norm(rect(ct2) - (2*cos(2) + im*2*sin(2))) < tol
   @test norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1))) < tol
   
-  # Hypot, mixing TPS with ComplexTPS
+  # Hypot, mixing TPS with ComplexTPS64
   @test norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
   @test norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
   @test norm(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im)) < tol
@@ -462,7 +462,7 @@ end
   @test norm(complex(t) - t) < tol
   @test norm(complex(t,t) - (t+im*t)) < tol
 
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
   @test norm(sin(t)^2+cos(t)^2 - 1) < tol
   @test norm(1/sin(t) - csc(t)) < tol
@@ -741,7 +741,7 @@ end
 @testset "@FastGTPSA - Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = TPS(use=d)
-  ct = ComplexTPS(t)
+  ct = ComplexTPS64(t)
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
@@ -790,7 +790,7 @@ end
   @test @FastGTPSA(norm(inv(t3) - 1/t3)) < tol
   @test @FastGTPSA(norm(inv(t3) - 1/3)) < tol
 
-  # ComplexTPS:
+  # ComplexTPS64:
   @test @FastGTPSA(norm(ct1 + ct2 - ct3)) < tol
   @test @FastGTPSA(norm(ct2 + ct1 - ct3)) < tol
   @test @FastGTPSA(norm(ct1 + (2+2im) - ct3)) < tol
@@ -817,7 +817,7 @@ end
   @test @FastGTPSA(norm(inv(ct3) - 1/ct3)) < tol
   @test @FastGTPSA(norm(inv(ct3) - 1/(3+3im))) < tol
 
-  # Promotion of TPS to ComplexTPS
+  # Promotion of TPS to ComplexTPS64
   @test @FastGTPSA(norm(t1 + ct2 - (1 + (2+2im)))) < tol
   @test @FastGTPSA(norm(ct2 + t1 - (1 + (2+2im)))) < tol
   @test @FastGTPSA(norm(t1 + (2+2im) - (1 + (2+2im)))) < tol
@@ -935,9 +935,9 @@ end
   
 
   v = 0.5+0.5im
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = v
-  ct1 = ComplexTPS(t)
+  ct1 = ComplexTPS64(t)
   ct1[0] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
@@ -1007,7 +1007,7 @@ end
   @test @FastGTPSA(norm(rect(ct2) - (2*cos(2) + im*2*sin(2)))) < tol
   @test @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1)))) < tol
   
-  # Hypot, mixing TPS with ComplexTPS
+  # Hypot, mixing TPS with ComplexTPS64
   @test @FastGTPSA(norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))) < tol
   @test @FastGTPSA(norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im))) < tol
   @test @FastGTPSA(norm(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im))) < tol
@@ -1094,7 +1094,7 @@ end
   @test @FastGTPSA(norm(complex(t) - t)) < tol
   @test @FastGTPSA(norm(complex(t,t) - (t+im*t))) < tol
 
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
   @test @FastGTPSA(norm(sin(t)^2+cos(t)^2 - 1)) < tol
   @test @FastGTPSA(norm(1/sin(t) - csc(t))) < tol
@@ -1159,7 +1159,7 @@ end
   BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
   d = Descriptor(1, 5)
   t = TPS(use=d)
-  ct = ComplexTPS(t)
+  ct = ComplexTPS64(t)
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
@@ -1329,9 +1329,9 @@ end
   
 
   v = 0.5+0.5im
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = v
-  ct1 = ComplexTPS(t)
+  ct1 = ComplexTPS64(t)
   ct1[0] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
@@ -1446,7 +1446,7 @@ end
   @test @benchmark(@FastGTPSA(norm(complex($t) - $t))).allocs == 0
   @test @benchmark(@FastGTPSA(norm(complex($t,$t) - ($t+im*$t)))).allocs == 0
 
-  t = ComplexTPS(t)
+  t = ComplexTPS64(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
   @test @benchmark(@FastGTPSA(norm(sin($t)^2+cos($t)^2 - 1))).allocs == 0
   @test @benchmark(@FastGTPSA(norm(1/sin($t) - csc($t)))).allocs == 0

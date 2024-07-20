@@ -3,7 +3,7 @@
 ```TPS <: Real```
 ## Syntax
 ```
-t = TPS([real] [, use=(descriptor|tps|complextps)])
+t = TPS([real] [, use=(descriptor|tps|ComplexTPS64)])
 ```
 
 ## Description
@@ -15,7 +15,7 @@ t = TPS([real] [, use=(descriptor|tps|complextps)])
 
 `use=descriptor` creates a new `TPS` having a `Descriptor` equal to that passed
 
-`use=(tps|complextps)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS`
+`use=(tps|ComplexTPS64)` creates a new `TPS` having a `Descriptor` equal to that used by the passed `TPS` or `ComplexTPS64`
 
 ## Examples
 ```@repl desc

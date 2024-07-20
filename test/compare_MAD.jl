@@ -66,9 +66,9 @@ end
 
 
 function c_to_jl_type(type_c)
-  dim = count(i->(i=='*'), type_c)
   type_jl = ""
-  for i=1:dim
+  ptr = findfirst("*", type_c)
+  if !isnothing(ptr)
     type_jl = type_jl * "Ptr{"
   end
 
@@ -103,7 +103,7 @@ function c_to_jl_type(type_c)
   else
     println(io_out, "ERROR TYPE NOT FOUND! type_c = $(type_c)")
   end
-  for i=1:dim
+  if !isnothing(ptr)
     type_jl = type_jl * "}"
   end
 
@@ -361,9 +361,9 @@ function compare_MAD()
   str = String(take!(io))
   fun_decs_c  = get_c_function_declarations(str)
 
-  str = read("../src/low_level/TPS{Float64}.jl", String)
+  str = read("../src/low_level/rtpsa.jl", String)
   fun_decs_jl = get_jl_function_declarations(str)
-  println(io_out, "Comparing mad_tpsa.h to TPS{Float64}.jl...")
+  println(io_out, "Comparing mad_tpsa.h to rtpsa.jl...")
   compare(fun_decs_c, fun_decs_jl)
 
   try

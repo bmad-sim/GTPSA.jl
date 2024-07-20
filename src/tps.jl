@@ -25,7 +25,7 @@ numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
 is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `ta`.
 If `ta` is not a `TPS`, then the `Descriptor` used will by default be `GTPSA.desc_current`. The `Descriptor` 
-for the constructed `TPS` can be set using `use`. If a `TPS` or `ComplexTPS` is passed to `use`, 
+for the constructed `TPS` can be set using `use`. If a `TPS` or `ComplexTPS64` is passed to `use`, 
 the `Descriptor` for that TPS will be used.
 
 The constructor can also be used to create a copy of a `TPS` under one `Descriptor` to instead 

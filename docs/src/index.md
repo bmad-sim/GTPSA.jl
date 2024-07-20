@@ -21,7 +21,7 @@ import Pkg; Pkg.add("GTPSA")
 ```
 
 ## Basic Usage
-First, a `Descriptor` must be created specifying the number of variables, number of parameters, and truncation order for each variable/parameter in the TPSA. A `TPS` or `ComplexTPS` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the arithmetic operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `tanh`, etc.).
+First, a `Descriptor` must be created specifying the number of variables, number of parameters, and truncation order for each variable/parameter in the TPSA. A `TPS` or `ComplexTPS64` can then be created based on the `Descriptor`. TPSs can be manipulated using all of the arithmetic operators (`+`,`-`,`*`,`/`,`^`) and math functions (e.g. `abs`, `sqrt`, `sin`, `exp`, `log`, `tanh`, etc.).
 
 TPSs can be viewed as structures containing the coefficients for all of the monomials of a multivariable Taylor expansion up to the orders specified in the `Descriptor`. As an example, to compute the truncated power series of a function $f(x_1, x_2) = \cos{(x_1)}+i\sin{(x_2)}$ to 6th order in $x_1$ and $x_2$:
 ```julia
@@ -36,13 +36,13 @@ x = vars()
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
 f = cos(x[1]) + im*sin(x[2])
-# f is a new ComplexTPS 
+# f is a new ComplexTPS64 
 ```
 
 Note that scalars do not need to be defined as TPSs when writing expressions. Running `print(f)` gives the output
 
 ```
-ComplexTPS:
+ComplexTPS64:
  Real                     Imag                       Order   Exponent
   1.0000000000000000e+00   0.0000000000000000e+00      0      0   0
   0.0000000000000000e+00   1.0000000000000000e+00      1      0   1

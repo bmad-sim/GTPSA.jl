@@ -16,7 +16,7 @@ norm(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
 """
     setTPS!(t::TPS, t1::Number; change::Bool=false) 
 
-General function for setting a TPS/ComplexTPS `t` equal to `t1`. If `change` is `true`,
+General function for setting a TPS/ComplexTPS64 `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
 long as the number of variables + number of parameters are equal.
 """
@@ -97,7 +97,7 @@ integ(t1::TPS, var=1) = (t = zero(t1); integ!(t, t1, var); return t)
 const ∫ = integ
 
 # --- Derivative ---
-# Low-level equivalent calls for TPS and ComplexTPS:
+# Low-level equivalent calls for TPS and ComplexTPS64:
 mad_deriv!( t1::TPS{Float64},    t::TPS{Float64},    var) = mad_tpsa_deriv!(t1, t, Cint(var))
 mad_deriv!( t1::TPS{ComplexF64}, t::TPS{ComplexF64}, var) = mad_ctpsa_deriv!(t1, t, Cint(var))
 mad_derivm!(t1::TPS{Float64},    t::TPS{Float64},    n, ords) = mad_tpsa_derivm!(t1, t, Cint(n), convert(Vector{UInt8},ords))
@@ -333,16 +333,16 @@ Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`.
 Promotion is allowed, provided the output vector function `m` has the correct type. 
 
 If promotion is occuring, then one of the input vectors must be promoted to 
-`ComplexTPS`. A vector of pre-allocated `ComplexTPS`s can optionally provided 
+`ComplexTPS64`. A vector of pre-allocated `ComplexTPS64`s can optionally provided 
 in `work`, and has the requirement:
 
 If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
-`work = m1_prom  # Length >= length(m1), Vector{ComplexTPS}`
+`work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
 
 else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
-`work = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS}`
+`work = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS64}`
 
-The `ComplexTPS`s in `work` must be defined and have the same `Descriptor`.
+The `ComplexTPS64`s in `work` must be defined and have the same `Descriptor`.
 """
 function compose!(m, m2, m1; work::Union{Nothing,AbstractVector{TPS{ComplexF64}}}=nothing)
   n = length(m)

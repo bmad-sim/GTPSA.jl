@@ -104,7 +104,7 @@ lowget(t, idx, param, params) = error("Invalid monomial index specified. Please 
     numcoefs(t::TPS)
 
 Returns the maximum number of monomials (including the scalar part)
-in the `TPS`/`ComplexTPS` given its `Descriptor`. 
+in the `TPS`/`ComplexTPS64` given its `Descriptor`. 
 """
 numcoefs(t::TPS) = len(t)
 
@@ -317,7 +317,7 @@ calculating anything - just extracting the first-order monomial coefficients alr
 in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS` to extract the gradient from
+- `t`              -- `TPS`/`ComplexTPS64` to extract the gradient from
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
@@ -345,7 +345,7 @@ set to `true`. Note that this function is not calculating anything - just extrac
 first-order monomial coefficients already in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS` to extract the gradient from
+- `t`              -- `TPS`/`ComplexTPS64` to extract the gradient from
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
@@ -490,7 +490,7 @@ is not calculating anything - just extracting the second-order monomial coeffici
 in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS` to extract the Hessian from
+- `t`              -- `TPS`/`ComplexTPS64` to extract the Hessian from
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output
@@ -588,7 +588,7 @@ flag is set to `true`. Note that this function is not calculating anything - jus
 the second-order monomial coefficients already in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS` to extract the Hessian from
+- `t`              -- `TPS`/`ComplexTPS64` to extract the Hessian from
 - `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
 
 ### Output

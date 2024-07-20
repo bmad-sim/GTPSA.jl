@@ -1,7 +1,7 @@
 # [`@FastGTPSA`](@id fastgtpsa)
 *Speed up evaluation of expressions containing TPSs, transparent to other types*
 
-The `@FastGTPSA` macro can be preprended to any mathematical expressions that may contain operations using `TPS`/`ComplexTPS`s. **The macro is completely transparent to non-TPS types, and so can be prepended in all functions while still maintaining type-generic code.**
+The `@FastGTPSA` macro can be preprended to any mathematical expressions that may contain operations using `TPS`/`ComplexTPS64`s. **The macro is completely transparent to non-TPS types, and so can be prepended in all functions while still maintaining type-generic code.**
 
 Here's an example of `@FastGTPSA` in action:
 
