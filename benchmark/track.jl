@@ -7,11 +7,11 @@ using BenchmarkTools: @btime, @benchmark
 #
 # 3rd Order ---------------------------------------------------------
 # Using the FastGTPSA macro:
-# GTPSA:                    617.784 ms (2927 allocations: 360.09 MiB)
+# GTPSA:                    N/A (OMP optimizations to be made
 # ForwardDiff:            3.457 s      (85142 allocations: 3.93 GiB) 
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                    665.421 ms (19129 allocations: 2.52 GiB)
+# GTPSA:                    N/A (OMP optimizations to be made)
 # ForwardDiff:            3.920 s      (85142 allocations: 3.93 GiB)
 #
 # 2nd Order ---------------------------------------------------------
@@ -34,7 +34,11 @@ using BenchmarkTools: @btime, @benchmark
 #
 # Note that  is transparent to all types except TPS/ComplexTPS64, so it can be
 # inserted into functions while still maintaining generic code, as shown here.
- 
+
+# At least with ForwardDiff's Dual's, there is a small difference in time with/without
+# the @FastGTPSA macro, so users may consider using ad-hoc polymorphism to define 
+# functions for TPS's specifically including the @FastGTPSA macro befoe each expression.
+
 function track_qf(z0, k1, hkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(hkick))}(undef, length(z0))
   lbend=0.1
