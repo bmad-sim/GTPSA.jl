@@ -7,33 +7,33 @@ using BenchmarkTools: @btime, @benchmark
 #
 # 3rd Order ---------------------------------------------------------
 # Using the FastGTPSA macro:
-# GTPSA:                    639.649 ms (4537 allocations: 581.17 MiB)
+# GTPSA:                    617.784 ms (2927 allocations: 360.09 MiB)
 # ForwardDiff:            3.457 s      (85142 allocations: 3.93 GiB) 
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                    754.393 ms (20739 allocations: 2.74 GiB)
+# GTPSA:                    665.421 ms (19129 allocations: 2.52 GiB)
 # ForwardDiff:            3.920 s      (85142 allocations: 3.93 GiB)
 #
 # 2nd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                    7.855 ms (4537 allocations: 28.73 MiB)
+# GTPSA:                    7.160 ms (2927 allocations: 17.81 MiB)
 # ForwardDiff:             26.422 ms (9166 allocations: 63.47 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                   14.177 ms (20739 allocations: 138.62 MiB)
+# GTPSA:                   13.310 ms (19129 allocations: 127.70 MiB)
 # ForwardDiff:             22.972 ms (9166 allocations: 63.47 MiB)
 #
 # 1st Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                  318.875 μs (4537 allocations: 1.11 MiB)
+# GTPSA:                  291.875 μs (2927 allocations: 715.48 KiB)
 # ForwardDiff:            219.875 μs (1520 allocations: 1.10 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                  739.750 μs (20739 allocations: 5.25 MiB)
+# GTPSA:                  618.667 μs (19129 allocations: 4.84 MiB)
 # ForwardDiff:            161.333 μs (1520 allocations: 1.10 MiB)
 #
 # Note that  is transparent to all types except TPS/ComplexTPS64, so it can be
-# inserted into functions while still maintaining generic code, as shown here
+# inserted into functions while still maintaining generic code, as shown here.
  
 function track_qf(z0, k1, hkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(hkick))}(undef, length(z0))
