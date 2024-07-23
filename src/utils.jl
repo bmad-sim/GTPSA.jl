@@ -1,9 +1,20 @@
-const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
-const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{Integer}}}
-const TPSIndexType = Union{Integer,
-                           MIndexType,
-                           SMIndexType}
+getdesc(t::TPS) = Descriptor(t.d)
+getdesc(d::Descriptor) = d
+getdesc(n::Nothing) = GTPSA.desc_current
+getdesc(t::TempTPS{Float64}) = Descriptor(mad_tpsa_desc(t))
+getdesc(t::TempTPS{ComplexF64}) = Descriptor(mad_ctpsa_desc(t))
 
+numvars(t::TPS) = unsafe_load(t.d).nv
+numvars(d::Descriptor) = unsafe_load(d.desc).nv
+numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
+
+numparams(t::TPS) = unsafe_load(t.d).np
+numparams(d::Descriptor) = unsafe_load(d.desc).np
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).np
+
+numnn(t::TPS) = unsafe_load(t.d).nn
+numnn(d::Descriptor) = unsafe_load(d.desc).nn
+numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}

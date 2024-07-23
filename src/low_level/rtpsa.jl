@@ -1,3 +1,6 @@
+# Internal constant to aid multiple dispatch including temporaries 
+const RealTPS = Union{TempTPS{Float64}, TPS{Float64}}
+
 """
     mad_tpsa_newd(d::Ptr{Desc}, mo::Cuchar)
 
@@ -18,7 +21,7 @@ end
 
 
 """
-    mad_tpsa_new(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, mo::Cuchar)
+    mad_tpsa_new(t::Ptr{TPS{Float64}}, mo::Cuchar)
 
 Creates a blank TPSA with same number of variables/parameters of the inputted TPSA, 
 with maximum order specified by `mo`. If `MAD_TPSA_SAME` is passed for `mo`, the `mo` 
@@ -38,20 +41,20 @@ end
 
 
 """
-    mad_tpsa_del!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_del!(t::Ptr{TPS{Float64}})
 
 Calls the destructor for the TPSA.
 
 ### Input
 - `t` -- TPSA to destruct
 """
-function mad_tpsa_del!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_del!(t::Ptr{TPS{Float64}})
   @ccall MAD_TPSA.mad_tpsa_del(t::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_desc(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Ptr{Desc}
+    mad_tpsa_desc(t::RealTPS)::Ptr{Desc}
 
 Gets the descriptor for the TPSA.
 
@@ -61,14 +64,14 @@ Gets the descriptor for the TPSA.
 ### Output
 - `ret` -- Descriptor for the TPS{Float64}
 """
-function mad_tpsa_desc(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Ptr{Desc}
+function mad_tpsa_desc(t::RealTPS)::Ptr{Desc}
   ret = @ccall MAD_TPSA.mad_tpsa_desc(t::Ptr{TPS{Float64}})::Ptr{Desc}
   return ret
 end
 
 
 """
-    mad_tpsa_uid!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, uid_::Cint)::Cint
+    mad_tpsa_uid!(t::RealTPS, uid_::Cint)::Cint
 
 Sets the TPSA uid if `uid_ != 0`, and returns the current (previous if set) TPSA `uid`. 
 
@@ -79,14 +82,14 @@ Sets the TPSA uid if `uid_ != 0`, and returns the current (previous if set) TPSA
 ### Output
 - `ret`  -- Current (previous if set) TPSA uid
 """
-function mad_tpsa_uid!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, uid_::Cint)::Cint
+function mad_tpsa_uid!(t::RealTPS, uid_::Cint)::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_uid(t::Ptr{TPS{Float64}}, uid_::Cint)::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_len(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, hi_::Bool)::Cint
+    mad_tpsa_len(t::RealTPS, hi_::Bool)::Cint
 
 Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA may only be order 2)
 
@@ -96,14 +99,14 @@ Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA
 ### Output
 - `ret` -- Length of TPS{Float64}
 """
-function mad_tpsa_len(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, hi_::Bool)::Cint
+function mad_tpsa_len(t::RealTPS, hi_::Bool)::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_len(t::Ptr{TPS{Float64}}, hi_::Bool)::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_mo!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, mo::Cuchar)::Cuchar
+    mad_tpsa_mo!(t::RealTPS, mo::Cuchar)::Cuchar
 
 Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 `mo_` should be less than or equal to the allocated order `ao`.
@@ -115,14 +118,14 @@ Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 ### Output
 - `ret` -- Original `mo` of the TPSA
 """
-function mad_tpsa_mo!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, mo::Cuchar)::Cuchar
+function mad_tpsa_mo!(t::RealTPS, mo::Cuchar)::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mo(t::Ptr{TPS{Float64}}, mo::Cuchar)::Cuchar
   return ret
 end
 
 
 """
-    mad_tpsa_nam(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, nam_)::Cstring
+    mad_tpsa_nam(t::RealTPS, nam_)::Cstring
 
 Get the name of the TPSA, and will optionally set if `nam_ != null`
 
@@ -133,14 +136,14 @@ Get the name of the TPSA, and will optionally set if `nam_ != null`
 ### Output
 - `ret`  -- Name of TPS{Float64} (null terminated in C)
 """
-function mad_tpsa_nam(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, nam_)::Cstring
+function mad_tpsa_nam(t::RealTPS, nam_)::Cstring
   ret = @ccall MAD_TPSA.mad_tpsa_nam(t::Ptr{TPS{Float64}}, nam_::Cstring)::Cstring
   return ret
 end
 
 
 """
-    mad_tpsa_ord(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, hi_::Bool)::Cuchar
+    mad_tpsa_ord(t::RealTPS, hi_::Bool)::Cuchar
 
 Gets the TPSA maximum order, or `hi` if `hi_` is true.
 
@@ -151,13 +154,13 @@ Gets the TPSA maximum order, or `hi` if `hi_` is true.
 ### Output
 - `ret` -- Order of TPSA
 """
-function mad_tpsa_ord(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, hi_::Bool)::Cuchar
+function mad_tpsa_ord(t::RealTPS, hi_::Bool)::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_ord(t::Ptr{TPS{Float64}}, hi_::Bool)::Cuchar
   return ret
 end
 
 """
-    mad_tpsa_ordv(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, ts::Union{TPS{Float64},Ptr{TPS{Float64}}}...)::Cuchar
+    mad_tpsa_ordv(t::RealTPS, ts::RealTPS...)::Cuchar
 
 Returns maximum order of all TPSAs provided.
 
@@ -168,7 +171,7 @@ Returns maximum order of all TPSAs provided.
 ### Output
 - `mo` -- Maximum order of all TPSAs provided
 """
-function mad_tpsa_ordv(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, ts::Union{TPS{Float64},Ptr{TPS{Float64}}}...)::Cuchar
+function mad_tpsa_ordv(t::RealTPS, ts::RealTPS...)::Cuchar
   #mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ptr{TPS{Float64}}, ts::Ptr{TPS{Float64}}..., 0::Cint)::Cuchar # null pointer after args for safe use
   mo = ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{Float64}, TPS{Float64}...), (t, ts...))
   return mo
@@ -176,7 +179,7 @@ end
 
 
 """
-    mad_tpsa_copy!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_copy!(t::RealTPS, r::RealTPS)
 
 Makes a copy of the TPSA `t` to `r`.
 
@@ -186,13 +189,13 @@ Makes a copy of the TPSA `t` to `r`.
 ### Output
 - `r` -- Destination TPSA
 """
-function mad_tpsa_copy!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_copy!(t::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_copy(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sclord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, inv::Bool, prm::Bool)
+    mad_tpsa_sclord!(t::RealTPS, r::RealTPS, inv::Bool, prm::Bool)
 
 Scales all coefficients by order. If `inv == 0`, scales coefficients by order (derivation), else 
 scales coefficients by 1/order (integration).
@@ -205,13 +208,13 @@ scales coefficients by 1/order (integration).
 ### Output
 - `r`   -- Destination TPSA
 """
-function mad_tpsa_sclord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, inv::Bool, prm::Bool)
+function mad_tpsa_sclord!(t::RealTPS, r::RealTPS, inv::Bool, prm::Bool)
   @ccall MAD_TPSA.mad_tpsa_sclord(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, inv::Bool, prm::Bool)::Cvoid
 end
 
 
 """
-    mad_tpsa_getord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cuchar)
+    mad_tpsa_getord!(t::RealTPS, r::RealTPS, ord::Cuchar)
 
 Extract one homogeneous polynomial of the given order
 
@@ -222,13 +225,13 @@ Extract one homogeneous polynomial of the given order
 ### Output
 - `r`   -- Destination TPSA
 """
-function mad_tpsa_getord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cuchar)
+function mad_tpsa_getord!(t::RealTPS, r::RealTPS, ord::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_getord(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, ord::Cuchar)::Cvoid
 end
 
 
 """
-    mad_tpsa_cutord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cint)
+    mad_tpsa_cutord!(t::RealTPS, r::RealTPS, ord::Cint)
 
 Cuts the TPSA off at the given order and above, or if `ord` is negative, will cut orders below 
 `abs(ord)` (e.g. if ord = -3, then orders 0-3 are cut off).
@@ -240,12 +243,12 @@ Cuts the TPSA off at the given order and above, or if `ord` is negative, will cu
 ### Output
 - `r`   -- Destination TPSA
 """
-function mad_tpsa_cutord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cint)
+function mad_tpsa_cutord!(t::RealTPS, r::RealTPS, ord::Cint)
   @ccall MAD_TPSA.mad_tpsa_cutord(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, ord::Cint)::Cvoid
 end
 
 """
-    mad_tpsa_clrord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cuchar)
+    mad_tpsa_clrord!(t::RealTPS, ord::Cuchar)
 
 Clears all monomial coefficients of the TPSA at order `ord`
 
@@ -253,12 +256,12 @@ Clears all monomial coefficients of the TPSA at order `ord`
 - `t` -- TPSA
 - `ord` -- Order to clear monomial coefficients
 """
-function mad_tpsa_clrord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, ord::Cuchar)
+function mad_tpsa_clrord!(t::RealTPS, ord::Cuchar)
   @ccall MAD_TPSA.mad_tpsa_clrord(t::Ptr{TPS{Float64}}, ord::Cuchar)::Cvoid
 end
 
 """
-    mad_tpsa_maxord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, idx_::Vector{Cint})::Cint
+    mad_tpsa_maxord!(t::RealTPS, n::Cint, idx_::Vector{Cint})::Cint
 
 Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n`. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 
@@ -271,13 +274,13 @@ is provided, it is filled with the indices for the maximum abs(coefficient) mono
 - `idx_` -- (Optional) If provided, is filled with indices to the monomial for each order up to `n` with maximum abs(coefficient)
 - `mi`   -- Index to the monomial in the TPSA with maximum abs(coefficient)
 """
-function mad_tpsa_maxord!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, idx_::Vector{Cint})::Cint
+function mad_tpsa_maxord!(t::RealTPS, n::Cint, idx_::Vector{Cint})::Cint
   mi = @ccall MAD_TPSA.mad_tpsa_maxord(t::Ptr{TPS{Float64}}, n::Cint, idx_::Ptr{Cint})::Cint
   return mi
 end
 
 """
-    mad_tpsa_convert!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+    mad_tpsa_convert!(t::RealTPS, r::RealTPS, n::Cint, t2r_::Vector{Cint}, pb::Cint)
 
 General function to convert TPSAs to different orders and reshuffle canonical coordinates. The destination TPSA will 
 be of order `n`, and optionally have the variable reshuffling defined by `t2r_` and poisson bracket sign. e.g. if 
@@ -293,13 +296,13 @@ will be negated. Useful for comparing with different differential algebra packag
 ### Output
 - `r`    -- Destination TPSA with specified order and canonical coordinate reshuffling.
 """
-function mad_tpsa_convert!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+function mad_tpsa_convert!(t::RealTPS, r::RealTPS, n::Cint, t2r_::Vector{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_convert(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
 
 """
-    mad_tpsa_setvar!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, iv::Cint, scl_::Cdouble)
+    mad_tpsa_setvar!(t::RealTPS, v::Cdouble, iv::Cint, scl_::Cdouble)
 
 Sets the 0th and 1st order values for the specified variable, and sets the rest of the variables/parameters to 0
 
@@ -309,12 +312,12 @@ Sets the 0th and 1st order values for the specified variable, and sets the rest 
 - `iv`   -- Variable index
 - `scl_` -- 1st order variable value (typically will be 1)
 """
-function mad_tpsa_setvar!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, iv::Cint, scl_::Cdouble)
+function mad_tpsa_setvar!(t::RealTPS, v::Cdouble, iv::Cint, scl_::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setvar(t::Ptr{TPS{Float64}}, v::Cdouble, iv::Cint, scl_::Cdouble)::Cvoid
 end
 
 """
-    mad_tpsa_setprm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, ip::Cint)
+    mad_tpsa_setprm!(t::RealTPS, v::Cdouble, ip::Cint)
 
 Sets the 0th and 1st order values for the specified parameter, and sets the rest of the variables/parameters to 0. 
 The 1st order value `scl_` of a parameter is always 1.
@@ -324,12 +327,12 @@ The 1st order value `scl_` of a parameter is always 1.
 - `v`    -- 0th order value (coefficient)
 - `ip`   -- Parameter index (e.g. iv = 1 is nn-nv+1)
 """
-function mad_tpsa_setprm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, ip::Cint)
+function mad_tpsa_setprm!(t::RealTPS, v::Cdouble, ip::Cint)
   @ccall MAD_TPSA.mad_tpsa_setprm(t::Ptr{TPS{Float64}}, v::Cdouble, ip::Cint)::Cvoid
 end
 
 """
-    mad_tpsa_setval!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble)
+    mad_tpsa_setval!(t::RealTPS, v::Cdouble)
 
 Sets the scalar part of the TPSA to `v` and all other values to 0 (sets the TPSA order to 0).
 
@@ -337,35 +340,35 @@ Sets the scalar part of the TPSA to `v` and all other values to 0 (sets the TPSA
 - `t` -- TPSA to set to scalar
 - `v` -- Scalar value to set TPSA
 """
-function mad_tpsa_setval!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble)
+function mad_tpsa_setval!(t::RealTPS, v::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setval(t::Ptr{TPS{Float64}}, v::Cdouble)::Cvoid
 end
 
 """
-    mad_tpsa_update!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_update!(t::RealTPS)
 
     ???
 """
-function mad_tpsa_update!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_update!(t::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_update(t::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_clear!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_clear!(t::RealTPS)
 
 Clears the TPSA (reset to 0)
 
 ### Input
 - `t` -- TPSA
 """
-function mad_tpsa_clear!(t::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_clear!(t::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_clear(t::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_isnul(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+    mad_tpsa_isnul(t::RealTPS)::Bool
 
 Checks if TPSA is 0 or not
 
@@ -375,14 +378,14 @@ Checks if TPSA is 0 or not
 ### Output
 - `ret`  -- True or false
 """
-function mad_tpsa_isnul(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+function mad_tpsa_isnul(t::RealTPS)::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_isnul(t::Ptr{TPS{Float64}})::Bool
   return ret
 end
 
 
 """
-    mad_tpsa_mono!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
+    mad_tpsa_mono!(t::RealTPS, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
 
 Returns the order of the monomial at index `i` in the TPSA and optionally the monomial at that index is returned in `m_` 
 and the order of parameters in the monomial in `p_`
@@ -397,14 +400,14 @@ and the order of parameters in the monomial in `p_`
 - `p_`  -- (Optional) Order of parameters in monomial
 - `ret` -- Order of monomial in TPSA `a`t index `i`
 """
-function mad_tpsa_mono!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
+function mad_tpsa_mono!(t::RealTPS, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mono(t::Ptr{TPS{Float64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
 
 
 """
-    mad_tpsa_idxs(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)::Cint
+    mad_tpsa_idxs(t::RealTPS, n::Cint, s::Cstring)::Cint
 
 Returns index of monomial in the TPSA given the monomial as string. This generally should not be used, as there 
 are no assumptions about which monomial is attached to which index.
@@ -417,7 +420,7 @@ are no assumptions about which monomial is attached to which index.
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_tpsa_idxs(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)::Cint
+function mad_tpsa_idxs(t::RealTPS, n::Cint, s::Cstring)::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxs(t::Ptr{TPS{Float64}}, n::Cint, s::Cstring)::Cint
   return ret
 end
@@ -425,7 +428,7 @@ end
 
 
 """
-    mad_tpsa_idxm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})::Cint
+    mad_tpsa_idxm(t::RealTPS, n::Cint, m::Vector{Cuchar})::Cint
 
 Returns index of monomial in the TPSA given the monomial as a byte array
 
@@ -437,14 +440,14 @@ Returns index of monomial in the TPSA given the monomial as a byte array
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_tpsa_idxm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})::Cint
+function mad_tpsa_idxm(t::RealTPS, n::Cint, m::Vector{Cuchar})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_idxsm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})::Cint
+    mad_tpsa_idxsm(t::RealTPS, n::Cint, m::Vector{Cint})::Cint
 
 Returns index of monomial in the TPSA given the monomial as a sparse monomial. This generally should not be used, as there 
 are no assumptions about which monomial is attached to which index.
@@ -457,14 +460,14 @@ are no assumptions about which monomial is attached to which index.
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_tpsa_idxsm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})::Cint
+function mad_tpsa_idxsm(t::RealTPS, n::Cint, m::Vector{Cint})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_idxsm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cint})::Cint
   return ret
 end
 
 
 """
-    mad_tpsa_cycle!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, m_, v_)::Cint
+    mad_tpsa_cycle!(t::RealTPS, i::Cint, n::Cint, m_, v_)::Cint
 
 Used for scanning through each nonzero monomial in the TPSA. Given a starting index (-1 if starting at 0), will 
 optionally fill monomial `m_` with the monomial at index `i` and the value at `v_` with the monomials coefficient, and 
@@ -480,14 +483,14 @@ return the next NONZERO monomial index in the TPSA. This is useful for building 
 ### Output
 - `i`  -- Index of next nonzero monomial in the TPSA, or -1 if reached the end
 """
-function mad_tpsa_cycle!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, m_, v_)::Cint
+function mad_tpsa_cycle!(t::RealTPS, i::Cint, n::Cint, m_, v_)::Cint
   i = @ccall MAD_TPSA.mad_tpsa_cycle(t::Ptr{TPS{Float64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{Cdouble})::Cint
   return i
 end
 
 
 """
-    mad_tpsa_geti(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint)::Cdouble
+    mad_tpsa_geti(t::RealTPS, i::Cint)::Cdouble
 
 Gets the coefficient of the monomial at index `i`. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -498,14 +501,14 @@ Gets the coefficient of the monomial at index `i`. Generally should use `mad_tps
 ### Output
 - `ret` -- Coefficient of monomial at index `i`
 """
-function mad_tpsa_geti(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint)::Cdouble
+function mad_tpsa_geti(t::RealTPS, i::Cint)::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_geti(t::Ptr{TPS{Float64}}, i::Cint)::Cdouble
   return ret
 end
 
 
 """
-    mad_tpsa_gets(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)::Cdouble
+    mad_tpsa_gets(t::RealTPS, n::Cint, s::Cstring)::Cdouble
 
 Gets the coefficient of the monomial `s` defined as a string. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -517,14 +520,14 @@ Gets the coefficient of the monomial `s` defined as a string. Generally should u
 ### Output
 - `ret` -- Coefficient of monomial `s` in TPSA
 """
-function mad_tpsa_gets(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)::Cdouble
+function mad_tpsa_gets(t::RealTPS, n::Cint, s::Cstring)::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_gets(t::Ptr{TPS{Float64}}, n::Cint, s::Cstring)::Cdouble
   return ret
 end
 
 
 """
-    mad_tpsa_getm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})::Cdouble
+    mad_tpsa_getm(t::RealTPS, n::Cint, m::Vector{Cuchar})::Cdouble
 
 Gets the coefficient of the monomial `m` defined as a byte array. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -536,14 +539,14 @@ Gets the coefficient of the monomial `m` defined as a byte array. Generally shou
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_tpsa_getm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})::Cdouble
+function mad_tpsa_getm(t::RealTPS, n::Cint, m::Vector{Cuchar})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_getm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cuchar})::Cdouble
   return ret
 end
 
 
 """
-    mad_tpsa_getsm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})::Cdouble
+    mad_tpsa_getsm(t::RealTPS, n::Cint, m::Vector{Cint})::Cdouble
 
 Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -555,7 +558,7 @@ Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_tpsa_getsm(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})::Cdouble
+function mad_tpsa_getsm(t::RealTPS, n::Cint, m::Vector{Cint})::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_getsm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cint})::Cdouble
   return ret
 end
@@ -563,7 +566,7 @@ end
 
 
 """
-    mad_tpsa_seti!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, a::Cdouble, b::Cdouble)
+    mad_tpsa_seti!(t::RealTPS, i::Cint, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial at index `i` to `coef[i] = a*coef[i] + b`. Does not modify other values in TPSA.
 
@@ -573,13 +576,13 @@ Sets the coefficient of monomial at index `i` to `coef[i] = a*coef[i] + b`. Does
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_seti!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, a::Cdouble, b::Cdouble)
+function mad_tpsa_seti!(t::RealTPS, i::Cint, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_seti(t::Ptr{TPS{Float64}}, i::Cint, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_sets!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
+    mad_tpsa_sets!(t::RealTPS, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial defined by string `s` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -590,13 +593,13 @@ Sets the coefficient of monomial defined by string `s` to `coef = a*coef + b`. D
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_sets!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
+function mad_tpsa_sets!(t::RealTPS, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_sets(t::Ptr{TPS{Float64}}, n::Cint, s::Cstring, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_setm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
+    mad_tpsa_setm!(t::RealTPS, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -607,13 +610,13 @@ Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_setm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
+function mad_tpsa_setm!(t::RealTPS, n::Cint, m::Vector{Cuchar}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cuchar}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_setsm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
+    mad_tpsa_setsm!(t::RealTPS, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
 
 Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -624,13 +627,13 @@ Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coe
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_tpsa_setsm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
+function mad_tpsa_setsm!(t::RealTPS, n::Cint, m::Vector{Cint}, a::Cdouble, b::Cdouble)
   @ccall MAD_TPSA.mad_tpsa_setsm(t::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cint}, a::Cdouble, b::Cdouble)::Cvoid
 end
 
 
 """
-    mad_tpsa_cpyi!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint)
+    mad_tpsa_cpyi!(t::RealTPS, r::RealTPS, i::Cint)
 
 Copies the monomial coefficient at index `i` in `t` into the 
 same monomial coefficient in `r`
@@ -640,12 +643,12 @@ same monomial coefficient in `r`
 - `r` -- Destination TPSA 
 - `i` -- Index of monomial
 """
-function mad_tpsa_cpyi!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint)
+function mad_tpsa_cpyi!(t::RealTPS, r::RealTPS, i::Cint)
   @ccall MAD_TPSA.mad_tpsa_cpyi(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, i::Cint)::Cvoid
 end
 
 """
-    mad_tpsa_cpys!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)
+    mad_tpsa_cpys!(t::RealTPS, r::RealTPS, n::Cint, s::Cstring)
 
 Copies the monomial coefficient at the monomial-as-string-of-order
 `s` in `t` into the same monomial coefficient in `r`
@@ -656,12 +659,12 @@ Copies the monomial coefficient at the monomial-as-string-of-order
 - `n` -- Length of string
 - `s` -- Monomial as string
 """
-function mad_tpsa_cpys!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, s::Cstring)
+function mad_tpsa_cpys!(t::RealTPS, r::RealTPS, n::Cint, s::Cstring)
   @ccall MAD_TPSA.mad_tpsa_cpys(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, n::Cint, s::Cstring)::Cvoid
 end
 
 """
-    mad_tpsa_cpym!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})
+    mad_tpsa_cpym!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cuchar})
 
 Copies the monomial coefficient at the monomial-as-vector-of-orders
 `m` in `t` into the same monomial coefficient in `r`
@@ -672,22 +675,22 @@ Copies the monomial coefficient at the monomial-as-vector-of-orders
 - `n` -- Length of monomial `m`
 - `m` -- Monomial as vector of orders
 """
-function mad_tpsa_cpym!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})
+function mad_tpsa_cpym!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cuchar})
   @ccall MAD_TPSA.mad_tpsa_cpym(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
 """
-    mad_tpsa_cpysm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})
+    mad_tpsa_cpysm!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cint})
 
     ???
 """
-function mad_tpsa_cpysm!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cint})
+function mad_tpsa_cpysm!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cint})
   @ccall MAD_TPSA.mad_tpsa_cpysm(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cint})::Cvoid
 end
 
 
 """
-    mad_tpsa_getv!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, v)
+    mad_tpsa_getv!(t::RealTPS, i::Cint, n::Cint, v)
 
 
 Vectorized getter of the coefficients for monomials with indices `i..i+n`. Useful for extracting the 1st order parts of 
@@ -701,13 +704,13 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 ### Output
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_tpsa_getv!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, v)
+function mad_tpsa_getv!(t::RealTPS, i::Cint, n::Cint, v)
   @ccall MAD_TPSA.mad_tpsa_getv(t::Ptr{TPS{Float64}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
 
 
 """
-    mad_tpsa_setv!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, v::Vector{Cdouble})
+    mad_tpsa_setv!(t::RealTPS, i::Cint, n::Cint, v::Vector{Cdouble})
 
 Vectorized setter of the coefficients for monomials with indices `i..i+n`. Useful for putting a matrix into a map.
 
@@ -717,13 +720,13 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_tpsa_setv!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, i::Cint, n::Cint, v::Vector{Cdouble})
+function mad_tpsa_setv!(t::RealTPS, i::Cint, n::Cint, v::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_setv(t::Ptr{TPS{Float64}}, i::Cint, n::Cint, v::Ptr{Cdouble})::Cvoid
 end
 
 
 """
-    mad_tpsa_equ(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, tol_::Cdouble)::Bool
+    mad_tpsa_equ(a::RealTPS, b::RealTPS, tol_::Cdouble)::Bool
 
 Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
 
@@ -735,14 +738,14 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 ### Output
 - `ret`   - True if `a == b` within `tol_`
 """
-function mad_tpsa_equ(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, tol_::Cdouble)::Bool
+function mad_tpsa_equ(a::RealTPS, b::RealTPS, tol_::Cdouble)::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_equ(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, tol_::Cdouble)::Bool
   return ret
 end
 
 
 """
-    mad_tpsa_dif!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_dif!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 For each homogeneous polynomial in TPSAs `a` and `b`, calculates either the relative error or absolute error for each order.
 If the maximum coefficient for a given order in `a` is > 1, the relative error is computed for that order. Else, the absolute 
@@ -757,13 +760,13 @@ error is computed. This is very useful for comparing maps between codes or doing
 ### Output
 - `c` -- Destination TPSA `c` 
 """
-function mad_tpsa_dif!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_dif!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_dif(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_add!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_add!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 Sets the destination TPSA `c = a + b`
 
@@ -774,13 +777,13 @@ Sets the destination TPSA `c = a + b`
 ### Output
 - `c` -- Destination TPSA `c = a + b`
 """
-function mad_tpsa_add!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_add!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_add(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sub!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sub!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 Sets the destination TPSA `c = a - b`
 
@@ -791,13 +794,13 @@ Sets the destination TPSA `c = a - b`
 ### Output
 - `c` -- Destination TPSA `c = a - b`
 """
-function mad_tpsa_sub!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sub!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sub(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_mul!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_mul!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 Sets the destination TPSA `c = a * b`
 
@@ -808,13 +811,13 @@ Sets the destination TPSA `c = a * b`
 ### Output
 - `c` -- Destination TPSA `c = a * b`
 """
-function mad_tpsa_mul!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_mul!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_mul(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_div!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_div!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 Sets the destination TPSA `c = a / b`
 
@@ -825,13 +828,13 @@ Sets the destination TPSA `c = a / b`
 ### Output
 - `c` -- Destination TPSA `c = a / b`
 """
-function mad_tpsa_div!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_div!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_div(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pow!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_pow!(a::RealTPS, b::RealTPS, c::RealTPS)
 
 Sets the destination TPSA `c = a ^ b`
 
@@ -842,13 +845,13 @@ Sets the destination TPSA `c = a ^ b`
 ### Output
 - `c` -- Destination TPSA `c = a ^ b`
 """
-function mad_tpsa_pow!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_pow!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_pow(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_powi!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_powi!(a::RealTPS, n::Cint, c::RealTPS)
 
 Sets the destination TPSA `c = a ^ n` where `n` is an integer.
 
@@ -859,13 +862,13 @@ Sets the destination TPSA `c = a ^ n` where `n` is an integer.
 ### Output
 - `c` -- Destination TPSA `c = a ^ n`
 """
-function mad_tpsa_powi!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_powi!(a::RealTPS, n::Cint, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_powi(a::Ptr{TPS{Float64}}, n::Cint, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pown!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_pown!(a::RealTPS, v::Cdouble, c::RealTPS)
 
 Sets the destination TPSA `c = a ^ v` where `v` is of double precision.
 
@@ -876,13 +879,13 @@ Sets the destination TPSA `c = a ^ v` where `v` is of double precision.
 ### Output
 - `c` -- Destination TPSA `c = a ^ v`
 """
-function mad_tpsa_pown!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_pown!(a::RealTPS, v::Cdouble, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_pown(a::Ptr{TPS{Float64}}, v::Cdouble, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_nrm(a::Union{TPS{Float64},Ptr{TPS{Float64}}})::Cdouble
+    mad_tpsa_nrm(a::RealTPS)::Cdouble
 
 Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 
@@ -892,14 +895,14 @@ Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 ### Output
 - `nrm` -- 1-Norm of TPSA
 """
-function mad_tpsa_nrm(a::Union{TPS{Float64},Ptr{TPS{Float64}}})::Cdouble
+function mad_tpsa_nrm(a::RealTPS)::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_nrm(a::Ptr{TPS{Float64}})::Cdouble
   return nrm
 end
 
 
 """
-    mad_tpsa_abs!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_abs!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the absolute value of TPSA `a`. Specifically, the 
 result contains a TPSA with the `abs` of all coefficients.
@@ -910,13 +913,13 @@ result contains a TPSA with the `abs` of all coefficients.
 ### Output
 - `c` -- Destination TPSA `c = |a|`
 """
-function mad_tpsa_abs!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_abs!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_abs(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sqrt!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sqrt!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the sqrt of TPSA `a`.
 
@@ -926,13 +929,13 @@ Sets TPSA `c` to the sqrt of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = sqrt(a)`
 """
-function mad_tpsa_sqrt!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sqrt!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sqrt(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_exp!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_exp!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the exponential of TPSA `a`.
 
@@ -942,14 +945,14 @@ Sets TPSA `c` to the exponential of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = exp(a)`
 """
-function mad_tpsa_exp!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_exp!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_exp(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 
 """
-    mad_tpsa_log!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_log!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the log of TPSA `a`.
 
@@ -959,13 +962,13 @@ Sets TPSA `c` to the log of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = log(a)`
 """
-function mad_tpsa_log!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_log!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_log(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sincos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, s::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sincos!(a::RealTPS, s::RealTPS, c::RealTPS)
 
 Sets TPSA `s = sin(a)` and TPSA `c = cos(a)`
 
@@ -976,13 +979,13 @@ Sets TPSA `s = sin(a)` and TPSA `c = cos(a)`
 - `s` -- Destination TPSA `s = sin(a)`
 - `c` -- Destination TPSA `c = cos(a)`
 """
-function mad_tpsa_sincos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, s::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sincos!(a::RealTPS, s::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sincos(a::Ptr{TPS{Float64}}, s::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sin!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sin!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `sin` of TPSA `a`.
 
@@ -992,13 +995,13 @@ Sets TPSA `c` to the `sin` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = sin(a)`
 """
-function mad_tpsa_sin!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sin!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sin(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_cos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_cos!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `cos` of TPSA `a`.
 
@@ -1008,13 +1011,13 @@ Sets TPSA `c` to the `cos` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = cos(a)`
 """
-function mad_tpsa_cos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_cos!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_cos(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_tan!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_tan!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `tan` of TPSA `a`.
 
@@ -1024,13 +1027,13 @@ Sets TPSA `c` to the `tan` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = tan(a)`
 """
-function mad_tpsa_tan!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_tan!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_tan(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_cot!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_cot!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `cot` of TPSA `a`.
 
@@ -1040,13 +1043,13 @@ Sets TPSA `c` to the `cot` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = cot(a)`
 """
-function mad_tpsa_cot!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_cot!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_cot(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sinc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sinc!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `sinc` of TPSA `a`.
 
@@ -1056,13 +1059,13 @@ Sets TPSA `c` to the `sinc` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = sinc(a)`
 """
-function mad_tpsa_sinc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sinc!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sinc(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sincosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, s::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sincosh!(a::RealTPS, s::RealTPS, c::RealTPS)
 
 Sets TPSA `s = sinh(a)` and TPSA `c = cosh(a)`
 
@@ -1073,13 +1076,13 @@ Sets TPSA `s = sinh(a)` and TPSA `c = cosh(a)`
 - `s` -- Destination TPSA `s = sinh(a)`
 - `c` -- Destination TPSA `c = cosh(a)`
 """
-function mad_tpsa_sincosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, s::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sincosh!(a::RealTPS, s::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sincosh(a::Ptr{TPS{Float64}}, s::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sinh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sinh!(a::RealTPS, c::RealTPS)
 
   Sets TPSA `c` to the `sinh` of TPSA `a`.
 
@@ -1089,13 +1092,13 @@ end
 ### Output
 - `c` -- Destination TPSA `c = sinh(a)`
 """
-function mad_tpsa_sinh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sinh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sinh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_cosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_cosh!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `cosh` of TPSA `a`.
 
@@ -1105,13 +1108,13 @@ Sets TPSA `c` to the `cosh` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = cosh(a)`
 """
-function mad_tpsa_cosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_cosh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_cosh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_tanh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_tanh!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `tanh` of TPSA `a`.
 
@@ -1121,13 +1124,13 @@ Sets TPSA `c` to the `tanh` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = tanh(a)`
 """
-function mad_tpsa_tanh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_tanh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_tanh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_coth!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_coth!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `coth` of TPSA `a`.
 
@@ -1137,13 +1140,13 @@ Sets TPSA `c` to the `coth` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = coth(a)`
 """
-function mad_tpsa_coth!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_coth!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_coth(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_sinhc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_sinhc!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `sinhc` of TPSA `a`.
 
@@ -1153,13 +1156,13 @@ Sets TPSA `c` to the `sinhc` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = sinhc(a)`
 """
-function mad_tpsa_sinhc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_sinhc!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sinhc(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_asin!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_asin!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `asin` of TPSA `a`.
 
@@ -1169,13 +1172,13 @@ Sets TPSA `c` to the `asin` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = asin(a)`
 """
-function mad_tpsa_asin!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_asin!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_asin(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_acos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_acos!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `acos` of TPSA `a`.
 
@@ -1185,13 +1188,13 @@ Sets TPSA `c` to the `acos` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = acos(a)`
 """
-function mad_tpsa_acos!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_acos!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_acos(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_atan!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_atan!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `atan` of TPSA `a`.
 
@@ -1201,13 +1204,13 @@ Sets TPSA `c` to the `atan` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = atan(a)`
 """
-function mad_tpsa_atan!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_atan!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_atan(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_acot!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_acot!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `acot` of TPSA `a`.
 
@@ -1217,12 +1220,12 @@ Sets TPSA `c` to the `acot` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = acot(a)`
 """
-function mad_tpsa_acot!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_acot!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_acot(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 """
-    mad_tpsa_asinc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_asinc!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `asinc(a) = asin(a)/a`
 
@@ -1232,13 +1235,13 @@ Sets TPSA `c` to the `asinc(a) = asin(a)/a`
 ### Output
 - `c` -- Destination TPSA `c = asinc(a) = asin(a)/a`
 """
-function mad_tpsa_asinc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_asinc!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_asinc(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_asinh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_asinh!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `asinh` of TPSA `a`.
 
@@ -1248,13 +1251,13 @@ Sets TPSA `c` to the `asinh` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = asinh(a)'
 """
-function mad_tpsa_asinh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_asinh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_asinh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_acosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_acosh!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `acosh` of TPSA `a`.
 
@@ -1264,13 +1267,13 @@ Sets TPSA `c` to the `acosh` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = acosh(a)'
 """
-function mad_tpsa_acosh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_acosh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_acosh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_atanh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_atanh!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `atanh` of TPSA `a`.
 
@@ -1280,13 +1283,13 @@ Sets TPSA `c` to the `atanh` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = atanh(a)'
 """
-function mad_tpsa_atanh!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_atanh!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_atanh(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_acoth!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_acoth!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the acoth of TPSA `a`.
 
@@ -1296,13 +1299,13 @@ Sets TPSA `c` to the acoth of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = acoth(a)'
 """
-function mad_tpsa_acoth!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_acoth!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_acoth(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_asinhc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_asinhc!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `asinhc` of TPSA `a`.
 
@@ -1312,13 +1315,13 @@ Sets TPSA `c` to the `asinhc` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = asinhc(a)'
 """
-function mad_tpsa_asinhc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_asinhc!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_asinhc(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_erf!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_erf!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `erf` of TPSA `a`.
 
@@ -1328,13 +1331,13 @@ Sets TPSA `c` to the `erf` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = erf(a)'
 """
-function mad_tpsa_erf!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_erf!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_erf(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_erfc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_erfc!(a::RealTPS, c::RealTPS)
 
 Sets TPSA `c` to the `erfc` of TPSA `a`.
 
@@ -1344,13 +1347,13 @@ Sets TPSA `c` to the `erfc` of TPSA `a`.
 ### Output
 - `c` -- Destination TPSA `c = erfc(a)'
 """
-function mad_tpsa_erfc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_erfc!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_erfc(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_acc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_acc!(a::RealTPS, v::Cdouble, c::RealTPS)
 
 Adds `a*v` to TPSA `c`. Aliasing OK.
 
@@ -1361,13 +1364,13 @@ Adds `a*v` to TPSA `c`. Aliasing OK.
 ### Output
 - `c` -- Destination TPSA `c += v*a`
 """
-function mad_tpsa_acc!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_acc!(a::RealTPS, v::Cdouble, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_acc(a::Ptr{TPS{Float64}}, v::Cdouble, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_scl!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_scl!(a::RealTPS, v::Cdouble, c::RealTPS)
 
 Sets TPSA `c` to `v*a`. 
 
@@ -1378,13 +1381,13 @@ Sets TPSA `c` to `v*a`.
 ### Output
 - `c` -- Destination TPSA `c = v*a`
 """
-function mad_tpsa_scl!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_scl!(a::RealTPS, v::Cdouble, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_scl(a::Ptr{TPS{Float64}}, v::Cdouble, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_inv!(a::Union{TPS{Float64},Ptr{TPS{Float64}}},  v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_inv!(a::RealTPS,  v::Cdouble, c::RealTPS)
 
 Sets TPSA `c` to `v/a`. 
 
@@ -1395,12 +1398,12 @@ Sets TPSA `c` to `v/a`.
 ### Output
 - `c` -- Destination TPSA `c = v/a`
 """
-function mad_tpsa_inv!(a::Union{TPS{Float64},Ptr{TPS{Float64}}},  v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_inv!(a::RealTPS,  v::Cdouble, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_inv(a::Ptr{TPS{Float64}},  v::Cdouble, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 """
-    mad_tpsa_invsqrt!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_invsqrt!(a::RealTPS, v::Cdouble, c::RealTPS)
 
 Sets TPSA `c` to `v/sqrt(a)`. 
 
@@ -1411,13 +1414,13 @@ Sets TPSA `c` to `v/sqrt(a)`.
 ### Output
 - `c` -- Destination TPSA `c = v/sqrt(a)`
 """
-function mad_tpsa_invsqrt!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, v::Cdouble, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_invsqrt!(a::RealTPS, v::Cdouble, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_invsqrt(a::Ptr{TPS{Float64}}, v::Cdouble, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_unit!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_unit!(a::RealTPS, c::RealTPS)
 
 Interpreting TPSA as a vector, gets the "unit vector", e.g. `c = a/norm(a)`. 
 May be useful for checking for convergence.
@@ -1428,13 +1431,13 @@ May be useful for checking for convergence.
 ### Output
 - `c` -- Destination TPSA `c`
 """
-function  mad_tpsa_unit!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function  mad_tpsa_unit!(a::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_unit(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_atan2!(y::Union{TPS{Float64},Ptr{TPS{Float64}}}, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_atan2!(y::RealTPS, x::RealTPS, r::RealTPS)
 
 Sets TPSA `r` to `atan2(y,x)`
 
@@ -1445,12 +1448,12 @@ Sets TPSA `r` to `atan2(y,x)`
 ### Output
 - `r` -- Destination TPSA r = atan2(y,x)
 """
-function  mad_tpsa_atan2!(y::Union{TPS{Float64},Ptr{TPS{Float64}}}, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function  mad_tpsa_atan2!(y::RealTPS, x::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_atan2(y::Ptr{TPS{Float64}}, x::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 """
-    mad_tpsa_hypot!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_hypot!(x::RealTPS, y::RealTPS, r::RealTPS)
 
 Sets TPSA `r` to `sqrt(x^2+y^2)`. Used to oversimplify polymorphism in code but not optimized
 
@@ -1461,12 +1464,12 @@ Sets TPSA `r` to `sqrt(x^2+y^2)`. Used to oversimplify polymorphism in code but 
 ### Output
 - `r` -- Destination TPSA r = sqrt(x^2+y^2)
 """
-function  mad_tpsa_hypot!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function  mad_tpsa_hypot!(x::RealTPS, y::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_hypot(x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 """
-    mad_tpsa_hypot3!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_hypot3!(x::RealTPS, y::RealTPS, z::RealTPS, r::RealTPS)
 
 Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`. Does NOT allow for r = x, y, z !!!
 
@@ -1478,14 +1481,14 @@ Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`. Does NOT allow for r = x, y, z !!!
 ### Output
 - `r` -- Destination TPSA `r = sqrt(x^2+y^2+z^2)`
 """
-function  mad_tpsa_hypot3!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function  mad_tpsa_hypot3!(x::RealTPS, y::RealTPS, z::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_hypot3(x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, z::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 
 """
-    mad_tpsa_integ!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, iv::Cint)
+    mad_tpsa_integ!(a::RealTPS, c::RealTPS, iv::Cint)
 
 Integrates TPSA with respect to the variable with index `iv`.
 
@@ -1496,13 +1499,13 @@ Integrates TPSA with respect to the variable with index `iv`.
 ### Output
 - `c`  -- Destination TPSA
 """
-function mad_tpsa_integ!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, iv::Cint)
+function mad_tpsa_integ!(a::RealTPS, c::RealTPS, iv::Cint)
   @ccall MAD_TPSA.mad_tpsa_integ(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}}, iv::Cint)::Cvoid
 end
 
 
 """
-    mad_tpsa_deriv!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, iv::Cint)
+    mad_tpsa_deriv!(a::RealTPS, c::RealTPS, iv::Cint)
 
 Differentiates TPSA with respect to the variable with index `iv`.
 
@@ -1513,13 +1516,13 @@ Differentiates TPSA with respect to the variable with index `iv`.
 ### Output
 - `c`  -- Destination TPSA
 """
-function mad_tpsa_deriv!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, iv::Cint)
+function mad_tpsa_deriv!(a::RealTPS, c::RealTPS, iv::Cint)
   @ccall MAD_TPSA.mad_tpsa_deriv(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}}, iv::Cint)::Cvoid
 end
 
 
 """
-    mad_tpsa_derivm!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})
+    mad_tpsa_derivm!(a::RealTPS, c::RealTPS, n::Cint, m::Vector{Cuchar})
 
 Differentiates TPSA with respect to the monomial defined by byte array `m`.
 
@@ -1531,13 +1534,13 @@ Differentiates TPSA with respect to the monomial defined by byte array `m`.
 ### Output
 - `c` -- Destination TPSA
 """
-function mad_tpsa_derivm!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, m::Vector{Cuchar})
+function mad_tpsa_derivm!(a::RealTPS, c::RealTPS, n::Cint, m::Vector{Cuchar})
   @ccall MAD_TPSA.mad_tpsa_derivm(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
 
 """
-    mad_tpsa_poisbra!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, nv::Cint)
+    mad_tpsa_poisbra!(a::RealTPS, b::RealTPS, c::RealTPS, nv::Cint)
 
 Sets TPSA `c` to the poisson bracket of TPSAs `a` and `b`.
 
@@ -1549,13 +1552,13 @@ Sets TPSA `c` to the poisson bracket of TPSAs `a` and `b`.
 ### Output
 - `c`  -- Destination TPSA `c`
 """
-function mad_tpsa_poisbra!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}}, nv::Cint)
+function mad_tpsa_poisbra!(a::RealTPS, b::RealTPS, c::RealTPS, nv::Cint)
   @ccall MAD_TPSA.mad_tpsa_poisbra(a::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}}, nv::Cint)::Cvoid
 end
 
 
 """
-    mad_tpsa_taylor!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, coef::Vector{Cdouble}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_taylor!(a::RealTPS, n::Cint, coef::Vector{Cdouble}, c::RealTPS)
 
 Computes the result of the Taylor series up to order `n-1` with Taylor coefficients coef for the scalar value in `a`. That is,
 `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` is the scalar part of TPSA `a`.
@@ -1566,13 +1569,13 @@ Computes the result of the Taylor series up to order `n-1` with Taylor coefficie
 - `coef` -- Array of coefficients in Taylor `s`
 - `c`    -- Result
 """
-function mad_tpsa_taylor!(a::Union{TPS{Float64},Ptr{TPS{Float64}}}, n::Cint, coef::Vector{Cdouble}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_taylor!(a::RealTPS, n::Cint, coef::Vector{Cdouble}, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_taylor(a::Ptr{TPS{Float64}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axpb!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axpb!(a::Cdouble, x::RealTPS, b::Cdouble, r::RealTPS)
 
 `r = a*x + b`
 
@@ -1584,13 +1587,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axpb!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axpb!(a::Cdouble, x::RealTPS, b::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axpb(a::Cdouble, x::Ptr{TPS{Float64}}, b::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axpbypc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axpbypc!(a::Cdouble, x::RealTPS, b::Cdouble, y::RealTPS, c::Cdouble, r::RealTPS)
 
 `r = a*x + b*y + c`
 
@@ -1604,13 +1607,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axpbypc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axpbypc!(a::Cdouble, x::RealTPS, b::Cdouble, y::RealTPS, c::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axpbypc(a::Cdouble, x::Ptr{TPS{Float64}}, b::Cdouble, y::Ptr{TPS{Float64}}, c::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axypb!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axypb!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, r::RealTPS)
 
 `r = a*x*y + b`
 
@@ -1623,13 +1626,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axypb!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axypb!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axypb(a::Cdouble, x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, b::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axypbzpc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axypbzpc!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, z::RealTPS, c::Cdouble, r::RealTPS)
 
 `r = a*x*y + b*z + c`
 
@@ -1644,13 +1647,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axypbzpc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axypbzpc!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, z::RealTPS, c::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axypbzpc(a::Cdouble, x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, b::Cdouble, z::Ptr{TPS{Float64}}, c::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axypbvwpc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, v::Union{TPS{Float64},Ptr{TPS{Float64}}}, w::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axypbvwpc!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, v::RealTPS, w::RealTPS, c::Cdouble, r::RealTPS)
 
 `r = a*x*y + b*v*w + c`
 
@@ -1666,13 +1669,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axypbvwpc!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, v::Union{TPS{Float64},Ptr{TPS{Float64}}}, w::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axypbvwpc!(a::Cdouble, x::RealTPS, y::RealTPS, b::Cdouble, v::RealTPS, w::RealTPS, c::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axypbvwpc(a::Cdouble, x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, b::Cdouble, v::Ptr{TPS{Float64}}, w::Ptr{TPS{Float64}}, c::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::RealTPS, b::Cdouble, y::RealTPS, c::Cdouble, z::RealTPS, r::RealTPS)
 
 `r = a*x^2 + b*y^2 + c*z^2`
 
@@ -1687,13 +1690,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::Union{TPS{Float64},Ptr{TPS{Float64}}}, b::Cdouble, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Cdouble, z::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_ax2pby2pcz2!(a::Cdouble, x::RealTPS, b::Cdouble, y::RealTPS, c::Cdouble, z::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_ax2pby2pcz2(a::Cdouble, x::Ptr{TPS{Float64}}, b::Cdouble, y::Ptr{TPS{Float64}}, c::Cdouble, z::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_axpsqrtbpcx2!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_axpsqrtbpcx2!(x::RealTPS, a::Cdouble, b::Cdouble, c::Cdouble, r::RealTPS)
 
 `r = a*x + sqrt(b + c*x^2)`
 
@@ -1706,13 +1709,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_axpsqrtbpcx2!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_axpsqrtbpcx2!(x::RealTPS, a::Cdouble, b::Cdouble, c::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_axpsqrtbpcx2(x::Ptr{TPS{Float64}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_logaxpsqrtbpcx2!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_logaxpsqrtbpcx2!(x::RealTPS, a::Cdouble, b::Cdouble, c::Cdouble, r::RealTPS)
 
 `r = log(a*x + sqrt(b + c*x^2))`
 
@@ -1725,13 +1728,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_logaxpsqrtbpcx2!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_logaxpsqrtbpcx2!(x::RealTPS, a::Cdouble, b::Cdouble, c::Cdouble, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_logaxpsqrtbpcx2(x::Ptr{TPS{Float64}}, a::Cdouble, b::Cdouble, c::Cdouble, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_logxdy!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_logxdy!(x::RealTPS, y::RealTPS, r::RealTPS)
 
 `r = log(x / y)`
 
@@ -1742,13 +1745,13 @@ end
 ### Output
 - `r` -- Destination TPSA `r`
 """
-function mad_tpsa_logxdy!(x::Union{TPS{Float64},Ptr{TPS{Float64}}}, y::Union{TPS{Float64},Ptr{TPS{Float64}}}, r::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_logxdy!(x::RealTPS, y::RealTPS, r::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_logxdy(x::Ptr{TPS{Float64}}, y::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_vec2fld!(na::Cint, a::Union{TPS{Float64},Ptr{TPS{Float64}}}, mc::Vector{TPS{Float64}})
+    mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{TPS{Float64}})
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the vector field (Hamilton's 
@@ -1761,13 +1764,13 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 ### Output
 - `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
-function mad_tpsa_vec2fld!(na::Cint, a::Union{TPS{Float64},Ptr{TPS{Float64}}}, mc::Vector{TPS{Float64}})
+function mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{TPS{Float64}})
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::RealTPS)
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the Hamiltonian one obtains 
@@ -1780,13 +1783,13 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 ### Output
 - `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
-function mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+    mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::RealTPS, c::RealTPS)
 
 Calculates `dot(ma, grad(b))`
 
@@ -1798,7 +1801,7 @@ Calculates `dot(ma, grad(b))`
 ### Output
 - `c`  -- `dot(ma, grad(b))`
 """
-function mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::Union{TPS{Float64},Ptr{TPS{Float64}}}, c::Union{TPS{Float64},Ptr{TPS{Float64}}})
+function mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
@@ -2016,7 +2019,7 @@ end
 
 
 """
-    mad_tpsa_print(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
+    mad_tpsa_print(t::RealTPS, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
 
 Prints the TPSA coefficients with precision `eps_`. If `nohdr_` is not zero, 
 the header is not printed. 
@@ -2028,13 +2031,13 @@ the header is not printed.
 - `nohdr_`  -- (Optional) If True, no header is printed
 - `stream_` -- (Optional) `FILE` pointer of output stream. Default is `stdout`
 """
-function mad_tpsa_print(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
+function mad_tpsa_print(t::RealTPS, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_print(t::Ptr{TPS{Float64}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
 """
-    mad_tpsa_scan(stream_::Ptr{Cvoid})::Union{TPS{Float64},Ptr{TPS{Float64}}}
+    mad_tpsa_scan(stream_::Ptr{Cvoid})::RealTPS
 
 Scans in a TPSA from the `stream_`.
 
@@ -2044,7 +2047,7 @@ Scans in a TPSA from the `stream_`.
 ### Output
 - `t`       -- TPSA scanned from I/O `stream_`
 """
-function mad_tpsa_scan(stream_::Ptr{Cvoid})::Union{TPS{Float64},Ptr{TPS{Float64}}}
+function mad_tpsa_scan(stream_::Ptr{Cvoid})::RealTPS
   t = @ccall MAD_TPSA.mad_tpsa_scan(stream_::Ptr{Cvoid})::Ptr{TPS{Float64}}
   return t
 end
@@ -2071,7 +2074,7 @@ end
 
 
 """
-    mad_tpsa_scan_coef!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, stream_::Ptr{Cvoid})
+    mad_tpsa_scan_coef!(t::RealTPS, stream_::Ptr{Cvoid})
 
 Read TPSA coefficients into TPSA `t`. This should be used with `mad_tpsa_scan_hdr` for external languages using 
 this library where the memory is managed NOT on the C side.
@@ -2082,13 +2085,13 @@ this library where the memory is managed NOT on the C side.
 ### Output
 - `t`       -- TPSA with coefficients scanned from `stream_`
 """
-function mad_tpsa_scan_coef!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, stream_::Ptr{Cvoid})
+function mad_tpsa_scan_coef!(t::RealTPS, stream_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_tpsa_scan_coef(t::Ptr{TPS{Float64}}, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
 """
-    mad_tpsa_debug(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+    mad_tpsa_debug(t::RealTPS, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
 
 Prints TPSA with all information of data structure.
 
@@ -2102,7 +2105,7 @@ Prints TPSA with all information of data structure.
 ### Output
 - `ret` -- ??
 """
-function mad_tpsa_debug(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+function mad_tpsa_debug(t::RealTPS, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_debug(t::Ptr{TPS{Float64}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   return ret
 end
@@ -2127,7 +2130,7 @@ function mad_tpsa_clrdensity!()::Cvoid
 end
 
 """
-    mad_tpsa_isval(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+    mad_tpsa_isval(t::RealTPS)::Bool
 
 Sanity check of the TPSA integrity.
 
@@ -2137,13 +2140,13 @@ Sanity check of the TPSA integrity.
 ### Output
 - `ret`  -- True if valid TPSA, false otherwise
 """
-function mad_tpsa_isval(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+function mad_tpsa_isval(t::RealTPS)::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_isval(t::Ptr{TPS{Float64}})::Bool
   return ret
 end
 
 """
-    mad_tpsa_isvalid(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+    mad_tpsa_isvalid(t::RealTPS)::Bool
 
 Sanity check of the TPSA integrity.
 
@@ -2153,25 +2156,25 @@ Sanity check of the TPSA integrity.
 ### Output
 - `ret`  -- True if valid TPSA, false otherwise
 """
-function mad_tpsa_isvalid(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Bool
+function mad_tpsa_isvalid(t::RealTPS)::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_isvalid(t::Ptr{TPS{Float64}})::Bool
   return ret
 end
 
 
 """
-    mad_tpsa_density(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Cdouble
+    mad_tpsa_density(t::RealTPS)::Cdouble
 
 ???
 """
-function mad_tpsa_density(t::Union{TPS{Float64},Ptr{TPS{Float64}}})::Cdouble
+function mad_tpsa_density(t::RealTPS)::Cdouble
   ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{TPS{Float64}})::Cdouble
   return ret
 end
 
 
 """
-    mad_tpsa_init(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, d::Ptr{Desc}, mo::Cuchar)::Union{TPS{Float64},Ptr{TPS{Float64}}}
+    mad_tpsa_init(t::RealTPS, d::Ptr{Desc}, mo::Cuchar)::RealTPS
 
 Unsafe initialization of an already existing TPSA `t` with maximum order `mo` to the descriptor `d`. `mo` must be less than 
 the maximum order of the descriptor. `t` is modified in place and also returned.
@@ -2184,7 +2187,7 @@ the maximum order of the descriptor. `t` is modified in place and also returned.
 ### Output
 - `t`  -- TPSA initialized to descriptor `d` with maximum order `mo`
 """
-function mad_tpsa_init!(t::Union{TPS{Float64},Ptr{TPS{Float64}}}, d::Ptr{Desc}, mo::Cuchar)::Union{TPS{Float64},Ptr{TPS{Float64}}}
+function mad_tpsa_init!(t::RealTPS, d::Ptr{Desc}, mo::Cuchar)::RealTPS
   t = @ccall MAD_TPSA.mad_tpsa_init(t::Ptr{TPS{Float64}}, d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{Float64}}
   return t
 end

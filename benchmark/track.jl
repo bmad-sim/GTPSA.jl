@@ -2,37 +2,37 @@ using GTPSA
 using ForwardDiff
 using BenchmarkTools: @btime, @benchmark
 
-# As of 05/03/2024, Julia v1.10.2 on Mac M2 Ultra: Comparison with GTPSA for 58 inputs and 6 outputs
+# As of 07/22/2024, Julia v1.10.3 on Mac M2 Ultra: Comparison with GTPSA for 58 inputs and 6 outputs
 # Numbers calculated using BenchmarkTools.@btime
 #
 # 3rd Order ---------------------------------------------------------
-# Using the @FastGTPSA macro:
-# GTPSA:                    227.111 ms
-# ForwardDiff:            4.212 s
+# Using the FastGTPSA macro:
+# GTPSA:                    639.649 ms (4537 allocations: 581.17 MiB)
+# ForwardDiff:            3.457 s      (85142 allocations: 3.93 GiB) 
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                    371.465 ms
-# ForwardDiff:            4.096 s  
+# GTPSA:                    754.393 ms (20739 allocations: 2.74 GiB)
+# ForwardDiff:            3.920 s      (85142 allocations: 3.93 GiB)
 #
 # 2nd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                    7.024 ms 
-# ForwardDiff:             23.417 ms
+# GTPSA:                    7.855 ms (4537 allocations: 28.73 MiB)
+# ForwardDiff:             26.422 ms (9166 allocations: 63.47 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                   15.594 ms
-# ForwardDiff:             23.318 ms
+# GTPSA:                   14.177 ms (20739 allocations: 138.62 MiB)
+# ForwardDiff:             22.972 ms (9166 allocations: 63.47 MiB)
 #
 # 1st Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                  280.542 μs 
-# ForwardDiff:            188.792 μs
+# GTPSA:                  318.875 μs (4537 allocations: 1.11 MiB)
+# ForwardDiff:            219.875 μs (1520 allocations: 1.10 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                  697.625 μs
-# ForwardDiff:            161.125 μs
+# GTPSA:                  739.750 μs (20739 allocations: 5.25 MiB)
+# ForwardDiff:            161.333 μs (1520 allocations: 1.10 MiB)
 #
-# Note that @FastGTPSA is transparent to all types except TPS/ComplexTPS64, so it can be
+# Note that  is transparent to all types except TPS/ComplexTPS64, so it can be
 # inserted into functions while still maintaining generic code, as shown here
  
 function track_qf(z0, k1, hkick)
@@ -119,7 +119,15 @@ function track_ring(z0, k1=0.36, k2l=1.2, kick=zeros(50))
   return z0
 end
 
-function benchmark_GTPSA()
+function benchmark_GTPSA1()
+  d = Descriptor(6,1,52,1)
+  z = vars()
+  k = params()
+  map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
+  return map
+end
+
+function benchmark_GTPSA2()
   d = Descriptor(6,2,52,2)
   z = vars()
   k = params()
@@ -127,13 +135,44 @@ function benchmark_GTPSA()
   return map
 end
 
-function benchmark_ForwardDiff()
+function benchmark_GTPSA3()
+  d = Descriptor(6,3,52,3)
+  z = vars()
+  k = params()
+  map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
+  return map
+end
+
+function benchmark_ForwardDiff1()
+  m(z) = track_ring([z[1], z[2], z[3], z[4], z[5], z[6]], 0.36+z[7], 1.2+z[8], z[9:end])
+  j = Array{Float64}(undef,6,58)
+ 
+ 
+  ForwardDiff.jacobian!(j, m, zeros(58))
+  
+ 
+  return j
+end
+
+function benchmark_ForwardDiff2()
   m(z) = track_ring([z[1], z[2], z[3], z[4], z[5], z[6]], 0.36+z[7], 1.2+z[8], z[9:end])
   j = Array{Float64}(undef,6,58)
   h = Array{Float64}(undef,348,58)
-  #c = Array{Float64}(undef,20184,58)
+  
   ForwardDiff.jacobian!(j, m, zeros(58))
   ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(58))
-  #ForwardDiff.jacobian!(c, z->ForwardDiff.jacobian(z->ForwardDiff.jacobian(z->m(z), z), z), zeros(58))
-  return j, h #, c
+  
+  return j, h
 end
+
+function benchmark_ForwardDiff3()
+  m(z) = track_ring([z[1], z[2], z[3], z[4], z[5], z[6]], 0.36+z[7], 1.2+z[8], z[9:end])
+  j = Array{Float64}(undef,6,58)
+  h = Array{Float64}(undef,348,58)
+  c = Array{Float64}(undef,20184,58)
+  ForwardDiff.jacobian!(j, m, zeros(58))
+  ForwardDiff.jacobian!(h, z->ForwardDiff.jacobian(z->m(z), z), zeros(58))
+  ForwardDiff.jacobian!(c, z->ForwardDiff.jacobian(z->ForwardDiff.jacobian(z->m(z), z), z), zeros(58))
+  return j, h, c
+end
+

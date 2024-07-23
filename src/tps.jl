@@ -1,22 +1,55 @@
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}},pointer_from_objref(t))
-Base.eltype(::Type{TPS{T}}) where {T} = T
-Base.eltype(::TPS{T}) where {T} = T
+#=
+    `mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number`
 
-getdesc(t::TPS) = Descriptor(t.d)
-getdesc(d::Descriptor) = d
-getdesc(n::Nothing) = GTPSA.desc_current
+Struct representing a truncated power series. The definition here is 1-to-1 
+with the GTPSA C library definition.
 
-numvars(t::TPS) = unsafe_load(t.d).nv
-numvars(d::Descriptor) = unsafe_load(d.desc).nv
-numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
+### Fields
+- `d::Ptr{Desc}`             -- Ptr to low-level descriptor struct
+- `lo::UInt8`                -- Lowest used order
+- `hi::UInt8`                -- Highest used order
+- `mo::UInt8`                -- Max order
+- `ao::UInt8`                -- Allocated order
+- `uid::Cint`                -- Special user field for external use (and padding)
+- `nam::NTuple{16,UInt8}` -- TPS name, max string length = GTPSA.NAMSZ = 15 chars
+- `coef::Ptr{T}`             -- An array containing all of the monomial coefficients up to the TPS max order
+=#
+mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
+  d::Ptr{Desc}                                            
+  lo::UInt8                
+  hi::UInt8     
+  mo::UInt8  
+  ao::UInt8
+  uid::Cint            
+  nam::NTuple{16,UInt8}  # NAMSZ = 16
+  coef::Ptr{T} # CRITICAL: Flexible array members in C must NOT BE USED! 
+               # In the C code: change [] to * and fix malloc
+  
+  # Analog to C code mad_tpsa_newd
+  function TPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
+    d != C_NULL || error("No Descriptor defined!")
+    mo = min(mo, unsafe_load(d).mo)
+    sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
+    coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
+    ao = mo
+    uid = Cint(0)
+    nam = (0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
+    
+    lo = 0x1
+    hi = 0x0
+    unsafe_store!(coef, T(0))
 
-numparams(t::TPS) = unsafe_load(t.d).np
-numparams(d::Descriptor) = unsafe_load(d.desc).np
-numparams(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).np
+    t = new{T}(d, lo, hi, mo, ao, uid, nam, coef)
 
-numnn(t::TPS) = unsafe_load(t.d).nn
-numnn(d::Descriptor) = unsafe_load(d.desc).nn
-numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
+    f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
+    finalizer(f, t)
+
+    return t
+  end
+end
+
+const TPS64 = TPS{Float64}
+const ComplexTPS64 = TPS{ComplexF64}
 
 """
     TPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing)
@@ -46,9 +79,6 @@ TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promo
 TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
 TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{eltype(ta)}(ta, use=use)
 
-const TPS64 = TPS{Float64}
-const ComplexTPS64 = TPS{ComplexF64}
-
 function low_TPS(T, ta, use)
   if ta isa Nothing          # --- Blank TPS ---
     return TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
@@ -69,24 +99,28 @@ function low_TPS(T, ta, use)
 end
 
 
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}},pointer_from_objref(t))
+Base.eltype(::Type{TPS{T}}) where {T} = T
+Base.eltype(::TPS{T}) where {T} = T
+
 promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
 promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}
 promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
 promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
-
 promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
 promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:AbstractIrrational} = TPS{ComplexF64}
-
 promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:Rational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
 promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:Rational} = TPS{ComplexF64}
 
-complex(::Type{TPS}) = TPS{ComplexF64}
-complex(::Type{TPS{T}}) where{T} = TPS{ComplexF64}
-
+complex(::Type{TPS{T}}) where{T} = TPS{complex(T)}
 eps(::Type{TPS{T}}) where {T} = eps(T)
 floatmin(::Type{TPS{T}}) where {T} = floatmin(T)
 floatmax(::Type{TPS{T}}) where {T} = floatmax(T)
 
-#promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Union{AbstractFloat, Integer, Rational, Irrational}} = TPS{Float64}
-#promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Union{Complex{<:Real},AbstractFloat,Integer,Rational,Irrational}} = TPS{ComplexF64}
-#promote_rule(::Type{TPS{Float64}}, ::Type{Irrational}) = TPS{Float64}
+
+
+
+
+
+
+

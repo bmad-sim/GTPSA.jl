@@ -1,4 +1,3 @@
-# Wrapper struct for Ptr{Desc}
 struct Descriptor
   desc::Ptr{Desc}
   function Descriptor(desc::Ptr{Desc})::Descriptor
@@ -7,7 +6,6 @@ struct Descriptor
   end
 end
 
-# Descriptor outer constructors
 """
     Descriptor(nv::Integer, mo::Integer)::Descriptor
 

@@ -1,15 +1,13 @@
-# --- clear ---
-clear!(t::TPS{Float64})    = mad_tpsa_clear!(t)
-clear!(t::TPS{ComplexF64}) = mad_ctpsa_clear!(t)
+# --- norm --- 
 
 """
-    norm(t1::TPS)
+    normTPS(t1::TPS)
 
 Calculates the 1-norm of the `TPS`, which is the sum of 
 the `abs` of all coefficients.
 """
-norm(t1::TPS{Float64}) = mad_tpsa_nrm(t1)
-norm(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
+normTPS(t1::TPS{Float64}) = mad_tpsa_nrm(t1)
+normTPS(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
 
 # --- setTPS! ---
 

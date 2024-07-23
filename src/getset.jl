@@ -1,3 +1,13 @@
+# Valid indexing types 
+# Sparse monomial:
+const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
+# Monomial:
+const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{Integer}}}
+# TPS Index:
+const TPSIndexType = Union{Integer,
+                           MIndexType,
+                           SMIndexType}
+
 # --- Setters ---
 # All
 function setindex!(t::TPS, v::Union{AbstractVector{<:Number},Number}, idx::Union{TPSIndexType,AbstractVector{<:Integer},Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
