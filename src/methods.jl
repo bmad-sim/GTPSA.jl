@@ -40,10 +40,10 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
   nn = numnn(t)
   coef = Ref{eltype(t1)}()
   mono = Vector{Cuchar}(undef, nn)
-  idx = cycle!(t1, -1, np+nv, mono, coef)
+  idx = cycle!(t1, -1, nn, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
-    if convert(Bool, mad_desc_isvalidm(newdesc, nn, mono))
+    if convert(Bool, mad_desc_isvalidm(newdesc.desc, nn, mono))
       setm!(t, nn, mono, 0, eltype(t)(coef[])) # set new tpsa
     end
     idx = cycle!(t1, idx, nn, mono, coef)

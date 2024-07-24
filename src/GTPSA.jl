@@ -94,11 +94,7 @@ export
   polar,
   rect, 
   clear!,
-  complex!,
-  add!,
-  sub!,
   mul!,
-  div!,
 
   # Monomial as TPS creators:
   vars,
@@ -136,6 +132,7 @@ export
   
   # Temporaries:
   @FastGTPSA,
+  @FastGTPSA!,
   ±,
   ∓,
   ⨰,

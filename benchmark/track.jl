@@ -6,22 +6,22 @@ using BenchmarkTools: @btime, @benchmark
 # Numbers calculated using BenchmarkTools.@btime
 #
 # 3rd Order ---------------------------------------------------------
-# Using the FastGTPSA macro:
-# GTPSA:                    N/A (OMP optimizations to be made
-# ForwardDiff:            3.457 s      (85142 allocations: 3.93 GiB) 
+# Using the @FastGTPSA macro:
+# GTPSA:                    196.825 ms (2927 allocations: 360.09 MiB)
+# ForwardDiff:            3.417 s      (85142 allocations: 3.93 GiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
-# GTPSA:                    N/A (OMP optimizations to be made)
-# ForwardDiff:            3.920 s      (85142 allocations: 3.93 GiB)
+# GTPSA:                    200.869 ms (19129 allocations: 2.52 GiB)
+# ForwardDiff:            3.936 s      (85142 allocations: 3.93 GiB)
 #
 # 2nd Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
-# GTPSA:                    7.160 ms (2927 allocations: 17.81 MiB)
-# ForwardDiff:             26.422 ms (9166 allocations: 63.47 MiB)
+# GTPSA:                    7.115 ms (2927 allocations: 17.81 MiB)
+# ForwardDiff:             25.646 ms (9166 allocations: 63.47 MiB)
 #
 # Without the @FastGTPSA macro (including ForwardDiff as control):
 # GTPSA:                   13.310 ms (19129 allocations: 127.70 MiB)
-# ForwardDiff:             22.972 ms (9166 allocations: 63.47 MiB)
+# ForwardDiff:             23.073 ms (9166 allocations: 63.47 MiB)
 #
 # 1st Order ---------------------------------------------------------
 # Using the @FastGTPSA macro:
@@ -32,12 +32,8 @@ using BenchmarkTools: @btime, @benchmark
 # GTPSA:                  618.667 μs (19129 allocations: 4.84 MiB)
 # ForwardDiff:            161.333 μs (1520 allocations: 1.10 MiB)
 #
-# Note that  is transparent to all types except TPS/ComplexTPS64, so it can be
+# Note that @FastGTPSA is transparent to all types except TPS types, so it can be
 # inserted into functions while still maintaining generic code, as shown here.
-
-# At least with ForwardDiff's Dual's, there is a small difference in time with/without
-# the @FastGTPSA macro, so users may consider using ad-hoc polymorphism to define 
-# functions for TPS's specifically including the @FastGTPSA macro befoe each expression.
 
 function track_qf(z0, k1, hkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(hkick))}(undef, length(z0))

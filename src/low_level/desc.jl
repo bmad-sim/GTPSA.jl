@@ -17,6 +17,8 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `uno::Cint`                  -- User provided array of orders of each variable/parameter (with `mad_desc_newvpo`)
 - `nth::Cint`                  -- Max number of threads or 1
 - `nc::Cuint`                  -- Number of coefficients (max length of TPSA)
+- `pmul::Cuint`                -- Threshold for parallel mult (0 = disable)
+- `pcomp::Cuint`               -- Threshold for parallel compose (0 = disable)
 
 - `shared::Ptr{Cint}`          -- counter of shared desc (all tables below except prms)
 - `monos::Ptr{Cuchar}`         -- 'Matrix' storing the monomials (sorted by variable)
@@ -51,7 +53,9 @@ struct Desc
 
   uno::Cint                  
   nth::Cint                  
-  nc::Cuint                  
+  nc::Cuint     
+  pmul::Cuint
+  pcomp::Cuint              
 
   shared::Ptr{Cint}
   monos::Ptr{Cuchar}         

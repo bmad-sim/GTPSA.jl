@@ -16,6 +16,7 @@ getord
 getord!
 integ
 integ!
+normTPS
 numcoefs
 scalar
 setTPS!

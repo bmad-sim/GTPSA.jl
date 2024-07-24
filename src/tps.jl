@@ -88,7 +88,7 @@ function low_TPS(T, ta, use)
       copy!(t, ta)
     else                     # --- Change descriptor ---
       t = TPS{T}(getdesc(use).desc, ta.mo)
-      setTPS!(t, t1, change=true)
+      setTPS!(t, ta, change=true)
       return t
     end
   else                       # --- promote number ---

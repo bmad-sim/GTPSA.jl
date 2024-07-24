@@ -1,7 +1,7 @@
 # [`@FastGTPSA`](@id fastgtpsa)
 *Speed up evaluation of expressions containing TPSs, transparent to other types*
 
-The `@FastGTPSA` macro can be preprended to any mathematical expressions that may contain operations using `TPS`/`ComplexTPS64`s. **The macro is completely transparent to non-TPS types, and so can be prepended in all functions while still maintaining type-generic code.**
+The `@FastGTPSA` macro can be preprended to any mathematical expressions that may contain operations using `TPS`s to speed up evaluation and reduce the number of allocations in the expression to 1. **The macro is completely transparent to non-TPS types, and so can be prepended in all functions while still maintaining type-generic code.**
 
 Here's an example of `@FastGTPSA` in action:
 
@@ -22,5 +22,3 @@ Without using the macro, each time an operation is performed using a TPS, a new 
 The macro `@FastGTPSA` basically tells the code to instead use a permanent, pre-allocated buffer of TPSs to contain the temporaries during evaluation of the expression, so there is no dynamic memory allocation until the result is obtained; the number of allocations is reduced to 1. Furthermore, these temporaries are accessed and deleted in a stack-like manner from the buffer, so that temporaries involved in operations are right next to each other in memory. This ensures minimal cache misses throughout the evaluation of the expression.
 
 The speedup of using the macro can be quite significant. See our [example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl), where we observe a roughly x2.5 speedup.
-
-**WARNING: `@FastGTPSA` in its current state is NOT thread safe! This will be fixed in the near future, where a thread-safe memory pool will be used to draw temporaries from**

@@ -1,9 +1,12 @@
 """
-    FastGTPSA(expr)
+    @FastGTPSA(expr)
 
-Macro speed up evaluation of mathematical expressions containing TPSs.
-@FastGTPSA is completely transparent to all other types, so it can be prepended 
-to expressions while still maintaining type-generic code.
+Macro to speed up evaluation of mathematical expressions containing TPSs.
+The temporaries generated during evaluation of the expression are drawn 
+from a thread-safe buffer, reducing the number of heap allocations to 
+2 (which is for a single TPS) for the result. @FastGTPSA is completely 
+transparent to all other types, so it can be prepended to expressions 
+while still maintaining type-generic code.
 
 # Example
 ```julia-repl
@@ -12,14 +15,42 @@ julia> using GTPSA, BenchmarkTools
 julia> d = Descriptor(3,5); x = vars(d);
 
 julia> @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
-  2.114 μs (10 allocations: 160 bytes)
+  1.654 μs (20 allocations: 5.88 KiB)
 
 julia> @btime @FastGTPSA \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
-  1.744 μs (1 allocation: 16 bytes)
+  1.363 μs (2 allocations: 960 bytes)
 ```
 """
 macro FastGTPSA(expr)
   return :(to_TPS($(to_temp_form(munge_expr(esc(expr))))))
+end 
+
+"""
+    @FastGTPSA!(result, expr)
+
+Macro to speed up evaluation of mathematical expressions containing TPSs.
+The temporaries generated during evaluation of the expression are drawn 
+from a thread-safe buffer, and `result` is set equal to the result. With 
+this macro, the number of heap allocations during expression evaluation is 
+0, however it is not type-generic as `result` must be an allocated `TPS`.
+
+# Example
+```julia-repl
+julia> using GTPSA, BenchmarkTools
+
+julia> d = Descriptor(3,5); x = vars(d);
+
+julia> t = ComplexTPS64();
+
+julia> @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+  1.654 μs (20 allocations: 5.88 KiB)
+
+julia> @btime @FastGTPSA!(\$t, \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im);
+  1.321 μs (0 allocations: 0 bytes)
+```
+"""
+macro FastGTPSA!(result, expr)
+  return :(to_TPS!($(esc(result)), $(to_temp_form(munge_expr(esc(expr))))))
 end 
 
 function to_temp_form(expr)
@@ -80,6 +111,12 @@ end
 
 function to_TPS(t1::TempTPS{T}) where {T}
   t = TPS{T}(getdesc(t1).desc, getmo(t1)) #get_and_zero_mo!(t1))
+  copy!(t,t1)
+  rel_temp!(t1)
+  return t
+end
+
+function to_TPS!(t::TPS{T},t1::TempTPS{T}) where {T}
   copy!(t,t1)
   rel_temp!(t1)
   return t
