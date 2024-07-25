@@ -26,7 +26,7 @@ struct TempTPS{T<:Union{Float64,ComplexF64}}
       try
         error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions.")
       finally
-        #GTPSA.cleartemps!(getdesc(use))
+        GTPSA.cleartemps!(getdesc(use))
       end
     end
     idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1 # Julia is one based with unsafe_load! First this is 0
@@ -45,7 +45,11 @@ struct TempTPS{T<:Union{Float64,ComplexF64}}
       # Release this thread's temporaries and give warning to run cleartemps!()
       unsafe_store!(desc.ti, Cint(0), Threads.threadid())
       unsafe_store!(desc.cti, Cint(0), Threads.threadid())
-      error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions, and if this Julia run is not terminated, GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current) must be executed.")
+      try
+        error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions.")
+      finally
+        GTPSA.cleartemps!(getdesc(use))
+      end
     end
     idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1
     t = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{ComplexF64}}}, desc.ct), idx)
@@ -63,7 +67,7 @@ function rel_temp!(t::TempTPS{Float64})
   tmpidx = unsafe_load(desc.ti, Threads.threadid())
   #println("decrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx-1)
   # Make sure we release this actual temporary
-  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx) == t.t "Something went wrong"
+  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx) == t.t "This should not have been reached! Please submit an issue to GTPSA.jl with a minimal working example"
   
   unsafe_store!(desc.ti, tmpidx-Cint(1), Threads.threadid())
   return
@@ -73,8 +77,8 @@ function rel_temp!(t::TempTPS{ComplexF64})
   desc = unsafe_load(mad_ctpsa_desc(t))
   tmpidx = unsafe_load(desc.cti, Threads.threadid())
 
-    # Make sure we release this actual temporary
-  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{ComplexF64}}}, desc.ct), (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx) == t.t "Something went wrong"
+  # Make sure we release this actual temporary
+  @assert unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{ComplexF64}}}, desc.ct), (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx) == t.t "This should not have been reached! Please submit an issue to GTPSA.jl with a minimal working example"
 
   unsafe_store!(desc.cti, tmpidx-Cint(1), Threads.threadid())
   return
@@ -82,16 +86,32 @@ end
 
 # --- temporary sanity checks/cleaners ---
 # Clears all temporaries:
+"""
+    GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current)
+
+Clears the "stack" of temporaries currently in use by the `Descriptor`. This is 
+necessary to run if `GTPSA.checktemps(d::Descriptor=GTPSA.desc_current)` returns 
+`false`; this occurs if an error is thrown during evaluation of an expression 
+using `@FastGTPSA` or `@FastGTPSA!`, and the Julia session is not terminated.
+"""
 function cleartemps!(d::Descriptor=GTPSA.desc_current)
   desc = unsafe_load(d.desc)
-  for i = 1:Threads.nthreads()
+  for i = 1:Threads.nthreads(:default)
     unsafe_store!(desc.ti, Cint(0), i)
     unsafe_store!(desc.cti, Cint(0), i)
   end
   return
 end
 
-# Checks that no temps are being used
+"""
+    GTPSA.checktemps(d::Descriptor=GTPSA.desc_current)
+
+Sanity check of the temporary buffer in the `Descriptor` used by @FastGTPSA. 
+Returns `true` if everything is OK, else `false` in which case 
+`GTPSA.cleartemps!(d::Descriptor=GTPSA.desc_current)` should be run. This may 
+occur if an error is thrown during evaluation of an expression using `@FastGTPSA` 
+or `@FastGTPSA!`.
+"""
 function checktemps(d::Descriptor=GTPSA.desc_current)
   desc = unsafe_load(d.desc)
   for i=1:desc.nth

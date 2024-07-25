@@ -162,19 +162,29 @@ print(g)
 print(h)
 ```
 
-## `@FastGTPSA` Macro
+## `@FastGTPSA`/`@FastGTPSA!` Macros
 
-The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
+The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s. **The `@FastGTPSA` macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored.
 
 ```@repl
 using GTPSA, BenchmarkTools
 
-d = Descriptor(3, 5);
-x = vars(d);
+d = Descriptor(3, 7);  x = vars(d);
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 
 @btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+```
+
+Another macro, `@FastGTPSA!`, can be used to fill a preallocated `TPS` with the result of an expression.This macro will calculate a `TPS` expression with _zero_ allocations, however is not type-generic like `@FastGTPSA`, as the result must be an allocated `TPS`.
+
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d); # hide
+
+t = ComplexTPS64();
+
+@btime @FastGTPSA!($t, $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im);
 ```
 
 The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/track.jl`. 
