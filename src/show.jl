@@ -147,7 +147,7 @@ function format(t::TPS; coloffset=0, max_nn=-1)
     if cmplx
       numcolumns += 1
     end
-    out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
+    out = Matrix{Any}(nothing, 0, numcolumns)
     idx = -1
     idx = cycle!(t, idx, nn, mono, v)
     while idx >= 0
