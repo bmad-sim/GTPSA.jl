@@ -5,6 +5,11 @@
 const TPSType    = Union{TempTPS, TPS}
 
 # --- clear! ---
+"""
+    clear!(t::TPS) 
+
+Clears all monomial coefficients in the `TPS` (sets to 0).
+"""
 clear!(t::RealTPS)    = mad_tpsa_clear!(t)
 clear!(t::ComplexTPS) = mad_ctpsa_clear!(t)
 
@@ -147,6 +152,11 @@ end
 polar!(t::ComplexTPS, t1::ComplexTPS) = mad_ctpsa_polar!(t1, t)
 polar!(t::ComplexTPS, t1::RealTPS) = (copy!(t,t1); polar!(t, t) )
 
+"""
+    complex!(t::ComplexTPS64; tre=nothing, tim=nothing) 
+
+Sets `t` to so that `real(t)=tre` and `imag(t)=tim` in place.
+"""
 complex!(t::ComplexTPS; tre=nothing, tim=nothing) = low_cplx!(t, tre, tim)
 
 # TPS:

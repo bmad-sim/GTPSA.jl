@@ -99,7 +99,7 @@ function low_TPS(T, ta, use)
 end
 
 
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}},pointer_from_objref(t))
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, pointer_from_objref(t))
 Base.eltype(::Type{TPS{T}}) where {T} = T
 Base.eltype(::TPS{T}) where {T} = T
 

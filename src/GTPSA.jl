@@ -71,7 +71,8 @@ import Base:  +,
               eltype,
               eps,
               floatmin,
-              floatmax
+              floatmax,
+              delete!
 
 import LinearAlgebra: norm, mul!
 import SpecialFunctions: erf, erfc
@@ -117,7 +118,9 @@ export
 
   # Methods:
   evaluate, evaluate!,
+  complex!,
   compose, compose!,
+  cycle!,
   integ, ∫, integ!, ∫!,
   deriv, ∂, deriv!, ∂!,
   getord, getord!,

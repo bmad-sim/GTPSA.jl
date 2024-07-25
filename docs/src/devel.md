@@ -7,34 +7,87 @@ import Pkg
 Pkg.develop(url="https://github.com/githubuser/GTPSA.jl")
 ```
 
-The package consists of two layers: a low-level layer written in Julia that is 1-to-1 with the GTPSA C code, and a high-level, user-friendly layer that cleans up the notation for manipulating TPSAs, manages temporaries generated during evaluation, and properly manages the memory in C when variables go out of scope in Julia. The low-level functions, which are exported for developer usage at the moment, are listed below.
+The package consists of two layers: a low-level layer written in Julia that is 1-to-1 with the GTPSA C code, and a high-level, user-friendly layer that cleans up the notation for manipulating TPSs, manages temporaries generated during evaluation, and properly manages the memory in C when variables go out of scope in Julia. The low-level functions are listed at the bottom of this page.
 
-The C code consists of three C structs: `desc`, `tpsa`, and `ctpsa`. The low-level Julia-equivalent, 1-to-1 structs are respectively `Desc`, `TPS{Float64}`, and `TPS{ComplexF64}`. C pointers `Ptr` to these structs are wrapped by the high-level structs `Descriptor`, `TPSA`, and `ComplexTPSA` respectively.
+When it comes to managing memory in C via Julia, there are certain intricacies that have to be considered. First, let's consider the `Descriptor`, which is the simplest: 
 
-The low-level structs `Desc`, `TPS{Float64}`, and `TPS{ComplexF64}` contain fields with `Ptr{Cvoid}`; these are pointers to any of the other structs, specified in the documentation. For example, the `d` field in `TPS{Float64}` is a `Ptr{Desc}`. We could not explicitly define `Ptr{Desc}`, because `Desc` likewise has a `Ptr{TPS{Float64}}`, and Julia does not allow for cyclic implicit struct definitions. Therefore, the `Ptr` must be converted to the appropriate low-level Julia struct before safe accessing (documented next to each of the fields).
+## Descriptor
 
-For example, to access the `t` array of `TPS{Float64}`s in `Desc` defined by a high-level struct `Descriptor`:
+The `Descriptor` stores all information about the GTPSA, including the indexing table for indexing specific monomials. This is a static object, only created once for a GTPSA, which all `TPS`s refer to. In C, these structs must exist for the entirety of the program execution. In Julia, because they must not be destroyed when out-of-scope, we wrap these objects in **immutable** structs. In a single program, up to 250 `Descriptor`s can exist simultanouesly, and they can be manually optionally destroyed using `GTPSA.mad_desc_del!`. At program termination all `Descriptor`s are destroyed. Given the significantly large number allowed, as well as the danger of still-existing `TPS` and `Descriptor` structs after destruction, no front-facing interface to the user is given for destroying existing `Descriptor`s.
 
-```
+The `Descriptor` struct simply wraps a C-pointer to a low-level struct called `Desc`: this struct is 1-to-1 equivalent to the C struct `desc` in GTPSA. See the documentation for [`GTPSA.Desc`](@ref) below. By having this struct in Julia, we can `unsafe_load` the struct and get values in the `desc`. For example, to access the first `TPS{Float64}` in the buffer of temporaries in the `Descriptor`, we can do
+
+
+```@repl
 using GTPSA
-import GTPSA: TPS{Float64}, TPS{ComplexF64}, Desc
+import GTPSA: Desc
 
 d = Descriptor(5,8)
 
-# To access the low-level C struct:
-desc = unsafe_load(d.desc)
-
-# To access the array of 8 temporaries t:
-t_jl = unsafe_wrap(Vector{Ptr{TPS{Float64}}}, Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), 8)
+desc = unsafe_load(d.desc) # To access the low-level C struct
+t_jl = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), 1) # 1 in Julia = 0 in C
 ```
 
-First the `Ptr{Ptr{Cvoid}}` is converted to a `Ptr{Ptr{TPS{Float64}}}`, which can then be wrapped in a `Vector{Ptr{TPS{Float64}}}`. Note that calling `unsafe_wrap` uses memory allocation, so it is preferred to use `unsafe_load` for speed-critical applications.To get the first temporary in the array without using `unsafe_wrap`, use:
+In Julia, if we were to then `unsafe_load(t_jl)`, there would in fact be allocations, as its internally creating a copy of the `TPS{Float64}` in Julia. This is not well documented in the documentation of `unsafe_load` (see the discussion [here](https://discourse.julialang.org/t/c-struct-garbage-collection-not-run-frequently-enough/116919/27?u=mattsignorelli)).
 
+## TPS
+
+The `TPS{Float64}` struct in Julia corresponds exactly to the C struct `tpsa` and `TPS{ComplexF64}` struct in Julia corresponds exactly to `ctpsa` in C. To understand fully the `TPS` struct, some history is needed:
+
+In early development versions of `GTPSA.jl`, the `TPS` struct was very similar to the `Descriptor` struct: it used to just wrap a C `Ptr` to a low-level struct, and instead be `mutable` so out-of-scope `TPS`s and temporaries are cleaned up. This at the time seemed like the simplest solution, since in Julia there is no way to tag C pointers for Julia garbage collection. This created some problems though: firstly, there is one indirection because Julia would tag that particular mutable wrapper struct for GC, but then the member `Ptr` of that struct pointed to a different place in memory that had to be cleaned up. Secondly, when calling GTPSA C functions that want a `Vector` of `TPS` (e.g. `Ptr` to `TPS`), you would need to do a `map(t->t.tpsa, x)` where `x` is a `Vector{TPS64}` and `tpsa` is the field member of the wrapper TPS struct. Thirdly, and perhaps most significantly, Julia is not aware of how much memory the C is using. Therefore, it will not call the garbage collector very often, even if actually >100GB of memory is being used. Sometimes the OS will just kill the Julia process.
+
+In order to get around these problems, we must allocate the entire mutable `TPS` struct in Julia instead of in the C code (e.g. using `GTPSA.mad_tpsa_newd`). We then can use `pointer_from_objref` in Julia to get a pointer to that mutable, Julia-owned struct to pass to the C functions. 
+
+Sounds simple enough, right? If only! In the GTPSA C code, the `coef` member array is something called a [flexible array member](https://en.wikipedia.org/wiki/Flexible_array_member). This is great in C, because instead of the struct storing a pointer to an array (which would cause an indirection every time the `coef` array is accessed in a `TPS`), it actually stores the array right there in the struct, with variable size. This gives some performance gains. In Julia, there is no such analog. For those who know about `StaticArrays.jl`, you might think an `SVector` could work, but surprise, it doesn't because you cannot mutate the fields of an `SVector` and neither can the C code.
+
+So the only solution it seems is to change the actual C struct in `mad_tpsa_impl.h` and `mad_ctpsa_impl.h` to use regular arrays for `coef` instead of flexible array members, and indeed this is what is done for `GTPSA.jl`. There is a tiny speed reduction due to the extra indirection, however the benefits of Julia's garbage collector knowing how much memory it's using, and keeping memory usage sane, is worth the cost.
+
+On the Julia side, it turns out you cannot just use a regular `Vector` for the `coef` array in the `TPS` struct, because Julia's `Vector` structs are quite complex and play a lot of tricks. You might actually be able to use an `MVector` from `StaticArrays`, however using this struct might make `GTPSA.jl` significantly more complex because the size of the array has to be known at compile-time or else you suffer the drastic performance reductions caused by type-instabilities. The complexity of using this could be checked at some point in the future.
+
+The decided solution was to, in the Julia, `@ccall jl_malloc` for the `coef` array, and in the finalizer for the mutable `TPS` struct call `@ccall jl_free` for the `coef` array. This gives us C-style arrays that Julia's garbage collector knows about, and so will make sure to keep the memory usage sane.
+
+When `@ccall` is used, the arguments are `Base.unsafe_convert`ed to the corresponding specified argument types. Therefore, for `TPS` all we had to do then was define
+```julia
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}},pointer_from_objref(t))
 ```
-t1_jl = unsafe_load(Base.unsafe_convert(Ptr{Ptr{TPS{Float64}}}, desc.t), 1)
+ and now we can pass our `TPS` structs to C using `@ccall`.
+
+
+## TempTPS
+
+Because `unsafe_load` of a `Ptr{<:TPS}` creates a copy and allocates, we cannot treat the constant buffer of pre-allocated temporaries in the `Descriptor` as bona-fide `TPS`s. Note that the memory addresses of the temporaries in the buffer are constant and do not need to be cleaned up; they are **immutable!**. The temporaries, which we give the type `GTPSA.TempTPS`, do not have any of the problems of just wrapping a pointer as do the `TPS`s, and so that's what they are. Also in Julia, in order to access the fields of a `TempTPS` (e.g. `mo`) via `unsafe_load` without allocating, we need an immutable struct having the same structure as `TPS`. This is the purpose of `GTPSA.LowTempTPS`. We need to use the `mo` field for `@FastGTPSA` to finally allocate the result `TPS` with the `mo` of the result `TempTPS`.
+
+As with `TPS`, we also had to define `Base.unsafe_convert` for `TempTPS` so we can `@ccall`. In this case, the `unsafe_convert` returns the member `Ptr` of the `TempTPS`.
+
+```@docs
+GTPSA.TempTPS
 ```
 
-## Monomial
+## Library Structure
+
+All operators have an in-place, mutating version specified with a bang (!). These are the lowest-level pure Julia code, following the convention that the first argument is the one to contain the result. In the GTPSA C library, the last argument contains the result, so this is accounted for in the file `inplace_operators.jl`. All in-place functions can receive either a regular `TPS` , which the user will be using, as well as a `GTPSA.TempTPS`, which the user should not concern themselves with. The constants `RealTPS` and `ComplexTPS` are defined respectively in `low_level/rtpsa.jl` and `low_level/ctpsa.jl` to simplify the notation. These are just:
+
+```julia
+# Internal constants to aid multiple dispatch including temporaries 
+const RealTPS = Union{TempTPS{Float64}, TPS{Float64}}
+const ComplexTPS = Union{TempTPS{ComplexF64}, TPS{ComplexF64}}
+```
+
+All this does is enforce correct types for the in-place functions, while keeping the notation/code simple. 
+
+The in-place, mutating functions, defined in `inplace_operators.jl` **must all use the `RealTPS` and `ComplexTPS` "types"**. Then, the higher level out-of-place functions for both `TPS` and `TempTPS`, which do different things with the result, will use these in-place functions.
+
+The out-of-place functions for `TPS` are defined in `operators.jl`, and the out-of-place functions for `TempTPS` are defined in `fastgtpsa/operators.jl`.
+
+## Fast GTPSA Macros
+
+The `@FastGTPSA`/`@FastGTPSA!` macros work by changes all arithmetic operators in different Julia arithmetic operators with the same operator precedence and unary operator capabilities. These special operators then dispatch on functions that use the temporaries when a `TPS` or `TempTPS` is passed, else default to their original operators, thereby making it completely transparent to non-TPS types. Both `+` and `-` must work as unary operators, and there is a very short list of allowed ones shown [here](https://github.com/JuliaLang/julia/blob/master/src/julia-parser.scm#L99). The other arithmetic operators were chosen somewhat randomly from the top of the same file, next to `prec-plus`, `prec-times`, and `prec-power` which defines the operator precedences. By taking this approach, we relieve ourselves of having to rewrite PEMDAS and instead let the Julia do it for us.
+
+All non-arithmetic operators that are supported by GTPSA are then changed to `__t_<operator>`, e.g. `sin` → `__t_sin`, where the prefix `__t_` is also chosen somewhat arbitrarily. These operators are all defined in `fastgtpsa/operators.jl`, and when they encounter a TPS type, they use the temporaries, and when other number types are detected, they fallback to the regular, non-`__t_` operator. This approach works extraordinarily well, however has the disadvantage that all of the `__t_` operators and special infix arithmetic operators have to be exported.
+
+## Low-Level
+
+### Monomial
 ```@docs
 GTPSA.mad_mono_add!
 GTPSA.mad_mono_cat!
@@ -58,7 +111,7 @@ GTPSA.mad_mono_str!
 GTPSA.mad_mono_sub!
 ```
 
-## Desc
+### Desc
 ```@docs
 GTPSA.Desc
 GTPSA.mad_desc_del!
@@ -79,9 +132,8 @@ GTPSA.mad_desc_newvpo
 GTPSA.mad_desc_nxtbyord
 GTPSA.mad_desc_nxtbyvar
 ```
-## TPS{Float64}
+### TPS{Float64}
 ```@docs
-GTPSA.TPS{Float64}
 GTPSA.mad_tpsa_abs!
 GTPSA.mad_tpsa_acc!
 GTPSA.mad_tpsa_acos!
@@ -104,7 +156,6 @@ GTPSA.mad_tpsa_axypb!
 GTPSA.mad_tpsa_axypbvwpc!
 GTPSA.mad_tpsa_axypbzpc!
 GTPSA.mad_tpsa_clear!
-GTPSA.mad_tpsa_clrdensity!
 GTPSA.mad_tpsa_clrord!
 GTPSA.mad_tpsa_compose!
 GTPSA.mad_tpsa_convert!
@@ -179,7 +230,6 @@ GTPSA.mad_tpsa_pow!
 GTPSA.mad_tpsa_powi!
 GTPSA.mad_tpsa_pown!
 GTPSA.mad_tpsa_print
-GTPSA.mad_tpsa_prtdensity
 GTPSA.mad_tpsa_scan
 GTPSA.mad_tpsa_scan_coef!
 GTPSA.mad_tpsa_scan_hdr
@@ -204,15 +254,15 @@ GTPSA.mad_tpsa_sub!
 GTPSA.mad_tpsa_tan!
 GTPSA.mad_tpsa_tanh!
 GTPSA.mad_tpsa_taylor!
+GTPSA.mad_tpsa_taylor_h!
 GTPSA.mad_tpsa_translate!
 GTPSA.mad_tpsa_uid!
 GTPSA.mad_tpsa_unit!
 GTPSA.mad_tpsa_update!
 GTPSA.mad_tpsa_vec2fld!
 ```
-# TPS{ComplexF64} 
+### TPS{ComplexF64} 
 ```@docs
-GTPSA.TPS{ComplexF64}
 GTPSA.mad_ctpsa_acc!
 GTPSA.mad_ctpsa_acc_r!
 GTPSA.mad_ctpsa_acos!
@@ -371,6 +421,7 @@ GTPSA.mad_ctpsa_subt!
 GTPSA.mad_ctpsa_tan!
 GTPSA.mad_ctpsa_tanh!
 GTPSA.mad_ctpsa_taylor!
+GTPSA.mad_ctpsa_taylor_h!
 GTPSA.mad_ctpsa_tdif!
 GTPSA.mad_ctpsa_tdiv!
 GTPSA.mad_ctpsa_tpoisbra!

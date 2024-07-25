@@ -67,6 +67,11 @@ function evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {
   mad_eval!(length(F), F, length(x), x, y)
 end
 
+"""
+    evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+
+Evaluates the vector function `F` at the point `x`, and returns the result.
+"""
 evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
 
 
