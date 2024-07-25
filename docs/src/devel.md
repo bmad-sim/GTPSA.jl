@@ -40,7 +40,7 @@ In order to get around these problems, we must allocate the entire mutable `TPS`
 
 Sounds simple enough, right? If only! In the GTPSA C code, the `coef` member array is something called a [flexible array member](https://en.wikipedia.org/wiki/Flexible_array_member). This is great in C, because instead of the struct storing a pointer to an array (which would cause an indirection every time the `coef` array is accessed in a `TPS`), it actually stores the array right there in the struct, with variable size. This gives some performance gains. In Julia, there is no such analog. For those who know about `StaticArrays.jl`, you might think an `SVector` could work, but surprise, it doesn't because you cannot mutate the fields of an `SVector` and neither can the C code.
 
-So the only solution it seems is to change the actual C struct in `mad_tpsa_impl.h` and `mad_ctpsa_impl.h` to use regular arrays for `coef` instead of flexible array members, and indeed this is what is done for `GTPSA.jl`. There is a tiny speed reduction due to the extra indirection, however the benefits of Julia's garbage collector knowing how much memory it's using, and keeping memory usage sane, is worth the cost.
+So the only solution it seems is to change the actual C struct in `mad_tpsa_impl.h` and `mad_ctpsa_impl.h` to use regular arrays for `coef` instead of flexible array members, and indeed this is what is done for `GTPSA.jl`. There is a tiny speed reduction due to the indirection of accessing `coef`, however the benefits of Julia's garbage collector knowing how much memory it's using, and keeping memory usage sane, is worth the very tiny cost.
 
 On the Julia side, it turns out you cannot just use a regular `Vector` for the `coef` array in the `TPS` struct, because Julia's `Vector` structs are quite complex and play a lot of tricks. You might actually be able to use an `MVector` from `StaticArrays`, however using this struct might make `GTPSA.jl` significantly more complex because the size of the array has to be known at compile-time or else you suffer the drastic performance reductions caused by type-instabilities. The complexity of using this could be checked at some point in the future.
 
@@ -83,9 +83,11 @@ The out-of-place functions for `TPS` are defined in `operators.jl`, and the out-
 
 The `@FastGTPSA`/`@FastGTPSA!` macros work by changes all arithmetic operators in different Julia arithmetic operators with the same operator precedence and unary operator capabilities. These special operators then dispatch on functions that use the temporaries when a `TPS` or `TempTPS` is passed, else default to their original operators, thereby making it completely transparent to non-TPS types. Both `+` and `-` must work as unary operators, and there is a very short list of allowed ones shown [here](https://github.com/JuliaLang/julia/blob/master/src/julia-parser.scm#L99). The other arithmetic operators were chosen somewhat randomly from the top of the same file, next to `prec-plus`, `prec-times`, and `prec-power` which defines the operator precedences. By taking this approach, we relieve ourselves of having to rewrite PEMDAS and instead let the Julia do it for us.
 
-All non-arithmetic operators that are supported by GTPSA are then changed to `__t_<operator>`, e.g. `sin` → `__t_sin`, where the prefix `__t_` is also chosen somewhat arbitrarily. These operators are all defined in `fastgtpsa/operators.jl`, and when they encounter a TPS type, they use the temporaries, and when other number types are detected, they fallback to the regular, non-`__t_` operator. This approach works extraordinarily well, however has the disadvantage that all of the `__t_` operators and special infix arithmetic operators have to be exported.
+All arithmetic operators are changed to `GTPSA.:<special symbols>`, e.g. `+` → `GTPSA.:±`. All non-arithmetic operators that are supported by GTPSA are then changed to `GTPSA.__t_<operator>`, e.g. `sin` → `GTPSA.__t_sin`, where the prefix `__t_` is also chosen somewhat arbitrarily. These operators are all defined in `fastgtpsa/operators.jl`, and when they encounter a TPS type, they use the temporaries, and when other number types are detected, they fallback to the regular, non-`__t_` operator. This approach works extraordinarily well, and introduces no problems externally because none of these functions/symbols are exported.
 
 ## Low-Level
+
+Below is documentation for every single 1-to-1 C function in the GTPSA library. If there is any function missing, please submit an issue to `GTPSA.jl`.
 
 ### Monomial
 ```@docs
@@ -131,6 +133,7 @@ GTPSA.mad_desc_newvp
 GTPSA.mad_desc_newvpo
 GTPSA.mad_desc_nxtbyord
 GTPSA.mad_desc_nxtbyvar
+GTPSA.mad_desc_paropsth!
 ```
 ### TPS{Float64}
 ```@docs
