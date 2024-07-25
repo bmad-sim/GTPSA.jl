@@ -7,6 +7,7 @@ complex!
 compose!
 cutord
 cutord!
+cycle!
 deriv
 deriv!
 evaluate
@@ -15,7 +16,8 @@ getord
 getord!
 integ
 integ!
-lengthTPS
+normTPS
+numcoefs
 scalar
 setTPS!
 translate

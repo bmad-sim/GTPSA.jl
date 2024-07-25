@@ -66,9 +66,9 @@ end
 
 
 function c_to_jl_type(type_c)
-  dim = count(i->(i=='*'), type_c)
   type_jl = ""
-  for i=1:dim
+  ptr = findfirst("*", type_c)
+  if !isnothing(ptr)
     type_jl = type_jl * "Ptr{"
   end
 
@@ -93,9 +93,9 @@ function c_to_jl_type(type_c)
   elseif occursin("desc_t", type_c)
     type_jl = type_jl * "Desc"
   elseif occursin("ctpsa_t", type_c)
-    type_jl = type_jl * "CTPSA"
+    type_jl = type_jl * "TPS{ComplexF64}"
   elseif occursin("tpsa_t", type_c)
-    type_jl = type_jl * "RTPSA"
+    type_jl = type_jl * "TPS{Float64}"
   elseif occursin("FILE", type_c)
     type_jl = type_jl * "Cvoid"
   elseif occursin("void", type_c)
@@ -103,7 +103,7 @@ function c_to_jl_type(type_c)
   else
     println(io_out, "ERROR TYPE NOT FOUND! type_c = $(type_c)")
   end
-  for i=1:dim
+  if !isnothing(ptr)
     type_jl = type_jl * "}"
   end
 

@@ -30,7 +30,9 @@ These `TPS`s can then be manipulated just like any other mathematical quantity i
 f = cos(x[1]) + sqrt(1 + x[2])
 ```
 
-A blank `TPS` or `ComplexTPS`, with all coefficients equal to zero, can be created using `TPS(use=d)` or `ComplexTPS(use=d)` respectively. If `use` is not explicitly passed, then the global `GTPSA.desc_current`, which is set each time a new `Descriptor` is defined, will be used.
+A blank TPS with all coefficients equal to zero can be created using `TPS(use=d)`. This will construct a new `TPS` where each monomial coefficient is a `Float64`. If `use` is not explicitly passed in the constructor, then the global `GTPSA.desc_current`, which is set each time a new `Descriptor` is defined, will be used. Equivalently, `TPS64(use=d)` or `TPS{Float64}(use=d)` could have been used; a `TPS` is a [parametric type](https://docs.julialang.org/en/v1/manual/types/#Parametric-Types) where the type parameter specifies the number type that the `TPS` represents, and therefore the number type for each monomial coefficient in the TPS. `TPS64` is an alias for `TPS{Float64}`, and if no type parameter is specified, then the default is `TPS64`. Likewise, a blank complex TPS can be created used `ComplexTPS64(use=d)` or `TPS{ComplexF64}(use=d)`, with `ComplexTPS64` being an alias for `TPS{ComplexF64}`. Currently, the GTPSA library only supports `TPS`s representing `Float64` and `ComplexF64` number types.
+
+A regular scalar number `a` can be promoted to a `TPS` using `TPS(a)` (note by excluding the `use` keyword argument, `GTPSA.desc_current` is used for the `Descriptor`). In this case, the type parameter of the `TPS` is inferred from the type of `a`.
 
 When a TPS contains a lot of variables, the default output showing each variable exponent can be larger than the screen can show. A global variable `GTPSA.show_sparse`, which is by default set to `false`, can be set to `true` to instead show each specific monomial instead of the exponents for each variable:
 
@@ -56,7 +58,7 @@ Individual monomial coefficients in a TPS `t` can be get/set with three methods 
 
 1. **By Order:** `t[[<x_1 order>, ..., <x_nv order>]]`. For example, for a TPS with three variables ``x_1``, ``x_2``, and ``x_3``, the ``x_1^3x_2^1`` monomial coefficient is accessed with `t[[3,1,0]]` or equivalently `t[[3,1]]`, as leaving out trailing zeros for unincluded variables is allowed. A tuple is also allowed instead of a vector for the list of orders.
 2. **By Sparse Monomial** `t[[<ix_var> => <order>, ...]]`. This method of indexing is convenient when a TPS contains many variables and parameters. For example, for a TPS with variables ``x_1,x_2,...x_{100}``, the ``x_{1}^3x_{99}^1`` monomial coefficient is accessed with `t[[1=>3, 99=>1]]`. A tuple is also allowed instead of a vector for the list of pairs.
-3. **By Monomial Index** `t[idx]`. *This method is not recommended for indexing above first order.* Indexes the TPS with all monomials sorted by order. For example, for a TPS with two variables ``x_1`` and ``x_2``, the ``x_1`` monomial is indexed with `t[1]` and the ``x_1^2`` monomial is indexed with `t[3]`. The zeroth order part, or the *scalar* part of the TPS, can be set with `t[0]`. This method requires zero allocations for indexing, unlike the other two.
+3. **By Monomial Index** `t[idx]`. *This method is generally not recommended for indexing above first order.* Indexes the TPS with all monomials sorted by order. For example, for a TPS with two variables ``x_1`` and ``x_2``, the ``x_1`` monomial is indexed with `t[1]` and the ``x_1^2`` monomial is indexed with `t[3]`. The zeroth order part, or the *scalar* part of the TPS, can be set with `t[0]`. This method requires zero allocations for indexing, unlike the other two.
 
 These three methods of indexing are best shown with an example:
 
@@ -160,23 +162,69 @@ print(g)
 print(h)
 ```
 
-## `@FastGTPSA` Macro
+## `@FastGTPSA`/`@FastGTPSA!` Macros
 
-The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s and/or `ComplexTPS`s. The macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining generic code. Any functions in the expression that are not overloaded by GTPSA will be ignored.
+The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **not** use any `-ffast-math` business (so still IEEE compliant), but instead will use a pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
+
+The first macro, `@FastGTPSA` can be prepended to an expression following assignment (`=`, `+=`, etc) to only construct one `TPS` (which requires two allocations), instead of a `TPS` for every temporary:
 
 ```@repl
 using GTPSA, BenchmarkTools
 
-d = Descriptor(3, 5);
-x = vars(d);
+d = Descriptor(3, 7);  x = vars(d);
 
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 
 @btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+
+y = rand(3); # transparent to non-TPS types
+
+@btime $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+
+@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
 ```
 
-The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/track.jl`. 
+The second macro, `@FastGTPSA!` can be prepended to the LHS of an assignment, and will fill a preallocated `TPS` with the result of an expression. `@FastGTPSA!` will calculate a `TPS` expression with _zero_ allocations, and will still have no impact if a non-TPS type is used. The only requirement is that all symbols in the expression are defined:
 
-## Promotion of `TPS` to `ComplexTPS`
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d); # hide
 
-`TPS`s and `ComplexTPS`s can be mixed freely without concern. Any time an operation with a `TPS` and a `ComplexTPS` or a `Complex` number occurs, the result will be a `ComplexTPS`. A `ComplexTPS` can be converted back to a `TPS` using the `real` and `imag` operators.
+t = ComplexTPS64(); # pre-allocate
+
+@btime @FastGTPSA! $t = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im; 
+
+y = rand(3); @gensym z; # transparent to non-TPS types
+
+@btime @FastGTPSA! $z = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
+```
+
+Both `@FastGTPSA` and `@FastGTPSA!` can also be prepended to a block of code, in which case they are applied to each assignment in the block:
+
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d);
+
+y = rand(3);
+
+@btime @FastGTPSA begin
+        t1 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        t2 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        z  = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
+       end;
+
+t3 = ComplexTPS64(); t4 = ComplexTPS64(); @gensym w;
+
+@btime @FastGTPSA! begin
+        $t3 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        $t4 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        $w  = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
+       end;
+
+```
+
+The advantages of using the macro become especially apparent in more complicated systems, for example in [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl). 
+
+## Promotion of `TPS64` to `ComplexTPS64`
+
+`TPS64`s and `ComplexTPS64`s can be mixed freely without concern. Any time an operation with a `TPS64` and a `ComplexTPS64` or a `Complex` number occurs, the result will be a `ComplexTPS64`. A `ComplexTPS64` can be converted back to a `TPS64` using the `real` and `imag` operators.

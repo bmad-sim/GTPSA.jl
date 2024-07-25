@@ -17,6 +17,8 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `uno::Cint`                  -- User provided array of orders of each variable/parameter (with `mad_desc_newvpo`)
 - `nth::Cint`                  -- Max number of threads or 1
 - `nc::Cuint`                  -- Number of coefficients (max length of TPSA)
+- `pmul::Cuint`                -- Threshold for parallel mult (0 = disable)
+- `pcomp::Cuint`               -- Threshold for parallel compose (0 = disable)
 
 - `shared::Ptr{Cint}`          -- counter of shared desc (all tables below except prms)
 - `monos::Ptr{Cuchar}`         -- 'Matrix' storing the monomials (sorted by variable)
@@ -35,8 +37,8 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 
 - `size::Culonglong`           -- Bytes used by `desc`. `Unsigned Long Int`: In 32 bit system is `Int32` but 64 bit is `Int64`. Using `Culonglong` assuming 64 bit
 
-- `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `RTPSA`s already initialized
-- `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `CTPSA`s already initialized
+- `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `TPS{Float64}`s already initialized
+- `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `TPS{ComplexF64}`s already initialized
 - `ti::Ptr{Cint}`              -- idx of tmp used by each thread (length = # threads)
 - `cti::Ptr{Cint}`             -- idx of tmp used by each thread (length = # threads)                                                                                              
 """
@@ -51,7 +53,9 @@ struct Desc
 
   uno::Cint                  
   nth::Cint                  
-  nc::Cuint                  
+  nc::Cuint     
+  pmul::Cuint
+  pcomp::Cuint              
 
   shared::Ptr{Cint}
   monos::Ptr{Cuchar}         
@@ -395,4 +399,23 @@ For debugging.
 """
 function mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})::Cvoid
+end
+
+
+"""
+    mad_desc_paropsth!(d::Ptr{Desc}, mult_, comp_)
+
+Sets the parallelised operations thresholds for multiplication (`mult_`) and/or
+composition (`comp_`). Will return in `mult_` and/or `comp_` the previous threshold.
+
+### Input
+- `mult_` -- (Optional) `Ptr{Cint}` to new multiplication OMP parallelization threshold
+- `comp_` -- (Optional) `Ptr{Cint}` to new composition OMP parallelization threshold
+
+### Output
+- `mult_` -- (Optional) old multiplication parallelization threshold
+- `comp_` -- (Optional) old composition parallelization threshold
+"""
+function mad_desc_paropsth!(d::Ptr{Desc}, mult_, comp_)
+  @ccall MAD_TPSA.mad_desc_paropsth!(d::Ptr{Desc}, mult_::Ptr{Cint}, comp_::Ptr{Cint})::Cvoid
 end

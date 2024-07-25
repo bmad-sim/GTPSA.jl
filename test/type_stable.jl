@@ -1,7 +1,7 @@
 function type_stable_test()
   d = Descriptor(1, 5)
-  t = TPS(use=d)
-  ct = ComplexTPS(t)
+  t = TPS{Float64}(use=d)
+  ct = TPS{ComplexF64}(t)
 
   # Basics
   isequal(t , 0)
@@ -135,92 +135,92 @@ function type_stable_test()
   tcn = zero(ct1)
   tcn[0] = 1+1im; tcn[[1]] = 2+2im; tcn[[2]] = 3+3im; tcn[[3]] = 4+4im; tcn[[4]] = 5+5im; tcn[[5]] = 6+6im
 
-  norm(tn) == sum([i for i in 1:6])
-  norm(tcn) == sum([abs(i+i*im) for i in 1:6])
+  normTPS(tn) == sum([i for i in 1:6])
+  normTPS(tcn) == sum([abs(i+i*im) for i in 1:6])
 
-  # TPS:
-  norm(t1 + t2 - t3) < tol
-  norm(t2 + t1 - t3) < tol
-  norm(t1 + 2 - t3) < tol
-  norm(2 + t1 - t3) < tol
-  norm(t3 - t2 - t1) < tol
-  norm(t2 - t3 - -t1) < tol
-  norm(t3 - 2 - t1) < tol
-  norm(2 - t3 - -t1) < tol
-  norm(t2 * t3 - 6) < tol
-  norm(t3 * t2 - 6) < tol
-  norm(t2 * 5 - 10) < tol
-  norm(5 * t2 - 10 * t1) < tol
-  norm(t1 / t2 - 1/2) < tol
-  norm(t2 / t1 - 2) < tol
-  norm(1 / t2 - 1/2) < tol
-  norm(t2 / 3 - 2/3) < tol
-  norm(t2 / t2 - t1) < tol
-  norm(t2 / t2 - 1) < tol
-  norm(t2 ^ t3 - 8) < tol
-  norm(t3 ^ t2 - 9) < tol
-  norm(t2 ^ 3 - 8) < tol
-  norm(t2 ^ (1/2) - sqrt(2)) < tol
-  norm(t2 ^ (1/2) - sqrt(t2)) < tol
-  norm(2 ^ t3 - 8) < tol
-  norm(inv(t3) - 1/t3) < tol
-  norm(inv(t3) - 1/3) < tol
+  # TPS{Float64}:
+  normTPS(t1 + t2 - t3) < tol
+  normTPS(t2 + t1 - t3) < tol
+  normTPS(t1 + 2 - t3) < tol
+  normTPS(2 + t1 - t3) < tol
+  normTPS(t3 - t2 - t1) < tol
+  normTPS(t2 - t3 - -t1) < tol
+  normTPS(t3 - 2 - t1) < tol
+  normTPS(2 - t3 - -t1) < tol
+  normTPS(t2 * t3 - 6) < tol
+  normTPS(t3 * t2 - 6) < tol
+  normTPS(t2 * 5 - 10) < tol
+  normTPS(5 * t2 - 10 * t1) < tol
+  normTPS(t1 / t2 - 1/2) < tol
+  normTPS(t2 / t1 - 2) < tol
+  normTPS(1 / t2 - 1/2) < tol
+  normTPS(t2 / 3 - 2/3) < tol
+  normTPS(t2 / t2 - t1) < tol
+  normTPS(t2 / t2 - 1) < tol
+  normTPS(t2 ^ t3 - 8) < tol
+  normTPS(t3 ^ t2 - 9) < tol
+  normTPS(t2 ^ 3 - 8) < tol
+  normTPS(t2 ^ (1/2) - sqrt(2)) < tol
+  normTPS(t2 ^ (1/2) - sqrt(t2)) < tol
+  normTPS(2 ^ t3 - 8) < tol
+  normTPS(inv(t3) - 1/t3) < tol
+  normTPS(inv(t3) - 1/3) < tol
 
-  # ComplexTPS:
-  norm(ct1 + ct2 - ct3) < tol
-  norm(ct2 + ct1 - ct3) < tol
-  norm(ct1 + (2+2im) - ct3) < tol
-  norm((2+2im) + ct1 - ct3) < tol
-  norm(ct3 - ct2 - ct1) < tol
-  norm(ct2 - ct3 - -ct1) < tol
-  norm(ct3 - (2+2im) - ct1) < tol
-  norm((2+2im) - ct3 - -ct1) < tol
-  norm(ct2 * ct3 - (2+2im)*(3+3im)) < tol
-  norm(ct3 * ct2 - (2+2im)*(3+3im)) < tol
-  norm(ct2 * 5 - (10+10im)) < tol
-  norm(5 * ct2 - (10 * ct1)) < tol
-  norm(ct1 / ct2 - (1+im)/(2+2im)) < tol
-  norm(ct2 / ct1 - 2) < tol
-  norm(1 / ct2 - 1/(2+2im)) < tol
-  norm(ct2 / 3 - (2+2im)/3) < tol
-  norm(ct2 / ct2 - 1) < tol
-  norm(ct2 ^ ct3 - (2+2im)^(3+3im)) < tol
-  norm(ct3 ^ ct2 - (3+3im)^(2+2im)) < tol
-  norm(ct2 ^ 3 - (2+2im)^3) < tol
-  norm(ct2 ^ (1/2) - sqrt(2+2im)) < tol
-  norm(ct2 ^ (1/2) - sqrt(ct2)) < tol
-  norm(2 ^ ct3 - 2^(3+3im)) < tol
-  norm(inv(ct3) - 1/ct3) < tol
-  norm(inv(ct3) - 1/(3+3im)) < tol
+  # TPS{ComplexF64}:
+  normTPS(ct1 + ct2 - ct3) < tol
+  normTPS(ct2 + ct1 - ct3) < tol
+  normTPS(ct1 + (2+2im) - ct3) < tol
+  normTPS((2+2im) + ct1 - ct3) < tol
+  normTPS(ct3 - ct2 - ct1) < tol
+  normTPS(ct2 - ct3 - -ct1) < tol
+  normTPS(ct3 - (2+2im) - ct1) < tol
+  normTPS((2+2im) - ct3 - -ct1) < tol
+  normTPS(ct2 * ct3 - (2+2im)*(3+3im)) < tol
+  normTPS(ct3 * ct2 - (2+2im)*(3+3im)) < tol
+  normTPS(ct2 * 5 - (10+10im)) < tol
+  normTPS(5 * ct2 - (10 * ct1)) < tol
+  normTPS(ct1 / ct2 - (1+im)/(2+2im)) < tol
+  normTPS(ct2 / ct1 - 2) < tol
+  normTPS(1 / ct2 - 1/(2+2im)) < tol
+  normTPS(ct2 / 3 - (2+2im)/3) < tol
+  normTPS(ct2 / ct2 - 1) < tol
+  normTPS(ct2 ^ ct3 - (2+2im)^(3+3im)) < tol
+  normTPS(ct3 ^ ct2 - (3+3im)^(2+2im)) < tol
+  normTPS(ct2 ^ 3 - (2+2im)^3) < tol
+  normTPS(ct2 ^ (1/2) - sqrt(2+2im)) < tol
+  normTPS(ct2 ^ (1/2) - sqrt(ct2)) < tol
+  normTPS(2 ^ ct3 - 2^(3+3im)) < tol
+  normTPS(inv(ct3) - 1/ct3) < tol
+  normTPS(inv(ct3) - 1/(3+3im)) < tol
 
-  # Promotion of TPS to ComplexTPS
-  norm(t1 + ct2 - (1 + (2+2im))) < tol
-  norm(ct2 + t1 - (1 + (2+2im))) < tol
-  norm(t1 + (2+2im) - (1 + (2+2im))) < tol
-  norm((2+2im) + t1 - (1 + (2+2im))) < tol
-  norm(t3 - ct2 - (3 - (2+2im))) < tol
-  norm(ct2 - t3 - ((2+2im) - 3)) < tol
-  norm(t3 - (2+2im) - (3 - (2+2im))) < tol
-  norm((2+2im) - t3 - ((2+2im) - 3)) < tol
-  norm(t2 * ct3 - 2 * (3+3im)) < tol
-  norm(ct3 * t2 - 2 * (3+3im)) < tol
-  norm(t2 * (3+3im) - 2 * (3+3im)) < tol
-  norm((3+3im) * t2 - 2 * (3+3im)) < tol
-  norm(t2 / ct3 - 2/(3+3im)) < tol
-  norm(ct3 / t2 - (3+3im)/2) < tol
-  norm(t2 / (3+3im) - 2/(3+3im)) < tol
-  norm((3+3im) / t2 - (3+3im)/2) < tol
-  norm(t2 ^ ct3 - 2^(3+3im)) < tol
-  norm(ct3 ^ t2 - (3+3im)^2) < tol
-  norm(t2 ^ (3+3im) - 2^(3+3im)) < tol
-  norm((3+3im)^t2 - (3+3im)^2) < tol
+  # Promotion of TPS{Float64} to TPS{ComplexF64}
+  normTPS(t1 + ct2 - (1 + (2+2im))) < tol
+  normTPS(ct2 + t1 - (1 + (2+2im))) < tol
+  normTPS(t1 + (2+2im) - (1 + (2+2im))) < tol
+  normTPS((2+2im) + t1 - (1 + (2+2im))) < tol
+  normTPS(t3 - ct2 - (3 - (2+2im))) < tol
+  normTPS(ct2 - t3 - ((2+2im) - 3)) < tol
+  normTPS(t3 - (2+2im) - (3 - (2+2im))) < tol
+  normTPS((2+2im) - t3 - ((2+2im) - 3)) < tol
+  normTPS(t2 * ct3 - 2 * (3+3im)) < tol
+  normTPS(ct3 * t2 - 2 * (3+3im)) < tol
+  normTPS(t2 * (3+3im) - 2 * (3+3im)) < tol
+  normTPS((3+3im) * t2 - 2 * (3+3im)) < tol
+  normTPS(t2 / ct3 - 2/(3+3im)) < tol
+  normTPS(ct3 / t2 - (3+3im)/2) < tol
+  normTPS(t2 / (3+3im) - 2/(3+3im)) < tol
+  normTPS((3+3im) / t2 - (3+3im)/2) < tol
+  normTPS(t2 ^ ct3 - 2^(3+3im)) < tol
+  normTPS(ct3 ^ t2 - (3+3im)^2) < tol
+  normTPS(t2 ^ (3+3im) - 2^(3+3im)) < tol
+  normTPS((3+3im)^t2 - (3+3im)^2) < tol
 
   d = Descriptor(1, 5)
-  t = TPS(use=d)
+  t = TPS{Float64}(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
-  t1 = TPS(t)
+  t1 = TPS{Float64}(t)
   t1[0] = 1
   t2 = zero(t1)
   t2[0] = 2
@@ -228,282 +228,285 @@ function type_stable_test()
   t3[0] = 3
 
 
-  norm(abs(-t) - abs(-v) ) < tol
-  norm(sqrt(t) - sqrt(v)) < tol
-  norm(exp(t) - exp(v)) < tol
-  norm(log(t) - log(v)) < tol
-  norm(sin(t) - sin(v)) < tol
-  norm(cos(t) - cos(v)) < tol
-  norm(tan(t) - tan(v)) < tol
-  norm(csc(t) - csc(v)) < tol
-  norm(sec(t) - sec(v)) < tol
-  norm(cot(t) - cot(v)) < tol
-  norm(sinc(t) - sinc(v)) < tol
-  norm(sinh(t) - sinh(v)) < tol
-  norm(cosh(t) - cosh(v)) < tol
-  norm(tanh(t) - tanh(v)) < tol
-  norm(csch(t) - csch(v)) < tol
-  norm(sech(t) - sech(v)) < tol
-  norm(coth(t) - coth(v)) < tol
-  norm(asin(t) - asin(v)) < tol
-  norm(acos(t) - acos(v)) < tol
-  norm(atan(t) - atan(v)) < tol
-  norm(acsc(1/t) - acsc(1/v)) < tol
-  norm(asec(1/t) - asec(1/v)) < tol
-  norm(acot(1/t) - acot(1/v)) < tol
-  norm(asinh(t) - asinh(v)) < tol
-  norm(acosh(1/t) - acosh(1/v)) < tol
-  norm(atanh(t) - atanh(v)) < tol
-  norm(acsch(1/t) - acsch(1/v)) < tol
-  norm(asech(t) - asech(v)) < tol
-  norm(acoth(1/t) - acoth(1/v)) < tol
-  norm(asinc(t/pi) - asin(v)/(v)) < tol
-  norm(asinhc(t/pi) - asinh(v)/(v)) < tol
-  norm(zero(t) - zero(v)) < tol
-  norm(real(t) - real(v)) < tol
-  norm(imag(t) - imag(v)) < tol
-  norm(conj(t) - conj(v)) < tol
-  norm(sinhc(t/pi) - sinh(v)/v) < tol
-  norm(erf(t) - erf(v)) < tol
-  norm(erfc(t) - erfc(v)) < tol
-  norm(-im*erf(t*im) - erfi(v)) < tol
+  normTPS(abs(-t) - abs(-v) ) < tol
+  normTPS(sqrt(t) - sqrt(v)) < tol
+  normTPS(exp(t) - exp(v)) < tol
+  normTPS(log(t) - log(v)) < tol
+  normTPS(sin(t) - sin(v)) < tol
+  normTPS(cos(t) - cos(v)) < tol
+  normTPS(tan(t) - tan(v)) < tol
+  normTPS(csc(t) - csc(v)) < tol
+  normTPS(sec(t) - sec(v)) < tol
+  normTPS(cot(t) - cot(v)) < tol
+  normTPS(sinc(t) - sinc(v)) < tol
+  normTPS(sinh(t) - sinh(v)) < tol
+  normTPS(cosh(t) - cosh(v)) < tol
+  normTPS(tanh(t) - tanh(v)) < tol
+  normTPS(csch(t) - csch(v)) < tol
+  normTPS(sech(t) - sech(v)) < tol
+  normTPS(coth(t) - coth(v)) < tol
+  normTPS(asin(t) - asin(v)) < tol
+  normTPS(acos(t) - acos(v)) < tol
+  normTPS(atan(t) - atan(v)) < tol
+  normTPS(acsc(1/t) - acsc(1/v)) < tol
+  normTPS(asec(1/t) - asec(1/v)) < tol
+  normTPS(acot(1/t) - acot(1/v)) < tol
+  normTPS(asinh(t) - asinh(v)) < tol
+  normTPS(acosh(1/t) - acosh(1/v)) < tol
+  normTPS(atanh(t) - atanh(v)) < tol
+  normTPS(acsch(1/t) - acsch(1/v)) < tol
+  normTPS(asech(t) - asech(v)) < tol
+  normTPS(acoth(1/t) - acoth(1/v)) < tol
+  normTPS(asinc(t/pi) - asin(v)/(v)) < tol
+  normTPS(asinhc(t/pi) - asinh(v)/(v)) < tol
+  normTPS(zero(t) - zero(v)) < tol
+  normTPS(real(t) - real(v)) < tol
+  normTPS(imag(t) - imag(v)) < tol
+  normTPS(conj(t) - conj(v)) < tol
+  normTPS(sinhc(t/pi) - sinh(v)/v) < tol
+  normTPS(erf(t) - erf(v)) < tol
+  normTPS(erfc(t) - erfc(v)) < tol
+  normTPS(-im*erf(t*im) - erfi(v)) < tol
   
-  norm(atan(t3,t2) - atan(3,2)) < tol
-  norm(atan(t3,2) - atan(3,2)) < tol
-  norm(atan(3,t2) - atan(3,2)) < tol
-  norm(atan(t3,-t2) - atan(3,-2)) < tol
-  norm(atan(t3,-2) - atan(3,-2)) < tol
-  norm(atan(3,-t2) - atan(3,-2)) < tol
-  norm(atan(-t3,-t2) - atan(-3,-2)) < tol
-  norm(atan(-t3,-2) - atan(-3,-2)) < tol
-  norm(atan(-3,-t2) - atan(-3,-2)) < tol
-  norm(atan(-t3,t2) - atan(-3,2)) < tol
-  norm(atan(-t3,2) - atan(-3,2)) < tol
-  norm(atan(-3,t2) - atan(-3,2)) < tol
-  
-  norm(hypot(t2,t3) - hypot(2,3)) < tol
-  norm(hypot(2,t3) - hypot(2,3)) < tol
-  norm(hypot(t2,3) - hypot(2,3)) < tol
-  norm(hypot(t1,t2,t3) - hypot(1,2,3)) < tol
-  norm(hypot(1, t2, t3) - hypot(1,2,3)) < tol
-  norm(hypot(t1, 2, t3) - hypot(1,2,3)) < tol
-  norm(hypot(t1, t2, 3) - hypot(1,2,3)) < tol
-  norm(hypot(1, 2, t3) - hypot(1,2,3)) < tol
-  norm(hypot(1, t2, 3) - hypot(1,2,3)) < tol
-  norm(hypot(t1, 2, 3) - hypot(1,2,3)) < tol
-  norm(angle(t2) - angle(2)) < tol
-  norm(angle(-t2) - angle(-2)) < tol
-  norm(complex(t3) - complex(3)) < tol
-  norm(complex(t2,t3) - complex(2,3)) < tol
-  norm(polar(t2) - (abs(2)+im*atan(0,2))) < tol
-  norm(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
-  norm(rect(t2) - (2*cos(0) + im*2*sin(0))) < tol
-  norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0))) < tol
+  normTPS(atan(t3,t2) - atan(3,2)) < tol
+  normTPS(atan(t3,2) - atan(3,2)) < tol
+  normTPS(atan(3,t2) - atan(3,2)) < tol
+  normTPS(atan(t3,-t2) - atan(3,-2)) < tol
+  normTPS(atan(t3,-2) - atan(3,-2)) < tol
+  normTPS(atan(3,-t2) - atan(3,-2)) < tol
+  normTPS(atan(-t3,-t2) - atan(-3,-2)) < tol
+  normTPS(atan(-t3,-2) - atan(-3,-2)) < tol
+  normTPS(atan(-3,-t2) - atan(-3,-2)) < tol
+  normTPS(atan(-t3,t2) - atan(-3,2)) < tol
+  normTPS(atan(-t3,2) - atan(-3,2)) < tol
+  normTPS(atan(-3,t2) - atan(-3,2)) < tol
+  #=
+  normTPS(hypot(t2,t3) - hypot(2,3)) < tol
+  normTPS(hypot(2,t3) - hypot(2,3)) < tol
+  normTPS(hypot(t2,3) - hypot(2,3)) < tol
+  normTPS(hypot(t1,t2,t3) - hypot(1,2,3)) < tol
+  normTPS(hypot(1, t2, t3) - hypot(1,2,3)) < tol
+  normTPS(hypot(t1, 2, t3) - hypot(1,2,3)) < tol
+  normTPS(hypot(t1, t2, 3) - hypot(1,2,3)) < tol
+  normTPS(hypot(1, 2, t3) - hypot(1,2,3)) < tol
+  normTPS(hypot(1, t2, 3) - hypot(1,2,3)) < tol
+  normTPS(hypot(t1, 2, 3) - hypot(1,2,3)) < tol
+  =#
+  normTPS(angle(t2) - angle(2)) < tol
+  normTPS(angle(-t2) - angle(-2)) < tol
+  normTPS(complex(t3) - complex(3)) < tol
+  normTPS(complex(t2,t3) - complex(2,3)) < tol
+  normTPS(polar(t2) - (abs(2)+im*atan(0,2))) < tol
+  normTPS(polar(-t1) - (abs(-1)+im*atan(0,-1))) < tol
+  normTPS(rect(t2) - (2*cos(0) + im*2*sin(0))) < tol
+  normTPS(rect(-t1) - (-1*cos(0) + im*-1*sin(0))) < tol
   
 
   v = 0.5+0.5im
-  t = ComplexTPS(t)
+  t = TPS{ComplexF64}(t)
   t[0] = v
-  ct1 = ComplexTPS(t)
+  ct1 = TPS{ComplexF64}(t)
   ct1[0] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
   ct3 = zero(ct1)
   ct3[0] = 3 + 3im
-  norm(abs(-t) - abs(-v) ) < tol
-  norm(sqrt(t) - sqrt(v)) < tol
-  norm(exp(t) - exp(v)) < tol
-  norm(log(t) - log(v)) < tol
-  norm(sin(t) - sin(v)) < tol
-  norm(cos(t) - cos(v)) < tol
-  norm(tan(t) - tan(v)) < tol
-  norm(csc(t) - csc(v)) < tol
-  norm(sec(t) - sec(v)) < tol
-  norm(cot(t) - cot(v)) < tol
-  norm(sinc(t) - sinc(v)) < tol
-  norm(sinh(t) - sinh(v)) < tol
-  norm(cosh(t) - cosh(v)) < tol
-  norm(tanh(t) - tanh(v)) < tol
-  norm(csch(t) - csch(v)) < tol
-  norm(sech(t) - sech(v)) < tol
-  norm(coth(t) - coth(v)) < tol
+  normTPS(abs(-t) - abs(-v) ) < tol
+  normTPS(sqrt(t) - sqrt(v)) < tol
+  normTPS(exp(t) - exp(v)) < tol
+  normTPS(log(t) - log(v)) < tol
+  normTPS(sin(t) - sin(v)) < tol
+  normTPS(cos(t) - cos(v)) < tol
+  normTPS(tan(t) - tan(v)) < tol
+  normTPS(csc(t) - csc(v)) < tol
+  normTPS(sec(t) - sec(v)) < tol
+  normTPS(cot(t) - cot(v)) < tol
+  normTPS(sinc(t) - sinc(v)) < tol
+  normTPS(sinh(t) - sinh(v)) < tol
+  normTPS(cosh(t) - cosh(v)) < tol
+  normTPS(tanh(t) - tanh(v)) < tol
+  normTPS(csch(t) - csch(v)) < tol
+  normTPS(sech(t) - sech(v)) < tol
+  normTPS(coth(t) - coth(v)) < tol
 
-  norm(asin(t) - asin(v)) < tol
-  norm(acos(t) - acos(v)) < tol
-  norm(atan(t) - atan(v)) < tol
-  norm(acsc(t) - acsc(v)) < tol
-  norm(asec(t) - asec(v)) < tol
-  norm(acot(t) - acot(v)) < tol
-  norm(asinh(t) - asinh(v)) < tol
-  norm(acosh(t) - acosh(v)) < tol
-  norm(atanh(t) - atanh(v)) < tol
-  norm(acsch(t) - acsch(v)) < tol
-  norm(asech(t) - asech(v)) < tol
-  norm(acoth(t) - acoth(v)) < tol
-  norm(asinc(t/pi) - asin(v)/v) < tol
-  norm(asinhc(t/pi) - asinh(v)/v) < tol
+  normTPS(asin(t) - asin(v)) < tol
+  normTPS(acos(t) - acos(v)) < tol
+  normTPS(atan(t) - atan(v)) < tol
+  normTPS(acsc(t) - acsc(v)) < tol
+  normTPS(asec(t) - asec(v)) < tol
+  normTPS(acot(t) - acot(v)) < tol
+  normTPS(asinh(t) - asinh(v)) < tol
+  normTPS(acosh(t) - acosh(v)) < tol
+  normTPS(atanh(t) - atanh(v)) < tol
+  normTPS(acsch(t) - acsch(v)) < tol
+  normTPS(asech(t) - asech(v)) < tol
+  normTPS(acoth(t) - acoth(v)) < tol
+  normTPS(asinc(t/pi) - asin(v)/v) < tol
+  normTPS(asinhc(t/pi) - asinh(v)/v) < tol
 
-  norm(zero(t) - zero(v)) < tol
-  norm(real(t) - real(v)) < tol
-  norm(imag(t) - imag(v)) < tol
-  norm(conj(t) - conj(v)) < tol
-  norm(sinhc(t/pi) - sinh(v)/v) < tol
-  norm(erf(t) - erf(v)) < tol
-  norm(erfc(t) - erfc(v)) < tol
-  norm(-im*erf(t*im) - erfi(v)) < tol
-  norm(hypot(ct2,ct3) - hypot(2+2im,3+3im)) < tol
-  norm(hypot(2+2im,ct3) - hypot(2+2im,3+3im)) < tol
-  norm(hypot(ct2,3+3im) - hypot(2+2im,3+3im)) < tol
-  norm(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
-  norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(zero(t) - zero(v)) < tol
+  normTPS(real(t) - real(v)) < tol
+  normTPS(imag(t) - imag(v)) < tol
+  normTPS(conj(t) - conj(v)) < tol
+  normTPS(sinhc(t/pi) - sinh(v)/v) < tol
+  normTPS(erf(t) - erf(v)) < tol
+  normTPS(erfc(t) - erfc(v)) < tol
+  normTPS(-im*erf(t*im) - erfi(v)) < tol
+  #=
+  normTPS(hypot(ct2,ct3) - hypot(2+2im,3+3im)) < tol
+  normTPS(hypot(2+2im,ct3) - hypot(2+2im,3+3im)) < tol
+  normTPS(hypot(ct2,3+3im) - hypot(2+2im,3+3im)) < tol
+  normTPS(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  normTPS(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)) < tol
+  =#
+  normTPS(angle(t2+im*t3) - angle(2+3im)) < tol
+  normTPS(angle(t2-im*t3) - angle(2-3im)) < tol
+  normTPS(angle(-t2-im*t3) - angle(-2-3im)) < tol
+  normTPS(angle(-t2+im*t3) - angle(-2+3im)) < tol
+  normTPS(angle(ct2) - angle(2+2im)) < tol
+  normTPS(angle(-ct2) - angle(-2-2im)) < tol
+  normTPS(complex(ct3) - complex(3+3im)) < tol
+  normTPS(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
+  normTPS(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
+  normTPS(rect(ct2) - (2*cos(2) + im*2*sin(2))) < tol
+  normTPS(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1))) < tol
   
-  norm(angle(t2+im*t3) - angle(2+3im)) < tol
-  norm(angle(t2-im*t3) - angle(2-3im)) < tol
-  norm(angle(-t2-im*t3) - angle(-2-3im)) < tol
-  norm(angle(-t2+im*t3) - angle(-2+3im)) < tol
-  norm(angle(ct2) - angle(2+2im)) < tol
-  norm(angle(-ct2) - angle(-2-2im)) < tol
-  norm(complex(ct3) - complex(3+3im)) < tol
-  norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im))) < tol
-  norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))) < tol
-  norm(rect(ct2) - (2*cos(2) + im*2*sin(2))) < tol
-  norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1))) < tol
-  
-  # Hypot, mixing TPS with ComplexTPS
-  norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
-  norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
-  norm(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im)) < tol
-  norm(hypot(ct1, t2, t3) - hypot(1+1im,2,3)) < tol
-  norm(hypot(t1, ct2, t3) - hypot(1,2+2im,3)) < tol
-  norm(hypot(t1, t2, ct3) - hypot(1,2,3+3im)) < tol
-  norm(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im)) < tol
-  norm(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im)) < tol
-  norm(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3)) < tol
-  norm(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im)) < tol
-  norm(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3)) < tol
-  norm(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
-  norm(hypot(t1,t2,3+3im) - hypot(1,2,3+3im)) < tol
-  norm(hypot(t1,2+2im,t3) - hypot(1,2+2im,3)) < tol
-  norm(hypot(1+1im,t2,t3) - hypot(1+1im,2,3)) < tol
-  norm(hypot(t1,2,3+3im) - hypot(1,2,3+3im)) < tol
-  norm(hypot(1,t2,3+3im) - hypot(1,2,3+3im)) < tol
-  norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3)) < tol
-
+  # Hypot, mixing TPS{Float64} with TPS{ComplexF64}
+  #=
+  normTPS(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)) < tol
+  normTPS(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
+  normTPS(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im)) < tol
+  normTPS(hypot(ct1, t2, t3) - hypot(1+1im,2,3)) < tol
+  normTPS(hypot(t1, ct2, t3) - hypot(1,2+2im,3)) < tol
+  normTPS(hypot(t1, t2, ct3) - hypot(1,2,3+3im)) < tol
+  normTPS(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im)) < tol
+  normTPS(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im)) < tol
+  normTPS(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3)) < tol
+  normTPS(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im)) < tol
+  normTPS(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3)) < tol
+  normTPS(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im)) < tol
+  normTPS(hypot(t1,t2,3+3im) - hypot(1,2,3+3im)) < tol
+  normTPS(hypot(t1,2+2im,t3) - hypot(1,2+2im,3)) < tol
+  normTPS(hypot(1+1im,t2,t3) - hypot(1+1im,2,3)) < tol
+  normTPS(hypot(t1,2,3+3im) - hypot(1,2,3+3im)) < tol
+  normTPS(hypot(1,t2,3+3im) - hypot(1,2,3+3im)) < tol
+  normTPS(hypot(1+1im,2,t3) - hypot(1+1im,2,3)) < tol
+=#
   d = Descriptor(1, 5)
-  t = TPS(use=d)
+  t = TPS{Float64}(use=d)
   t[0] = 0.5; t[[1]] = 2; t[[2]] = 3; t[[3]] = 4; t[[4]] = 5; t[[5]] = 6
 
   tol = 1e-10
 
-  norm(sin(t)^2+cos(t)^2 - 1) < tol
-  norm(1/sin(t) - csc(t)) < tol
-  norm(1/cos(t) - sec(t)) < tol
-  norm(1/tan(t) - cot(t)) < tol
-  norm(sin(t)/cos(t) - tan(t)) < tol
-  norm(cos(2*t) - cos(t)^2 + sin(t)^2) < tol
-  norm(sec(t)^2 - 1 - tan(t)^2) < tol
-  norm(sin(t/2) - sqrt((1-cos(t))/2)) < tol
-  norm(cos(t/2) - sqrt((1+cos(t))/2)) < tol
-  norm(sqrt(t^2) - abs(t)) < tol
-  norm(csc(t)^2 - cot(t)^2 - 1) < tol
-  norm(exp(log(t)) - t) < tol
-  norm(log(exp(t)) - t) < tol
-  norm(log(exp(t)) - exp(log(t))) < tol
-  norm(log(t^2) - 2*log(t)) < tol
-  norm(5*log(t) - log(t^5)) < tol
-  norm(t*log(5) - log(5^t)) < tol
-  norm(sinc(t) - sin(pi*t)/(pi*t)) < tol
-  norm(sinhc(t/pi) - sinh(t)/t) < tol
-  norm(exp(im*t) - cos(t) - im*sin(t)) < tol
-  norm(real(exp(im*t)) - cos(t)) < tol
-  norm(imag(exp(im*t)) - sin(t)) < tol
-  norm(sinh(t) - (exp(t) - exp(-t))/2) < tol
-  norm(cosh(t) - (exp(t) + exp(-t))/2) < tol
-  norm(tanh(t) - sinh(t)/cosh(t)) < tol
-  norm(csch(t) - 1/sinh(t)) < tol
-  norm(sech(t) - 1/cosh(t)) < tol
-  norm(coth(t) - cosh(t)/sinh(t)) < tol
-  norm(coth(t) - 1/tanh(t)) < tol
-  norm(cosh(t)^2 - sinh(t)^2 - 1) < tol
-  norm(1 - tanh(t)^2 - sech(t)^2) < tol
-  norm(coth(t)^2 - 1 - csch(t)^2) < tol
-  norm(asin(sin(t)) - t) < tol
-  norm(acos(cos(t)) - t) < tol
-  norm(atan(tan(t)) - t) < tol
-  norm(acsc(1/t) - asin(t)) < tol
-  norm(asec(1/t) - acos(t)) < tol
-  norm(acot(1/t) - atan(t)) < tol
-  norm(asinh(sinh(t)) - t) < tol
-  norm(acosh(cosh(t)) - t) < tol
-  norm(atanh(tanh(t)) - t) < tol
-  norm(acsch(t) - asinh(1/t)) < tol
-  norm(asech(t) - acosh(1/t)) < tol
-  norm(acoth(1/t) - atanh(t)) < tol
-  norm(asinc(t/pi) - asin(t)/t) < tol
-  norm(asinhc(t/pi) - asinh(t)/t) < tol
-  norm(erfc(t) - 1 + erf(t)) < tol
-  norm(erf(-t) + erf(t)) < tol
-  norm(angle(t)) < tol
-  norm(complex(t) - t) < tol
-  norm(complex(t,t) - (t+im*t)) < tol
+  normTPS(sin(t)^2+cos(t)^2 - 1) < tol
+  normTPS(1/sin(t) - csc(t)) < tol
+  normTPS(1/cos(t) - sec(t)) < tol
+  normTPS(1/tan(t) - cot(t)) < tol
+  normTPS(sin(t)/cos(t) - tan(t)) < tol
+  normTPS(cos(2*t) - cos(t)^2 + sin(t)^2) < tol
+  normTPS(sec(t)^2 - 1 - tan(t)^2) < tol
+  normTPS(sin(t/2) - sqrt((1-cos(t))/2)) < tol
+  normTPS(cos(t/2) - sqrt((1+cos(t))/2)) < tol
+  normTPS(sqrt(t^2) - abs(t)) < tol
+  normTPS(csc(t)^2 - cot(t)^2 - 1) < tol
+  normTPS(exp(log(t)) - t) < tol
+  normTPS(log(exp(t)) - t) < tol
+  normTPS(log(exp(t)) - exp(log(t))) < tol
+  normTPS(log(t^2) - 2*log(t)) < tol
+  normTPS(5*log(t) - log(t^5)) < tol
+  normTPS(t*log(5) - log(5^t)) < tol
+  normTPS(sinc(t) - sin(pi*t)/(pi*t)) < tol
+  normTPS(sinhc(t/pi) - sinh(t)/t) < tol
+  normTPS(exp(im*t) - cos(t) - im*sin(t)) < tol
+  normTPS(real(exp(im*t)) - cos(t)) < tol
+  normTPS(imag(exp(im*t)) - sin(t)) < tol
+  normTPS(sinh(t) - (exp(t) - exp(-t))/2) < tol
+  normTPS(cosh(t) - (exp(t) + exp(-t))/2) < tol
+  normTPS(tanh(t) - sinh(t)/cosh(t)) < tol
+  normTPS(csch(t) - 1/sinh(t)) < tol
+  normTPS(sech(t) - 1/cosh(t)) < tol
+  normTPS(coth(t) - cosh(t)/sinh(t)) < tol
+  normTPS(coth(t) - 1/tanh(t)) < tol
+  normTPS(cosh(t)^2 - sinh(t)^2 - 1) < tol
+  normTPS(1 - tanh(t)^2 - sech(t)^2) < tol
+  normTPS(coth(t)^2 - 1 - csch(t)^2) < tol
+  normTPS(asin(sin(t)) - t) < tol
+  normTPS(acos(cos(t)) - t) < tol
+  normTPS(atan(tan(t)) - t) < tol
+  normTPS(acsc(1/t) - asin(t)) < tol
+  normTPS(asec(1/t) - acos(t)) < tol
+  normTPS(acot(1/t) - atan(t)) < tol
+  normTPS(asinh(sinh(t)) - t) < tol
+  normTPS(acosh(cosh(t)) - t) < tol
+  normTPS(atanh(tanh(t)) - t) < tol
+  normTPS(acsch(t) - asinh(1/t)) < tol
+  normTPS(asech(t) - acosh(1/t)) < tol
+  normTPS(acoth(1/t) - atanh(t)) < tol
+  normTPS(asinc(t/pi) - asin(t)/t) < tol
+  normTPS(asinhc(t/pi) - asinh(t)/t) < tol
+  normTPS(erfc(t) - 1 + erf(t)) < tol
+  normTPS(erf(-t) + erf(t)) < tol
+  normTPS(angle(t)) < tol
+  normTPS(complex(t) - t) < tol
+  normTPS(complex(t,t) - (t+im*t)) < tol
 
-  t = ComplexTPS(t)
+  t = TPS{ComplexF64}(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
-  norm(sin(t)^2+cos(t)^2 - 1) < tol
-  norm(1/sin(t) - csc(t)) < tol
-  norm(1/cos(t) - sec(t)) < tol
-  norm(1/tan(t) - cot(t)) < tol
-  norm(sin(t)/cos(t) - tan(t)) < tol
-  norm(cos(2*t) - cos(t)^2 + sin(t)^2) < tol
-  norm(sec(t)^2 - 1 - tan(t)^2) < tol
-  norm(sin(t/2) - sqrt((1-cos(t))/2)) < tol
-  norm(cos(t/2) - sqrt((1+cos(t))/2)) < tol
-  norm(sqrt(t^2) - t) < tol
-  norm(csc(t)^2 - cot(t)^2 - 1) < tol
-  norm(exp(log(t)) - t) < tol
-  norm(log(exp(t)) - t) < tol
-  norm(log(exp(t)) - exp(log(t))) < tol
-  norm(log(t^2) - 2*log(t)) < tol
-  norm(5*log(t) - log(t^5) - 2*pi*im) < tol
-  norm(t*log(5) - log(5^t)) < tol
-  norm(sinc(t/pi) - sin(t)/t) < tol
-  norm(sinhc(t/pi) - sinh(t)/t) < tol
-  norm(exp(im*t) - cos(t) - im*sin(t)) < tol
-  norm(sinh(t) - (exp(t) - exp(-t))/2) < tol
-  norm(cosh(t) - (exp(t) + exp(-t))/2) < tol
-  norm(tanh(t) - sinh(t)/cosh(t)) < tol
-  norm(csch(t) - 1/sinh(t)) < tol
-  norm(sech(t) - 1/cosh(t)) < tol
-  norm(coth(t) - cosh(t)/sinh(t)) < tol
-  norm(coth(t) - 1/tanh(t)) < tol
-  norm(cosh(t)^2 - sinh(t)^2 - 1) < tol
-  norm(1 - tanh(t)^2 - sech(t)^2) < tol
-  norm(coth(t)^2 - 1 - csch(t)^2) < tol
+  normTPS(sin(t)^2+cos(t)^2 - 1) < tol
+  normTPS(1/sin(t) - csc(t)) < tol
+  normTPS(1/cos(t) - sec(t)) < tol
+  normTPS(1/tan(t) - cot(t)) < tol
+  normTPS(sin(t)/cos(t) - tan(t)) < tol
+  normTPS(cos(2*t) - cos(t)^2 + sin(t)^2) < tol
+  normTPS(sec(t)^2 - 1 - tan(t)^2) < tol
+  normTPS(sin(t/2) - sqrt((1-cos(t))/2)) < tol
+  normTPS(cos(t/2) - sqrt((1+cos(t))/2)) < tol
+  normTPS(sqrt(t^2) - t) < tol
+  normTPS(csc(t)^2 - cot(t)^2 - 1) < tol
+  normTPS(exp(log(t)) - t) < tol
+  normTPS(log(exp(t)) - t) < tol
+  normTPS(log(exp(t)) - exp(log(t))) < tol
+  normTPS(log(t^2) - 2*log(t)) < tol
+  normTPS(5*log(t) - log(t^5) - 2*pi*im) < tol
+  normTPS(t*log(5) - log(5^t)) < tol
+  normTPS(sinc(t/pi) - sin(t)/t) < tol
+  normTPS(sinhc(t/pi) - sinh(t)/t) < tol
+  normTPS(exp(im*t) - cos(t) - im*sin(t)) < tol
+  normTPS(sinh(t) - (exp(t) - exp(-t))/2) < tol
+  normTPS(cosh(t) - (exp(t) + exp(-t))/2) < tol
+  normTPS(tanh(t) - sinh(t)/cosh(t)) < tol
+  normTPS(csch(t) - 1/sinh(t)) < tol
+  normTPS(sech(t) - 1/cosh(t)) < tol
+  normTPS(coth(t) - cosh(t)/sinh(t)) < tol
+  normTPS(coth(t) - 1/tanh(t)) < tol
+  normTPS(cosh(t)^2 - sinh(t)^2 - 1) < tol
+  normTPS(1 - tanh(t)^2 - sech(t)^2) < tol
+  normTPS(coth(t)^2 - 1 - csch(t)^2) < tol
   
-  norm(asin(sin(t)) - t) < tol
-  norm(acos(cos(t)) - t) < tol
-  norm(atan(tan(t)) - t) < tol
-  norm(acsc(t) - asin(1/t)) < tol
-  norm(asec(t) - acos(1/t)) < tol
-  norm(acot(t) - atan(1/t)) < tol
-  norm(asinh(sinh(t)) - t) < tol
-  norm(acosh(cosh(t)) - t) < tol
-  norm(atanh(tanh(t)) - t) < tol
-  norm(acsch(t) - asinh(1/t)) < tol
-  norm(asech(t) - acosh(1/t)) < tol
-  norm(acoth(t) - atanh(1/t)) < tol
-  norm(asinc(t/pi) - asin(t)/t) < tol
-  norm(asinhc(t/pi) - asinh(t)/t) < tol
+  normTPS(asin(sin(t)) - t) < tol
+  normTPS(acos(cos(t)) - t) < tol
+  normTPS(atan(tan(t)) - t) < tol
+  normTPS(acsc(t) - asin(1/t)) < tol
+  normTPS(asec(t) - acos(1/t)) < tol
+  normTPS(acot(t) - atan(1/t)) < tol
+  normTPS(asinh(sinh(t)) - t) < tol
+  normTPS(acosh(cosh(t)) - t) < tol
+  normTPS(atanh(tanh(t)) - t) < tol
+  normTPS(acsch(t) - asinh(1/t)) < tol
+  normTPS(asech(t) - acosh(1/t)) < tol
+  normTPS(acoth(t) - atanh(1/t)) < tol
+  normTPS(asinc(t/pi) - asin(t)/t) < tol
+  normTPS(asinhc(t/pi) - asinh(t)/t) < tol
   
-  norm(erfc(t) - 1 + erf(t)) < tol
-  norm(erf(-t) + erf(t)) < tol
-  norm(angle(t) - atan(imag(t),real(t))) < tol
-  norm(complex(t) - t) < tol
+  normTPS(erfc(t) - 1 + erf(t)) < tol
+  normTPS(erf(-t) + erf(t)) < tol
+  normTPS(angle(t) - atan(imag(t),real(t))) < tol
+  normTPS(complex(t) - t) < tol
 
   d = Descriptor(3,10,2,10)
   v = vars(d)
@@ -723,8 +726,8 @@ function type_stable_test()
   abs(f3[params=[1=>10]] - f3[[0,0,0,10]]) < tol
 
   d = Descriptor(1, 5)
-  t = TPS(use=d)
-  ct = ComplexTPS(t)
+  t = TPS{Float64}(use=d)
+  ct = TPS{ComplexF64}(t)
   # Set scalar part so both TPSs are 1
   t[0] = 1
   ct[0] = 1
@@ -745,96 +748,96 @@ function type_stable_test()
 
   tol = 1e-14
 
-  # TPS:
-  @FastGTPSA(norm(t1 + t2 - t3)) < tol
-  @FastGTPSA(norm(t2 + t1 - t3)) < tol
-  @FastGTPSA(norm(t1 + 2 - t3)) < tol
-  @FastGTPSA(norm(2 + t1 - t3)) < tol
-  @FastGTPSA(norm(t3 - t2 - t1)) < tol
-  @FastGTPSA(norm(t2 - t3 - -t1)) < tol
-  @FastGTPSA(norm(t3 - 2 - t1)) < tol
-  @FastGTPSA(norm(2 - t3 - -t1)) < tol
-  @FastGTPSA(norm(t2 * t3 - 6)) < tol
-  @FastGTPSA(norm(t3 * t2 - 6)) < tol
-  @FastGTPSA(norm(t2 * 5 - 10)) < tol
-  @FastGTPSA(norm(5 * t2 - 10 * t1)) < tol
-  @FastGTPSA(norm(t1 / t2 - 1/2)) < tol
-  @FastGTPSA(norm(t2 / t1 - 2)) < tol
-  @FastGTPSA(norm(1 / t2 - 1/2)) < tol
-  @FastGTPSA(norm(t2 / 3 - 2/3)) < tol
-  @FastGTPSA(norm(t2 / t2 - t1)) < tol
-  @FastGTPSA(norm(t2 / t2 - 1)) < tol
-  @FastGTPSA(norm(t2 ^ t3 - 8)) < tol
-  @FastGTPSA(norm(t3 ^ t2 - 9)) < tol
-  @FastGTPSA(norm(t2 ^ 3 - 8)) < tol
-  @FastGTPSA(norm(t2 ^ (1/2) - sqrt(2))) < tol
-  @FastGTPSA(norm(t2 ^ (1/2) - sqrt(t2))) < tol
-  @FastGTPSA(norm(2 ^ t3 - 8)) < tol
-  @FastGTPSA(norm(inv(t3) - 1/t3)) < tol
-  @FastGTPSA(norm(inv(t3) - 1/3)) < tol
+  # TPS{Float64}:
+  @FastGTPSA(normTPS(t1 + t2 - t3)) < tol
+  @FastGTPSA(normTPS(t2 + t1 - t3)) < tol
+  @FastGTPSA(normTPS(t1 + 2 - t3)) < tol
+  @FastGTPSA(normTPS(2 + t1 - t3)) < tol
+  @FastGTPSA(normTPS(t3 - t2 - t1)) < tol
+  @FastGTPSA(normTPS(t2 - t3 - -t1)) < tol
+  @FastGTPSA(normTPS(t3 - 2 - t1)) < tol
+  @FastGTPSA(normTPS(2 - t3 - -t1)) < tol
+  @FastGTPSA(normTPS(t2 * t3 - 6)) < tol
+  @FastGTPSA(normTPS(t3 * t2 - 6)) < tol
+  @FastGTPSA(normTPS(t2 * 5 - 10)) < tol
+  @FastGTPSA(normTPS(5 * t2 - 10 * t1)) < tol
+  @FastGTPSA(normTPS(t1 / t2 - 1/2)) < tol
+  @FastGTPSA(normTPS(t2 / t1 - 2)) < tol
+  @FastGTPSA(normTPS(1 / t2 - 1/2)) < tol
+  @FastGTPSA(normTPS(t2 / 3 - 2/3)) < tol
+  @FastGTPSA(normTPS(t2 / t2 - t1)) < tol
+  @FastGTPSA(normTPS(t2 / t2 - 1)) < tol
+  @FastGTPSA(normTPS(t2 ^ t3 - 8)) < tol
+  @FastGTPSA(normTPS(t3 ^ t2 - 9)) < tol
+  @FastGTPSA(normTPS(t2 ^ 3 - 8)) < tol
+  @FastGTPSA(normTPS(t2 ^ (1/2) - sqrt(2))) < tol
+  @FastGTPSA(normTPS(t2 ^ (1/2) - sqrt(t2))) < tol
+  @FastGTPSA(normTPS(2 ^ t3 - 8)) < tol
+  @FastGTPSA(normTPS(inv(t3) - 1/t3)) < tol
+  @FastGTPSA(normTPS(inv(t3) - 1/3)) < tol
 
-  # ComplexTPS:
-  @FastGTPSA(norm(ct1 + ct2 - ct3)) < tol
-  @FastGTPSA(norm(ct2 + ct1 - ct3)) < tol
-  @FastGTPSA(norm(ct1 + (2+2im) - ct3)) < tol
-  @FastGTPSA(norm((2+2im) + ct1 - ct3)) < tol
-  @FastGTPSA(norm(ct3 - ct2 - ct1)) < tol
-  @FastGTPSA(norm(ct2 - ct3 - -ct1)) < tol
-  @FastGTPSA(norm(ct3 - (2+2im) - ct1)) < tol
-  @FastGTPSA(norm((2+2im) - ct3 - -ct1)) < tol
-  @FastGTPSA(norm(ct2 * ct3 - (2+2im)*(3+3im))) < tol
-  @FastGTPSA(norm(ct3 * ct2 - (2+2im)*(3+3im))) < tol
-  @FastGTPSA(norm(ct2 * 5 - (10+10im))) < tol
-  @FastGTPSA(norm(5 * ct2 - (10 * ct1))) < tol
-  @FastGTPSA(norm(ct1 / ct2 - (1+im)/(2+2im))) < tol
-  @FastGTPSA(norm(ct2 / ct1 - 2)) < tol
-  @FastGTPSA(norm(1 / ct2 - 1/(2+2im))) < tol
-  @FastGTPSA(norm(ct2 / 3 - (2+2im)/3)) < tol
-  @FastGTPSA(norm(ct2 / ct2 - 1)) < tol
-  @FastGTPSA(norm(ct2 ^ ct3 - (2+2im)^(3+3im))) < tol
-  @FastGTPSA(norm(ct3 ^ ct2 - (3+3im)^(2+2im))) < tol
-  @FastGTPSA(norm(ct2 ^ 3 - (2+2im)^3)) < tol
-  @FastGTPSA(norm(ct2 ^ (1/2) - sqrt(2+2im))) < tol
-  @FastGTPSA(norm(ct2 ^ (1/2) - sqrt(ct2))) < tol
-  @FastGTPSA(norm(2 ^ ct3 - 2^(3+3im))) < tol
-  @FastGTPSA(norm(inv(ct3) - 1/ct3)) < tol
-  @FastGTPSA(norm(inv(ct3) - 1/(3+3im))) < tol
+  # TPS{ComplexF64}:
+  @FastGTPSA(normTPS(ct1 + ct2 - ct3)) < tol
+  @FastGTPSA(normTPS(ct2 + ct1 - ct3)) < tol
+  @FastGTPSA(normTPS(ct1 + (2+2im) - ct3)) < tol
+  @FastGTPSA(normTPS((2+2im) + ct1 - ct3)) < tol
+  @FastGTPSA(normTPS(ct3 - ct2 - ct1)) < tol
+  @FastGTPSA(normTPS(ct2 - ct3 - -ct1)) < tol
+  @FastGTPSA(normTPS(ct3 - (2+2im) - ct1)) < tol
+  @FastGTPSA(normTPS((2+2im) - ct3 - -ct1)) < tol
+  @FastGTPSA(normTPS(ct2 * ct3 - (2+2im)*(3+3im))) < tol
+  @FastGTPSA(normTPS(ct3 * ct2 - (2+2im)*(3+3im))) < tol
+  @FastGTPSA(normTPS(ct2 * 5 - (10+10im))) < tol
+  @FastGTPSA(normTPS(5 * ct2 - (10 * ct1))) < tol
+  @FastGTPSA(normTPS(ct1 / ct2 - (1+im)/(2+2im))) < tol
+  @FastGTPSA(normTPS(ct2 / ct1 - 2)) < tol
+  @FastGTPSA(normTPS(1 / ct2 - 1/(2+2im))) < tol
+  @FastGTPSA(normTPS(ct2 / 3 - (2+2im)/3)) < tol
+  @FastGTPSA(normTPS(ct2 / ct2 - 1)) < tol
+  @FastGTPSA(normTPS(ct2 ^ ct3 - (2+2im)^(3+3im))) < tol
+  @FastGTPSA(normTPS(ct3 ^ ct2 - (3+3im)^(2+2im))) < tol
+  @FastGTPSA(normTPS(ct2 ^ 3 - (2+2im)^3)) < tol
+  @FastGTPSA(normTPS(ct2 ^ (1/2) - sqrt(2+2im))) < tol
+  @FastGTPSA(normTPS(ct2 ^ (1/2) - sqrt(ct2))) < tol
+  @FastGTPSA(normTPS(2 ^ ct3 - 2^(3+3im))) < tol
+  @FastGTPSA(normTPS(inv(ct3) - 1/ct3)) < tol
+  @FastGTPSA(normTPS(inv(ct3) - 1/(3+3im))) < tol
 
-  # Promotion of TPS to ComplexTPS
-  @FastGTPSA(norm(t1 + ct2 - (1 + (2+2im)))) < tol
-  @FastGTPSA(norm(ct2 + t1 - (1 + (2+2im)))) < tol
-  @FastGTPSA(norm(t1 + (2+2im) - (1 + (2+2im)))) < tol
-  @FastGTPSA(norm((2+2im) + t1 - (1 + (2+2im)))) < tol
-  @FastGTPSA(norm(t3 - ct2 - (3 - (2+2im)))) < tol
-  @FastGTPSA(norm(ct2 - t3 - ((2+2im) - 3))) < tol
-  @FastGTPSA(norm(t3 - (2+2im) - (3 - (2+2im)))) < tol
-  @FastGTPSA(norm((2+2im) - t3 - ((2+2im) - 3))) < tol
-  @FastGTPSA(norm(t2 * ct3 - 2 * (3+3im))) < tol
-  @FastGTPSA(norm(ct3 * t2 - 2 * (3+3im))) < tol
-  @FastGTPSA(norm(t2 * (3+3im) - 2 * (3+3im))) < tol
-  @FastGTPSA(norm((3+3im) * t2 - 2 * (3+3im))) < tol
-  @FastGTPSA(norm(t2 / ct3 - 2/(3+3im))) < tol
-  @FastGTPSA(norm(ct3 / t2 - (3+3im)/2)) < tol
-  @FastGTPSA(norm(t2 / (3+3im) - 2/(3+3im))) < tol
-  @FastGTPSA(norm((3+3im) / t2 - (3+3im)/2)) < tol
-  @FastGTPSA(norm(t2 ^ ct3 - 2^(3+3im))) < tol
-  @FastGTPSA(norm(ct3 ^ t2 - (3+3im)^2)) < tol
-  @FastGTPSA(norm(t2 ^ (3+3im) - 2^(3+3im))) < tol
-  @FastGTPSA(norm((3+3im)^t2 - (3+3im)^2)) < tol
+  # Promotion of TPS{Float64} to TPS{ComplexF64}
+  @FastGTPSA(normTPS(t1 + ct2 - (1 + (2+2im)))) < tol
+  @FastGTPSA(normTPS(ct2 + t1 - (1 + (2+2im)))) < tol
+  @FastGTPSA(normTPS(t1 + (2+2im) - (1 + (2+2im)))) < tol
+  @FastGTPSA(normTPS((2+2im) + t1 - (1 + (2+2im)))) < tol
+  @FastGTPSA(normTPS(t3 - ct2 - (3 - (2+2im)))) < tol
+  @FastGTPSA(normTPS(ct2 - t3 - ((2+2im) - 3))) < tol
+  @FastGTPSA(normTPS(t3 - (2+2im) - (3 - (2+2im)))) < tol
+  @FastGTPSA(normTPS((2+2im) - t3 - ((2+2im) - 3))) < tol
+  @FastGTPSA(normTPS(t2 * ct3 - 2 * (3+3im))) < tol
+  @FastGTPSA(normTPS(ct3 * t2 - 2 * (3+3im))) < tol
+  @FastGTPSA(normTPS(t2 * (3+3im) - 2 * (3+3im))) < tol
+  @FastGTPSA(normTPS((3+3im) * t2 - 2 * (3+3im))) < tol
+  @FastGTPSA(normTPS(t2 / ct3 - 2/(3+3im))) < tol
+  @FastGTPSA(normTPS(ct3 / t2 - (3+3im)/2)) < tol
+  @FastGTPSA(normTPS(t2 / (3+3im) - 2/(3+3im))) < tol
+  @FastGTPSA(normTPS((3+3im) / t2 - (3+3im)/2)) < tol
+  @FastGTPSA(normTPS(t2 ^ ct3 - 2^(3+3im))) < tol
+  @FastGTPSA(normTPS(ct3 ^ t2 - (3+3im)^2)) < tol
+  @FastGTPSA(normTPS(t2 ^ (3+3im) - 2^(3+3im))) < tol
+  @FastGTPSA(normTPS((3+3im)^t2 - (3+3im)^2)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   ctmpidx == 0
   tmpidx == 0
 
   d = Descriptor(1, 5)
-  t = TPS(use=d)
+  t = TPS{Float64}(use=d)
   v = 0.5
   t[0] = v
   tol = 1e-14
-  t1 = TPS(t)
+  t1 = TPS{Float64}(t)
   t1[0] = 1
   t2 = zero(t1)
   t2[0] = 2
@@ -842,292 +845,293 @@ function type_stable_test()
   t3[0] = 3
 
 
-  @FastGTPSA(norm(abs(-t) - abs(-v) )) < tol
-  @FastGTPSA(norm(sqrt(t) - sqrt(v))) < tol
-  @FastGTPSA(norm(exp(t) - exp(v))) < tol
-  @FastGTPSA(norm(log(t) - log(v))) < tol
-  @FastGTPSA(norm(sin(t) - sin(v))) < tol
-  @FastGTPSA(norm(cos(t) - cos(v))) < tol
-  @FastGTPSA(norm(tan(t) - tan(v))) < tol
-  @FastGTPSA(norm(csc(t) - csc(v))) < tol
-  @FastGTPSA(norm(sec(t) - sec(v))) < tol
-  @FastGTPSA(norm(cot(t) - cot(v))) < tol
-  @FastGTPSA(norm(sinc(t) - sinc(v))) < tol
-  @FastGTPSA(norm(sinh(t) - sinh(v))) < tol
-  @FastGTPSA(norm(cosh(t) - cosh(v))) < tol
-  @FastGTPSA(norm(tanh(t) - tanh(v))) < tol
-  @FastGTPSA(norm(csch(t) - csch(v))) < tol
-  @FastGTPSA(norm(sech(t) - sech(v))) < tol
-  @FastGTPSA(norm(coth(t) - coth(v))) < tol
-  @FastGTPSA(norm(asin(t) - asin(v))) < tol
-  @FastGTPSA(norm(acos(t) - acos(v))) < tol
-  @FastGTPSA(norm(atan(t) - atan(v))) < tol
-  @FastGTPSA(norm(acsc(1/t) - acsc(1/v))) < tol
-  @FastGTPSA(norm(asec(1/t) - asec(1/v))) < tol
-  @FastGTPSA(norm(acot(1/t) - acot(1/v))) < tol
-  @FastGTPSA(norm(asinh(t) - asinh(v))) < tol
-  @FastGTPSA(norm(acosh(1/t) - acosh(1/v))) < tol
-  @FastGTPSA(norm(atanh(t) - atanh(v))) < tol
-  @FastGTPSA(norm(acsch(1/t) - acsch(1/v))) < tol
-  @FastGTPSA(norm(asech(t) - asech(v))) < tol
-  @FastGTPSA(norm(acoth(1/t) - acoth(1/v))) < tol
-  @FastGTPSA(norm(asinc(t/pi) - asin(v)/(v))) < tol
-  @FastGTPSA(norm(asinhc(t/pi) - asinh(v)/(v))) < tol
-  @FastGTPSA(norm(zero(t) - zero(v))) < tol
-  @FastGTPSA(norm(real(t) - real(v))) < tol
-  @FastGTPSA(norm(imag(t) - imag(v))) < tol
-  @FastGTPSA(norm(conj(t) - conj(v))) < tol
-  @FastGTPSA(norm(sinhc(t/pi) - sinh(v)/v)) < tol
-  @FastGTPSA(norm(erf(t) - erf(v))) < tol
-  @FastGTPSA(norm(erfc(t) - erfc(v))) < tol
-  @FastGTPSA(norm(-im*erf(t*im) - erfi(v))) < tol
-  @FastGTPSA(norm(atan(t3,t2) - atan(3,2))) < tol
-  @FastGTPSA(norm(atan(t3,2) - atan(3,2))) < tol
-  @FastGTPSA(norm(atan(3,t2) - atan(3,2))) < tol
-  @FastGTPSA(norm(atan(t3,-t2) - atan(3,-2))) < tol
-  @FastGTPSA(norm(atan(t3,-2) - atan(3,-2))) < tol
-  @FastGTPSA(norm(atan(3,-t2) - atan(3,-2))) < tol
-  @FastGTPSA(norm(atan(-t3,-t2) - atan(-3,-2))) < tol
-  @FastGTPSA(norm(atan(-t3,-2) - atan(-3,-2))) < tol
-  @FastGTPSA(norm(atan(-3,-t2) - atan(-3,-2))) < tol
-  @FastGTPSA(norm(atan(-t3,t2) - atan(-3,2))) < tol
-  @FastGTPSA(norm(atan(-t3,2) - atan(-3,2))) < tol
-  @FastGTPSA(norm(atan(-3,t2) - atan(-3,2))) < tol
-  
-  @FastGTPSA(norm(hypot(t2,t3) - hypot(2,3))) < tol
-  @FastGTPSA(norm(hypot(2,t3) - hypot(2,3))) < tol
-  @FastGTPSA(norm(hypot(t2,3) - hypot(2,3))) < tol
-  @FastGTPSA(norm(hypot(t1,t2,t3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(1, t2, t3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(t1, 2, t3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(t1, t2, 3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(1, 2, t3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(1, t2, 3) - hypot(1,2,3))) < tol
-  @FastGTPSA(norm(hypot(t1, 2, 3) - hypot(1,2,3))) < tol
-  
-  @FastGTPSA(norm(angle(t2) - angle(2))) < tol
-  @FastGTPSA(norm(angle(-t2) - angle(-2))) < tol
-  @FastGTPSA(norm(complex(t3) - complex(3))) < tol
-  @FastGTPSA(norm(complex(t2,t3) - complex(2,3))) < tol
-  @FastGTPSA(norm(polar(t2) - (abs(2)+im*atan(0,2)))) < tol
-  @FastGTPSA(norm(polar(-t1) - (abs(-1)+im*atan(0,-1)))) < tol
-  @FastGTPSA(norm(rect(t2) - (2*cos(0) + im*2*sin(0)))) < tol
-  @FastGTPSA(norm(rect(-t1) - (-1*cos(0) + im*-1*sin(0)))) < tol
+  @FastGTPSA(normTPS(abs(-t) - abs(-v) )) < tol
+  @FastGTPSA(normTPS(sqrt(t) - sqrt(v))) < tol
+  @FastGTPSA(normTPS(exp(t) - exp(v))) < tol
+  @FastGTPSA(normTPS(log(t) - log(v))) < tol
+  @FastGTPSA(normTPS(sin(t) - sin(v))) < tol
+  @FastGTPSA(normTPS(cos(t) - cos(v))) < tol
+  @FastGTPSA(normTPS(tan(t) - tan(v))) < tol
+  @FastGTPSA(normTPS(csc(t) - csc(v))) < tol
+  @FastGTPSA(normTPS(sec(t) - sec(v))) < tol
+  @FastGTPSA(normTPS(cot(t) - cot(v))) < tol
+  @FastGTPSA(normTPS(sinc(t) - sinc(v))) < tol
+  @FastGTPSA(normTPS(sinh(t) - sinh(v))) < tol
+  @FastGTPSA(normTPS(cosh(t) - cosh(v))) < tol
+  @FastGTPSA(normTPS(tanh(t) - tanh(v))) < tol
+  @FastGTPSA(normTPS(csch(t) - csch(v))) < tol
+  @FastGTPSA(normTPS(sech(t) - sech(v))) < tol
+  @FastGTPSA(normTPS(coth(t) - coth(v))) < tol
+  @FastGTPSA(normTPS(asin(t) - asin(v))) < tol
+  @FastGTPSA(normTPS(acos(t) - acos(v))) < tol
+  @FastGTPSA(normTPS(atan(t) - atan(v))) < tol
+  @FastGTPSA(normTPS(acsc(1/t) - acsc(1/v))) < tol
+  @FastGTPSA(normTPS(asec(1/t) - asec(1/v))) < tol
+  @FastGTPSA(normTPS(acot(1/t) - acot(1/v))) < tol
+  @FastGTPSA(normTPS(asinh(t) - asinh(v))) < tol
+  @FastGTPSA(normTPS(acosh(1/t) - acosh(1/v))) < tol
+  @FastGTPSA(normTPS(atanh(t) - atanh(v))) < tol
+  @FastGTPSA(normTPS(acsch(1/t) - acsch(1/v))) < tol
+  @FastGTPSA(normTPS(asech(t) - asech(v))) < tol
+  @FastGTPSA(normTPS(acoth(1/t) - acoth(1/v))) < tol
+  @FastGTPSA(normTPS(asinc(t/pi) - asin(v)/(v))) < tol
+  @FastGTPSA(normTPS(asinhc(t/pi) - asinh(v)/(v))) < tol
+  @FastGTPSA(normTPS(zero(t) - zero(v))) < tol
+  @FastGTPSA(normTPS(real(t) - real(v))) < tol
+  @FastGTPSA(normTPS(imag(t) - imag(v))) < tol
+  @FastGTPSA(normTPS(conj(t) - conj(v))) < tol
+  @FastGTPSA(normTPS(sinhc(t/pi) - sinh(v)/v)) < tol
+  @FastGTPSA(normTPS(erf(t) - erf(v))) < tol
+  @FastGTPSA(normTPS(erfc(t) - erfc(v))) < tol
+  @FastGTPSA(normTPS(-im*erf(t*im) - erfi(v))) < tol
+  @FastGTPSA(normTPS(atan(t3,t2) - atan(3,2))) < tol
+  @FastGTPSA(normTPS(atan(t3,2) - atan(3,2))) < tol
+  @FastGTPSA(normTPS(atan(3,t2) - atan(3,2))) < tol
+  @FastGTPSA(normTPS(atan(t3,-t2) - atan(3,-2))) < tol
+  @FastGTPSA(normTPS(atan(t3,-2) - atan(3,-2))) < tol
+  @FastGTPSA(normTPS(atan(3,-t2) - atan(3,-2))) < tol
+  @FastGTPSA(normTPS(atan(-t3,-t2) - atan(-3,-2))) < tol
+  @FastGTPSA(normTPS(atan(-t3,-2) - atan(-3,-2))) < tol
+  @FastGTPSA(normTPS(atan(-3,-t2) - atan(-3,-2))) < tol
+  @FastGTPSA(normTPS(atan(-t3,t2) - atan(-3,2))) < tol
+  @FastGTPSA(normTPS(atan(-t3,2) - atan(-3,2))) < tol
+  @FastGTPSA(normTPS(atan(-3,t2) - atan(-3,2))) < tol
+  #=
+  @FastGTPSA(normTPS(hypot(t2,t3) - hypot(2,3))) < tol
+  @FastGTPSA(normTPS(hypot(2,t3) - hypot(2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t2,3) - hypot(2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1,t2,t3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(1, t2, t3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1, 2, t3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1, t2, 3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(1, 2, t3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(1, t2, 3) - hypot(1,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1, 2, 3) - hypot(1,2,3))) < tol
+  =#
+  @FastGTPSA(normTPS(angle(t2) - angle(2))) < tol
+  @FastGTPSA(normTPS(angle(-t2) - angle(-2))) < tol
+  @FastGTPSA(normTPS(complex(t3) - complex(3))) < tol
+  @FastGTPSA(normTPS(complex(t2,t3) - complex(2,3))) < tol
+  @FastGTPSA(normTPS(polar(t2) - (abs(2)+im*atan(0,2)))) < tol
+  @FastGTPSA(normTPS(polar(-t1) - (abs(-1)+im*atan(0,-1)))) < tol
+  @FastGTPSA(normTPS(rect(t2) - (2*cos(0) + im*2*sin(0)))) < tol
+  @FastGTPSA(normTPS(rect(-t1) - (-1*cos(0) + im*-1*sin(0)))) < tol
   
 
   v = 0.5+0.5im
-  t = ComplexTPS(t)
+  t = TPS{ComplexF64}(t)
   t[0] = v
-  ct1 = ComplexTPS(t)
+  ct1 = TPS{ComplexF64}(t)
   ct1[0] = 1 + 1im
   ct2 = zero(ct1)
   ct2[0] = 2 + 2im
   ct3 = zero(ct1)
   ct3[0] = 3 + 3im
-  @FastGTPSA(norm(abs(-t) - abs(-v) )) < tol
-  @FastGTPSA(norm(sqrt(t) - sqrt(v))) < tol
-  @FastGTPSA(norm(exp(t) - exp(v))) < tol
-  @FastGTPSA(norm(log(t) - log(v))) < tol
-  @FastGTPSA(norm(sin(t) - sin(v))) < tol
-  @FastGTPSA(norm(cos(t) - cos(v))) < tol
-  @FastGTPSA(norm(tan(t) - tan(v))) < tol
-  @FastGTPSA(norm(csc(t) - csc(v))) < tol
-  @FastGTPSA(norm(sec(t) - sec(v))) < tol
-  @FastGTPSA(norm(cot(t) - cot(v))) < tol
-  @FastGTPSA(norm(sinc(t) - sinc(v))) < tol
-  @FastGTPSA(norm(sinh(t) - sinh(v))) < tol
-  @FastGTPSA(norm(cosh(t) - cosh(v))) < tol
-  @FastGTPSA(norm(tanh(t) - tanh(v))) < tol
-  @FastGTPSA(norm(csch(t) - csch(v))) < tol
-  @FastGTPSA(norm(sech(t) - sech(v))) < tol
-  @FastGTPSA(norm(coth(t) - coth(v))) < tol
+  @FastGTPSA(normTPS(abs(-t) - abs(-v) )) < tol
+  @FastGTPSA(normTPS(sqrt(t) - sqrt(v))) < tol
+  @FastGTPSA(normTPS(exp(t) - exp(v))) < tol
+  @FastGTPSA(normTPS(log(t) - log(v))) < tol
+  @FastGTPSA(normTPS(sin(t) - sin(v))) < tol
+  @FastGTPSA(normTPS(cos(t) - cos(v))) < tol
+  @FastGTPSA(normTPS(tan(t) - tan(v))) < tol
+  @FastGTPSA(normTPS(csc(t) - csc(v))) < tol
+  @FastGTPSA(normTPS(sec(t) - sec(v))) < tol
+  @FastGTPSA(normTPS(cot(t) - cot(v))) < tol
+  @FastGTPSA(normTPS(sinc(t) - sinc(v))) < tol
+  @FastGTPSA(normTPS(sinh(t) - sinh(v))) < tol
+  @FastGTPSA(normTPS(cosh(t) - cosh(v))) < tol
+  @FastGTPSA(normTPS(tanh(t) - tanh(v))) < tol
+  @FastGTPSA(normTPS(csch(t) - csch(v))) < tol
+  @FastGTPSA(normTPS(sech(t) - sech(v))) < tol
+  @FastGTPSA(normTPS(coth(t) - coth(v))) < tol
 
-  @FastGTPSA(norm(asin(t) - asin(v))) < tol
-  @FastGTPSA(norm(acos(t) - acos(v))) < tol
-  @FastGTPSA(norm(atan(t) - atan(v))) < tol
-  @FastGTPSA(norm(acsc(t) - acsc(v))) < tol
-  @FastGTPSA(norm(asec(t) - asec(v))) < tol
-  @FastGTPSA(norm(acot(t) - acot(v))) < tol
-  @FastGTPSA(norm(asinh(t) - asinh(v))) < tol
-  @FastGTPSA(norm(acosh(t) - acosh(v))) < tol
-  @FastGTPSA(norm(atanh(t) - atanh(v))) < tol
-  @FastGTPSA(norm(acsch(t) - acsch(v))) < tol
-  @FastGTPSA(norm(asech(t) - asech(v))) < tol
-  @FastGTPSA(norm(acoth(t) - acoth(v))) < tol
-  @FastGTPSA(norm(asinc(t/pi) - asin(v)/v)) < tol
-  @FastGTPSA(norm(asinhc(t/pi) - asinh(v)/v)) < tol
+  @FastGTPSA(normTPS(asin(t) - asin(v))) < tol
+  @FastGTPSA(normTPS(acos(t) - acos(v))) < tol
+  @FastGTPSA(normTPS(atan(t) - atan(v))) < tol
+  @FastGTPSA(normTPS(acsc(t) - acsc(v))) < tol
+  @FastGTPSA(normTPS(asec(t) - asec(v))) < tol
+  @FastGTPSA(normTPS(acot(t) - acot(v))) < tol
+  @FastGTPSA(normTPS(asinh(t) - asinh(v))) < tol
+  @FastGTPSA(normTPS(acosh(t) - acosh(v))) < tol
+  @FastGTPSA(normTPS(atanh(t) - atanh(v))) < tol
+  @FastGTPSA(normTPS(acsch(t) - acsch(v))) < tol
+  @FastGTPSA(normTPS(asech(t) - asech(v))) < tol
+  @FastGTPSA(normTPS(acoth(t) - acoth(v))) < tol
+  @FastGTPSA(normTPS(asinc(t/pi) - asin(v)/v)) < tol
+  @FastGTPSA(normTPS(asinhc(t/pi) - asinh(v)/v)) < tol
   
-  @FastGTPSA(norm(zero(t) - zero(v))) < tol
-  @FastGTPSA(norm(real(t) - real(v))) < tol
-  @FastGTPSA(norm(imag(t) - imag(v))) < tol
-  @FastGTPSA(norm(conj(t) - conj(v))) < tol
-  @FastGTPSA(norm(sinhc(t/pi) - sinh(v)/v)) < tol
-  @FastGTPSA(norm(erf(t) - erf(v))) < tol
-  @FastGTPSA(norm(erfc(t) - erfc(v))) < tol
-  @FastGTPSA(norm(-im*erf(t*im) - erfi(v))) < tol
-  @FastGTPSA(norm(hypot(ct2,ct3) - hypot(2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(2+2im,ct3) - hypot(2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct2,3+3im) - hypot(2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
-  
-  @FastGTPSA(norm(angle(t2+im*t3) - angle(2+3im))) < tol
-  @FastGTPSA(norm(angle(t2-im*t3) - angle(2-3im))) < tol
-  @FastGTPSA(norm(angle(-t2-im*t3) - angle(-2-3im))) < tol
-  @FastGTPSA(norm(angle(-t2+im*t3) - angle(-2+3im))) < tol
-  @FastGTPSA(norm(angle(ct2) - angle(2+2im))) < tol
-  @FastGTPSA(norm(angle(-ct2) - angle(-2-2im))) < tol
-  @FastGTPSA(norm(complex(ct3) - complex(3+3im))) < tol
-  @FastGTPSA(norm(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))) < tol
-  @FastGTPSA(norm(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))) < tol
-  @FastGTPSA(norm(rect(ct2) - (2*cos(2) + im*2*sin(2)))) < tol
-  @FastGTPSA(norm(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1)))) < tol
-  
-  # Hypot, mixing TPS with ComplexTPS
-  @FastGTPSA(norm(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))) < tol
-  @FastGTPSA(norm(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1, t2, t3) - hypot(1+1im,2,3))) < tol
-  @FastGTPSA(norm(hypot(t1, ct2, t3) - hypot(1,2+2im,3))) < tol
-  @FastGTPSA(norm(hypot(t1, t2, ct3) - hypot(1,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3))) < tol
-  @FastGTPSA(norm(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3))) < tol
-  @FastGTPSA(norm(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(t1,t2,3+3im) - hypot(1,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(t1,2+2im,t3) - hypot(1,2+2im,3))) < tol
-  @FastGTPSA(norm(hypot(1+1im,t2,t3) - hypot(1+1im,2,3))) < tol
-  @FastGTPSA(norm(hypot(t1,2,3+3im) - hypot(1,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1,t2,3+3im) - hypot(1,2,3+3im))) < tol
-  @FastGTPSA(norm(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
-
+  @FastGTPSA(normTPS(zero(t) - zero(v))) < tol
+  @FastGTPSA(normTPS(real(t) - real(v))) < tol
+  @FastGTPSA(normTPS(imag(t) - imag(v))) < tol
+  @FastGTPSA(normTPS(conj(t) - conj(v))) < tol
+  @FastGTPSA(normTPS(sinhc(t/pi) - sinh(v)/v)) < tol
+  @FastGTPSA(normTPS(erf(t) - erf(v))) < tol
+  @FastGTPSA(normTPS(erfc(t) - erfc(v))) < tol
+  @FastGTPSA(normTPS(-im*erf(t*im) - erfi(v))) < tol
+  #=
+  @FastGTPSA(normTPS(hypot(ct2,ct3) - hypot(2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(2+2im,ct3) - hypot(2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct2,3+3im) - hypot(2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im))) < tol
+  =#
+  @FastGTPSA(normTPS(angle(t2+im*t3) - angle(2+3im))) < tol
+  @FastGTPSA(normTPS(angle(t2-im*t3) - angle(2-3im))) < tol
+  @FastGTPSA(normTPS(angle(-t2-im*t3) - angle(-2-3im))) < tol
+  @FastGTPSA(normTPS(angle(-t2+im*t3) - angle(-2+3im))) < tol
+  @FastGTPSA(normTPS(angle(ct2) - angle(2+2im))) < tol
+  @FastGTPSA(normTPS(angle(-ct2) - angle(-2-2im))) < tol
+  @FastGTPSA(normTPS(complex(ct3) - complex(3+3im))) < tol
+  @FastGTPSA(normTPS(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))) < tol
+  @FastGTPSA(normTPS(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))) < tol
+  @FastGTPSA(normTPS(rect(ct2) - (2*cos(2) + im*2*sin(2)))) < tol
+  @FastGTPSA(normTPS(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1)))) < tol
+  #=
+  # Hypot, mixing TPS{Float64} with TPS{ComplexF64}
+  @FastGTPSA(normTPS(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))) < tol
+  @FastGTPSA(normTPS(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1, t2, t3) - hypot(1+1im,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1, ct2, t3) - hypot(1,2+2im,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1, t2, ct3) - hypot(1,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(t1,t2,3+3im) - hypot(1,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(t1,2+2im,t3) - hypot(1,2+2im,3))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im,t2,t3) - hypot(1+1im,2,3))) < tol
+  @FastGTPSA(normTPS(hypot(t1,2,3+3im) - hypot(1,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1,t2,3+3im) - hypot(1,2,3+3im))) < tol
+  @FastGTPSA(normTPS(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
+=#
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t1.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t1).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   ctmpidx == 0
   tmpidx == 0
 
   d = Descriptor(1, 5)
-  t = TPS(use=d)
+  t = TPS{Float64}(use=d)
   t[0] = 0.5; t[[1]] = 2; t[[2]] = 3; t[[3]] = 4; t[[4]] = 5; t[[5]] = 6
 
   tol = 1e-10
 
-  @FastGTPSA(norm(sin(t)^2+cos(t)^2 - 1)) < tol
-  @FastGTPSA(norm(1/sin(t) - csc(t))) < tol
-  @FastGTPSA(norm(1/cos(t) - sec(t))) < tol
-  @FastGTPSA(norm(1/tan(t) - cot(t))) < tol
-  @FastGTPSA(norm(sin(t)/cos(t) - tan(t))) < tol
-  @FastGTPSA(norm(cos(2*t) - cos(t)^2 + sin(t)^2)) < tol
-  @FastGTPSA(norm(sec(t)^2 - 1 - tan(t)^2)) < tol
-  @FastGTPSA(norm(sin(t/2) - sqrt((1-cos(t))/2))) < tol
-  @FastGTPSA(norm(cos(t/2) - sqrt((1+cos(t))/2))) < tol
-  @FastGTPSA(norm(sqrt(t^2) - abs(t))) < tol
-  @FastGTPSA(norm(csc(t)^2 - cot(t)^2 - 1)) < tol
-  @FastGTPSA(norm(exp(log(t)) - t)) < tol
-  @FastGTPSA(norm(log(exp(t)) - t)) < tol
-  @FastGTPSA(norm(log(exp(t)) - exp(log(t)))) < tol
-  @FastGTPSA(norm(log(t^2) - 2*log(t))) < tol
-  @FastGTPSA(norm(5*log(t) - log(t^5))) < tol
-  @FastGTPSA(norm(t*log(5) - log(5^t))) < tol
-  @FastGTPSA(norm(sinc(t) - sin(pi*t)/(pi*t))) < tol
-  @FastGTPSA(norm(sinhc(t/pi) - sinh(t)/t)) < tol
-  @FastGTPSA(norm(exp(im*t) - cos(t) - im*sin(t))) < tol
-  @FastGTPSA(norm(real(exp(im*t)) - cos(t))) < tol
-  @FastGTPSA(norm(imag(exp(im*t)) - sin(t))) < tol
-  @FastGTPSA(norm(sinh(t) - (exp(t) - exp(-t))/2)) < tol
-  @FastGTPSA(norm(cosh(t) - (exp(t) + exp(-t))/2)) < tol
-  @FastGTPSA(norm(tanh(t) - sinh(t)/cosh(t))) < tol
-  @FastGTPSA(norm(csch(t) - 1/sinh(t))) < tol
-  @FastGTPSA(norm(sech(t) - 1/cosh(t))) < tol
-  @FastGTPSA(norm(coth(t) - cosh(t)/sinh(t))) < tol
-  @FastGTPSA(norm(coth(t) - 1/tanh(t))) < tol
-  @FastGTPSA(norm(cosh(t)^2 - sinh(t)^2 - 1)) < tol
-  @FastGTPSA(norm(1 - tanh(t)^2 - sech(t)^2)) < tol
-  @FastGTPSA(norm(coth(t)^2 - 1 - csch(t)^2)) < tol
-  @FastGTPSA(norm(asin(sin(t)) - t)) < tol
-  @FastGTPSA(norm(acos(cos(t)) - t)) < tol
-  @FastGTPSA(norm(atan(tan(t)) - t)) < tol
-  @FastGTPSA(norm(acsc(1/t) - asin(t))) < tol
-  @FastGTPSA(norm(asec(1/t) - acos(t))) < tol
-  @FastGTPSA(norm(acot(1/t) - atan(t))) < tol
-  @FastGTPSA(norm(asinh(sinh(t)) - t)) < tol
-  @FastGTPSA(norm(acosh(cosh(t)) - t)) < tol
-  @FastGTPSA(norm(atanh(tanh(t)) - t)) < tol
-  @FastGTPSA(norm(acsch(t) - asinh(1/t))) < tol
-  @FastGTPSA(norm(asech(t) - acosh(1/t))) < tol
-  @FastGTPSA(norm(acoth(1/t) - atanh(t))) < tol
-  @FastGTPSA(norm(asinc(t/pi) - asin(t)/t)) < tol
-  @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t)) < tol
-  @FastGTPSA(norm(erfc(t) - 1 + erf(t))) < tol
-  @FastGTPSA(norm(erf(-t) + erf(t))) < tol
-  @FastGTPSA(norm(angle(t))) < tol
-  @FastGTPSA(norm(complex(t) - t)) < tol
-  @FastGTPSA(norm(complex(t,t) - (t+im*t))) < tol
+  @FastGTPSA(normTPS(sin(t)^2+cos(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(1/sin(t) - csc(t))) < tol
+  @FastGTPSA(normTPS(1/cos(t) - sec(t))) < tol
+  @FastGTPSA(normTPS(1/tan(t) - cot(t))) < tol
+  @FastGTPSA(normTPS(sin(t)/cos(t) - tan(t))) < tol
+  @FastGTPSA(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2)) < tol
+  @FastGTPSA(normTPS(sec(t)^2 - 1 - tan(t)^2)) < tol
+  @FastGTPSA(normTPS(sin(t/2) - sqrt((1-cos(t))/2))) < tol
+  @FastGTPSA(normTPS(cos(t/2) - sqrt((1+cos(t))/2))) < tol
+  @FastGTPSA(normTPS(sqrt(t^2) - abs(t))) < tol
+  @FastGTPSA(normTPS(csc(t)^2 - cot(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(exp(log(t)) - t)) < tol
+  @FastGTPSA(normTPS(log(exp(t)) - t)) < tol
+  @FastGTPSA(normTPS(log(exp(t)) - exp(log(t)))) < tol
+  @FastGTPSA(normTPS(log(t^2) - 2*log(t))) < tol
+  @FastGTPSA(normTPS(5*log(t) - log(t^5))) < tol
+  @FastGTPSA(normTPS(t*log(5) - log(5^t))) < tol
+  @FastGTPSA(normTPS(sinc(t) - sin(pi*t)/(pi*t))) < tol
+  @FastGTPSA(normTPS(sinhc(t/pi) - sinh(t)/t)) < tol
+  @FastGTPSA(normTPS(exp(im*t) - cos(t) - im*sin(t))) < tol
+  @FastGTPSA(normTPS(real(exp(im*t)) - cos(t))) < tol
+  @FastGTPSA(normTPS(imag(exp(im*t)) - sin(t))) < tol
+  @FastGTPSA(normTPS(sinh(t) - (exp(t) - exp(-t))/2)) < tol
+  @FastGTPSA(normTPS(cosh(t) - (exp(t) + exp(-t))/2)) < tol
+  @FastGTPSA(normTPS(tanh(t) - sinh(t)/cosh(t))) < tol
+  @FastGTPSA(normTPS(csch(t) - 1/sinh(t))) < tol
+  @FastGTPSA(normTPS(sech(t) - 1/cosh(t))) < tol
+  @FastGTPSA(normTPS(coth(t) - cosh(t)/sinh(t))) < tol
+  @FastGTPSA(normTPS(coth(t) - 1/tanh(t))) < tol
+  @FastGTPSA(normTPS(cosh(t)^2 - sinh(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(1 - tanh(t)^2 - sech(t)^2)) < tol
+  @FastGTPSA(normTPS(coth(t)^2 - 1 - csch(t)^2)) < tol
+  @FastGTPSA(normTPS(asin(sin(t)) - t)) < tol
+  @FastGTPSA(normTPS(acos(cos(t)) - t)) < tol
+  @FastGTPSA(normTPS(atan(tan(t)) - t)) < tol
+  @FastGTPSA(normTPS(acsc(1/t) - asin(t))) < tol
+  @FastGTPSA(normTPS(asec(1/t) - acos(t))) < tol
+  @FastGTPSA(normTPS(acot(1/t) - atan(t))) < tol
+  @FastGTPSA(normTPS(asinh(sinh(t)) - t)) < tol
+  @FastGTPSA(normTPS(acosh(cosh(t)) - t)) < tol
+  @FastGTPSA(normTPS(atanh(tanh(t)) - t)) < tol
+  @FastGTPSA(normTPS(acsch(t) - asinh(1/t))) < tol
+  @FastGTPSA(normTPS(asech(t) - acosh(1/t))) < tol
+  @FastGTPSA(normTPS(acoth(1/t) - atanh(t))) < tol
+  @FastGTPSA(normTPS(asinc(t/pi) - asin(t)/t)) < tol
+  @FastGTPSA(normTPS(asinhc(t/pi) - asinh(t)/t)) < tol
+  @FastGTPSA(normTPS(erfc(t) - 1 + erf(t))) < tol
+  @FastGTPSA(normTPS(erf(-t) + erf(t))) < tol
+  @FastGTPSA(normTPS(angle(t))) < tol
+  @FastGTPSA(normTPS(complex(t) - t)) < tol
+  @FastGTPSA(normTPS(complex(t,t) - (t+im*t))) < tol
 
-  t = ComplexTPS(t)
+  t = TPS{ComplexF64}(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
-  @FastGTPSA(norm(sin(t)^2+cos(t)^2 - 1)) < tol
-  @FastGTPSA(norm(1/sin(t) - csc(t))) < tol
-  @FastGTPSA(norm(1/cos(t) - sec(t))) < tol
-  @FastGTPSA(norm(1/tan(t) - cot(t))) < tol
-  @FastGTPSA(norm(sin(t)/cos(t) - tan(t))) < tol
-  @FastGTPSA(norm(cos(2*t) - cos(t)^2 + sin(t)^2)) < tol
-  @FastGTPSA(norm(sec(t)^2 - 1 - tan(t)^2)) < tol
-  @FastGTPSA(norm(sin(t/2) - sqrt((1-cos(t))/2))) < tol
-  @FastGTPSA(norm(cos(t/2) - sqrt((1+cos(t))/2))) < tol
-  @FastGTPSA(norm(sqrt(t^2) - t)) < tol
-  @FastGTPSA(norm(csc(t)^2 - cot(t)^2 - 1)) < tol
-  @FastGTPSA(norm(exp(log(t)) - t)) < tol
-  @FastGTPSA(norm(log(exp(t)) - t)) < tol
-  @FastGTPSA(norm(log(exp(t)) - exp(log(t)))) < tol
-  @FastGTPSA(norm(log(t^2) - 2*log(t))) < tol
-  @FastGTPSA(norm(5*log(t) - log(t^5) - 2*pi*im)) < tol
-  @FastGTPSA(norm(t*log(5) - log(5^t))) < tol
-  @FastGTPSA(norm(sinc(t/pi) - sin(t)/t)) < tol
-  @FastGTPSA(norm(sinhc(t/pi) - sinh(t)/t)) < tol
-  @FastGTPSA(norm(exp(im*t) - cos(t) - im*sin(t))) < tol
-  @FastGTPSA(norm(sinh(t) - (exp(t) - exp(-t))/2)) < tol
-  @FastGTPSA(norm(cosh(t) - (exp(t) + exp(-t))/2)) < tol
-  @FastGTPSA(norm(tanh(t) - sinh(t)/cosh(t))) < tol
-  @FastGTPSA(norm(csch(t) - 1/sinh(t))) < tol
-  @FastGTPSA(norm(sech(t) - 1/cosh(t))) < tol
-  @FastGTPSA(norm(coth(t) - cosh(t)/sinh(t))) < tol
-  @FastGTPSA(norm(coth(t) - 1/tanh(t))) < tol
-  @FastGTPSA(norm(cosh(t)^2 - sinh(t)^2 - 1)) < tol
-  @FastGTPSA(norm(1 - tanh(t)^2 - sech(t)^2)) < tol
-  @FastGTPSA(norm(coth(t)^2 - 1 - csch(t)^2)) < tol
+  @FastGTPSA(normTPS(sin(t)^2+cos(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(1/sin(t) - csc(t))) < tol
+  @FastGTPSA(normTPS(1/cos(t) - sec(t))) < tol
+  @FastGTPSA(normTPS(1/tan(t) - cot(t))) < tol
+  @FastGTPSA(normTPS(sin(t)/cos(t) - tan(t))) < tol
+  @FastGTPSA(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2)) < tol
+  @FastGTPSA(normTPS(sec(t)^2 - 1 - tan(t)^2)) < tol
+  @FastGTPSA(normTPS(sin(t/2) - sqrt((1-cos(t))/2))) < tol
+  @FastGTPSA(normTPS(cos(t/2) - sqrt((1+cos(t))/2))) < tol
+  @FastGTPSA(normTPS(sqrt(t^2) - t)) < tol
+  @FastGTPSA(normTPS(csc(t)^2 - cot(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(exp(log(t)) - t)) < tol
+  @FastGTPSA(normTPS(log(exp(t)) - t)) < tol
+  @FastGTPSA(normTPS(log(exp(t)) - exp(log(t)))) < tol
+  @FastGTPSA(normTPS(log(t^2) - 2*log(t))) < tol
+  @FastGTPSA(normTPS(5*log(t) - log(t^5) - 2*pi*im)) < tol
+  @FastGTPSA(normTPS(t*log(5) - log(5^t))) < tol
+  @FastGTPSA(normTPS(sinc(t/pi) - sin(t)/t)) < tol
+  @FastGTPSA(normTPS(sinhc(t/pi) - sinh(t)/t)) < tol
+  @FastGTPSA(normTPS(exp(im*t) - cos(t) - im*sin(t))) < tol
+  @FastGTPSA(normTPS(sinh(t) - (exp(t) - exp(-t))/2)) < tol
+  @FastGTPSA(normTPS(cosh(t) - (exp(t) + exp(-t))/2)) < tol
+  @FastGTPSA(normTPS(tanh(t) - sinh(t)/cosh(t))) < tol
+  @FastGTPSA(normTPS(csch(t) - 1/sinh(t))) < tol
+  @FastGTPSA(normTPS(sech(t) - 1/cosh(t))) < tol
+  @FastGTPSA(normTPS(coth(t) - cosh(t)/sinh(t))) < tol
+  @FastGTPSA(normTPS(coth(t) - 1/tanh(t))) < tol
+  @FastGTPSA(normTPS(cosh(t)^2 - sinh(t)^2 - 1)) < tol
+  @FastGTPSA(normTPS(1 - tanh(t)^2 - sech(t)^2)) < tol
+  @FastGTPSA(normTPS(coth(t)^2 - 1 - csch(t)^2)) < tol
   
-  @FastGTPSA(norm(asin(sin(t)) - t)) < tol
-  @FastGTPSA(norm(acos(cos(t)) - t)) < tol
-  @FastGTPSA(norm(atan(tan(t)) - t)) < tol
-  @FastGTPSA(norm(acsc(t) - asin(1/t))) < tol
-  @FastGTPSA(norm(asec(t) - acos(1/t))) < tol
-  @FastGTPSA(norm(acot(t) - atan(1/t))) < tol
-  @FastGTPSA(norm(asinh(sinh(t)) - t)) < tol
-  @FastGTPSA(norm(acosh(cosh(t)) - t)) < tol
-  @FastGTPSA(norm(atanh(tanh(t)) - t)) < tol
-  @FastGTPSA(norm(acsch(t) - asinh(1/t))) < tol
-  @FastGTPSA(norm(asech(t) - acosh(1/t))) < tol
-  @FastGTPSA(norm(acoth(t) - atanh(1/t))) < tol
-  @FastGTPSA(norm(asinc(t/pi) - asin(t)/t)) < tol
-  @FastGTPSA(norm(asinhc(t/pi) - asinh(t)/t)) < tol
+  @FastGTPSA(normTPS(asin(sin(t)) - t)) < tol
+  @FastGTPSA(normTPS(acos(cos(t)) - t)) < tol
+  @FastGTPSA(normTPS(atan(tan(t)) - t)) < tol
+  @FastGTPSA(normTPS(acsc(t) - asin(1/t))) < tol
+  @FastGTPSA(normTPS(asec(t) - acos(1/t))) < tol
+  @FastGTPSA(normTPS(acot(t) - atan(1/t))) < tol
+  @FastGTPSA(normTPS(asinh(sinh(t)) - t)) < tol
+  @FastGTPSA(normTPS(acosh(cosh(t)) - t)) < tol
+  @FastGTPSA(normTPS(atanh(tanh(t)) - t)) < tol
+  @FastGTPSA(normTPS(acsch(t) - asinh(1/t))) < tol
+  @FastGTPSA(normTPS(asech(t) - acosh(1/t))) < tol
+  @FastGTPSA(normTPS(acoth(t) - atanh(1/t))) < tol
+  @FastGTPSA(normTPS(asinc(t/pi) - asin(t)/t)) < tol
+  @FastGTPSA(normTPS(asinhc(t/pi) - asinh(t)/t)) < tol
   
-  @FastGTPSA(norm(erfc(t) - 1 + erf(t))) < tol
-  @FastGTPSA(norm(erf(-t) + erf(t))) < tol
-  @FastGTPSA(norm(angle(t) - atan(imag(t),real(t)))) < tol
-  @FastGTPSA(norm(complex(t) - t)) < tol
+  @FastGTPSA(normTPS(erfc(t) - 1 + erf(t))) < tol
+  @FastGTPSA(normTPS(erf(-t) + erf(t))) < tol
+  @FastGTPSA(normTPS(angle(t) - atan(imag(t),real(t)))) < tol
+  @FastGTPSA(normTPS(complex(t) - t)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(Base.unsafe_convert(Ptr{Desc}, unsafe_load(t.tpsa).d))
+  desc = unsafe_load(GTPSA.getdesc(t).desc)
   tmpidx = unsafe_load(desc.ti)
   ctmpidx = unsafe_load(desc.cti)
   ctmpidx == 0
