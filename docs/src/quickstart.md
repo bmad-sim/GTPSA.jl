@@ -164,7 +164,9 @@ print(h)
 
 ## `@FastGTPSA`/`@FastGTPSA!` Macros
 
-The macro `@FastGTPSA` can be used to speed up evaluation of expressions that contain `TPS`s. **The `@FastGTPSA` macro is completely transparent to all other types, so it can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored.
+The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **not** use any `-ffast-math` business (so still IEEE compliant), but instead will use a pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
+
+The first macro, `@FastGTPSA` can be prepended to an expression following assignment (`=`, `+=`, etc) to only construct one `TPS` (which requires two allocations), instead of a `TPS` for every temporary:
 
 ```@repl
 using GTPSA, BenchmarkTools
@@ -174,20 +176,54 @@ d = Descriptor(3, 7);  x = vars(d);
 @btime $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
 
 @btime @FastGTPSA $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+
+y = rand(3); # transparent to non-TPS types
+
+@btime $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+
+@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
 ```
 
-Another macro, `@FastGTPSA!`, can be used to fill a preallocated `TPS` with the result of an expression.This macro will calculate a `TPS` expression with _zero_ allocations, however is not type-generic like `@FastGTPSA`, as the result must be an allocated `TPS`.
+The second macro, `@FastGTPSA!` can be prepended to the LHS of an assignment, and will fill a preallocated `TPS` with the result of an expression. `@FastGTPSA!` will calculate a `TPS` expression with _zero_ allocations, and will still have no impact if a non-TPS type is used. The only requirement is that all symbols in the expression are defined:
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
 d = Descriptor(3, 7); x = vars(d); # hide
 
-t = ComplexTPS64();
+t = ComplexTPS64(); # pre-allocate
 
-@btime @FastGTPSA!($t, $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im);
+@btime @FastGTPSA! $t = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im; 
+
+y = rand(3); @gensym z; # transparent to non-TPS types
+
+@btime @FastGTPSA! $z = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 ```
 
-The advantages of using the macro become especially apparent in more complicated systems, for example in `benchmark/track.jl`. 
+Both `@FastGTPSA` and `@FastGTPSA!` can be prepended to a block of code, in which case they are applied to each assignment in the block:
+
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d);
+
+y = rand(3);
+
+@btime @FastGTPSA begin
+        t1 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        t2 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        z  = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
+       end;
+
+t3 = ComplexTPS64(); t4 = ComplexTPS64(); @gensym w;
+
+@btime @FastGTPSA! begin
+        $t3 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        $t4 = $x[1]^3*sin($x[2])/log(2+$x[3])-exp($x[1]*$x[2])*im;
+        $w  = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
+       end;
+
+```
+
+The advantages of using the macro become especially apparent in more complicated systems, for example in [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl). 
 
 ## Promotion of `TPS64` to `ComplexTPS64`
 

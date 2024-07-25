@@ -63,7 +63,9 @@ regardless of whether or not the type is a `TPS`:
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3,7); x = vars(d); t = ComplexTPS64(); # Pre-allocate
+julia> d = Descriptor(3,7); x = vars(d); 
+
+julia> t = ComplexTPS64(); # Pre-allocate
 
 julia> @btime @FastGTPSA! \$t = \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
   2.972 μs (0 allocations: 0 bytes)
@@ -73,8 +75,8 @@ julia> @btime @FastGTPSA! \$t ^= \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\
 
 julia> y = rand(3); z = 2; # transparent to non-TPS types 
 
-julia>  @btime @FastGTPSA! $z = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
-  11.678 ns (0 allocations: 0 bytes)
+julia>  @btime @FastGTPSA! \$z = \$y[1]^3*sin(\$y[2])/log(2+\$y[3])-exp(\$y[1]*\$y[2])*im;
+  11.344 ns (0 allocations: 0 bytes)
 ```
 
 Like `@FastGTPSA`, `@FastGTPSA!` can prepended to a block of code, in 
@@ -88,10 +90,8 @@ julia> @btime @FastGTPSA! begin
        \$t2 -= \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
        \$z += 7
        end
-  6.075 μs (0 allocations: 0 bytes)
+  5.965 μs (0 allocations: 0 bytes)
 ```
-
-
 """
 macro FastGTPSA!(expr_or_block)
   if expr_or_block.head == :block 
@@ -112,7 +112,7 @@ macro FastGTPSA!(expr_or_block)
         else
           continue
         end
-        expr_or_block.args[i] = :($(expr_or_block.args[i].args[1]) = GTPSA.to_TPS!($(expr_or_block.args[i].args[1]), $(to_temp_form(munge_expr(expr_or_block.args[i].args[2]))), $op!)) 
+        expr_or_block.args[i] = :($(expr_or_block.args[i].args[1]) isa TPS ? $(expr_or_block.args[i].args[1]) = GTPSA.to_TPS!($(expr_or_block.args[i].args[1]), $(to_temp_form(munge_expr(expr_or_block.args[i].args[2]))), $op!) : $(expr_or_block.args[i])) 
       end
     end
     return esc(expr_or_block)
@@ -134,7 +134,7 @@ macro FastGTPSA!(expr_or_block)
       return :($expr_or_block)
     end
 
-    return :($(esc(expr_or_block.args[1])) = to_TPS!($(esc(expr_or_block.args[1])), $(to_temp_form(munge_expr(esc(expr_or_block.args[2])))),$op!)) 
+    return :( $(esc(expr_or_block.args[1])) isa TPS ?  $(esc(expr_or_block.args[1])) = to_TPS!($(esc(expr_or_block.args[1])), $(to_temp_form(munge_expr(esc(expr_or_block.args[2])))),$op!) : $(esc(expr_or_block)))  
   end
 end 
 
