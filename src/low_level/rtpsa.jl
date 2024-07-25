@@ -347,7 +347,8 @@ end
 """
     mad_tpsa_update!(t::RealTPS)
 
-    ???
+Updates the `lo` and `hi` fields of the TPSA to reflect the current state 
+given the lowest/highest nonzero monomial coefficients.
 """
 function mad_tpsa_update!(t::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_update(t::Ptr{TPS{Float64}})::Cvoid
@@ -682,7 +683,14 @@ end
 """
     mad_tpsa_cpysm!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cint})
 
-    ???
+Copies the monomial coefficient at the monomial-as-sparse-monomial
+`m` in `t` into the same monomial coefficient in `r`
+
+### Input
+- `t` -- Source TPSA
+- `r` -- Destination TPSA 
+- `n` -- Length of monomial `m`
+- `m` -- Monomial as sparse-monomial
 """
 function mad_tpsa_cpysm!(t::RealTPS, r::RealTPS, n::Cint, m::Vector{Cint})
   @ccall MAD_TPSA.mad_tpsa_cpysm(t::Ptr{TPS{Float64}}, r::Ptr{TPS{Float64}}, n::Cint, m::Ptr{Cint})::Cvoid
@@ -1573,6 +1581,25 @@ function mad_tpsa_taylor!(a::RealTPS, n::Cint, coef::Vector{Cdouble}, c::RealTPS
   @ccall MAD_TPSA.mad_tpsa_taylor(a::Ptr{TPS{Float64}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
+"""
+    mad_tpsa_taylor_h!(a::RealTPS, n::Cint, coef::Vector{Cdouble}, c::RealTPS)
+
+Computes the result of the Taylor series up to order `n-1` with Taylor coefficients coef for 
+the scalar value in `a`. That is, `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` 
+is the scalar part of TPSA `a`.
+
+Same as `mad_tpsa_taylor`, but uses Horner's method (which is 50%-100% slower because mul is 
+always full order).
+
+### Input
+- `a`    -- TPSA `a`
+- `n`    -- `Order-1` of Taylor expansion, size of `coef` array
+- `coef` -- Array of coefficients in Taylor `s`
+- `c`    -- Result
+"""
+function mad_tpsa_taylor_h!(a::RealTPS, n::Cint, coef::Vector{Cdouble}, c::RealTPS)
+  @ccall MAD_TPSA.mad_tpsa_taylor_h(a::Ptr{TPS{Float64}}, n::Cint, coef::Ptr{Cdouble}, c::Ptr{TPS{Float64}})::Cvoid
+end
 
 """
     mad_tpsa_axpb!(a::Cdouble, x::RealTPS, b::Cdouble, r::RealTPS)
@@ -2103,30 +2130,11 @@ Prints TPSA with all information of data structure.
 - `stream_` -- (Optional) I/O stream to print to, default is `stdout`
 
 ### Output
-- `ret` -- ??
+- `ret` -- `Cint` reflecting internal state of TPSA
 """
 function mad_tpsa_debug(t::RealTPS, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   ret = @ccall MAD_TPSA.mad_tpsa_debug(t::Ptr{TPS{Float64}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   return ret
-end
-
-
-"""
-    mad_tpsa_prtdensity(stream_::Ptr{Cvoid})
-
-???
-"""
-function mad_tpsa_prtdensity(stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_tpsa_prtdensity(stream_::Ptr{Cvoid})::Cvoid
-end
-
-"""
-    mad_tpsa_clrdensity!()::Cvoid
-
-???
-"""
-function mad_tpsa_clrdensity!()::Cvoid
-  @ccall MAD_TPSA.mad_tpsa_clrdensity()::Cvoid
 end
 
 """
@@ -2163,12 +2171,12 @@ end
 
 
 """
-    mad_tpsa_density(t::RealTPS)::Cdouble
+    mad_tpsa_density(t::RealTPS, stat_, reset::Bool)::Cdouble
 
-???
+Computes the ratio of `nz`/`nc` in `[0] U [lo,hi]` or `stat_`
 """
-function mad_tpsa_density(t::RealTPS)::Cdouble
-  ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{TPS{Float64}})::Cdouble
+function mad_tpsa_density(t::RealTPS, stat_, reset::Bool)::Cdouble
+  ret = @ccall MAD_TPSA.mad_tpsa_density(t::Ptr{TPS{Float64}}, stat_::Ptr{Cdouble}, reset::Bool)::Cdouble
   return ret
 end
 

@@ -400,3 +400,24 @@ For debugging.
 function mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})
   @ccall MAD_TPSA.mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})::Cvoid
 end
+
+
+void  mad_desc_paropsth  (const desc_t *d, ssz_t *mult_, ssz_t *comp_); // return previous values
+
+"""
+    mad_desc_paropsth!(d::Ptr{Desc}, mult_, comp_)
+
+Sets the parallelised operations thresholds for multiplication (`mult_`) and/or
+composition (`comp_`). Will return in `mult_` and/or `comp_` the previous threshold.
+
+### Input
+- `mult_` -- (Optional) `Ptr{Cint}` to new multiplication OMP parallelization threshold
+- `comp_` -- (Optional) `Ptr{Cint}` to new composition OMP parallelization threshold
+
+### Output
+- `mult_` -- (Optional) old multiplication parallelization threshold
+- `comp_` -- (Optional) old composition parallelization threshold
+"""
+function mad_desc_paropsth!(d::Ptr{Desc}, mult_, comp_)
+  @ccall MAD_TPSA.mad_desc_paropsth!(d::Ptr{Desc}, mult_::Ptr{Cint}, comp_::Ptr{Cint})::Cvoid
+end

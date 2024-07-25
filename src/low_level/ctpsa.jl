@@ -380,7 +380,8 @@ end
 """
     mad_ctpsa_update!(t::ComplexTPS)
 
-    ???
+Updates the `lo` and `hi` fields of the TPSA to reflect the current state 
+given the lowest/highest nonzero monomial coefficients.
 """
 function mad_ctpsa_update!(t::ComplexTPS)
   @ccall MAD_TPSA.mad_ctpsa_update(t::Ptr{TPS{ComplexF64}})::Cvoid
@@ -2088,6 +2089,26 @@ function mad_ctpsa_taylor!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::
   @ccall MAD_TPSA.mad_ctpsa_taylor(a::Ptr{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ptr{TPS{ComplexF64}})::Cvoid
 end
 
+"""
+    mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
+
+Computes the result of the Taylor series up to order `n-1` with Taylor coefficients `coef` for 
+the scalar value in `a`. That is, `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` 
+is the scalar part of TPSA `a`.
+
+Same as `mad_ctpsa_taylor`, but uses Horner's method (which is 50%-100% slower because mul is 
+always full order).
+
+### Input
+- `a`    -- TPSA `a`
+- `n`    -- `Order-1` of Taylor expansion, size of `coef` array
+- `coef` -- Array of coefficients in Taylor `s`
+- `c`    -- Result
+"""
+function mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_taylor_h(a::Ptr{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ptr{TPS{ComplexF64}})::Cvoid
+end
+
 
 """
     mad_ctpsa_poisbrat!(a::ComplexTPS, b::RealTPS, c::ComplexTPS, nv::Cint)
@@ -2903,7 +2924,7 @@ Prints TPSA with all information of data structure.
 - `stream_` -- (Optional) I/O stream to print to, default is `stdout`
 
 ### Output
-- `ret` -- ??
+- `ret` -- `Cint` reflecting internal state of TPSA
 """
 function mad_ctpsa_debug(t::ComplexTPS, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   ret = @ccall MAD_TPSA.mad_ctpsa_debug(t::Ptr{TPS{ComplexF64}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
@@ -2944,12 +2965,12 @@ end
 
 
 """
-    mad_ctpsa_density(t::ComplexTPS)::Cdouble
+    mad_ctpsa_density(t::ComplexTPS, stat_, reset::Bool)::Cdouble
 
-???
+Computes the ratio of `nz`/`nc` in `[0] U [lo,hi]` or `stat_`
 """
-function mad_ctpsa_density(t::ComplexTPS)::Cdouble
-  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ptr{TPS{ComplexF64}})::Cdouble
+function mad_ctpsa_density(t::ComplexTPS, stat_, reset::Bool)::Cdouble
+  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ptr{TPS{ComplexF64}}, stat_::Ptr{Cdouble}, reset::Bool)::Cdouble
   return ret
 end
 
