@@ -16,9 +16,9 @@ d = Descriptor(3, 7);  x = vars(d);
 
 y = rand(3); # transparent to non-TPS types
 
-@btime $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+@btime $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 
-@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 ```
 
 The second macro, `@FastGTPSA!` can be prepended to the LHS of an assignment, and will fill a preallocated `TPS` with the result of an expression. `@FastGTPSA!` will calculate a `TPS` expression with _zero_ allocations, and will still have no impact if a non-TPS type is used. The only requirement is that all symbols in the expression are defined:

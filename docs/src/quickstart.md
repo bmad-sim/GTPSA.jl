@@ -114,7 +114,7 @@ print(t)
 ### Gradients, Jacobians, Hessians
 The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a TPS/Vector of TPSs. Note that these functions are not actually calculating anything - at this point the TPS should already have been propagated through the system, and these functions are just extracting the corresponding partial derivatives. Note that these function names are not exported, because they are commonly used by other automatic differentiation packages.
 
-```@example
+```julia
 using GTPSA; GTPSA.show_header=false; GTPSA.show_sparse=false; #hide
 # 2nd Order TPSA with 100 variables
 d = Descriptor(100, 2);
@@ -164,7 +164,7 @@ print(h)
 
 ## `@FastGTPSA`/`@FastGTPSA!` Macros
 
-The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **not** use any `-ffast-math` business (so still IEEE compliant), but instead will use a pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
+The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **NOT** use any `-ffast-math` business (so still IEEE compliant), but instead will use a pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
 
 The first macro, `@FastGTPSA` can be prepended to an expression following assignment (`=`, `+=`, etc) to only construct one `TPS` (which requires two allocations), instead of a `TPS` for every temporary:
 
@@ -179,9 +179,9 @@ d = Descriptor(3, 7);  x = vars(d);
 
 y = rand(3); # transparent to non-TPS types
 
-@btime $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+@btime $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 
-@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-eyp($y[1]*$y[2])*im;
+@btime @FastGTPSA $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 ```
 
 The second macro, `@FastGTPSA!` can be prepended to the LHS of an assignment, and will fill a preallocated `TPS` with the result of an expression. `@FastGTPSA!` will calculate a `TPS` expression with _zero_ allocations, and will still have no impact if a non-TPS type is used. The only requirement is that all symbols in the expression are defined:
