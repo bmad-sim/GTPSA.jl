@@ -164,7 +164,7 @@ print(h)
 
 ## `@FastGTPSA`/`@FastGTPSA!` Macros
 
-The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **NOT** use any `-ffast-math` business (so still IEEE compliant), but instead will use a pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
+The macros [`@FastGTPSA`/`@FastGTPSA!`](@ref fastgtpsa) can be used to speed up evaluation of expressions that may contain `TPS`s. **Both macros are completely transparent to all other types, so they can be prepended to any existing expressions while still maintaining type-generic code.** Any functions in the expression that are not overloaded by GTPSA will be ignored. Both macros do **NOT** use any `-ffast-math` business (so still IEEE compliant), but instead will use a thread-safe pre-allocated buffer in the `Descriptor` for any temporaries that may be generated during evaluation of the expression.
 
 The first macro, `@FastGTPSA` can be prepended to an expression following assignment (`=`, `+=`, etc) to only construct one `TPS` (which requires two allocations), instead of a `TPS` for every temporary:
 
