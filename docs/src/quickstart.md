@@ -199,7 +199,7 @@ y = rand(3); @gensym z; # transparent to non-TPS types
 @btime @FastGTPSA! $z = $y[1]^3*sin($y[2])/log(2+$y[3])-exp($y[1]*$y[2])*im;
 ```
 
-Both `@FastGTPSA` and `@FastGTPSA!` can be prepended to a block of code, in which case they are applied to each assignment in the block:
+Both `@FastGTPSA` and `@FastGTPSA!` can also be prepended to a block of code, in which case they are applied to each assignment in the block:
 
 ```@repl
 using GTPSA, BenchmarkTools # hide

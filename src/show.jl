@@ -149,7 +149,7 @@ function format(t::TPS; coloffset=0, max_nn=-1)
     end
     out = Matrix{Any}(nothing, 0, (coloffset+1+1+1+1+1))
     idx = -1
-    idx = cycle!(t.tpsa, idx, nn, mono, v)
+    idx = cycle!(t, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
       varidxs = Vector{Int}(undef,0)

@@ -402,8 +402,6 @@ function mad_desc_info(d::Ptr{Desc}, fp_::Ptr{Cvoid})
 end
 
 
-void  mad_desc_paropsth  (const desc_t *d, ssz_t *mult_, ssz_t *comp_); // return previous values
-
 """
     mad_desc_paropsth!(d::Ptr{Desc}, mult_, comp_)
 
