@@ -117,6 +117,8 @@ eps(::Type{TPS{T}}) where {T} = eps(T)
 floatmin(::Type{TPS{T}}) where {T} = floatmin(T)
 floatmax(::Type{TPS{T}}) where {T} = floatmax(T)
 
+Base.broadcastable(o::TPS) = Ref(o)
+
 
 
 
