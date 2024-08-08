@@ -23,9 +23,9 @@ GTPSA.hessian!(H, f [, include_params=bool])
 
 ------
 
-`J = GTPSA.jacobian(F)` extracts the Jacobian matrix from the vector of TPSs `F`, defined as ``J_{ij} = \frac{\partial F_i}{\partial x_j}``
+`J = GTPSA.jacobian(F)` extracts the Jacobian matrix from the array of TPSs `F`, defined as ``J_{ij} = \frac{\partial F_i}{\partial x_j}``
 
-`GTPSA.jacobian!(J, F)` fills the `J` matrix in-place with the Jacobian extracted from the vector of TPSs `F`
+`GTPSA.jacobian!(J, F)` fills the `J` matrix in-place with the Jacobian extracted from the array of TPSs `F`
 
 ------
 
