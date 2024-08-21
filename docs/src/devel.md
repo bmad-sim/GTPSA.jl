@@ -85,6 +85,14 @@ The `@FastGTPSA`/`@FastGTPSA!` macros work by changes all arithmetic operators i
 
 All arithmetic operators are changed to `GTPSA.:<special symbols>`, e.g. `+` → `GTPSA.:±`. All non-arithmetic operators that are supported by GTPSA are then changed to `GTPSA.__t_<operator>`, e.g. `sin` → `GTPSA.__t_sin`, where the prefix `__t_` is also chosen somewhat arbitrarily. These operators are all defined in `fastgtpsa/operators.jl`, and when they encounter a TPS type, they use the temporaries, and when other number types are detected, they fallback to the regular, non-`__t_` operator. This approach works extraordinarily well, and introduces no problems externally because none of these functions/symbols are exported.
 
+## Calling the C-library with pointer-to-pointers
+
+All of the GTPSA map functions required a vector of `TPS` as input, in C `**tpsa`. In Julia, this works automatically for `Vector{<:Union{TPS64,ComplexTPS64}}` by specifying the C argument type in the C call as `::Ptr{TPS64}` or `::Ptr{ComplexTPS64}`. However, in some cases, one might have only a single `TPS64` and would like the call the corresponding map function without having to allocate an array. After some experimenting, I've found the following solution to have zero allocations, using `compose!` as an example:
+
+```julia
+mad_compose!(na, ma::TPS64, nb, mb::AbstractVector{TPS64}, mc::TPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+```
+
 ## Low-Level
 
 Below is documentation for every single 1-to-1 C function in the GTPSA library. If there is any function missing, please submit an issue to `GTPSA.jl`.

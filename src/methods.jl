@@ -328,9 +328,12 @@ scalar(t::Number) = t[1]
 mad_compose!(na, ma::AbstractVector{TPS{Float64}},    nb, mb::AbstractVector{TPS{Float64}},    mc::AbstractVector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 mad_compose!(na, ma::AbstractVector{TPS{ComplexF64}}, nb, mb::AbstractVector{TPS{ComplexF64}}, mc::AbstractVector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
+# This is for composing single TPSs with ZERO allocations:
+mad_compose!(na, ma::TPS64,        nb, mb::AbstractVector{TPS64},        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+mad_compose!(na, ma::ComplexTPS64, nb, mb::AbstractVector{ComplexTPS64}, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
 
 """
-    compose!(m, m2, m1; work::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)compose!(m::Vector{TPS{<:Union{Float64,ComplexF64}}}, m2::Vector{TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{TPS{<:Union{Float64,ComplexF64}}}; work::Union{Nothing,Vector{TPS{ComplexF64}}}=nothing)
+    compose!(m::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m2::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,AbstractVector{ComplexTPS64}}=nothing)
 
 Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`. 
 Promotion is allowed, provided the output vector function `m` has the correct type. 
@@ -347,7 +350,8 @@ else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
 
 The `ComplexTPS64`s in `work` must be defined and have the same `Descriptor`.
 """
-function compose!(m, m2, m1; work::Union{Nothing,AbstractVector{TPS{ComplexF64}}}=nothing)
+function compose!(m::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m2::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,AbstractVector{ComplexTPS64}}=nothing)
+  Base.require_one_based_indexing(m, m2, m1)
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
@@ -401,6 +405,70 @@ function compose!(m, m2, m1; work::Union{Nothing,AbstractVector{TPS{ComplexF64}}
 end
 
 """
+    compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,ComplexTPS64,AbstractVector{ComplexTPS64}}=nothing)
+
+Composes the scalar TPS function `m2` with vector function `m1`, and stores the result in-place in `m`. 
+Promotion is allowed, provided the output function `m` has the correct type. 
+
+If promotion is occuring, then the inputs must be promoted to `ComplexTPS64`. If `m1` is 
+to be promoted, a vector of pre-allocated `ComplexTPS64`s can optionally provided 
+in `work`, and has the requirement:
+
+If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
+`work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
+
+Else if `m2` is to be promoted (`typeof(m.x) != typeof(m2.x)`), a single `ComplexTPS64` 
+can be provided in `work`:  
+
+`work = m2_prom  # ComplexTPS64`
+
+The `ComplexTPS64`(s) in `work` must be defined and have the same `Descriptor`.
+"""
+function compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,ComplexTPS64,AbstractVector{ComplexTPS64}}=nothing)
+  n1 = length(m1)
+
+  # Checks:
+  numnn(m2) == n1 || error("Not enough input arguments")
+  typeof(m) == promote_type(typeof(m2),eltype(m1)) || error("Cannot compose: output type $(typeof(m)) must be $(promote_type(typeof(m2),eltype(m1)))")
+
+  # Check if promoting
+  if typeof(m) != eltype(m1)  # Promoting m1
+    if isnothing(work)
+      m1_prom = Vector{TPS{ComplexF64}}(undef, n1)
+      for i=1:n1  # Allocate
+        @inbounds m1_prom[i] = TPS{ComplexF64}(use=first(m))
+      end
+    else
+      Base.require_one_based_indexing(work)
+      m1_prom = work
+      @assert (work isa AbstractVector{ComplexTPS64}) "Incorrect type for work = m1_prom: `work isa AbstractVector{ComplexTPS64}` must be `true`"
+      @assert length(work) >= n1 "Incorrect length for work = m1_prom: Received $(length(work)), should be >=$n1"
+    end
+
+    for i=1:n1
+      @inbounds copy!(m1_prom[i], m1[i])
+    end
+
+    mad_compose!(-1, m2, n1, m1_prom, m)
+
+  elseif eltype(m) != eltype(m2) # Promoting m2
+    if isnothing(work)
+      m2_prom = TPS{ComplexF64}(use=first(m))
+    else
+      m2_prom = work
+      @assert (work isa ComplexTPS64) "Incorrect type for work = m2_prom: `work isa ComplexTPS64` must be `true`"
+    end
+    
+    copy!(m2_prom, m2)
+    mad_compose!(-1, m2_prom, n1, m1, m)
+    
+  else  # No promotion, just do it
+    mad_compose!(-1, m2, n1, m1, m)
+  end
+end
+
+
+"""
     compose(m2::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}})
 
 Composes the vector functions `m2 ∘ m1`
@@ -418,7 +486,21 @@ function compose(m2::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Abs
   return m
 end
 
-∘(m2::Vector{<:TPS{<:Union{Float64,ComplexF64}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}) = compose(m2, m1)
+"""
+    compose(m2::TPS, m1::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}})
+
+Composes the scalar TPS functions `m2` with vector function `m1`
+"""
+function compose(m2::TPS, m1::AbstractVector{<:TPS{<:Union{Float64,ComplexF64}}})
+  Base.require_one_based_indexing(m1)
+  desc = getdesc(first(m2))
+  outT = promote_type(typeof(m2),eltype(m1))
+  m = outT(use=desc)
+  compose!(m, m2, m1)
+  return m
+end
+
+∘(m2::Union{TPS,Vector{<:TPS{<:Union{Float64,ComplexF64}}}}, m1::Vector{<:TPS{<:Union{Float64,ComplexF64}}}) = compose(m2, m1)
 
 # --- translate ---
 mad_translate!(na, ma::Vector{TPS{Float64}},    nb, tb, mc::Vector{TPS{Float64}})    = mad_tpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), mc)
