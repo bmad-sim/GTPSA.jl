@@ -140,6 +140,8 @@ promote_rule(::Type{TempTPS{ComplexF64}}, ::Type{TPS{ComplexF64}})  = TempTPS{Co
 
 getmo(t::TempTPS) = unsafe_load(Base.unsafe_convert(Ptr{LowTempTPS}, t.t)).mo
 
+Base.broadcastable(o::TempTPS) = Ref(o)
+
 # This struct just allows access to the fields of the temporaries
 # because unsafe_load of mutable structs causes allocation in Julia
 # instead of just reading the struct
