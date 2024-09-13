@@ -839,11 +839,7 @@ end
   @test @FastGTPSA(normTPS((3+3im)^t2 - (3+3im)^2)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(GTPSA.getdesc(t1).desc)
-  tmpidx = unsafe_load(desc.ti)
-  ctmpidx = unsafe_load(desc.cti)
-  @test ctmpidx == 0
-  @test tmpidx == 0
+  @test GTPSA.checktemps()
 end
 
 @testset "@FastGTPSA - Functions: scalar TPSs vs. Julia scalars" begin
@@ -1027,11 +1023,7 @@ end
   @test @FastGTPSA(normTPS(hypot(1+1im,2,t3) - hypot(1+1im,2,3))) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(GTPSA.getdesc(t1).desc)
-  tmpidx = unsafe_load(desc.ti)
-  ctmpidx = unsafe_load(desc.cti)
-  @test ctmpidx == 0
-  @test tmpidx == 0
+  @test GTPSA.checktemps()
 end
 
 @testset "@FastGTPSA - Functions: identities, using TPSs" begin
@@ -1147,11 +1139,7 @@ end
   @test @FastGTPSA(normTPS(complex(t) - t)) < tol
 
   # Make sure stack is 0:
-  desc = unsafe_load(GTPSA.getdesc(t).desc)
-  tmpidx = unsafe_load(desc.ti)
-  ctmpidx = unsafe_load(desc.cti)
-  @test ctmpidx == 0
-  @test tmpidx == 0
+  @test GTPSA.checktemps()
 end
 
 
@@ -1503,6 +1491,808 @@ end
   @test @allocations(@FastGTPSA(normTPS(erf(-t) + erf(t)))) == 0
   @test @allocations(@FastGTPSA(normTPS(angle(t) - atan(imag(t),real(t))))) == 0
   @test @allocations(@FastGTPSA(normTPS(complex(t) - t))) == 0
+end
+
+@testset "@FastGTPSA - Block" begin
+  d = Descriptor(3, 7); x = vars(d); y= rand(3)
+  @FastGTPSA begin
+    t1 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    t2 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    z  = y[1]^3*sin(y[2])/log(2+y[3])-exp(y[1]*y[2])*im;
+  end
+
+  begin
+    tt1 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    tt2 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    tz  = y[1]^3*sin(y[2])/log(2+y[3])-exp(y[1]*y[2])*im;
+  end
+  @test normTPS(tt1-t1) < tol
+  @test normTPS(tt2-t2) < tol
+  @test norm(tz-z) < tol
+
+  @test GTPSA.checktemps()
+end
+
+@testset "@FastGTPSA - Broadcasting" begin
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  ct = ComplexTPS64(t)
+  # Set scalar part so both TPSs are 1
+  t[0] = 1
+  ct[0] = 1
+  # Now do operators
+  t1 = t
+  t1[0] = 1
+  t2 = zero(t1)
+  t2[0] = 2
+  t3 = zero(t1)
+  t3[0] = 3
+
+  ct1 = ct
+  ct1[0] = 1 + 1im
+  ct2 = zero(ct1)
+  ct2[0] = 2 + 2im
+  ct3 = zero(ct1)
+  ct3[0] = 3 + 3im
+
+  tol = 1e-14
+
+  # TPS:
+  @test @FastGTPSA(@.(normTPS(t1 + t2 - t3))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 + t1 - t3))) < tol
+  @test @FastGTPSA(@.(normTPS(t1 + 2 - t3))) < tol
+  @test @FastGTPSA(@.(normTPS(2 + t1 - t3))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 - t2 - t1))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 - t3 - -t1))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 - 2 - t1))) < tol
+  @test @FastGTPSA(@.(normTPS(2 - t3 - -t1))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 * t3 - 6))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 * t2 - 6))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 * 5 - 10))) < tol
+  @test @FastGTPSA(@.(normTPS(5 * t2 - 10 * t1))) < tol
+  @test @FastGTPSA(@.(normTPS(t1 / t2 - 1/2))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / t1 - 2))) < tol
+  @test @FastGTPSA(@.(normTPS(1 / t2 - 1/2))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / 3 - 2/3))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / t2 - t1))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / t2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ t3 - 8))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 ^ t2 - 9))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ 3 - 8))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ (1/2) - sqrt(2)))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ (1/2) - sqrt(t2)))) < tol
+  @test @FastGTPSA(@.(normTPS(2 ^ t3 - 8))) < tol
+  @test @FastGTPSA(@.(normTPS(inv(t3) - 1/t3))) < tol
+  @test @FastGTPSA(@.(normTPS(inv(t3) - 1/3))) < tol
+
+  # ComplexTPS:
+  @test @FastGTPSA(@.(normTPS(ct1 + ct2 - ct3))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 + ct1 - ct3))) < tol
+  @test @FastGTPSA(@.(normTPS(ct1 + (2+2im) - ct3))) < tol
+  @test @FastGTPSA(@.(normTPS((2+2im) + ct1 - ct3))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 - ct2 - ct1))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 - ct3 - -ct1))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 - (2+2im) - ct1))) < tol
+  @test @FastGTPSA(@.(normTPS((2+2im) - ct3 - -ct1))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 * ct3 - (2+2im)*(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 * ct2 - (2+2im)*(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 * 5 - (10+10im)))) < tol
+  @test @FastGTPSA(@.(normTPS(5 * ct2 - (10 * ct1)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct1 / ct2 - (1+im)/(2+2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 / ct1 - 2))) < tol
+  @test @FastGTPSA(@.(normTPS(1 / ct2 - 1/(2+2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 / 3 - (2+2im)/3))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 / ct2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 ^ ct3 - (2+2im)^(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 ^ ct2 - (3+3im)^(2+2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 ^ 3 - (2+2im)^3))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 ^ (1/2) - sqrt(2+2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 ^ (1/2) - sqrt(ct2)))) < tol
+  @test @FastGTPSA(@.(normTPS(2 ^ ct3 - 2^(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(inv(ct3) - 1/ct3))) < tol
+  @test @FastGTPSA(@.(normTPS(inv(ct3) - 1/(3+3im)))) < tol
+
+  # Promotion of TPS to ComplexTPS
+  @test @FastGTPSA(@.(normTPS(t1 + ct2 - (1 + (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 + t1 - (1 + (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS(t1 + (2+2im) - (1 + (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS((2+2im) + t1 - (1 + (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 - ct2 - (3 - (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS(ct2 - t3 - ((2+2im) - 3)))) < tol
+  @test @FastGTPSA(@.(normTPS(t3 - (2+2im) - (3 - (2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS((2+2im) - t3 - ((2+2im) - 3)))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 * ct3 - 2 * (3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 * t2 - 2 * (3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 * (3+3im) - 2 * (3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS((3+3im) * t2 - 2 * (3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / ct3 - 2/(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 / t2 - (3+3im)/2))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 / (3+3im) - 2/(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS((3+3im) / t2 - (3+3im)/2))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ ct3 - 2^(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(ct3 ^ t2 - (3+3im)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(t2 ^ (3+3im) - 2^(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS((3+3im)^t2 - (3+3im)^2))) < tol
+
+  # Vectorized DOT:
+  t1 = [t1]
+  t2 = [t2]
+  t3 = [t3]
+  ct1 = [ct1]
+  ct2 = [ct2]
+  ct3 = [ct3]
+
+  @test @FastGTPSA(norm(@.(normTPS(t1 + t2 - t3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 + t1 - t3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t1 + 2 - t3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(2 + t1 - t3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 - t2 - t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 - t3 - -t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 - 2 - t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(2 - t3 - -t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 * t3 - 6)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 * t2 - 6)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 * 5 - 10)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(5 * t2 - 10 * t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t1 / t2 - 1/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / t1 - 2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1 / t2 - 1/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / 3 - 2/3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / t2 - t1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / t2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ t3 - 8)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 ^ t2 - 9)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ 3 - 8)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ (1/2) - sqrt(2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ (1/2) - sqrt(t2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(2 ^ t3 - 8)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(inv(t3) - 1/t3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(inv(t3) - 1/3)))) < tol
+  
+  # ComplexTPS
+  @test @FastGTPSA(norm(@.(normTPS(ct1 + ct2 - ct3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 + ct1 - ct3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct1 + (2+2im) - ct3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((2+2im) + ct1 - ct3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 - ct2 - ct1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 - ct3 - -ct1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 - (2+2im) - ct1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((2+2im) - ct3 - -ct1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 * ct3 - (2+2im)*(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 * ct2 - (2+2im)*(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 * 5 - (10+10im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(5 * ct2 - (10 * ct1))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct1 / ct2 - (1+im)/(2+2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 / ct1 - 2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1 / ct2 - 1/(2+2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 / 3 - (2+2im)/3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 / ct2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 ^ ct3 - (2+2im)^(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 ^ ct2 - (3+3im)^(2+2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 ^ 3 - (2+2im)^3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 ^ (1/2) - sqrt(2+2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 ^ (1/2) - sqrt(ct2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(2 ^ ct3 - 2^(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(inv(ct3) - 1/ct3)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(inv(ct3) - 1/(3+3im))))) < tol
+
+  # Promotion of TPS to ComplexTPS
+  @test @FastGTPSA(norm(@.(normTPS(t1 + ct2 - (1 + (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 + t1 - (1 + (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t1 + (2+2im) - (1 + (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((2+2im) + t1 - (1 + (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 - ct2 - (3 - (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct2 - t3 - ((2+2im) - 3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t3 - (2+2im) - (3 - (2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((2+2im) - t3 - ((2+2im) - 3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 * ct3 - 2 * (3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 * t2 - 2 * (3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 * (3+3im) - 2 * (3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((3+3im) * t2 - 2 * (3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / ct3 - 2/(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 / t2 - (3+3im)/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 / (3+3im) - 2/(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((3+3im) / t2 - (3+3im)/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ ct3 - 2^(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(ct3 ^ t2 - (3+3im)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t2 ^ (3+3im) - 2^(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS((3+3im)^t2 - (3+3im)^2)))) < tol
+
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  v = 0.5
+  t[0] = v
+  tol = 1e-14
+  t1 = TPS(t)
+  t1[0] = 1
+  t2 = zero(t1)
+  t2[0] = 2
+  t3 = zero(t1)
+  t3[0] = 3
+
+
+  @test @FastGTPSA(@.(normTPS(abs(-t) - abs(-v) ))) < tol
+  @test @FastGTPSA(@.(normTPS(sqrt(t) - sqrt(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(t) - exp(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(log(t) - log(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t) - sin(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(t) - cos(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(tan(t) - tan(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(csc(t) - csc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sec(t) - sec(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cot(t) - cot(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinc(t) - sinc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinh(t) - sinh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t) - cosh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(tanh(t) - tanh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(csch(t) - csch(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sech(t) - sech(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - coth(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asin(t) - asin(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acos(t) - acos(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t) - atan(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acsc(1/t) - acsc(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asec(1/t) - asec(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acot(1/t) - acot(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinh(t) - asinh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acosh(1/t) - acosh(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(atanh(t) - atanh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acsch(1/t) - acsch(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asech(t) - asech(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acoth(1/t) - acoth(1/v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinc(t/pi) - asin(v)/(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinhc(t/pi) - asinh(v)/(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(zero(t) - zero(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(real(t) - real(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(imag(t) - imag(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(conj(t) - conj(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinhc(t/pi) - sinh(v)/v))) < tol
+  @test @FastGTPSA(@.(normTPS(erf(t) - erf(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(erfc(t) - erfc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(-im*erf(t*im) - erfi(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t3,t2) - atan(3,2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t3,2) - atan(3,2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(3,t2) - atan(3,2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t3,-t2) - atan(3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t3,-2) - atan(3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(3,-t2) - atan(3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-t3,-t2) - atan(-3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-t3,-2) - atan(-3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-3,-t2) - atan(-3,-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-t3,t2) - atan(-3,2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-t3,2) - atan(-3,2)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(-3,t2) - atan(-3,2)))) < tol
+
+  @test @FastGTPSA(@.(normTPS(hypot(t2,t3) - hypot(2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(2,t3) - hypot(2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t2,3) - hypot(2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1,t2,t3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1, t2, t3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, 2, t3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, t2, 3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1, 2, t3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1, t2, 3) - hypot(1,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, 2, 3) - hypot(1,2,3)))) < tol
+
+  @test @FastGTPSA(@.(normTPS(angle(t2) - angle(2)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(-t2) - angle(-2)))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(t3) - complex(3)))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(t2,t3) - complex(2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(polar(t2) - (abs(2)+im*atan(0,2))))) < tol
+  @test @FastGTPSA(@.(normTPS(polar(-t1) - (abs(-1)+im*atan(0,-1))))) < tol
+  @test @FastGTPSA(@.(normTPS(rect(t2) - (2*cos(0) + im*2*sin(0))))) < tol
+  @test @FastGTPSA(@.(normTPS(rect(-t1) - (-1*cos(0) + im*-1*sin(0))))) < tol
+  
+
+  v = 0.5+0.5im
+  t = ComplexTPS64(t)
+  t[0] = v
+  ct1 = ComplexTPS64(t)
+  ct1[0] = 1 + 1im
+  ct2 = zero(ct1)
+  ct2[0] = 2 + 2im
+  ct3 = zero(ct1)
+  ct3[0] = 3 + 3im
+  @test @FastGTPSA(@.(normTPS(abs(-t) - abs(-v) ))) < tol
+  @test @FastGTPSA(@.(normTPS(sqrt(t) - sqrt(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(t) - exp(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(log(t) - log(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t) - sin(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(t) - cos(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(tan(t) - tan(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(csc(t) - csc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sec(t) - sec(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cot(t) - cot(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinc(t) - sinc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinh(t) - sinh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t) - cosh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(tanh(t) - tanh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(csch(t) - csch(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sech(t) - sech(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - coth(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asin(t) - asin(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acos(t) - acos(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(t) - atan(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acsc(t) - acsc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asec(t) - asec(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acot(t) - acot(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinh(t) - asinh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acosh(t) - acosh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(atanh(t) - atanh(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acsch(t) - acsch(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asech(t) - asech(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(acoth(t) - acoth(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinc(t/pi) - asin(v)/v))) < tol
+  @test @FastGTPSA(@.(normTPS(asinhc(t/pi) - asinh(v)/v))) < tol
+  @test @FastGTPSA(@.(normTPS(zero(t) - zero(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(real(t) - real(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(imag(t) - imag(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(conj(t) - conj(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinhc(t/pi) - sinh(v)/v))) < tol
+  @test @FastGTPSA(@.(normTPS(erf(t) - erf(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(erfc(t) - erfc(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(-im*erf(t*im) - erfi(v)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct2,ct3) - hypot(2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(2+2im,ct3) - hypot(2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct2,3+3im) - hypot(2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(t2+im*t3) - angle(2+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(t2-im*t3) - angle(2-3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(-t2-im*t3) - angle(-2-3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(-t2+im*t3) - angle(-2+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(ct2) - angle(2+2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(-ct2) - angle(-2-2im)))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(ct3) - complex(3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(polar(ct2) - (abs(2+2im)+im*angle(2+2im))))) < tol
+  @test @FastGTPSA(@.(normTPS(polar(-ct1) - (abs(-1-im)+im*angle(-1-im))))) < tol
+  @test @FastGTPSA(@.(normTPS(rect(ct2) - (2*cos(2) + im*2*sin(2))))) < tol
+  @test @FastGTPSA(@.(normTPS(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1))))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1, t2, t3) - hypot(1+1im,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, ct2, t3) - hypot(1,2+2im,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, t2, ct3) - hypot(1,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1,t2,3+3im) - hypot(1,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1,2+2im,t3) - hypot(1,2+2im,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im,t2,t3) - hypot(1+1im,2,3)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(t1,2,3+3im) - hypot(1,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1,t2,3+3im) - hypot(1,2,3+3im)))) < tol
+  @test @FastGTPSA(@.(normTPS(hypot(1+1im,2,t3) - hypot(1+1im,2,3)))) < tol
+
+  # Now with vectors:
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  v = 0.5
+  t[0] = v
+  tol = 1e-14
+  t1 = TPS(t)
+  t1[0] = 1
+  t2 = zero(t1)
+  t2[0] = 2
+  t3 = zero(t1)
+  t3[0] = 3
+
+  t = [t]
+  v = [v]
+  t1 = [t1]
+  t2 = [t2]
+  t3 = [t3]
+
+
+  @test @FastGTPSA(norm(@.(normTPS(abs(-t) - abs(-v) )))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sqrt(t) - sqrt(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(t) - exp(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(t) - log(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t) - sin(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(t) - cos(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tan(t) - tan(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csc(t) - csc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sec(t) - sec(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cot(t) - cot(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinc(t) - sinc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinh(t) - sinh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t) - cosh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tanh(t) - tanh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csch(t) - csch(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sech(t) - sech(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - coth(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asin(t) - asin(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acos(t) - acos(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t) - atan(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsc(1/t) - acsc(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asec(1/t) - asec(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acot(1/t) - acot(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinh(t) - asinh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acosh(1/t) - acosh(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atanh(t) - atanh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsch(1/t) - acsch(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asech(t) - asech(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acoth(1/t) - acoth(1/v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinc(t/pi) - asin(v)/(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinhc(t/pi) - asinh(v)/(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(zero(t) - zero(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(real(t) - real(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(imag(t) - imag(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(conj(t) - conj(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinhc(t/pi) - sinh(v)/v)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erf(t) - erf(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erfc(t) - erfc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(-im*erf(t*im) - erfi(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t3,t2) - atan(3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t3,2) - atan(3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(3,t2) - atan(3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t3,-t2) - atan(3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t3,-2) - atan(3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(3,-t2) - atan(3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-t3,-t2) - atan(-3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-t3,-2) - atan(-3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-3,-t2) - atan(-3,-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-t3,t2) - atan(-3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-t3,2) - atan(-3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(-3,t2) - atan(-3,2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t2,t3) - hypot(2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(2,t3) - hypot(2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t2,3) - hypot(2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1,t2,t3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1, t2, t3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, 2, t3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, t2, 3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1, 2, t3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1, t2, 3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, 2, 3) - hypot(1,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(t2) - angle(2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(-t2) - angle(-2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(t3) - complex(3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(t2,t3) - complex(2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(polar(t2) - (abs(2)+im*atan(0,2)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(polar(-t1) - (abs(-1)+im*atan(0,-1)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(rect(t2) - (2*cos(0) + im*2*sin(0)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(rect(-t1) - (-1*cos(0) + im*-1*sin(0)))))) < tol
+  
+
+  v = 0.5+0.5im
+  t = ComplexTPS64(first(t))
+  t[0] = v
+  ct1 = ComplexTPS64(t)
+  ct1[0] = 1 + 1im
+  ct2 = zero(ct1)
+  ct2[0] = 2 + 2im
+  ct3 = zero(ct1)
+  ct3[0] = 3 + 3im
+
+  t = [t]
+  v = [v]
+  ct1 = [ct1]
+  ct2 = [ct2]
+  ct3 = [ct3]
+
+  @test @FastGTPSA(norm(@.(normTPS(abs(-t) - abs(-v) )))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sqrt(t) - sqrt(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(t) - exp(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(t) - log(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t) - sin(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(t) - cos(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tan(t) - tan(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csc(t) - csc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sec(t) - sec(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cot(t) - cot(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinc(t) - sinc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinh(t) - sinh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t) - cosh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tanh(t) - tanh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csch(t) - csch(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sech(t) - sech(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - coth(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asin(t) - asin(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acos(t) - acos(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(t) - atan(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsc(t) - acsc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asec(t) - asec(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acot(t) - acot(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinh(t) - asinh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acosh(t) - acosh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atanh(t) - atanh(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsch(t) - acsch(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asech(t) - asech(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acoth(t) - acoth(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinc(t/pi) - asin(v)/v)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinhc(t/pi) - asinh(v)/v)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(zero(t) - zero(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(real(t) - real(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(imag(t) - imag(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(conj(t) - conj(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinhc(t/pi) - sinh(v)/v)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erf(t) - erf(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erfc(t) - erfc(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(-im*erf(t*im) - erfi(v))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct2,ct3) - hypot(2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(2+2im,ct3) - hypot(2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct2,3+3im) - hypot(2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1,ct2,ct3) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im, ct2, ct3) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im, 2+2im, ct3) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im, ct2, 3+3im) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, 2+2im, 3+3im) - hypot(1+1im,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(t2+im*t3) - angle(2+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(t2-im*t3) - angle(2-3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(-t2-im*t3) - angle(-2-3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(-t2+im*t3) - angle(-2+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(ct2) - angle(2+2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(-ct2) - angle(-2-2im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(ct3) - complex(3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(polar(ct2) - (abs(2+2im)+im*angle(2+2im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(polar(-ct1) - (abs(-1-im)+im*angle(-1-im)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(rect(ct2) - (2*cos(2) + im*2*sin(2)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(rect(-ct1) - (-1*cos(-1) + im*-1*sin(-1)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, ct2, t3) - hypot(1+1im,2+2im,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, t2, ct3) - hypot(1+1im,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, ct2, ct3) - hypot(1,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1, t2, t3) - hypot(1+1im,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, ct2, t3) - hypot(1,2+2im,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, t2, ct3) - hypot(1,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1,t2,3+3im) - hypot(1+1im,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1, ct2, 3+3im) - hypot(1,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(ct1,2+2im,t3) - hypot(1+1im,2+2im,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1,2+2im,ct3) - hypot(1,2+2im,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im,ct2,t3) - hypot(1+1im,2+2im,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im, t2, ct3) - hypot(1+1im,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1,t2,3+3im) - hypot(1,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1,2+2im,t3) - hypot(1,2+2im,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im,t2,t3) - hypot(1+1im,2,3))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(t1,2,3+3im) - hypot(1,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1,t2,3+3im) - hypot(1,2,3+3im))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(hypot(1+1im,2,t3) - hypot(1+1im,2,3))))) < tol
+
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  t[0] = 0.5; t[[1]] = 2; t[[2]] = 3; t[[3]] = 4; t[[4]] = 5; t[[5]] = 6
+  tol = 1e-10
+  @test @FastGTPSA(@.(normTPS(sin(t)^2+cos(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(1/sin(t) - csc(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(1/cos(t) - sec(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(1/tan(t) - cot(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t)/cos(t) - tan(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(sec(t)^2 - 1 - tan(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t/2) - sqrt((1-cos(t))/2)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(t/2) - sqrt((1+cos(t))/2)))) < tol
+  @test @FastGTPSA(@.(normTPS(sqrt(t^2) - abs(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(csc(t)^2 - cot(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(log(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(log(exp(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(log(exp(t)) - exp(log(t))))) < tol
+  @test @FastGTPSA(@.(normTPS(log(t^2) - 2*log(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(5*log(t) - log(t^5)))) < tol
+  @test @FastGTPSA(@.(normTPS(t*log(5) - log(5^t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinc(t) - sin(pi*t)/(pi*t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinhc(t/pi) - sinh(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(im*t) - cos(t) - im*sin(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(real(exp(im*t)) - cos(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(imag(exp(im*t)) - sin(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinh(t) - (exp(t) - exp(-t))/2))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t) - (exp(t) + exp(-t))/2))) < tol
+  @test @FastGTPSA(@.(normTPS(tanh(t) - sinh(t)/cosh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(csch(t) - 1/sinh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sech(t) - 1/cosh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - cosh(t)/sinh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - 1/tanh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t)^2 - sinh(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(1 - tanh(t)^2 - sech(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t)^2 - 1 - csch(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(asin(sin(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acos(cos(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(tan(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acsc(1/t) - asin(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asec(1/t) - acos(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(acot(1/t) - atan(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinh(sinh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acosh(cosh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(atanh(tanh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acsch(t) - asinh(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asech(t) - acosh(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(acoth(1/t) - atanh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinc(t/pi) - asin(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(asinhc(t/pi) - asinh(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(erfc(t) - 1 + erf(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(erf(-t) + erf(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(t) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(t,t) - (t+im*t)))) < tol
+
+  t = ComplexTPS64(t)
+  t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
+  @test @FastGTPSA(@.(normTPS(sin(t)^2+cos(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(1/sin(t) - csc(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(1/cos(t) - sec(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(1/tan(t) - cot(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t)/cos(t) - tan(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(sec(t)^2 - 1 - tan(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(sin(t/2) - sqrt((1-cos(t))/2)))) < tol
+  @test @FastGTPSA(@.(normTPS(cos(t/2) - sqrt((1+cos(t))/2)))) < tol
+  @test @FastGTPSA(@.(normTPS(sqrt(t^2) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(csc(t)^2 - cot(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(log(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(log(exp(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(log(exp(t)) - exp(log(t))))) < tol
+  @test @FastGTPSA(@.(normTPS(log(t^2) - 2*log(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(5*log(t) - log(t^5) - 2*pi*im))) < tol
+  @test @FastGTPSA(@.(normTPS(t*log(5) - log(5^t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinc(t/pi) - sin(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(sinhc(t/pi) - sinh(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(exp(im*t) - cos(t) - im*sin(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sinh(t) - (exp(t) - exp(-t))/2))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t) - (exp(t) + exp(-t))/2))) < tol
+  @test @FastGTPSA(@.(normTPS(tanh(t) - sinh(t)/cosh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(csch(t) - 1/sinh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(sech(t) - 1/cosh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - cosh(t)/sinh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t) - 1/tanh(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(cosh(t)^2 - sinh(t)^2 - 1))) < tol
+  @test @FastGTPSA(@.(normTPS(1 - tanh(t)^2 - sech(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(coth(t)^2 - 1 - csch(t)^2))) < tol
+  @test @FastGTPSA(@.(normTPS(asin(sin(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acos(cos(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(atan(tan(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acsc(t) - asin(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asec(t) - acos(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(acot(t) - atan(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinh(sinh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acosh(cosh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(atanh(tanh(t)) - t))) < tol
+  @test @FastGTPSA(@.(normTPS(acsch(t) - asinh(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asech(t) - acosh(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(acoth(t) - atanh(1/t)))) < tol
+  @test @FastGTPSA(@.(normTPS(asinc(t/pi) - asin(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(asinhc(t/pi) - asinh(t)/t))) < tol
+  @test @FastGTPSA(@.(normTPS(erfc(t) - 1 + erf(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(erf(-t) + erf(t)))) < tol
+  @test @FastGTPSA(@.(normTPS(angle(t) - atan(imag(t),real(t))))) < tol
+  @test @FastGTPSA(@.(normTPS(complex(t) - t))) < tol
+
+  d = Descriptor(1, 5)
+  t = TPS(use=d)
+  t[0] = 0.5; t[[1]] = 2; t[[2]] = 3; t[[3]] = 4; t[[4]] = 5; t[[5]] = 6
+  tol = 1e-10
+  t = [t]
+  @test @FastGTPSA(norm(@.(normTPS(sin(t)^2+cos(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/sin(t) - csc(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/cos(t) - sec(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/tan(t) - cot(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t)/cos(t) - tan(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sec(t)^2 - 1 - tan(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t/2) - sqrt((1-cos(t))/2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(t/2) - sqrt((1+cos(t))/2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sqrt(t^2) - abs(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csc(t)^2 - cot(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(log(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(exp(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(exp(t)) - exp(log(t)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(t^2) - 2*log(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(5*log(t) - log(t^5))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t*log(5) - log(5^t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinc(t) - sin(pi*t)/(pi*t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinhc(t/pi) - sinh(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(im*t) - cos(t) - im*sin(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(real(exp(im*t)) - cos(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(imag(exp(im*t)) - sin(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinh(t) - (exp(t) - exp(-t))/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t) - (exp(t) + exp(-t))/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tanh(t) - sinh(t)/cosh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csch(t) - 1/sinh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sech(t) - 1/cosh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - cosh(t)/sinh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - 1/tanh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t)^2 - sinh(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1 - tanh(t)^2 - sech(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t)^2 - 1 - csch(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asin(sin(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acos(cos(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(tan(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsc(1/t) - asin(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asec(1/t) - acos(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acot(1/t) - atan(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinh(sinh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acosh(cosh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atanh(tanh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsch(t) - asinh(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asech(t) - acosh(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acoth(1/t) - atanh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinc(t/pi) - asin(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinhc(t/pi) - asinh(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erfc(t) - 1 + erf(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erf(-t) + erf(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(t) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(t,t) - (t+im*t))))) < tol
+
+  t = ComplexTPS64(first(t))
+  t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
+  t = [t]
+  @test @FastGTPSA(norm(@.(normTPS(sin(t)^2+cos(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/sin(t) - csc(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/cos(t) - sec(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1/tan(t) - cot(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t)/cos(t) - tan(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(2*t) - cos(t)^2 + sin(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sec(t)^2 - 1 - tan(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sin(t/2) - sqrt((1-cos(t))/2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cos(t/2) - sqrt((1+cos(t))/2))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sqrt(t^2) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csc(t)^2 - cot(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(log(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(exp(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(exp(t)) - exp(log(t)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(log(t^2) - 2*log(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(5*log(t) - log(t^5) - 2*pi*im)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(t*log(5) - log(5^t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinc(t/pi) - sin(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinhc(t/pi) - sinh(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(exp(im*t) - cos(t) - im*sin(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sinh(t) - (exp(t) - exp(-t))/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t) - (exp(t) + exp(-t))/2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(tanh(t) - sinh(t)/cosh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(csch(t) - 1/sinh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(sech(t) - 1/cosh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - cosh(t)/sinh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t) - 1/tanh(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(cosh(t)^2 - sinh(t)^2 - 1)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(1 - tanh(t)^2 - sech(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(coth(t)^2 - 1 - csch(t)^2)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asin(sin(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acos(cos(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atan(tan(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsc(t) - asin(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asec(t) - acos(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acot(t) - atan(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinh(sinh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acosh(cosh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(atanh(tanh(t)) - t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acsch(t) - asinh(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asech(t) - acosh(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(acoth(t) - atanh(1/t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinc(t/pi) - asin(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(asinhc(t/pi) - asinh(t)/t)))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erfc(t) - 1 + erf(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(erf(-t) + erf(t))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(angle(t) - atan(imag(t),real(t)))))) < tol
+  @test @FastGTPSA(norm(@.(normTPS(complex(t) - t)))) < tol
+
+  d = Descriptor(3, 7); x = vars(d); y= rand(3)
+  @FastGTPSA begin
+    t1 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    t2 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    z  = y[1]^3*sin(y[2])/log(2+y[3])-exp(y[1]*y[2])*im;
+   end
+
+   @FastGTPSA begin
+    tt1 = @. x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    tt2 = @. x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
+    tz  = @. y[1]^3*sin(y[2])/log(2+y[3])-exp(y[1]*y[2])*im;
+   end
+
+   @test normTPS(tt1-t1) < tol
+   @test normTPS(tt2-t2) < tol
+   @test norm(tz-z) < tol
+
+  # Make sure stack is 0:
+  @test GTPSA.checktemps()
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin

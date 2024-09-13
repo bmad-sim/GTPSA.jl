@@ -1,7 +1,6 @@
 # 1. Apply other macros to expression first
 function apply_macro(exp::Expr)
   if exp isa Expr && exp.head == :macrocall
-      println("changing things")
       exp.args[3] = apply_macro(exp.args[3])
       return macroexpand(@__MODULE__, exp, recursive = false)
   else
@@ -62,6 +61,7 @@ function munge_expr(expr::Expr; inplace::Bool = false)
 
   return expr
 end
+munge_expr(not_expr) = not_expr
 
 # 4. Change functions symbols to temporary types
 function change_functions(expr::Expr)
@@ -147,7 +147,7 @@ macro FastGTPSA(expr_or_block)
     block = expr_or_block
     for i in eachindex(block.args)
       if !(block.args[i] isa LineNumberNode) && block.args[i].head == :(=)
-        expr = expr_or_block.args[i].args[2]
+        expr = block.args[i].args[2]
         expr = apply_macro(expr)
         expr = change_dots(expr)
         expr = munge_expr(expr)
@@ -214,110 +214,68 @@ julia> @btime @FastGTPSA! begin
 ```
 """
 macro FastGTPSA!(expr_or_block)
-  if expr_or_block.head == :block 
-    for i in eachindex(expr_or_block.args)
-      if !(expr_or_block.args[i] isa LineNumberNode)
-        if expr_or_block.args[i].head == :(=)
+  if expr_or_block.head == :block
+    block = expr_or_block
+    for i in eachindex(block.args)
+      if !(block.args[i] isa LineNumberNode)
+        expr = block.args[i]
+        rhs = expr.args[2]
+        
+        if expr.head == :(=)
           op! = nothing
-        elseif expr_or_block.args[i].head == :(+=)
+        elseif expr.head == :(+=)
           op! = add!
-        elseif expr_or_block.args[i].head == :(-=)
+        elseif expr.head == :(-=)
           op! = sub!
-        elseif expr_or_block.args[i].head == :(*=)
+        elseif expr.head == :(*=)
           op! = mul!
-        elseif expr_or_block.args[i].head == :(/=)
+        elseif expr.head == :(/=)
           op! = div!
-        elseif expr_or_block.args[i].head == :(^=)
+        elseif expr.head == :(^=)
           op! = pow!
         else
-          continue
+          return :($expr)
         end
-        expr_or_block.args[i] = :($(expr_or_block.args[i].args[1]) isa TPS ? $(expr_or_block.args[i].args[1]) = GTPSA.to_TPS!($(expr_or_block.args[i].args[1]), $(to_temp_form(munge_expr(expr_or_block.args[i].args[2]))), $op!) : $(expr_or_block.args[i])) 
+
+        rhs = apply_macro(esc(rhs))
+        rhs = change_dots(rhs)
+        rhs = munge_expr(rhs)
+        rhs = change_functions(rhs)
+        outvar = esc(expr.args[1])
+
+        block.args[i] = :( $outvar isa TPS ?  to_TPS!($outvar, $rhs, $op!) : $(esc(expr)))
       end
     end
-    return esc(expr_or_block)
+    return block
   else
-
-    if expr_or_block.head == :(=)
+    expr = expr_or_block
+    rhs = expr.args[2]
+    
+    if expr.head == :(=)
       op! = nothing
-    elseif expr_or_block.head == :(+=)
+    elseif expr.head == :(+=)
       op! = add!
-    elseif expr_or_block.head == :(-=)
+    elseif expr.head == :(-=)
       op! = sub!
-    elseif expr_or_block.head == :(*=)
+    elseif expr.head == :(*=)
       op! = mul!
-    elseif expr_or_block.head == :(/=)
+    elseif expr.head == :(/=)
       op! = div!
-    elseif expr_or_block.head == :(^=)
+    elseif expr.head == :(^=)
       op! = pow!
     else
-      return :($expr_or_block)
+      return :($expr)
     end
 
-    return :( $(esc(expr_or_block.args[1])) isa TPS ?  $(esc(expr_or_block.args[1])) = to_TPS!($(esc(expr_or_block.args[1])), $(to_temp_form(munge_expr(esc(expr_or_block.args[2])))),$op!) : $(esc(expr_or_block)))  
+    rhs = apply_macro(esc(rhs))
+    rhs = change_dots(rhs)
+    rhs = munge_expr(rhs)
+    rhs = change_functions(rhs)
+    outvar = esc(expr.args[1])
+
+    return :( $outvar isa TPS ?  to_TPS!($outvar, $rhs, $op!) : $(esc(expr)))
   end
 end 
-#=
-to_temp_form(not_expr) = not_expr
-function to_temp_form(expr::Expr)
-  fcns = [:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv, :coth, 
-          :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, 
-          :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
-          :conj, :rect, :real, :imag, :angle, :abs, :atan, :polar, :complex, :zero, :one,
-          :norm, :normTPS, :+, :-, :*, :/, :^]
-
-  dump(expr)
-  if expr.head == :.
-    if expr.args[2] isa QuoteNode # calling a function in a different module
-      if expr.args[1] == :GTPSA && expr.args[end].value in fcns # Only change is function is in GTPSA
-        str = "__t_" * string(expr.args[end].value)
-        expr.args[end] = QuoteNode(Symbol(str))
-        return expr
-      end
-    else # broadcasting
-
-    end
-  end
-  for i in eachindex(expr.args)
-    #dump(expr.args[i])
-    if expr.args[i] isa Expr# && expr.args[i].args[1] in fcns
-     # println("going in")
-      #println(expr.args[i])
-      to_temp_form(expr.args[i])
-    elseif expr.args[i] == :+
-      expr.args[i] = :(GTPSA.:±)  # \pm  (allowed as unary operator)
-    elseif expr.args[i] == :-
-      expr.args[i] = :(GTPSA.:∓)  # \mp  (allowed as unary operator)
-    elseif expr.args[i] == :*
-      expr.args[i] = :(GTPSA.:⨰)  # \dottimes
-    elseif expr.args[i] == :/
-      expr.args[i] = :(GTPSA.:⨱)  # \timesbar
-    elseif expr.args[i] == :^
-      expr.args[i] = :(GTPSA.:⤊)  # \Uuparrow
-
-    elseif expr.args[i] == :.+
-      expr.args[i] = :(GTPSA.:.±)  # \pm  (allowed as unary operator)
-    elseif expr.args[i] == :.-
-      expr.args[i] = :(GTPSA.:.∓)  # \mp  (allowed as unary operator)
-    elseif expr.args[i] == :.*
-      expr.args[i] = :(GTPSA.:.⨰)  # \dottimes
-    elseif expr.args[i] == :./
-      expr.args[i] = :(GTPSA.:.⨱)  # \timesbar
-    elseif expr.args[i] == :.^
-      expr.args[i] = :(GTPSA.:.⤊)  # \Uuparrow
-
-    elseif expr.args[i] in fcns
-      str = "__t_" * string(expr.args[i])
-      expr.args[i] = :(GTPSA.$(Symbol(str)))
-    end
-  end
-#println(expr)
-  return expr
-end
-=#
-
-munge_expr(not_expr) = not_expr
-
 
 function to_TPS(t1::TempTPS{T}) where {T}
   t = TPS{T}(getdesc(t1).desc, getmo(t1)) #get_and_zero_mo!(t1))
@@ -325,34 +283,8 @@ function to_TPS(t1::TempTPS{T}) where {T}
   rel_temp!(t1)
   return t
 end
-#=
-function to_TPS(t1::AbstractArray{TempTPS{T}, N}) where {N}
-  t = similar(t1, TPS{T})
-end
-=#
-function to_TPS!(t::S, t1::T, op!)  where {S,T}
-  if !(S <: TPS)
-    if T <: Union{TPS,TempTPS} 
-      try error("Incorrect destination type: received $(typeof(a)), require $(TPS{T})") finally GTPSA.cleartemps!(getdesc(b)) end
-    else
-      if isnothing(op!)
-        return t1
-      else
-        if op! == add!
-          return t+t1
-        elseif op! == sub!
-          return t-t1
-        elseif op! == mul!
-          return t*t1
-        elseif op! == div!
-          return t/t1
-        else
-          return t^t1
-        end
-      end
-    end
-  end
 
+function to_TPS!(t::TPS, t1, op!)
   if isnothing(op!)
     if t1 isa TPS || t1 isa TempTPS
       copy!(t,t1)
