@@ -1,4 +1,5 @@
 # 1. Apply other macros to expression first
+# taken from https://jkrumbiegel.com/pages/2022-08-09-composing-macros/
 function apply_macro(exp::Expr)
   if exp isa Expr && exp.head == :macrocall
       exp.args[3] = apply_macro(exp.args[3])
@@ -43,25 +44,30 @@ end
 
 # 3. Munge expression :(+, a, b, c, d) to be :(+, (+, (+, a, b), c), d)
 # so temporaries push/pop handled correctly
-function munge_expr(expr::Expr; inplace::Bool = false)
+function munge_expr(expr; inplace::Bool = false)
   if !inplace; expr = deepcopy(expr); end
 
-  if expr.head == :call && (expr.args[1] == :+ || expr.args[1] == :*) && length(expr.args) > 3
-    # println("Found +*")
-    stub = deepcopy(expr)
-    pop!(stub.args)  # d removed in above exprample
-    expr.args = [expr.args[1], stub, expr.args[end]]
+  if (expr.args[1] == :+ || expr.args[1] == :*)
+    if length(expr.args) > 3
+      stub = deepcopy(expr)
+      pop!(stub.args)  # d removed in above example
+      expr.args = [expr.args[1], stub, expr.args[end]]
+    elseif expr.head == :. && (expr.args[1] == :+ || expr.args[1] == :*) # broadcasting
+      if expr.args[2].head == :tuple && length(expr.args[2].args) > 2
+        stub = deepcopy(expr)
+        pop!(stub.args[2].args)
+        expr.args[2].args = [stub, expr.args[2].args[end]]
+      end
+    end
   end
 
   # Recursively call this routine for each element in args array if the arg is an Expr.
   for arg in expr.args
-    # println("In: " * string(arg))
     if typeof(arg) == Expr; arg = munge_expr(arg, inplace = true); end
   end
 
   return expr
 end
-munge_expr(not_expr) = not_expr
 
 # 4. Change functions symbols to temporary types
 function change_functions(expr::Expr)
@@ -226,7 +232,8 @@ macro FastGTPSA!(expr_or_block)
         rhs = munge_expr(rhs)
         rhs = change_functions(rhs)
         
-        if expr.args[1].head == :(=) || expr.args[1].head == :(.=)
+        op! = false
+        if expr.args[1].head == :(=)
           op! = nothing
         elseif expr.args[1].head == :(+=)
           op! = add!
@@ -238,15 +245,72 @@ macro FastGTPSA!(expr_or_block)
           op! = div!
         elseif expr.args[1].head == :(^=)
           op! = pow!
-        else
+        end
+
+        if op! != false
+          block.args[i] = :(if $lhs isa TPS || eltype($lhs) <: TPS
+                              to_TPS!.($lhs, $rhs, $op!)
+                            else
+                              $(expr)
+                            end)
           continue
         end
 
-        block.args[i] = :(if $lhs isa TPS || eltype($lhs) <: TPS
-                            to_TPS!.($lhs, $rhs, $op!)  
-                          else
-                            $(esc(block.args[i]))
-                          end)
+        if expr.args[1].head == :(.=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs .= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        elseif expr.args[1].head == :(.+=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs .+= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        elseif expr.args[1].head == :(.-=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs .-= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        elseif expr.args[1].head == :(.*=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs .*= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        elseif expr.args[1].head == :(./=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs ./= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        elseif expr.args[1].head == :(.^=)
+          # broadcasted assignment
+          # leave rhs as is:
+          block.args[i] = :(if eltype($lhs) <: TPS
+                              $lhs .^= $rhs
+                            else
+                              $(expr)
+                            end)
+          continue
+        end
       end
     end
     return block
@@ -258,8 +322,9 @@ macro FastGTPSA!(expr_or_block)
     rhs = change_dots(rhs)
     rhs = munge_expr(rhs)
     rhs = change_functions(rhs)
-    
-    if expr.args[1].head == :(=)  || expr.args[1].head == :(.=)
+
+    op! = false
+    if expr.args[1].head == :(=)
       op! = nothing
     elseif expr.args[1].head == :(+=)
       op! = add!
@@ -271,16 +336,67 @@ macro FastGTPSA!(expr_or_block)
       op! = div!
     elseif expr.args[1].head == :(^=)
       op! = pow!
-    else
-      return :($(esc(expr)))
     end
 
+    if op! != false
+      return :( if $lhs isa TPS || eltype($lhs) <: TPS
+                  to_TPS!.($lhs, $rhs, $op!)
+                else
+                  $(expr)
+                end)
+    end
 
-    return :( if $lhs isa TPS || eltype($lhs) <: TPS
-                to_TPS!.($lhs, $rhs, $op!) 
-              else
-                $(expr)
-              end)
+    if expr.args[1].head == :(.=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs .= $rhs
+                else
+                  $(expr)
+                end)
+    elseif expr.args[1].head == :(.+=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs .+= $rhs
+                else
+                  $(expr)
+                end)
+    elseif expr.args[1].head == :(.-=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs .-= $rhs
+                else
+                  $(expr)
+                end)
+    elseif expr.args[1].head == :(.*=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs .*= $rhs
+                else
+                  $(expr)
+                end)
+    elseif expr.args[1].head == :(./=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs ./= $rhs
+                else
+                  $(expr)
+                end)
+    elseif expr.args[1].head == :(.^=)
+      # broadcasted assignment
+      # leave rhs as is:
+      return :( if eltype($lhs) <: TPS
+                  $lhs .^= $rhs
+                else
+                  $(expr)
+                end)
+    end
+    
+    return :($(esc(expr)))
   end
 end 
 
@@ -309,16 +425,5 @@ function to_TPS!(t::TPS, t1, op!)
   return t
 end
 
-
-
-
-#to_TPS!(t::TPS{T}, b::Union{TPS{T},TempTPS{T}}, op!) where {T}
-
-
-
-
 # Fallback for non-TPS types
 to_TPS(a) = a
-#to_TPS!(a, b::Union{TPS,TempTPS}, op!) = try error("Incorrect destination type: received $(typeof(a)), require $(TPS{T})") finally GTPSA.cleartemps!(getdesc(b)) end
-#to_TPS!(a,b,op!) = b
-

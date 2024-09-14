@@ -95,6 +95,9 @@ necessary to run if `GTPSA.checktemps(d::Descriptor=GTPSA.desc_current)` returns
 using `@FastGTPSA` or `@FastGTPSA!`, and the Julia session is not terminated.
 """
 function cleartemps!(d::Descriptor=GTPSA.desc_current)
+  if GTPSA.desc_current.desc == C_NULL
+    return
+  end
   desc = unsafe_load(d.desc)
   for i = 1:Threads.nthreads(:default)
     unsafe_store!(desc.ti, Cint(0), i)
@@ -113,6 +116,9 @@ occur if an error is thrown during evaluation of an expression using `@FastGTPSA
 or `@FastGTPSA!`.
 """
 function checktemps(d::Descriptor=GTPSA.desc_current)
+  if GTPSA.desc_current.desc == C_NULL
+    return false
+  end
   desc = unsafe_load(d.desc)
   for i=1:desc.nth
     unsafe_load(desc.ti, i) == 0 || return false
@@ -120,6 +126,22 @@ function checktemps(d::Descriptor=GTPSA.desc_current)
   end
   return true
 end
+
+# --- overloads for broadcasting compatibility ---
+Base.broadcastable(o::TempTPS) = Ref(o)
+function Base.setindex!(A::Array{T}, x::TempTPS, i1::Int) where {T<:TPS}
+  copy!(A[i1], x)
+  rel_temp!(x)
+end
+# These operators are *only* called when doing .+= or .-= etc
+# because temporaries should otherwise never see +, -, .... Broadcasting 
+# calls these guys internally.
++(t::TPS, t1::TempTPS) = (add!(t, t, t1); rel_temp!(t1); return t)
+-(t::TPS, t1::TempTPS) = (sub!(t, t, t1); rel_temp!(t1); return t)
+*(t::TPS, t1::TempTPS) = (mul!(t, t, t1); rel_temp!(t1); return t)
+/(t::TPS, t1::TempTPS) = (div!(t, t, t1); rel_temp!(t1); return t)
+^(t::TPS, t1::TempTPS) = (pow!(t, t, t1); rel_temp!(t1); return t)
+
 
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TempTPS{T}) where {T} = t.t
 Base.eltype(::Type{TempTPS{T}}) where {T} = T
@@ -139,8 +161,6 @@ promote_rule(::Type{TempTPS{ComplexF64}}, ::Type{TPS{Float64}}) = TempTPS{Comple
 promote_rule(::Type{TempTPS{ComplexF64}}, ::Type{TPS{ComplexF64}})  = TempTPS{ComplexF64}
 
 getmo(t::TempTPS) = unsafe_load(Base.unsafe_convert(Ptr{LowTempTPS}, t.t)).mo
-
-Base.broadcastable(o::TempTPS) = Ref(o)
 
 # This struct just allows access to the fields of the temporaries
 # because unsafe_load of mutable structs causes allocation in Julia
