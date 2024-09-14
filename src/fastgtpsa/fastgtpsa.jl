@@ -146,19 +146,20 @@ macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
     block = expr_or_block
     for i in eachindex(block.args)
-      if !(block.args[i] isa LineNumberNode) && block.args[i].head == :(=)
-        expr = block.args[i].args[2]
-        expr = apply_macro(expr)
-        expr = change_dots(expr)
-        expr = munge_expr(expr)
-        expr = change_functions(expr)
-        block.args[i] = :($(block.args[i].args[1]) = GTPSA.to_TPS.($expr))
+      if !(block.args[i] isa LineNumberNode)
+        expr = esc(apply_macro(block.args[i]))
+        lhs = expr.args[1].args[1]
+        rhs = expr.args[1].args[2]
+        rhs = change_dots(rhs)
+        rhs = munge_expr(rhs)
+        rhs = change_functions(rhs)
+        block.args[i] = :($lhs = GTPSA.to_TPS.($rhs))
       end
     end
     return esc(block)
   else
     expr = expr_or_block
-    expr = apply_macro(esc(expr))
+    expr = esc(apply_macro(expr))
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
@@ -218,62 +219,68 @@ macro FastGTPSA!(expr_or_block)
     block = expr_or_block
     for i in eachindex(block.args)
       if !(block.args[i] isa LineNumberNode)
-        expr = block.args[i]
-        rhs = expr.args[2]
-        
-        if expr.head == :(=)
-          op! = nothing
-        elseif expr.head == :(+=)
-          op! = add!
-        elseif expr.head == :(-=)
-          op! = sub!
-        elseif expr.head == :(*=)
-          op! = mul!
-        elseif expr.head == :(/=)
-          op! = div!
-        elseif expr.head == :(^=)
-          op! = pow!
-        else
-          return :($expr)
-        end
-
-        rhs = apply_macro(esc(rhs))
+        expr = esc(apply_macro(block.args[i]))
+        lhs = esc(expr.args[1].args[1])
+        rhs = esc(expr.args[1].args[2])
         rhs = change_dots(rhs)
         rhs = munge_expr(rhs)
         rhs = change_functions(rhs)
-        outvar = esc(expr.args[1])
+        
+        if expr.args[1].head == :(=) || expr.args[1].head == :(.=)
+          op! = nothing
+        elseif expr.args[1].head == :(+=)
+          op! = add!
+        elseif expr.args[1].head == :(-=)
+          op! = sub!
+        elseif expr.args[1].head == :(*=)
+          op! = mul!
+        elseif expr.args[1].head == :(/=)
+          op! = div!
+        elseif expr.args[1].head == :(^=)
+          op! = pow!
+        else
+          continue
+        end
 
-        block.args[i] = :( $outvar isa TPS ?  to_TPS!($outvar, $rhs, $op!) : $(esc(expr)))
+        block.args[i] = :(if $lhs isa TPS || eltype($lhs) <: TPS
+                            to_TPS!.($lhs, $rhs, $op!)  
+                          else
+                            $(esc(block.args[i]))
+                          end)
       end
     end
     return block
   else
     expr = expr_or_block
-    rhs = expr.args[2]
-    
-    if expr.head == :(=)
-      op! = nothing
-    elseif expr.head == :(+=)
-      op! = add!
-    elseif expr.head == :(-=)
-      op! = sub!
-    elseif expr.head == :(*=)
-      op! = mul!
-    elseif expr.head == :(/=)
-      op! = div!
-    elseif expr.head == :(^=)
-      op! = pow!
-    else
-      return :($expr)
-    end
-
-    rhs = apply_macro(esc(rhs))
+    expr = esc(apply_macro(expr))
+    lhs = esc(expr.args[1].args[1])
+    rhs = esc(expr.args[1].args[2])
     rhs = change_dots(rhs)
     rhs = munge_expr(rhs)
     rhs = change_functions(rhs)
-    outvar = esc(expr.args[1])
+    
+    if expr.args[1].head == :(=)  || expr.args[1].head == :(.=)
+      op! = nothing
+    elseif expr.args[1].head == :(+=)
+      op! = add!
+    elseif expr.args[1].head == :(-=)
+      op! = sub!
+    elseif expr.args[1].head == :(*=)
+      op! = mul!
+    elseif expr.args[1].head == :(/=)
+      op! = div!
+    elseif expr.args[1].head == :(^=)
+      op! = pow!
+    else
+      return :($(esc(expr)))
+    end
 
-    return :( $outvar isa TPS ?  to_TPS!($outvar, $rhs, $op!) : $(esc(expr)))
+
+    return :( if $lhs isa TPS || eltype($lhs) <: TPS
+                to_TPS!.($lhs, $rhs, $op!) 
+              else
+                $(expr)
+              end)
   end
 end 
 
