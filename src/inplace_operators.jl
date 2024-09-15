@@ -160,18 +160,18 @@ Sets `t` to so that `real(t)=tre` and `imag(t)=tim` in place.
 complex!(t::ComplexTPS; tre=nothing, tim=nothing) = low_cplx!(t, tre, tim)
 
 # TPS:
-function low_cplx!(t::ComplexTPS, tre::Union{TPS{Float64},Nothing}, tim::Union{TPS{Float64},Nothing})
+function low_cplx!(t::ComplexTPS, tre::Union{RealTPS,Nothing}, tim::Union{RealTPS,Nothing})
   return mad_ctpsa_cplx!(!isnothing(tre) ? tre : C_NULL, !isnothing(tim) ? tim : C_NULL, t)
 end
 
 # TPS, Number:
-function low_cplx!(t::ComplexTPS, tre::Union{TPS{Float64},Nothing}, tim::Real)
+function low_cplx!(t::ComplexTPS, tre::Union{RealTPS,Nothing}, tim::Real)
   mad_ctpsa_cplx!(!isnothing(tre) ? tre : C_NULL, C_NULL, t)
   seti!(t, 0, 1, complex(0,tim))
 end
 
 # Number, TPS:
-function low_cplx!(t::ComplexTPS, tre::Real, tim::Union{TPS{Float64},Nothing})
+function low_cplx!(t::ComplexTPS, tre::Real, tim::Union{RealTPS,Nothing})
   mad_ctpsa_cplx!(C_NULL, !isnothing(tim) ? tim : t)
   seti!(t, 0, 1, tre)
 end

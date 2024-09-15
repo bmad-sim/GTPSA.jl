@@ -250,11 +250,11 @@ __t_complex(t1::TempTPS{Float64}) = (t = TempTPS{complex(eltype(t1))}(t1); compl
 function __t_complex(tre::RealTPS, tim::RealTPS)
   t = TempTPS{ComplexF64}(tre)
   complex!(t, tre=tre, tim=tim)
-  if tre isa TempTPS
-    rel_temp!(tre)
-  end
   if tim isa TempTPS
     rel_temp!(tim)
+  end
+  if tre isa TempTPS
+    rel_temp!(tre)
   end
   return t
 end
