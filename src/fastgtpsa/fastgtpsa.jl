@@ -147,6 +147,14 @@ julia> @btime @FastGTPSA begin
        end
   6.317 μs (6 allocations: 5.81 KiB)
 ```
+
+Broadcasting is also compatible with `@FastGTPSA` (note two allocations 
+per `TPS` and one allocation per `Array`):
+
+```julia-repl
+
+```
+
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
