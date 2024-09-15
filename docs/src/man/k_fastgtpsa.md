@@ -83,6 +83,9 @@ Both `@FastGTPSA` and `@FastGTPSA!` basically tell the code to instead use a per
 
 The speedup of using the macro can be quite significant. See our [example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl), where we observe a x2 speedup at 2nd order. 
 
+## Note on Julia Versions < v1.10
+In order to support vectorized/broadcasted operations using `@FastGTPSA!` with *zero* allocations, `setindex!` was overloaded for `Array{<:TPS}` types. This can lead to massive speedups in calculating Taylor maps in simulations using a structure-of-arrays layout of memory. However, it turns out that on Julia versions < v1.10, merely overloading this function causes allocations when using the macro. It currently is not understood why (seems like a bug in previous Julia versions), however we strongly recommend using Julia version >= v1.10 with this package. If you are stuck with Julia v1.9, then you can use GTPSA v1.1.1, which is the latest version that does not have this particular overload. With this, you cannot do broadcasted operators using the macros, but you will have zero allocations for non-vector `TPS` operations.
+
 
 ## Documentation
 ```@docs
