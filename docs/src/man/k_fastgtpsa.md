@@ -60,6 +60,23 @@ t3 = ComplexTPS64(); t4 = ComplexTPS64(); @gensym w;
 
 ```
 
+`@FastGTPSA` and `@FastGTPSA!` are also compatible with broadcasted, vectorized operators. This can be very useful for example if a structure-of-arrays (SoA) layout is used in a simulation program, but you would like to calculate a Taylor map of the output by propagating GTPSAs through. Note that for `@FastGTPSA`, which allocates the result, that there are two allocations per `TPS` and one for the `Array`. For `@FastGTPSA!`, which requires a pre-allocated output, there are zero allocations. Both are still transparent to non-`TPS` types for universally polymorphic use without cost.
+
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d); # hide
+y = rand(3); # hide
+@btime @FastGTPSA begin
+        out = @. $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
+       end;
+out = zeros(ComplexTPS64, 3) # pre-allocate
+@btime @FastGTPSA! begin
+        @. $out = $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
+       end;
+```
+
+If errors are thrown during usage of `@FastGTPSA`/`@FastGTPSA!`, temporaries in use may not have been properly popped from the stack. Therefore, if the Julia session is not terminated, the helper functions [`GTPSA.checktemps`](@ref) and [`GTPSA.cleartemps!](@ref) should be used to evaluate and correct the state of the buffer.
+
 Without using the macro, each time an operation is performed using a TPS, a new TPS is dynamically-allocated containing the result. For example in the above expression, the calculation of `sin(x[2])` creates a new TPS, and the calculation of `x[1]^3` also creates a new TPS. The multiplication of these two resulting TPSs creates a new TPS, and so on until a TPS containing the full result of the evaluated expression is obtained. The intermediate TPSs that must be created to evaluate the expression are referred to as *temporaries*, because they only exist temporarily. Julia's garbage collector notices when the dynamically-allocated temporaries are no longer in scope, and cleans up that memory when it decides it's a good time to. This process can cause slowdowns in performance critical code however, especially in more complicated expressions where a lot of temporaries are created.
 
 Both `@FastGTPSA` and `@FastGTPSA!` basically tell the code to instead use a permanent, pre-allocated thread-safe buffer of TPSs for the temporaries during evaluation of the expression, so there is no dynamic memory allocation; for `@FastGTPSA`, the number of allocations is reduced to two (which is one single `TPS`), and for `@FastGTPSA!` the number of allocations is zero. Furthermore, these temporaries are accessed and deleted in a stack-like manner from the buffer by each thread, so that temporaries involved in operations are right next to each other in memory. This ensures minimal cache misses throughout the evaluation of the expression.
@@ -71,4 +88,6 @@ The speedup of using the macro can be quite significant. See our [example](https
 ```@docs
 @FastGTPSA
 @FastGTPSA!
+GTPSA.checktemps
+GTPSA.cleartemps!
 ```
