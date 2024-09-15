@@ -1510,8 +1510,9 @@ end
   @test_opt benchmark_GTPSA3()
 end
 
-# allocations only works on 1.10
-# maybe 1.9 includes the macro call allocations?
+# NOTE: for some reason merely overloading Base.setindex!(A::Array{T}, x::TempTPS, i1::Int) where {T<:TPS},
+# in Julia 1.9 causes allocations. This is not the case in 1.10, so presumably this is a bug.
+# Therefore, allocation tests only are performed on >=1.10
 if VERSION >= v"1.10"
 
 @testset "FastGTPSA - Allocations" begin
