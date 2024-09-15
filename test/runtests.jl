@@ -1510,7 +1510,9 @@ end
   @test_opt benchmark_GTPSA3()
 end
 
-
+# allocations only works on 1.10
+# maybe 1.9 includes the macro call allocations?
+if VERSION > v"1.9"
 
 @testset "FastGTPSA - Allocations" begin
   d = Descriptor(1, 5)
@@ -2142,7 +2144,7 @@ end
 
   @test GTPSA.checktemps()
 end
-
+end
 
 @testset "FastGTPSA - Broadcasting" begin
   d = Descriptor(1, 5)
@@ -5703,6 +5705,8 @@ end
   @test GTPSA.checktemps()
 end
 
+if VERSION > v"1.9"
+
 @testset "FastGTPSA - Broadcast allocations" begin
   d = Descriptor(1,5)
   w = [[ComplexTPS64()] for i in 1:248]
@@ -6193,6 +6197,8 @@ end
   end
   @test a2.allocs == 0
   @test GTPSA.checktemps()
+end
+
 end
 
 @testset "Taylor map benchmark against ForwardDiff" begin
