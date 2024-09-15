@@ -88,6 +88,6 @@ The speedup of using the macro can be quite significant. See our [example](https
 ```@docs
 @FastGTPSA
 @FastGTPSA!
-GTPSA.checktemps
 GTPSA.cleartemps!
+GTPSA.checktemps
 ```

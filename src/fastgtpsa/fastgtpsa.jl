@@ -152,9 +152,15 @@ Broadcasting is also compatible with `@FastGTPSA` (note two allocations
 per `TPS` and one allocation per `Array`):
 
 ```julia-repl
+julia> using GTPSA, BenchmarkTools
 
+julia> d = Descriptor(3, 7); x = vars(d); y = rand(3);
+
+julia> @btime @FastGTPSA begin
+        out = @. \$x^3*sin(\$y)/log(2+\$x)-exp(\$x*\$y)*im;
+       end;
+  7.573 μs (7 allocations: 5.89 KiB)
 ```
-
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
@@ -226,6 +232,21 @@ julia> @btime @FastGTPSA! begin
        \$z += 7
        end
   5.965 μs (0 allocations: 0 bytes)
+```
+
+Broadcasting is also compatible with `@FastGTPSA!`:
+
+```julia-repl
+julia> using GTPSA, BenchmarkTools
+
+julia> d = Descriptor(3, 7); x = vars(d); y = rand(3);
+
+julia> out = zeros(ComplexTPS64, 3) # pre-allocate
+
+julia> @btime @FastGTPSA! begin
+        @. \$out = \$x^3*sin(\$y)/log(2+\$x)-exp(\$x*\$y)*im;
+       end;
+  7.312 μs (0 allocations: 0 bytes)
 ```
 """
 macro FastGTPSA!(expr_or_block)

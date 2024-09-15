@@ -1512,7 +1512,7 @@ end
 
 # allocations only works on 1.10
 # maybe 1.9 includes the macro call allocations?
-if VERSION > v"1.9"
+if VERSION >= v"1.10"
 
 @testset "FastGTPSA - Allocations" begin
   d = Descriptor(1, 5)
@@ -3808,7 +3808,7 @@ end
     y170 = complex(t) - t
   end
 
-  @test a1 == 170*2
+  @test VERSION < v"1.10" || a1 == 170*2
   a2 = @allocations @FastGTPSA! begin
     x[1  ]= t1 + t2 - t3
     x[2  ]= t2 + t1 - t3
@@ -3981,7 +3981,7 @@ end
     x[169] = angle(t) - atan(imag(t),real(t))
     x[170] = complex(t) - t
   end
-  @test a2 == 0
+  @test VERSION < v"1.10" || a2 == 0
 
   t = ComplexTPS64()
   t[0] = 0.5+0.5im
@@ -4068,7 +4068,7 @@ end
     y246 = hypot(1,t2,3+3im) - hypot(1,2,3+3im)
     y247 = hypot(1+1im,2,t3) - hypot(1+1im,2,3)
   end
-  @test a1 == 50*2
+  @test VERSION < v"1.10" || a1 == 50*2
 
   a2 = @allocations @FastGTPSA! begin
     x[171] = sqrt(t) - sqrt(v)
@@ -4154,7 +4154,7 @@ end
     x[247] = hypot(1+1im,2,t3) - hypot(1+1im,2,3)
   end
 
-  @test a2 == 0
+  @test VERSION < v"1.10" || a2 == 0
 
   @test normTPS(y1 ) < tol
   @test normTPS(y2 ) < tol
@@ -5705,7 +5705,7 @@ end
   @test GTPSA.checktemps()
 end
 
-if VERSION > v"1.9"
+if VERSION >= v"1.10"
 
 @testset "FastGTPSA - Broadcast allocations" begin
   d = Descriptor(1,5)
