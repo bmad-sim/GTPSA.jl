@@ -223,7 +223,21 @@ t3 = ComplexTPS64(); t4 = ComplexTPS64(); @gensym w;
 
 ```
 
-The advantages of using the macro become especially apparent in more complicated systems, for example in [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl). 
+Both macros are also compatible with broadcasted, vectorized operators:
+
+```@repl
+using GTPSA, BenchmarkTools # hide
+d = Descriptor(3, 7); x = vars(d); y = rand(3);
+@btime @FastGTPSA begin
+        out = @. $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
+       end;
+out = zeros(ComplexTPS64, 3); # pre-allocate
+@btime @FastGTPSA! begin
+        @. $out = $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
+       end;
+```
+
+The advantages of using the macros become especially apparent in more complicated systems, for example in [`benchmark/track.jl`](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl). 
 
 ## Promotion of `TPS64` to `ComplexTPS64`
 

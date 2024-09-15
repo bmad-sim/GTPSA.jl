@@ -69,7 +69,7 @@ y = rand(3); # hide
 @btime @FastGTPSA begin
         out = @. $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
        end;
-out = zeros(ComplexTPS64, 3) # pre-allocate
+out = zeros(ComplexTPS64, 3); # pre-allocate
 @btime @FastGTPSA! begin
         @. $out = $x^3*sin($y)/log(2+$x)-exp($x*$y)*im;
        end;
