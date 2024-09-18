@@ -35,7 +35,7 @@ using GTPSA
 d = Descriptor(2, 6)
 
 # Get the TPSs corresponding to each variable based on the Descriptor
-x = vars()
+x = vars(d)
 # x[1] corresponds to the first variable and x[2] corresponds to the second variable
 
 # Manipulate the TPSs as you would any other mathematical variable in Julia
