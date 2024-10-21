@@ -75,6 +75,40 @@ Evaluates the vector function `F` at the point `x`, and returns the result.
 evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
 
 
+
+# --- F . grad ---
+"""
+    fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} 
+
+Calculates `F⋅∇h` and sets `g` equal to the result.
+"""
+function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}
+  Base.require_one_based_indexing(F)
+  nv = numvars(h)
+  @assert length(F) == nv "Incorrect length of F; received $(length(F)), should be $nv"
+  @assert !(g === h) "Aliasing g === h not allowed for fgrad!"
+  if eltype(T) != Float64
+      GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
+  else
+      GTPSA.mad_tpsa_fgrad!(Cint(length(F)), F, h, g)
+  end
+  return g
+end
+  
+"""
+    fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}   
+
+Calculates `F⋅∇h`.
+"""
+function fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} 
+  g = zero(h)
+  fgrad!(g, F, h)
+  return g
+end
+
+
+
+
 # --- Integral ---
 """
     integ!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T}

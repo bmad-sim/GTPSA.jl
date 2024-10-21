@@ -12,6 +12,8 @@ deriv
 deriv!
 evaluate
 evaluate!
+fgrad
+fgrad!
 getord
 getord!
 integ

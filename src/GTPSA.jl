@@ -117,10 +117,11 @@ export
   
 
   # Methods:
-  evaluate, evaluate!,
   complex!,
   compose, compose!,
   cycle!,
+  evaluate, evaluate!,
+  fgrad, fgrad!,
   integ, ∫, integ!, ∫!,
   deriv, ∂, deriv!, ∂!,
   getord, getord!,

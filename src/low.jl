@@ -64,3 +64,16 @@ len(t::ComplexTPS) = mad_ctpsa_len(t, false)
 equ(a::RealTPS,    b::RealTPS,    tol_) = mad_tpsa_equ(  a, b, Float64(tol_))
 equ(a::ComplexTPS, b::ComplexTPS, tol_) = mad_ctpsa_equ( a, b, Float64(tol_))
 equ(a::ComplexTPS, b::RealTPS,    tol_) = mad_ctpsa_equt(a, b, Float64(tol_))
+
+# Lie bracket GTPSA only provides routines for orbital part:
+liebra!(na, m1::Vector{TPS{Float64}},    m2::Vector{TPS{Float64}},    m3::Vector{TPS{Float64}})    = GTPSA.mad_tpsa_liebra!(Cint(na), m1, m2, m3)
+liebra!(na, m1::Vector{TPS{ComplexF64}}, m2::Vector{TPS{ComplexF64}}, m3::Vector{TPS{ComplexF64}}) = GTPSA.mad_ctpsa_liebra!(Cint(na), m1, m2, m3)
+
+
+# --- inverse ---
+minv!(na, ma::Vector{<:RealTPS},    nb, mc::Vector{<:RealTPS})    = GTPSA.mad_tpsa_minv!(Cint(na), ma, Cint(nb), mc)
+minv!(na, ma::Vector{<:ComplexTPS}, nb, mc::Vector{<:ComplexTPS}) = GTPSA.mad_ctpsa_minv!(Cint(na), ma, Cint(nb), mc)
+  
+vec2fld!(na::Cint, tpsa::TPS{Float64}, m::Vector{<:TPS{Float64}}) = (@inline; GTPSA.mad_tpsa_vec2fld!(na, tpsa, m))
+vec2fld!(na::Cint, ctpsa::TPS{ComplexF64}, m::Vector{<:TPS{ComplexF64}}) = (@inline; GTPSA.mad_ctpsa_vec2fld!(na, ctpsa, m))
+
