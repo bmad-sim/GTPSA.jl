@@ -153,8 +153,9 @@ end
 
 # --- Rest of unary functions ---
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv,
-  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc,
-  :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
+  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu,
+  :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, 
+  :asec, :asech, :conj, :rect)
 @eval begin
 ($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{eltype(t1)}(t1); $(Symbol(t,:!))(t, t1); return t)
 ($(Symbol("__t_",t)))(t::TempTPS)  = ($(Symbol(t,:!))(t, t); return t)

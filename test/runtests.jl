@@ -4,6 +4,10 @@ using SpecialFunctions
 using GTPSA
 import GTPSA: Desc
 
+BenchmarkTools.DEFAULT_PARAMETERS.gctrial = false
+BenchmarkTools.DEFAULT_PARAMETERS.evals = 2
+BenchmarkTools.DEFAULT_PARAMETERS.samples = 1
+
 @testset "Arithmetic operators" begin
   d = Descriptor(1, 5)
   t = TPS(use=d)
@@ -5739,7 +5743,7 @@ if VERSION >= v"1.10"
 
   # Everything is JIT-ed already so only need 1 sample 
   # to correctly calculate allocations using interpolation
-  BenchmarkTools.DEFAULT_PARAMETERS.samples = 1
+  
 
   a1 = @benchmark @FastGTPSA begin
     y1 = @. $t1 + $t2 - $t3

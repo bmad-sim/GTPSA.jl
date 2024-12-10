@@ -1778,7 +1778,7 @@ end
 
 
 """
-    mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{TPS{Float64}})
+    mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{<:RealTPS})
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the vector field (Hamilton's 
@@ -1791,13 +1791,13 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 ### Output
 - `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
-function mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{TPS{Float64}})
+function mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::RealTPS)
+    mad_tpsa_fld2vec!(na::Cint, ma::Vector{<:RealTPS}, c::RealTPS)
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the Hamiltonian one obtains 
@@ -1810,13 +1810,13 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 ### Output
 - `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
-function mad_tpsa_fld2vec!(na::Cint, ma::Vector{TPS{Float64}}, c::RealTPS)
+function mad_tpsa_fld2vec!(na::Cint, ma::Vector{<:RealTPS}, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::RealTPS, c::RealTPS)
+    mad_tpsa_fgrad!(na::Cint, ma::Vector{<:RealTPS}, b::RealTPS, c::RealTPS)
 
 Calculates `dot(ma, grad(b))`
 
@@ -1828,13 +1828,13 @@ Calculates `dot(ma, grad(b))`
 ### Output
 - `c`  -- `dot(ma, grad(b))`
 """
-function mad_tpsa_fgrad!(na::Cint, ma::Vector{TPS{Float64}}, b::RealTPS, c::RealTPS)
+function mad_tpsa_fgrad!(na::Cint, ma::Vector{<:RealTPS}, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{TPS{Float64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_liebra!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+    mad_tpsa_liebra!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
 
 Computes the Lie bracket of the vector fields `ma` and `mb`, defined as 
 sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
@@ -1847,13 +1847,13 @@ sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_tpsa_liebra!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+function mad_tpsa_liebra!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_exppb!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+    mad_tpsa_exppb!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
 
 Computes the exponential of fgrad of the vector fields `ma` and `mb`,
 literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
@@ -1866,13 +1866,13 @@ literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ..
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_tpsa_exppb!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+function mad_tpsa_exppb!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_logpb!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+    mad_tpsa_logpb!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
 
 Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`; the result 
 is the vector field `F` used to evolve to `ma` from `mb`.
@@ -1885,13 +1885,13 @@ is the vector field `F` used to evolve to `ma` from `mb`.
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_tpsa_logpb!(na::Cint, ma::Vector{TPS{Float64}}, mb::Vector{TPS{Float64}}, mc::Vector{TPS{Float64}})
+function mad_tpsa_logpb!(na::Cint, ma::Vector{<:RealTPS}, mb::Vector{<:RealTPS}, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_mord(na::Cint, ma::Vector{TPS{Float64}}, hi::Bool)::Cuchar
+    mad_tpsa_mord(na::Cint, ma::Vector{<:RealTPS}, hi::Bool)::Cuchar
 
 If `hi` is false, getting the maximum `mo` among all TPSAs in `ma`. 
 If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
@@ -1904,14 +1904,14 @@ If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
 ### Output
 - `ret` -- Maximum `hi` of the map if `hi` is `true`, else returns maximum `mo` of the map
 """
-function mad_tpsa_mord(na::Cint, ma::Vector{TPS{Float64}}, hi::Bool)::Cuchar
+function mad_tpsa_mord(na::Cint, ma::Vector{<:RealTPS}, hi::Bool)::Cuchar
   ret = @ccall MAD_TPSA.mad_tpsa_mord(na::Cint, ma::Ptr{TPS{Float64}}, hi::Bool)::Cuchar
   return ret
 end
 
 
 """
-    mad_tpsa_mnrm(na::Cint, ma::Vector{TPS{Float64}})::Cdouble
+    mad_tpsa_mnrm(na::Cint, ma::Vector{<:RealTPS})::Cdouble
 
 Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
@@ -1922,14 +1922,14 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 ### Output
 - `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
-function mad_tpsa_mnrm(na::Cint, ma::Vector{TPS{Float64}})::Cdouble
+function mad_tpsa_mnrm(na::Cint, ma::Vector{<:RealTPS})::Cdouble
   nrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, ma::Ptr{TPS{Float64}})::Cdouble
   return nrm
 end
 
 
 """
-    mad_tpsa_minv!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mc::Vector{TPS{Float64}})
+    mad_tpsa_minv!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, mc::Vector{<:RealTPS})
 
 Inverts the map. To include the parameters in the inversion, `na` = `nn` and the output map 
 length only need be `nb` = `nv`.
@@ -1942,13 +1942,13 @@ length only need be `nb` = `nv`.
 ### Output
 - `mc` -- Inversion of map `ma`
 """
-function mad_tpsa_minv!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mc::Vector{TPS{Float64}})
+function mad_tpsa_minv!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_pminv!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mc::Vector{TPS{Float64}}, select::Vector{Cint})
+    mad_tpsa_pminv!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, mc::Vector{<:RealTPS}, select::Vector{Cint})
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 To include the parameters in the inversion, `na` = `nn` and the output map length only need be `nb` = `nv`.
@@ -1962,7 +1962,7 @@ To include the parameters in the inversion, `na` = `nn` and the output map lengt
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_tpsa_pminv!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, mc::Vector{TPS{Float64}}, select::Vector{Cint})
+function mad_tpsa_pminv!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, mc::Vector{<:RealTPS}, select::Vector{Cint})
   @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mc::Ptr{TPS{Float64}}, select::Ptr{Cint})::Cvoid
 end
 
@@ -1987,7 +1987,7 @@ end
 
 
 """
-    mad_tpsa_translate!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{TPS{Float64}})
+    mad_tpsa_translate!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{<:RealTPS})
 
 Translates the expansion point of the map by the amount `tb`.
 
@@ -2000,13 +2000,13 @@ Translates the expansion point of the map by the amount `tb`.
 ### Output
 - `mc` -- Map evaluated at the new point translated `tb` from the original evaluation point
 """
-function mad_tpsa_translate!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{TPS{Float64}})
+function mad_tpsa_translate!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, tb::Vector{Cdouble}, mc::Vector{<:RealTPS})
   @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{TPS{Float64}})::Cvoid
 end
 
 
 """
-    mad_tpsa_eval!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
+    mad_tpsa_eval!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
 
 Evaluates the map at the point `tb`
 
@@ -2019,13 +2019,13 @@ Evaluates the map at the point `tb`
 ### Output
 - `tc` -- Values for each TPSA in the map evaluated at the point `tb`
 """
-function mad_tpsa_eval!(na::Cint, ma::Vector{TPS{Float64}}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
+function mad_tpsa_eval!(na::Cint, ma::Vector{<:RealTPS}, nb::Cint, tb::Vector{Cdouble}, tc::Vector{Cdouble})
   @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})::Cvoid
 end
 
 
 """
-    mad_tpsa_mconv!(na::Cint, ma::Vector{TPS{Float64}}, nc::Cint, mc::Vector{TPS{Float64}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+    mad_tpsa_mconv!(na::Cint, ma::Vector{<:RealTPS}, nc::Cint, mc::Vector{<:RealTPS}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
 
 Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the map `ma`.
 
@@ -2040,7 +2040,7 @@ Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the
 ### Output
 - `mc`   -- map `mc` with specified conversions 
 """
-function mad_tpsa_mconv!(na::Cint, ma::Vector{TPS{Float64}}, nc::Cint, mc::Vector{TPS{Float64}}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+function mad_tpsa_mconv!(na::Cint, ma::Vector{<:RealTPS}, nc::Cint, mc::Vector{<:RealTPS}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
   @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, ma::Ptr{TPS{Float64}}, nc::Cint, mc::Ptr{TPS{Float64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 

@@ -72,8 +72,8 @@ end
 # 4. Change functions symbols to temporary types
 function change_functions(expr::Expr)
   fcns = [:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv, :coth, 
-          :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, 
-          :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
+          :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu, 
+          :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
           :conj, :rect, :real, :imag, :angle, :abs, :atan, :polar, :complex, :zero, :one,
           :norm, :normTPS]
 
