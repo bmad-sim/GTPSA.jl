@@ -6248,5 +6248,5 @@ end
   mad_ctpsa.h downloaded.
   Comparing mad_ctpsa.h to ctpsa.jl...
   """
-  @test_skip compare_MAD() == expected_out
+  @test compare_MAD() == expected_out
 end
