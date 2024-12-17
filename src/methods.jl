@@ -6,15 +6,15 @@
 Calculates the 1-norm of the `TPS`, which is the sum of 
 the `abs` of all coefficients.
 """
-normTPS(t1::TPS{Float64}) = mad_tpsa_nrm(t1)
-normTPS(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
+normTPS(t1::RealTPS) = mad_tpsa_nrm(t1)
+normTPS(t1::ComplexTPS) = mad_ctpsa_nrm(t1)
 
 # --- setTPS! ---
 
 """
     setTPS!(t::TPS, t1::Number; change::Bool=false) 
 
-General function for setting a TPS/ComplexTPS64 `t` equal to `t1`. If `change` is `true`,
+General function for setting a TPS `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
 long as the number of variables + number of parameters are equal.
 """
@@ -53,15 +53,18 @@ end
 
 
 # --- Evaluate ---
-mad_eval!(na, ma::Vector{TPS{Float64}}, nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64},tb), tc)
-mad_eval!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64},tb), tc)
+mad_eval!(na, ma::Vector{<:RealTPS},    nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), tc)
+mad_eval!(na, ma::Vector{<:ComplexTPS}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), tc)
+
+#mad_eval!(na, ma::TPS64,        nb, tb,        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+#mad_eval!(na, ma::ComplexTPS64, nb, mb, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
 
 """
     evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
 
 Evaluates the vector function `F` at the point `x`, and fills `y` with the result. 
 """
-function evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+function evaluate!(y::Vector{T}, F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T}
   length(x) == numnn(first(F)) || error("Not enough input arguments")
   length(y) == length(F) || error("Not enough output arguments")
   mad_eval!(length(F), F, length(x), x, y)
@@ -72,7 +75,7 @@ end
 
 Evaluates the vector function `F` at the point `x`, and returns the result.
 """
-evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
+evaluate(F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
 
 
 
@@ -82,7 +85,7 @@ evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length
 
 Calculates `F⋅∇h` and sets `g` equal to the result.
 """
-function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}
+function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
   Base.require_one_based_indexing(F)
   nv = numvars(h)
   @assert length(F) == nv "Incorrect length of F; received $(length(F)), should be $nv"
@@ -100,7 +103,7 @@ end
 
 Calculates `F⋅∇h`.
 """
-function fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} 
+function fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
   g = zero(h)
   fgrad!(g, F, h)
   return g
