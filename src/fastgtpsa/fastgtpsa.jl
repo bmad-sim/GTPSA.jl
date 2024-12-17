@@ -277,7 +277,7 @@ macro FastGTPSA!(expr_or_block)
         end
 
         if op! != false
-          block.args[i] = :(if $lhs isa TPS || eltype($lhs) <: TPS
+          block.args[i] = :(if eltype($lhs) <: TPS
                               to_TPS!.($lhs, $rhs, $op!)
                             else
                               $(expr)
@@ -368,7 +368,7 @@ macro FastGTPSA!(expr_or_block)
     end
 
     if op! != false
-      return :( if $lhs isa TPS || eltype($lhs) <: TPS
+      return :( if eltype($lhs) <: TPS
                   to_TPS!.($lhs, $rhs, $op!)
                 else
                   $(expr)

@@ -147,8 +147,8 @@ end
 
 
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TempTPS{T}) where {T} = t.t
-Base.eltype(::Type{TempTPS{T}}) where {T} = T
-Base.eltype(::TempTPS{T}) where {T} = T
+numtype(::Type{TempTPS{T}}) where {T} = T
+numtype(::TempTPS{T}) where {T} = T
 
 promote_rule(::Type{TempTPS{Float64}}, ::Type{T}) where {T<:Real} = TempTPS{Float64} 
 promote_rule(::Type{TempTPS{Float64}}, ::Type{TempTPS{ComplexF64}}) = TempTPS{ComplexF64}

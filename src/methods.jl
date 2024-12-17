@@ -38,13 +38,13 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
   # else we have to get fancy
   numnn(t) == numnn(t1) || error("Number of variables + parameters in GTPSAs do not agree!")
   nn = numnn(t)
-  coef = Ref{eltype(t1)}()
+  coef = Ref{numtype(t1)}()
   mono = Vector{Cuchar}(undef, nn)
   idx = cycle!(t1, -1, nn, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
     if convert(Bool, mad_desc_isvalidm(newdesc.desc, nn, mono))
-      setm!(t, nn, mono, 0, eltype(t)(coef[])) # set new tpsa
+      setm!(t, nn, mono, 0, numtype(t)(coef[])) # set new tpsa
     end
     idx = cycle!(t1, idx, nn, mono, coef)
   end
@@ -90,7 +90,7 @@ function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, Com
   nv = numvars(h)
   @assert length(F) == nv "Incorrect length of F; received $(length(F)), should be $nv"
   @assert !(g === h) "Aliasing g === h not allowed for fgrad!"
-  if eltype(T) != Float64
+  if numtype(T) != Float64
       GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
   else
       GTPSA.mad_tpsa_fgrad!(Cint(length(F)), F, h, g)
@@ -379,10 +379,10 @@ If promotion is occuring, then one of the input vectors must be promoted to
 `ComplexTPS64`. A vector of pre-allocated `ComplexTPS64`s can optionally provided 
 in `work`, and has the requirement:
 
-If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
+If `numtype(m.x) != numtype(m1.x)` (then `m1` must be promoted):
 `work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
 
-else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
+else if `numtype(m.x) != numtype(m2.x)` (then `m2` must be promoted):
 `work = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS64}`
 
 The `ComplexTPS64`s in `work` must be defined and have the same `Descriptor`.
@@ -451,10 +451,10 @@ If promotion is occuring, then the inputs must be promoted to `ComplexTPS64`. If
 to be promoted, a vector of pre-allocated `ComplexTPS64`s can optionally provided 
 in `work`, and has the requirement:
 
-If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
+If `typeof(m) != eltype(m1)` (then `m1` must be promoted):
 `work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
 
-Else if `m2` is to be promoted (`typeof(m.x) != typeof(m2.x)`), a single `ComplexTPS64` 
+Else if `m2` is to be promoted (`typeof(m) != typeof(m2)`), a single `ComplexTPS64` 
 can be provided in `work`:  
 
 `work = m2_prom  # ComplexTPS64`
@@ -488,7 +488,7 @@ function compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64
 
     mad_compose!(-1, m2, n1, m1_prom, m)
 
-  elseif eltype(m) != eltype(m2) # Promoting m2
+  elseif typeof(m) != typeof(m2) # Promoting m2
     if isnothing(work)
       m2_prom = TPS{ComplexF64}(use=first(m))
     else

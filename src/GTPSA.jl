@@ -135,6 +135,7 @@ export
   scalar,
   setTPS!,
   numcoefs,
+  numtype,
   normTPS,
   
   # Temporaries:

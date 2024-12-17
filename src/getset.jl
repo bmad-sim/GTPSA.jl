@@ -84,7 +84,7 @@ end
 # Flat index vectorized
 function lowget(t::TPS, idxs::AbstractVector{<:Integer}, param::Nothing, params::Nothing)
   Base.require_one_based_indexing(idxs)
-  v = Vector{eltype(t)}(undef, length(idxs))
+  v = Vector{numtype(t)}(undef, length(idxs))
   for i=1:length(idxs)
     v[i] = geti(t, idxs[i])
   end
@@ -290,7 +290,7 @@ function slice(t1::TPS, par_mono::Vector{Cuchar}, par_it=true)
   np = numparams(t1)
   t = zero(t1)
   v = length(par_mono)-1
-  coef = Ref{eltype(t)}()
+  coef = Ref{numtype(t)}()
   mono = Vector{Cuchar}(undef, np+nv)
   idx = idxm(t1, v, replace(x->x==0xff ? 0x0 : x, par_mono))-1
   idx = cycle!(t1, idx, np+nv, mono, coef)
@@ -366,7 +366,7 @@ function gradient(t::TPS; include_params=false)
   if include_params
     n += numparams(t)
   end
-  grad = Vector{eltype(t)}(undef, n)
+  grad = Vector{numtype(t)}(undef, n)
   getv!(t, 1, n, grad)
   return grad
 end
@@ -428,7 +428,7 @@ function jacobian(m::AbstractArray{<:TPS}; include_params=false)
   if include_params
     n += numparams(first(m))
   end
-  J = Matrix{eltype(first(m))}(undef, length(m), n)
+  J = Matrix{numtype(first(m))}(undef, length(m), n)
   jacobian!(J, m; include_params=include_params)
   return J
 end
@@ -485,7 +485,7 @@ function jacobiant(m::AbstractVector{<:TPS}; include_params=false)
   if include_params
     n += numparams(first(m))
   end
-  result = Matrix{eltype(first(m))}(undef, n, length(m))
+  result = Matrix{numtype(first(m))}(undef, n, length(m))
   jacobiant!(result, m, include_params=include_params)
   return result
 end
@@ -538,7 +538,7 @@ function hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,
     endidx = floor(n*(n+1)/2)+nn
     curdiag = 1
     col = 1
-    v = Ref{eltype(t)}()
+    v = Ref{numtype(t)}()
     idx = cycle!(t, idx, 0, C_NULL, v)
     while idx <= endidx && idx > 0
       h_idx = idx-nn
@@ -562,7 +562,7 @@ function hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,
     # I saw slow in quotes because it is likely still much faster than the calculation
     # of the Hessian itself (this is just a getter)  
     idx = desc.nv+desc.np # start at 2nd order
-    v = Ref{eltype(t)}()
+    v = Ref{numtype(t)}()
     if isnothing(tmp_mono)
       mono = Vector{UInt8}(undef, nn)
     else
@@ -621,7 +621,7 @@ function hessian(t::TPS; include_params=false)
     n += desc.np
   end
 
-  H = zeros(eltype(t), n, n)
+  H = zeros(numtype(t), n, n)
 
   hessian!(H, t, include_params=include_params)
   return H
