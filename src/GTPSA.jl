@@ -74,7 +74,7 @@ import Base:  +,
               delete!
 
 import LinearAlgebra: norm, mul!
-import SpecialFunctions: erf, erfc
+import SpecialFunctions: erf, erfc, erfi, erfcx
 
 using GTPSA_jll, Printf, PrettyTables
 
@@ -94,6 +94,9 @@ export
   asinhcu,
   erf   ,
   erfc  ,
+  erfcx ,
+  erfi  ,
+  wf,
   norm,
   polar,
   rect, 

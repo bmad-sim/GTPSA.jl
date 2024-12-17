@@ -12,6 +12,7 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 - `np::Cint`                   -- Number of parameters
 - `mo::Cuchar`                 -- Max order of both variables AND parameters
 - `po::Cuchar`                 -- Max order of parameters
+- `sh::Cuchar`                 -- shared with id or -1
 - `no::Ptr{Cuchar}`            -- Array of orders of each variable (first `nv` entries) and parameters (last `np` entries), length `nn`. Note: In C this is `const`
 
 - `uno::Cint`                  -- User provided array of orders of each variable/parameter (with `mad_desc_newvpo`)
@@ -37,6 +38,10 @@ the monomials, monomial indexing function, and pre-allocated permanent temporari
 
 - `size::Culonglong`           -- Bytes used by `desc`. `Unsigned Long Int`: In 32 bit system is `Int32` but 64 bit is `Int64`. Using `Culonglong` assuming 64 bit
 
+- `dst_n::Cdouble`             -- density count
+- `dst_mu::Cdouble`            -- density mean
+- `dst_var::Cdouble`           -- density variance
+
 - `t::Ptr{Ptr{Cvoid}}`         -- Temporary array contains 8 pointers to `TPS{Float64}`s already initialized
 - `ct::Ptr{Ptr{Cvoid}}`        -- Temporary array contains 8 pointers to `TPS{ComplexF64}`s already initialized
 - `ti::Ptr{Cint}`              -- idx of tmp used by each thread (length = # threads)
@@ -48,7 +53,8 @@ struct Desc
   nv::Cint                   
   np::Cint                   
   mo::Cuchar                 
-  po::Cuchar                 
+  po::Cuchar     
+  sh::Cuchar            
   no::Ptr{Cuchar}            
 
   uno::Cint                  
@@ -73,6 +79,10 @@ struct Desc
   L_idx::Ptr{Ptr{Ptr{Cint}}} 
 
   size::Culonglong           
+
+  dst_n::Cdouble
+  dst_mu::Cdouble
+  dst_var::Cdouble
 
   t::Ptr{Ptr{Cvoid}}         
   ct::Ptr{Ptr{Cvoid}}        

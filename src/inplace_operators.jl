@@ -80,7 +80,8 @@ pow!(c::TPSType, v, a::TPSType) = (mul!(c, log(v), a); exp!(c,c))
 # --- rest of basic unary functions ---
 # For unary functions we assume input type == output type unless otherwise specified
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, 
-  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc)
+  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, 
+  :erfcx, :erfi, :wf)
 @eval begin
 $(Symbol(t,:!))(t::RealTPS,    t1::RealTPS)    = $(Symbol("mad_tpsa_",t,:!))(t1, t)
 $(Symbol(t,:!))(t::ComplexTPS, t1::ComplexTPS) = $(Symbol("mad_ctpsa_",t,:!))(t1, t)

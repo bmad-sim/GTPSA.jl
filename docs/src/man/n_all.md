@@ -14,11 +14,11 @@ unsafe_convert, eps, floatmin, floatmax
 
 `GTPSA.jl` overloads (and exports) the following functions from the corresponding packages:
  **`LinearAlgebra`**: `norm`, `mul!` 
-**`SpecialFunctions`**: `erf`, `erfc`
+**`SpecialFunctions`**: `erf`, `erfc`, `erfcx`, `erfi`
 
 `GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [TPS Methods](@ref tpsmethods)):
 ```
-unit, sincu, sinhc, sinhcu, asinc, asincu, asinhc, asinhcu, polar, rect
+unit, sincu, sinhc, sinhcu, asinc, asincu, asinhc, asinhcu, wf, polar, rect
 ```
 
 If there is a mathematical function in Base which you'd like and is not included in the above list, feel free to submit an [issue](https://github.com/bmad-sim/GTPSA.jl/issues).
