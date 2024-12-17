@@ -6,15 +6,15 @@
 Calculates the 1-norm of the `TPS`, which is the sum of 
 the `abs` of all coefficients.
 """
-normTPS(t1::TPS{Float64}) = mad_tpsa_nrm(t1)
-normTPS(t1::TPS{ComplexF64}) = mad_ctpsa_nrm(t1)
+normTPS(t1::RealTPS) = mad_tpsa_nrm(t1)
+normTPS(t1::ComplexTPS) = mad_ctpsa_nrm(t1)
 
 # --- setTPS! ---
 
 """
     setTPS!(t::TPS, t1::Number; change::Bool=false) 
 
-General function for setting a TPS/ComplexTPS64 `t` equal to `t1`. If `change` is `true`,
+General function for setting a TPS `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
 long as the number of variables + number of parameters are equal.
 """
@@ -38,13 +38,13 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
   # else we have to get fancy
   numnn(t) == numnn(t1) || error("Number of variables + parameters in GTPSAs do not agree!")
   nn = numnn(t)
-  coef = Ref{eltype(t1)}()
+  coef = Ref{numtype(t1)}()
   mono = Vector{Cuchar}(undef, nn)
   idx = cycle!(t1, -1, nn, mono, coef)
   while idx >= 0
     # if valid monomial in new descriptor:
     if convert(Bool, mad_desc_isvalidm(newdesc.desc, nn, mono))
-      setm!(t, nn, mono, 0, eltype(t)(coef[])) # set new tpsa
+      setm!(t, nn, mono, 0, numtype(t)(coef[])) # set new tpsa
     end
     idx = cycle!(t1, idx, nn, mono, coef)
   end
@@ -53,15 +53,18 @@ end
 
 
 # --- Evaluate ---
-mad_eval!(na, ma::Vector{TPS{Float64}}, nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64},tb), tc)
-mad_eval!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64},tb), tc)
+mad_eval!(na, ma::Vector{<:RealTPS},    nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), tc)
+mad_eval!(na, ma::Vector{<:ComplexTPS}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), tc)
+
+#mad_eval!(na, ma::TPS64,        nb, tb,        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+#mad_eval!(na, ma::ComplexTPS64, nb, mb, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
 
 """
     evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
 
 Evaluates the vector function `F` at the point `x`, and fills `y` with the result. 
 """
-function evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+function evaluate!(y::Vector{T}, F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T}
   length(x) == numnn(first(F)) || error("Not enough input arguments")
   length(y) == length(F) || error("Not enough output arguments")
   mad_eval!(length(F), F, length(x), x, y)
@@ -72,7 +75,41 @@ end
 
 Evaluates the vector function `F` at the point `x`, and returns the result.
 """
-evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
+evaluate(F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
+
+
+
+# --- F . grad ---
+"""
+    fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} 
+
+Calculates `F⋅∇h` and sets `g` equal to the result.
+"""
+function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
+  Base.require_one_based_indexing(F)
+  nv = numvars(h)
+  @assert length(F) == nv "Incorrect length of F; received $(length(F)), should be $nv"
+  @assert !(g === h) "Aliasing g === h not allowed for fgrad!"
+  if numtype(T) != Float64
+      GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
+  else
+      GTPSA.mad_tpsa_fgrad!(Cint(length(F)), F, h, g)
+  end
+  return g
+end
+  
+"""
+    fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}   
+
+Calculates `F⋅∇h`.
+"""
+function fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
+  g = zero(h)
+  fgrad!(g, F, h)
+  return g
+end
+
+
 
 
 # --- Integral ---
@@ -342,10 +379,10 @@ If promotion is occuring, then one of the input vectors must be promoted to
 `ComplexTPS64`. A vector of pre-allocated `ComplexTPS64`s can optionally provided 
 in `work`, and has the requirement:
 
-If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
+If `numtype(m.x) != numtype(m1.x)` (then `m1` must be promoted):
 `work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
 
-else if `eltype(m.x) != eltype(m2.x)` (then `m2` must be promoted):
+else if `numtype(m.x) != numtype(m2.x)` (then `m2` must be promoted):
 `work = m2_prom  # Length >= length(m2) = length(m), Vector{ComplexTPS64}`
 
 The `ComplexTPS64`s in `work` must be defined and have the same `Descriptor`.
@@ -414,10 +451,10 @@ If promotion is occuring, then the inputs must be promoted to `ComplexTPS64`. If
 to be promoted, a vector of pre-allocated `ComplexTPS64`s can optionally provided 
 in `work`, and has the requirement:
 
-If `eltype(m.x) != eltype(m1.x)` (then `m1` must be promoted):
+If `typeof(m) != eltype(m1)` (then `m1` must be promoted):
 `work = m1_prom  # Length >= length(m1), Vector{ComplexTPS64}`
 
-Else if `m2` is to be promoted (`typeof(m.x) != typeof(m2.x)`), a single `ComplexTPS64` 
+Else if `m2` is to be promoted (`typeof(m) != typeof(m2)`), a single `ComplexTPS64` 
 can be provided in `work`:  
 
 `work = m2_prom  # ComplexTPS64`
@@ -451,7 +488,7 @@ function compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64
 
     mad_compose!(-1, m2, n1, m1_prom, m)
 
-  elseif eltype(m) != eltype(m2) # Promoting m2
+  elseif typeof(m) != typeof(m2) # Promoting m2
     if isnothing(work)
       m2_prom = TPS{ComplexF64}(use=first(m))
     else

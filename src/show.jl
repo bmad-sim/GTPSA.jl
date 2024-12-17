@@ -86,13 +86,13 @@ function format(t::TPS; coloffset=0, max_nn=-1)
   if max_nn == -1
     max_nn = nn
   end
-  if eltype(t) <: Complex
+  if numtype(t) <: Complex
     cmplx = true
   else
     cmplx = false
   end
 
-  v = Ref{eltype(t)}()
+  v = Ref{numtype(t)}()
   mono = Vector{UInt8}(undef, nn)
 
   if !GTPSA.show_sparse
@@ -207,13 +207,13 @@ function show(io::IO, t::TPS)
   end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
-    if eltype(t) <: Complex
+    if numtype(t) <: Complex
       println(io, " Real                     Imag                       Order   Monomial")
     else
       println(io, " Coefficient                Order   Monomial")
     end
   else
-    if eltype(t) <: Complex
+    if numtype(t) <: Complex
       println(io, " Real                     Imag                       Order   Exponent")
     else
       println(io, " Coefficient                Order   Exponent")

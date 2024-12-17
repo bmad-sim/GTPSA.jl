@@ -78,10 +78,10 @@ function rel_op!(t1::T1, t2::T2) where {T1,T2}
 end
 
 # --- zero/one ---
-__t_zero(t1::TPS)    = (t = TempTPS{eltype(t1)}(t1); clear!(t); return t) 
+__t_zero(t1::TPS)    = (t = TempTPS{numtype(t1)}(t1); clear!(t); return t) 
 __t_zero(t::TempTPS) = (clear!(t); return t) 
 
-__t_one(t1::TPS)    = (t = TempTPS{eltype(t1)}(t1); clear!(t); seti!(t, 0, 0, 1); return t) 
+__t_one(t1::TPS)    = (t = TempTPS{numtype(t1)}(t1); clear!(t); seti!(t, 0, 0, 1); return t) 
 __t_one(t::TempTPS) = (clear!(t); seti!(t, 0, 0, 1); return t) 
 
 __t_zero(a) = zero(a)
@@ -92,7 +92,7 @@ __t_one(a) = one(a)
 ±(t::TempTPS) = t
 ±(a) = +a
 
-∓(t1::TPS)    = (t = TempTPS{eltype(t1)}(t1); mul!(t, -1, t1); return t)
+∓(t1::TPS)    = (t = TempTPS{numtype(t1)}(t1); mul!(t, -1, t1); return t)
 ∓(t::TempTPS) = (mul!(t, -1, t); return t)
 ∓(b) = -b
 
@@ -153,10 +153,11 @@ end
 
 # --- Rest of unary functions ---
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv,
-  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc,
-  :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
+  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu,
+  :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, 
+  :asec, :asech, :conj, :rect)
 @eval begin
-($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{eltype(t1)}(t1); $(Symbol(t,:!))(t, t1); return t)
+($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{numtype(t1)}(t1); $(Symbol(t,:!))(t, t1); return t)
 ($(Symbol("__t_",t)))(t::TempTPS)  = ($(Symbol(t,:!))(t, t); return t)
 ($(Symbol("__t_",t)))(a) = $t(a)
 end
@@ -207,13 +208,13 @@ __t_atan(a,b) = atan(a,b)
 # --- Unary functions that return TempTPS{Float64} ---
 for t = (:real,  :imag, :angle, :abs)
 @eval begin
-($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{real(eltype(t1))}(t1); $(Symbol(t,:!))(t, t1); return t)
+($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{real(numtype(t1))}(t1); $(Symbol(t,:!))(t, t1); return t)
 function ($(Symbol("__t_",t)))(t1::TempTPS)
-  if eltype(t1) <: Real
+  if numtype(t1) <: Real
     $(Symbol(t,:!))(t1, t1)
     return t1
   else
-    t = TempTPS{real(eltype(t1))}(t1)
+    t = TempTPS{real(numtype(t1))}(t1)
     $(Symbol(t,:!))(t, t1)
     rel_temp!(t1)  # Release the complex temporary
     return t
@@ -226,13 +227,13 @@ end
 end
 
 # --- Unary functions that return TPS{ComplexF64} --- 
-__t_polar(t1::TPS) = (t = TempTPS{complex(eltype(t1))}(t1); polar!(t,t1); return t)
+__t_polar(t1::TPS) = (t = TempTPS{complex(numtype(t1))}(t1); polar!(t,t1); return t)
 function __t_polar(t1::TempTPS)
-  if eltype(t1) <: Complex
+  if numtype(t1) <: Complex
     polar!(t1, t1)
     return t1
   else
-    t = TempTPS{complex(eltype(t1))}(t1)
+    t = TempTPS{complex(numtype(t1))}(t1)
     polar!(t, t1)
     rel_temp!(t1)  # Release the real temporary
     return t
@@ -244,8 +245,8 @@ __t_polar(a) = polar(a)
 __t_complex(t1::TPS{ComplexF64})     = t1 
 __t_complex(t1::TempTPS{ComplexF64}) = t1 
 
-__t_complex(t1::TPS{Float64})     = (t = TempTPS{complex(eltype(t1))}(t1); complex!(t,tre=t1); return t);
-__t_complex(t1::TempTPS{Float64}) = (t = TempTPS{complex(eltype(t1))}(t1); complex!(t,tre=t1); rel_temp!(t1); return t);
+__t_complex(t1::TPS{Float64})     = (t = TempTPS{complex(numtype(t1))}(t1); complex!(t,tre=t1); return t);
+__t_complex(t1::TempTPS{Float64}) = (t = TempTPS{complex(numtype(t1))}(t1); complex!(t,tre=t1); rel_temp!(t1); return t);
 
 function __t_complex(tre::RealTPS, tim::RealTPS)
   t = TempTPS{ComplexF64}(tre)

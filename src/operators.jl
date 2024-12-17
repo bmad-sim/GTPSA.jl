@@ -61,7 +61,7 @@ function rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T
   t = T(use=use)
   len = numcoefs(t)
   for i=0:len-1
-    t[i] = rand(eltype(t))
+    t[i] = rand(numtype(t))
   end
   return t
 end
@@ -91,9 +91,9 @@ end
 isless(t1::TPS, t2::TPS) = t1 < t2
 isinf(t1::TPS) = isinf(geti(t1, 0))
 isnan(t1::TPS) = isnan(geti(t1, 0))
-eps(t1::TPS) = eltype(t1)
-floatmin(t1::TPS) = floatmin(eltype(t1))
-floatmax(t1::TPS) = floatmax(eltype(t1))
+eps(t1::TPS) = eps(numtype(t1))
+floatmin(t1::TPS) = floatmin(numtype(t1))
+floatmax(t1::TPS) = floatmax(numtype(t1))
 
 # --- Compare entire TPS (monomial-by-monomial) ---
 isequal(t1::TPS{Float64},    t2::TPS{Float64})    = equ(t1, t2, 0)
@@ -166,8 +166,9 @@ end
 
 # --- Rest of unary functions ---
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv,
-  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc,
-  :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
+  :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu,
+  :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, 
+  :asec, :asech, :conj, :rect)
 @eval begin
 ($t)(t1::TPS) = (t = zero(t1); $(Symbol(t,:!))(t, t1); return t)
 end
@@ -181,7 +182,7 @@ atan(a::Real, t1::TPS{Float64})     = (t = TPS{Float64}(a,use=t1); atan!(t, t, t
 # --- Unary functions that return TPS{Float64} ---
 for t = (:real,  :imag, :angle, :abs)
 @eval begin
-($t)(t1::TPS) = (t = TPS{real(eltype(t1))}(use=t1); $(Symbol(t,:!))(t, t1); return t)
+($t)(t1::TPS) = (t = TPS{real(numtype(t1))}(use=t1); $(Symbol(t,:!))(t, t1); return t)
 end
 end
 

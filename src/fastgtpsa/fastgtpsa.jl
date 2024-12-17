@@ -72,8 +72,8 @@ end
 # 4. Change functions symbols to temporary types
 function change_functions(expr::Expr)
   fcns = [:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv, :coth, 
-          :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, 
-          :sinhc, :asinc, :asinhc, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
+          :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu, 
+          :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
           :conj, :rect, :real, :imag, :angle, :abs, :atan, :polar, :complex, :zero, :one,
           :norm, :normTPS]
 
@@ -277,7 +277,7 @@ macro FastGTPSA!(expr_or_block)
         end
 
         if op! != false
-          block.args[i] = :(if $lhs isa TPS || eltype($lhs) <: TPS
+          block.args[i] = :(if eltype($lhs) <: TPS
                               to_TPS!.($lhs, $rhs, $op!)
                             else
                               $(expr)
@@ -368,7 +368,7 @@ macro FastGTPSA!(expr_or_block)
     end
 
     if op! != false
-      return :( if $lhs isa TPS || eltype($lhs) <: TPS
+      return :( if eltype($lhs) <: TPS
                   to_TPS!.($lhs, $rhs, $op!)
                 else
                   $(expr)

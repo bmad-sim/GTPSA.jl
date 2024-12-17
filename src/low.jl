@@ -64,3 +64,29 @@ len(t::ComplexTPS) = mad_ctpsa_len(t, false)
 equ(a::RealTPS,    b::RealTPS,    tol_) = mad_tpsa_equ(  a, b, Float64(tol_))
 equ(a::ComplexTPS, b::ComplexTPS, tol_) = mad_ctpsa_equ( a, b, Float64(tol_))
 equ(a::ComplexTPS, b::RealTPS,    tol_) = mad_ctpsa_equt(a, b, Float64(tol_))
+
+# Lie bracket GTPSA only provides routines for orbital part:
+liebra!(na, m1::Vector{<:RealTPS},    m2::Vector{<:RealTPS},    m3::Vector{<:RealTPS})    = mad_tpsa_liebra!(Cint(na), m1, m2, m3)
+liebra!(na, m1::Vector{<:ComplexTPS}, m2::Vector{<:ComplexTPS}, m3::Vector{<:ComplexTPS}) = mad_ctpsa_liebra!(Cint(na), m1, m2, m3)
+
+# Poisson bracket
+poisbra!(t1::RealTPS,     t2::RealTPS,     t::RealTPS,     nv) = (@inline; mad_tpsa_poisbra!(t1, t2, t, Cint(nv)))
+poisbra!(t1::RealTPS,     ct1::ComplexTPS, ct::ComplexTPS, nv) = (@inline; mad_ctpsa_poisbrat!(ct1, t1, ct, Cint(nv)))
+poisbra!(ct1::ComplexTPS, t1::RealTPS,     ct::ComplexTPS, nv) = (@inline; mad_ctpsa_tpoisbra!(t1, ct1, ct, Cint(nv)))
+poisbra!(ct1::ComplexTPS, ct2::ComplexTPS, ct::ComplexTPS, nv) = (@inline; mad_ctpsa_poisbra!(ct1,ct2, ct, Cint(nv)))
+
+# inversion
+minv!(na, ma::Vector{<:RealTPS},    nb, mc::Vector{<:RealTPS})    = mad_tpsa_minv!(Cint(na), ma, Cint(nb), mc)
+minv!(na, ma::Vector{<:ComplexTPS}, nb, mc::Vector{<:ComplexTPS}) = mad_ctpsa_minv!(Cint(na), ma, Cint(nb), mc)
+  
+# partial inverse
+pminv!(na, ma::Vector{<:RealTPS},    nb, mc::Vector{<:RealTPS},    select::Vector{<:Integer}) = (@inline; mad_tpsa_pminv!(Cint(na), ma, Cint(nb), mc, convert(Vector{Cint}, select)))
+pminv!(na, ma::Vector{<:ComplexTPS}, nb, mc::Vector{<:ComplexTPS}, select::Vector{<:Integer}) = (@inline; mad_ctpsa_pminv!(Cint(na), ma, Cint(nb), mc, convert(Vector{Cint}, select)))
+
+# get vector field from hamiltonian
+vec2fld!(na, tpsa::RealTPS,     m::Vector{<:RealTPS})    = (@inline; mad_tpsa_vec2fld!(Cint(na), tpsa, m))
+vec2fld!(na, ctpsa::ComplexTPS, m::Vector{<:ComplexTPS}) = (@inline; mad_ctpsa_vec2fld!(Cint(na), ctpsa, m))
+
+# get hamiltonian from vector field 
+fld2vec!(na, ma::Vector{<:RealTPS},     t::RealTPS)     = (@inline; mad_tpsa_fld2vec!(Cint(na), ma, t))
+fld2vec!(na, ma::Vector{<:ComplexTPS},  ct::ComplexTPS) = (@inline; mad_ctpsa_fld2vec!(Cint(na), ma, ct))

@@ -7,7 +7,7 @@ acos, atan, acsc, asec, acot, asinh, acosh, atanh, acsch, asech,
 acoth, zero, zeros, one, ones, real, imag, conj, angle, complex, 
 promote_rule, getindex, setindex!, ==, <, >, <=, >=, !=, isequal, 
 isless, isinf, isnan, show, copy!, lastindex, firstindex, rand, 
-unsafe_convert, eltype, eps, floatmin, floatmax
+unsafe_convert, eps, floatmin, floatmax
 ```
 
 `zeros` and `ones` are overloaded from Base so that allocated `TPS`s are placed in each element. Because of the mutability of `TPS`, if we didn't explicity overload these functions every element would correspond to the exact same heap-allocated TPS.
@@ -18,7 +18,7 @@ unsafe_convert, eltype, eps, floatmin, floatmax
 
 `GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [TPS Methods](@ref tpsmethods)):
 ```
-unit, sinhc, asinc, asinhc, polar, rect
+unit, sincu, sinhc, sinhcu, asinc, asincu, asinhc, asinhcu, polar, rect
 ```
 
 If there is a mathematical function in Base which you'd like and is not included in the above list, feel free to submit an [issue](https://github.com/bmad-sim/GTPSA.jl/issues).

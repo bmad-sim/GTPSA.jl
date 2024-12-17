@@ -99,6 +99,13 @@ sinc!(t::ComplexTPS, t1::ComplexTPS) = (mul!(t, t1, pi); mad_ctpsa_sinc!(t, t))
 sinhc!(t::RealTPS,    t1::RealTPS)    = (mul!(t, t1, pi); mad_tpsa_sinhc!(t, t))
 sinhc!(t::ComplexTPS, t1::ComplexTPS) = (mul!(t, t1, pi); mad_ctpsa_sinhc!(t, t))
 
+# u = unnormalized sinc
+sincu!(t::RealTPS,    t1::RealTPS)    = mad_tpsa_sinc!(t1, t)
+sincu!(t::ComplexTPS, t1::ComplexTPS) = mad_ctpsa_sinc!(t1, t)
+
+sinhcu!(t::RealTPS,    t1::RealTPS)    = mad_tpsa_sinhc!(t1, t)
+sinhcu!(t::ComplexTPS, t1::ComplexTPS) = mad_ctpsa_sinhc!(t1, t)
+
 # asinc is not in Julia, but in C is asinc(x) = asin(x)/x
 # To give similiar behavior, define asinc(x) = asin(pi*x)/(pi*x)
 asinc!(t::RealTPS,    t1::RealTPS)    = (mul!(t, t1, pi); mad_tpsa_asinc!(t, t))
@@ -106,6 +113,12 @@ asinc!(t::ComplexTPS, t1::ComplexTPS) = (mul!(t, t1, pi); mad_ctpsa_asinc!(t, t)
 
 asinhc!(t::RealTPS,    t1::RealTPS)    = (mul!(t, t1, pi); mad_tpsa_asinhc!(t, t))
 asinhc!(t::ComplexTPS, t1::ComplexTPS) = (mul!(t, t1, pi); mad_ctpsa_asinhc!(t, t))
+
+asincu!(t::RealTPS,    t1::RealTPS)    = mad_tpsa_asinc!(t1, t)
+asincu!(t::ComplexTPS, t1::ComplexTPS) = mad_ctpsa_asinc!(t1, t)
+
+asinhcu!(t::RealTPS,    t1::RealTPS)    = mad_tpsa_asinhc!(t1, t)
+asinhcu!(t::ComplexTPS, t1::ComplexTPS) = mad_ctpsa_asinhc!(t1, t)
 
 # These functions are not implemented in the GTPSA C library:
 csc!(t::TPSType, t1::TPSType) = (sin!(t, t1); inv!(t, t, 1))

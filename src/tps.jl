@@ -77,7 +77,7 @@ TPS{T}(ta::TPS;                        use::Union{Descriptor,TPS,Nothing}=nothin
 
 TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promote_type(Float64,typeof(ta))}(ta, use=use)
 TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
-TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{eltype(ta)}(ta, use=use)
+TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{numtype(ta)}(ta, use=use)
 
 function low_TPS(T, ta, use)
   if ta isa Nothing          # --- Blank TPS ---
@@ -100,8 +100,16 @@ end
 
 
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, pointer_from_objref(t))
-Base.eltype(::Type{TPS{T}}) where {T} = T
-Base.eltype(::TPS{T}) where {T} = T
+
+"""
+    numtype(::Union{Type{TPS{T}},TPS{T}}) where T
+
+Returns the type of number that the `TPS` represents.
+"""
+numtype
+
+numtype(::Type{TPS{T}}) where {T} = T
+numtype(::TPS{T}) where {T} = T
 
 promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
 promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}

@@ -68,7 +68,6 @@ import Base:  +,
               firstindex,
               rand,
               unsafe_convert,
-              eltype,
               eps,
               floatmin,
               floatmax,
@@ -86,9 +85,13 @@ export
   TPS64,
   ComplexTPS64,
   unit  ,
+  sincu,
   sinhc ,
+  sinhcu,
   asinc ,
+  asincu,
   asinhc,
+  asinhcu,
   erf   ,
   erfc  ,
   norm,
@@ -117,10 +120,11 @@ export
   
 
   # Methods:
-  evaluate, evaluate!,
   complex!,
   compose, compose!,
   cycle!,
+  evaluate, evaluate!,
+  fgrad, fgrad!,
   integ, ∫, integ!, ∫!,
   deriv, ∂, deriv!, ∂!,
   getord, getord!,
@@ -131,6 +135,7 @@ export
   scalar,
   setTPS!,
   numcoefs,
+  numtype,
   normTPS,
   
   # Temporaries:
