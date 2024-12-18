@@ -206,3 +206,7 @@ function hypot!(d::TPSType, a...)
   end
   sqrt!(d,d)
 end
+
+# --- extras ---
+log10!(t::RealTPS,    t1::RealTPS)    = (log!(t, t1); div!(t, t, log(10)))
+log10!(t::ComplexTPS, t1::ComplexTPS) = (log!(t, t1); div!(t, t, log(10)))
