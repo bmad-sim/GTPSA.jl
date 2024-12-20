@@ -98,16 +98,18 @@ function low_TPS(T, ta, use)
   return t
 end
 
-# The library uses Ref{TPS{T}} for tpsa* (single TPSA pointer)
-# Julia is stupid with arrays of mutable types, and currently the syntax to convert an array 
-# with mutable TPS is ::Ptr{TPS64} instead of what it should be Ptr{Ref{TPS64}}.
-# Workaround for this is the following:
+# To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
+# For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},
+# while it probably should be Ptr{Ref{TPS{T}}} because of the mutability of TPS.
+# This is a problem when trying to do basically Ref{Ref{TPS{T}}} (pointer to pointer 
+# of single TPS). So the workaround is to define the following:
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, r))
 Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objref(t))
-#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, pointer_from_objref(t))
-#Base.unsafe_convert(::Type{Ptr{T}}, t::TPS) where {T} = Base.unsafe_convert(Ptr{Cvoid}, Ref(pointer_from_objref(t)))
-#Base.unsafe_convert(::Type{Ptr{Ref{TPS{T}}}}, t::TPS{T}) where {T} = Ref(t)
-#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Ref(pointer_from_objref(r)))
+# NOTE: We need to have a GC.@preserve before the cconvert to keep t valid !!!!!
+# This is only necessary for my mutable type. The other array inputs including isbits 
+# types are ok and basically have the above defined for them.
+# See https://github.com/JuliaLang/julia/issues/56873#event-15727452235
+
 
 """
     numtype(::Union{Type{TPS{T}},TPS{T}}) where T

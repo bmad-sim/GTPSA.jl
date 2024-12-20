@@ -1811,7 +1811,9 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 """
 function mad_tpsa_vec2fld!(na::Cint, a::RealTPS, mc)
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve mc begin
   @ccall MAD_TPSA.mad_tpsa_vec2fld(na::Cint, a::Ref{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1831,7 +1833,9 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 """
 function mad_tpsa_fld2vec!(na::Cint, ma, c::RealTPS)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_tpsa_fld2vec(na::Cint, ma::Ptr{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1850,7 +1854,9 @@ Calculates `dot(ma, grad(b))`
 """
 function mad_tpsa_fgrad!(na::Cint, ma, b::RealTPS, c::RealTPS)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_tpsa_fgrad(na::Cint, ma::Ptr{TPS{Float64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1872,7 +1878,9 @@ function mad_tpsa_liebra!(na::Cint, ma, mb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mb) <: RealTPS || error("mb must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_tpsa_liebra(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1894,7 +1902,9 @@ function mad_tpsa_exppb!(na::Cint, ma, mb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mb) <: RealTPS || error("mb must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1916,7 +1926,9 @@ function mad_tpsa_logpb!(na::Cint, ma, mb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mb) <: RealTPS || error("mb must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_tpsa_logpb(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -1936,7 +1948,9 @@ If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
 """
 function mad_tpsa_mord(na::Cint, ma, hi::Bool)::Cuchar
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
+  GC.@preserve ma begin
   ret = @ccall MAD_TPSA.mad_tpsa_mord(na::Cint, ma::Ptr{TPS{Float64}}, hi::Bool)::Cuchar
+  end
   return ret
 end
 
@@ -1955,7 +1969,9 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 """
 function mad_tpsa_mnrm(na::Cint, ma)::Cdouble
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
+  GC.@preserve ma begin
   nrm = @ccall MAD_TPSA.mad_tpsa_mnrm(na::Cint, ma::Ptr{TPS{Float64}})::Cdouble
+  end
   return nrm
 end
 
@@ -1977,7 +1993,9 @@ length only need be `nb` = `nv`.
 function mad_tpsa_minv!(na::Cint, ma, nb::Cint, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_tpsa_minv(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -2000,7 +2018,9 @@ function mad_tpsa_pminv!(na::Cint, ma, nb::Cint, mc, select)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
   eltype(select) == Cint || error("select must have eltype Cint !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_tpsa_pminv(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mc::Ptr{TPS{Float64}}, select::Ptr{Cint})::Cvoid
+  end
 end
 
 
@@ -2022,7 +2042,9 @@ function mad_tpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mb) <: RealTPS || error("mb must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_tpsa_compose(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -2044,7 +2066,9 @@ function mad_tpsa_translate!(na::Cint, ma, nb::Cint, tb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
   eltype(tb) == Cdouble || error("tb must have eltype Cdouble !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_tpsa_translate(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, tb::Ptr{Cdouble}, mc::Ptr{TPS{Float64}})::Cvoid
+  end
 end
 
 
@@ -2066,7 +2090,9 @@ function mad_tpsa_eval!(na::Cint, ma, nb::Cint, tb, tc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(tb) == Cdouble || error("tb must have eltype Cdouble !")
   eltype(tc) == Cdouble || error("tc must have eltype Cdouble !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_tpsa_eval(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, tb::Ptr{Cdouble}, tc::Ptr{Cdouble})::Cvoid
+  end
 end
 
 
@@ -2090,7 +2116,9 @@ function mad_tpsa_mconv!(na::Cint, ma, nc::Cint, mc, n::Cint, t2r_, pb::Cint)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
   typeof(t2r_) == Ptr{Nothing} || eltype(t2r_) == Cint || error("t2r_ must have eltype Cint if provided!")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_tpsa_mconv(na::Cint, ma::Ptr{TPS{Float64}}, nc::Cint, mc::Ptr{TPS{Float64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+  end
 end
 
 

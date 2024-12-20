@@ -10,13 +10,19 @@ numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
 
 numparams(t::TPS) = unsafe_load(t.d).np
 numparams(d::Descriptor) = unsafe_load(d.desc).np
-numparams(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).np
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
 
 numnn(t::TPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
-require_mutable(x...) = all(t->ismutable(t), x) || error("Arguments must be mutable!")
+_promote_to_mutable_arrays(t::AbstractArray{T}, ::Type{T}) where {T} = ismutable(t) ? t : copymutable_oftype(t,T)
+_promote_to_mutable_arrays(t::AbstractArray{T}, ::Type{U}) where {T,U} = copymutable_oftype(t, U)
+
+function promote_to_mutable_arrays(arrays...)
+  return map(t->_promote_to_mutable_arrays(t, Base.promote_eltype(arrays...)), arrays)
+  #eltype(t) == Base.promote_eltype(arrays...) ? t : copy_oftype(t, Base.promote_eltype(arrays...)), arrays)
+end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}

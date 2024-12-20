@@ -2627,7 +2627,9 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 """
 function mad_ctpsa_vec2fld!(na::Cint, a::ComplexTPS, mc)
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve mc begin
   @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ref{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2647,7 +2649,9 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 """
 function mad_ctpsa_fld2vec!(na::Cint, ma, c::ComplexTPS)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2666,7 +2670,9 @@ Calculates `dot(ma, grad(b))`
 """
 function mad_ctpsa_fgrad!(na::Cint, ma, b::ComplexTPS, c::ComplexTPS)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2688,7 +2694,9 @@ function mad_ctpsa_liebra!(na::Cint, ma, mb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2710,7 +2718,9 @@ function mad_ctpsa_exppb!(na::Cint, ma, mb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2732,7 +2742,9 @@ function mad_ctpsa_logpb!(na::Cint, ma, mb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 """
@@ -2751,7 +2763,9 @@ If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
 """
 function mad_ctpsa_mord(na::Cint, ma, hi::Bool)::Cuchar
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{TPS{ComplexF64}}, hi::Bool)::Cuchar
+  end
   return ret
 end
 
@@ -2770,7 +2784,9 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 """
 function mad_ctpsa_mnrm(na::Cint, ma)::Cdouble
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   nrm = @ccall MAD_TPSA.mad_ctpsa_mnrm(na::Cint, ma::Ptr{TPS{ComplexF64}})::Cdouble
+  end
   return nrm
 end
 
@@ -2792,7 +2808,9 @@ length only need be `nb` = `nv`.
 function mad_ctpsa_minv!(na::Cint, ma, nb::Cint, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2815,7 +2833,9 @@ function mad_ctpsa_pminv!(na::Cint, ma, nb::Cint, mc, select)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
   eltype(select) == Cint || error("select must have eltype Cint !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mc::Ptr{TPS{ComplexF64}}, select::Ptr{Cint})::Cvoid
+  end
 end
 
 
@@ -2837,7 +2857,9 @@ function mad_ctpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2859,7 +2881,9 @@ function mad_ctpsa_translate!(na::Cint, ma, nb::Cint, tb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
   eltype(tb) == ComplexF64 || error("tb must have eltype ComplexF64 !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
@@ -2881,7 +2905,9 @@ function mad_ctpsa_eval!(na::Cint, ma, nb::Cint, tb, tc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(tb) == ComplexF64 || error("tb must have eltype ComplexF64 !")
   eltype(tc) == ComplexF64 || error("tc must have eltype ComplexF64 !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_ctpsa_eval(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})::Cvoid
+  end
 end
 
 
@@ -2905,7 +2931,9 @@ function mad_ctpsa_mconv!(na::Cint, ma, nc::Cint, mc, n::Cint, t2r_, pb::Cint)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
   typeof(t2r_) == Ptr{Nothing} || eltype(t2r_) == Cint || error("t2r_ must have eltype Cint if provided!")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_mconv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nc::Cint, mc::Ptr{TPS{ComplexF64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+  end
 end
 
 
