@@ -146,7 +146,7 @@ end
 ^(t::TPS, t1::TempTPS) = (pow!(t, t, t1); rel_temp!(t1); return t)
 
 
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TempTPS{T}) where {T} = t.t
+Base.convert(::Type{Ref{TPS{T}}}, t::TempTPS{T}) where {T} = t.t # convert to Ptr instead of Ref
 numtype(::Type{TempTPS{T}}) where {T} = T
 numtype(::TempTPS{T}) where {T} = T
 

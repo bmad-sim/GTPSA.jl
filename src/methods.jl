@@ -12,7 +12,7 @@ normTPS(t1::ComplexTPS) = mad_ctpsa_nrm(t1)
 # --- setTPS! ---
 
 """
-    setTPS!(t::TPS, t1::Number; change::Bool=false) 
+    setTPS!(t::TPS, t1::Number; change::Bool=false) -> t
 
 General function for setting a TPS `t` equal to `t1`. If `change` is `true`,
 then `t` and `t1` can have different `Descriptor`s (with invalid monomials removed) so 
@@ -23,7 +23,7 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
   if !(t1 isa TPS)
     clear!(t)
     t[0] = t1
-    return
+    return t
   end
 
   olddesc = getdesc(t1)
@@ -32,7 +32,7 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
   # if not changing descriptors
   if olddesc == newdesc || !change 
     copy!(t, t1)
-    return
+    return t
   end
 
   # else we have to get fancy
@@ -48,40 +48,74 @@ function setTPS!(t::TPS, t1::Number; change::Bool=false)
     end
     idx = cycle!(t1, idx, nn, mono, coef)
   end
+  return t
 end
 
 
 
 # --- Evaluate ---
-mad_eval!(na, ma::Vector{<:RealTPS},    nb, tb, tc) = mad_tpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), tc)
-mad_eval!(na, ma::Vector{<:ComplexTPS}, nb, tb, tc) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), tc)
+mad_eval!(na, ma::AbstractArray{<:RealTPS},    nb, tb::AbstractArray{Float64},    tc::AbstractArray{Float64})    = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
+mad_eval!(na, ma::AbstractArray{<:ComplexTPS}, nb, tb::AbstractArray{ComplexF64}, tc::AbstractArray{ComplexF64}) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
 
-#mad_eval!(na, ma::TPS64,        nb, tb,        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
-#mad_eval!(na, ma::ComplexTPS64, nb, mb, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+# Note that the cconvert here only will  work on TPS, not TempTPS
+# tc here will be a Ref
+mad_eval!(na, ma::TPS64,        nb, tb::AbstractArray{Float64},    tc::Ref{Float64})    = GC.@preserve ma @ccall MAD_TPSA.mad_tpsa_eval(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, tb::Ptr{Float64}, tc::Ptr{Float64})::Cvoid
+mad_eval!(na, ma::ComplexTPS64, nb, tb::AbstractArray{ComplexF64}, tc::Ref{ComplexF64}) = GC.@preserve ma @ccall MAD_TPSA.mad_ctpsa_eval(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, tb::Ptr{Float64}, tc::Ptr{ComplexF64})::Cvoid
 
 """
-    evaluate!(y::Vector{T}, F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+    evaluate!(y::Union{AbstractVector{T},Ref{T}}, F::Union{AbstractVector{
+      TPS{T}},TPS{T}}, x::AbstractVector{<:Number}) where {T} -> y
 
-Evaluates the vector function `F` at the point `x`, and fills `y` with the result. 
+Evaluates the scalar or vector function `F` at the point `x`, and fills `y` with the result. 
 """
-function evaluate!(y::Vector{T}, F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T}
+evaluate!
+
+"""
+    evaluate(F::Union{AbstractVector{TPS{T}},TPS{T}}, x::AbstractVector{T}) where {T}
+
+Evaluates the scalar or vector function `F` at the point `x`, and returns the result.
+"""
+evaluate
+
+# Vector function ---
+function evaluate!(y::AbstractVector{T}, F::AbstractVector{TPS{T}}, x::AbstractVector{T}) where {T}
+  Base.require_one_based_indexing(y, F, x)
+  require_mutable(y, x)
   length(x) == numnn(first(F)) || error("Not enough input arguments")
   length(y) == length(F) || error("Not enough output arguments")
-  mad_eval!(length(F), F, length(x), x, y)
+  # If the TPS vector function is immutable, we can just evaluate each (mutable) TPS element
+  if ismutable(F)
+    mad_eval!(length(F), F, length(x), x, y)
+  else
+    for i=1:length(y)
+
+    end
+  end
+  return y
 end
 
-"""
-    evaluate(F::Vector{TPS{T}}, x::Vector{<:Number}) where {T}
+function evaluate(F::AbstractVector{TPS{T}}, x::AbstractVector{<:Number}) where {T}
+  y = similar(x, T, length(F)); 
+  # Mutable input x is necessary for the C library
+  x1 = (eltype(x) == T && ismutable(x)) ? x : LinearAlgebra.copymutable_oftype(x, T)
+  evaluate!(y, F, x1); 
+  return y
+end
 
-Evaluates the vector function `F` at the point `x`, and returns the result.
-"""
-evaluate(F::Vector{<:Union{TPS{T}, TempTPS{T}}}, x::Vector{<:Number}) where {T} = (y = zeros(T,length(F)); evaluate!(y, F, x); return y)
+# Scalar function ---
+function evaluate!(y::Ref{T}, f::TPS{T}, x::Vector{<:Number}) where {T}
+  length(x) == numnn(f) || error("Not enough input arguments")
+  mad_eval!(1, f, length(x), convert(Vector{T}, x), y)
+  return y
+end
+
+evaluate(f::TPS{T}, x::Vector{<:Number}) where {T} = (y = Ref{T}(); evaluate!(y, f, x); return y[])
 
 
 
 # --- F . grad ---
 """
-    fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} 
+    fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} -> g
 
 Calculates `F⋅∇h` and sets `g` equal to the result.
 """
@@ -99,7 +133,7 @@ function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, Com
 end
   
 """
-    fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}   
+    fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}
 
 Calculates `F⋅∇h`.
 """
@@ -114,15 +148,15 @@ end
 
 # --- Integral ---
 """
-    integ!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T}
-    ∫!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T}
+    integ!(t::TPS{T}, t1::TPS{T}, var::Integer=1) where {T} -> t
+    ∫!(t::TPS{T}, t1::TPS{T}, var::Integer=1)     where {T} -> t
 
 Integrates `t1` wrt the variable `var` and fills `t` with the result. 
 Integration wrt parameters is not allowed, and integration wrt higher order 
 monomials is not currently supported.
 """
-integ!(t::TPS{Float64},   t1::TPS{Float64},    var=1) = mad_tpsa_integ!(t1, t, Cint(var))
-integ!(t::TPS{ComplexF64},t1::TPS{ComplexF64}, var=1) = mad_ctpsa_integ!(ctpsa1, ctpsa, Cint(var))
+integ!(t::TPS{Float64},   t1::TPS{Float64},    var=1) = (mad_tpsa_integ!(t1, t, Cint(var)); return t)
+integ!(t::TPS{ComplexF64},t1::TPS{ComplexF64}, var=1) = (mad_ctpsa_integ!(ctpsa1, ctpsa, Cint(var)); return t)
 const ∫! = integ!
 
 """
@@ -144,8 +178,8 @@ mad_derivm!(t1::TPS{Float64},    t::TPS{Float64},    n, ords) = mad_tpsa_derivm!
 mad_derivm!(t1::TPS{ComplexF64}, t::TPS{ComplexF64}, n, ords) = mad_ctpsa_derivm!(t1, t, Cint(n), convert(Vector{UInt8}, ords))
 
 """
-    deriv!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
-    ∂!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
+    deriv!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T} -> t 
+    ∂!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing)     where {T} -> t
 
 Differentiates `t1` wrt the variable/parameter specified by the variable/parameter index, or 
 alternatively any monomial specified by indexing-by-order OR indexing-by-sparse monomial, and 
@@ -158,6 +192,7 @@ sets `t` equal to the result in-place. See the `deriv` documentation for example
 """
 function deriv!(t::TPS{T}, t1::TPS{T}, v::Union{TPSIndexType, Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType, Nothing}=nothing) where {T}
   low_deriv!(t, t1, v, param, params)
+  return t
 end
 
 # Variable/parameter:
@@ -275,13 +310,13 @@ const ∂ = deriv
 # --- getord ---
 
 """
-    getord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T}
+    getord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T} -> t
 
 Extracts one homogenous polynomial from `t1` of the given order and 
 fills `t` with the result in-place.
 """
-getord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = mad_tpsa_getord!(t1, t, UInt8(order))
-getord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = mad_ctpsa_getord!(t1, t, UInt8(order))
+getord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = (mad_tpsa_getord!(t1, t, UInt8(order)); return t)
+getord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = (mad_ctpsa_getord!(t1, t, UInt8(order)); return t)
 
 """
     getord(t1::TPS, order::Integer)
@@ -293,14 +328,14 @@ getord(t1::TPS, order::Integer) = (t = zero(t1); getord!(t, t1, order); return t
 
 # --- cutord ---
 """
-    cutord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T<:TPS}
+    cutord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T<:TPS} -> t
 
 Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`. `t` 
 is filled in-place with the result. See the documentation for `cutord` for examples.
 """
-cutord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = mad_tpsa_cutord!(t1, t, Cint(order))
-cutord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = mad_ctpsa_cutord!(t1, t, Cint(order))
+cutord!(t::TPS{Float64},    t1::TPS{Float64},    order::Integer) = (mad_tpsa_cutord!(t1, t, Cint(order)); return t)
+cutord!(t::TPS{ComplexF64}, t1::TPS{ComplexF64}, order::Integer) = (mad_ctpsa_cutord!(t1, t, Cint(order)); return t)
 
 """
     cutord(t1::TPS, order::Integer)
@@ -332,12 +367,12 @@ cutord(t1::TPS, order::Integer) = (t = zero(t1); cutord!(t, t1, order); return t
 
 # --- clearord! ---
 """
-    clearord!(t::TPS, order::Integer)
+    clearord!(t::TPS, order::Integer) -> t
 
 Clears all monomial coefficients in `t` at order `order`.
 """
-clearord!(t::TPS{Float64},    ord::Integer) = mad_tpsa_clrord!(t, UInt8(ord))
-clearord!(t::TPS{ComplexF64}, ord::Integer) = mad_ctpsa_clrord!(t, UInt8(ord))
+clearord!(t::TPS{Float64},    ord::Integer) = (mad_tpsa_clrord!(t, UInt8(ord)); return t)
+clearord!(t::TPS{ComplexF64}, ord::Integer) = (mad_ctpsa_clrord!(t, UInt8(ord)); return t)
 
 
 """
@@ -362,15 +397,15 @@ scalar(t::TPS) = t[0]
 scalar(t::Number) = t[1]
 
 # --- composition ---
-mad_compose!(na, ma::AbstractVector{TPS{Float64}},    nb, mb::AbstractVector{TPS{Float64}},    mc::AbstractVector{TPS{Float64}}) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma,    nb, mb,    mc) = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 mad_compose!(na, ma::AbstractVector{TPS{ComplexF64}}, nb, mb::AbstractVector{TPS{ComplexF64}}, mc::AbstractVector{TPS{ComplexF64}}) = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
 # This is for composing single TPSs with ZERO allocations:
-mad_compose!(na, ma::TPS64,        nb, mb::AbstractVector{TPS64},        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
-mad_compose!(na, ma::ComplexTPS64, nb, mb::AbstractVector{ComplexTPS64}, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+#mad_compose!(na, ma::TPS64,        nb, mb::AbstractVector{TPS64},        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, ma::Ptr{TPS64}, Cint(nb)::Cint, mb::Ptr{TPS64}, mc::Ptr{TPS64})::Cvoid
+#mad_compose!(na, ma::ComplexTPS64, nb, mb::AbstractVector{ComplexTPS64}, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
 
 """
-    compose!(m::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m2::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,AbstractVector{ComplexTPS64}}=nothing)
+    compose!(m::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m2::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,AbstractVector{ComplexTPS64}}=nothing) -> m
 
 Composes the vector functions `m2 ∘ m1` and stores the result in-place in `m`. 
 Promotion is allowed, provided the output vector function `m` has the correct type. 
@@ -439,10 +474,11 @@ function compose!(m::AbstractVector{<:Union{TPS64,ComplexTPS64}}, m2::AbstractVe
   else  # No promotion, just do it
     mad_compose!(-n, m2, n1, m1, m)
   end
+  return m
 end
 
 """
-    compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,ComplexTPS64,AbstractVector{ComplexTPS64}}=nothing)
+    compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64}}; work::Union{Nothing,ComplexTPS64,AbstractVector{ComplexTPS64}}=nothing) -> m
 
 Composes the scalar TPS function `m2` with vector function `m1`, and stores the result in-place in `m`. 
 Promotion is allowed, provided the output function `m` has the correct type. 
@@ -500,8 +536,9 @@ function compose!(m::TPS, m2::TPS, m1::AbstractVector{<:Union{TPS64,ComplexTPS64
     mad_compose!(-1, m2_prom, n1, m1, m)
     
   else  # No promotion, just do it
-    mad_compose!(-1, m2, n1, m1, m)
+    GC.@preserve m2 m1 mad_compose!(-1, m2, n1, m1, m)
   end
+  return m
 end
 
 
@@ -543,9 +580,12 @@ end
 mad_translate!(na, ma::Vector{TPS{Float64}},    nb, tb, mc::Vector{TPS{Float64}})    = mad_tpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), mc)
 mad_translate!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, mc::Vector{TPS{ComplexF64}}) = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), mc)
 
+# This is for translating single TPSs with ZERO allocations:
+#mad_compose!(na, ma::TPS64,        nb, tb::AbstractVector{TPS64},        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+#mad_compose!(na, ma::ComplexTPS64, nb, tb::AbstractVector{ComplexTPS64}, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
 
 """
-    translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
+    translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T} -> m
 
 Fills `m` with the vector function equal to `m1` with its expansion point translated by `x`.
 """
@@ -553,6 +593,7 @@ function translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Numbe
   numnn(first(m1)) == length(x) || error("Not enough input arguments!")
   length(m) == length(m1) || error("Incorrect output length (should be $(length(m1)), received $(length(m)))")
   mad_translate!(length(m1), m1, length(x), x, m)
+  return m
 end
 
 """

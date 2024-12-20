@@ -16,6 +16,8 @@ numnn(t::TPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
+require_mutable(x...) = all(t->ismutable(t), x) || error("Arguments must be mutable!")
+
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
   # WE MUST Order THE VARIABLES !!!

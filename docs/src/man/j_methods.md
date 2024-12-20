@@ -20,6 +20,7 @@ integ
 integ!
 normTPS
 numcoefs
+numtype
 scalar
 setTPS!
 translate

@@ -98,8 +98,16 @@ function low_TPS(T, ta, use)
   return t
 end
 
-
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, pointer_from_objref(t))
+# The library uses Ref{TPS{T}} for tpsa* (single TPSA pointer)
+# Julia is stupid with arrays of mutable types, and currently the syntax to convert an array 
+# with mutable TPS is ::Ptr{TPS64} instead of what it should be Ptr{Ref{TPS64}}.
+# Workaround for this is the following:
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, r))
+Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objref(t))
+#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, pointer_from_objref(t))
+#Base.unsafe_convert(::Type{Ptr{T}}, t::TPS) where {T} = Base.unsafe_convert(Ptr{Cvoid}, Ref(pointer_from_objref(t)))
+#Base.unsafe_convert(::Type{Ptr{Ref{TPS{T}}}}, t::TPS{T}) where {T} = Ref(t)
+#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Ref(pointer_from_objref(r)))
 
 """
     numtype(::Union{Type{TPS{T}},TPS{T}}) where T
