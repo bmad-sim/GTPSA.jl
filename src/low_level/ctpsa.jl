@@ -15,7 +15,7 @@ is passed for `mo`, the `mo` defined in the descriptor is used. If `mo > d_mo`, 
 - `t`  -- New complex TPSA defined by the descriptor
 """
 function mad_ctpsa_newd(d::Ptr{Desc}, mo::Cuchar)
-  t = @ccall MAD_TPSA.mad_ctpsa_newd(d::Ptr{Desc}, mo::Cuchar)::Ref{TPS{ComplexF64}}
+  t = @ccall MAD_TPSA.mad_ctpsa_newd(d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return t
 end
 
@@ -35,7 +35,7 @@ currently in `t` is used for the created TPSA. Ok with `t=(tpsa_t*)ctpsa`
 - `ret` -- New blank TPSA with maximum order `mo`
 """
 function mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)
-  ret = @ccall MAD_TPSA.mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)::Ref{TPS{ComplexF64}}
+  ret = @ccall MAD_TPSA.mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return ret
 end
 
@@ -2939,7 +2939,7 @@ Scans in a TPSA from the `stream_`.
 - `t`       -- TPSA scanned from I/O `stream_`
 """
 function mad_ctpsa_scan(stream_::Ptr{Cvoid})::ComplexTPS
-  t = @ccall MAD_TPSA.mad_ctpsa_scan(stream_::Ptr{Cvoid})::Ref{TPS{ComplexF64}}
+  t = @ccall MAD_TPSA.mad_ctpsa_scan(stream_::Ptr{Cvoid})::Ptr{TPS{ComplexF64}}
   return t
 end
 
@@ -3060,6 +3060,6 @@ the maximum order of the descriptor. `t` is modified in place and also returned.
 - `t`  -- TPSA initialized to descriptor `d` with maximum order `mo`
 """
 function mad_ctpsa_init!(t::ComplexTPS, d::Ptr{Desc}, mo::Cuchar)::ComplexTPS
-  t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ref{TPS{ComplexF64}}, d::Ptr{Desc}, mo::Cuchar)::Ref{TPS{ComplexF64}}
+  t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ref{TPS{ComplexF64}}, d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return t
 end
