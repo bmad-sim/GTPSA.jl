@@ -21,7 +21,7 @@ end
 
 
 """
-    mad_ctpsa_new(t::Ptr{TPS{ComplexF64}}, mo::Cuchar)
+    mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)
 
 Creates a blank TPSA with same number of variables/parameters of the inputted TPSA, 
 with maximum order specified by `mo`. If `MAD_TPSA_SAME` is passed for `mo`, the `mo` 
@@ -34,22 +34,22 @@ currently in `t` is used for the created TPSA. Ok with `t=(tpsa_t*)ctpsa`
 ### Output
 - `ret` -- New blank TPSA with maximum order `mo`
 """
-function mad_ctpsa_new(t::Ptr{TPS{ComplexF64}}, mo::Cuchar)
-  ret = @ccall MAD_TPSA.mad_ctpsa_new(t::Ptr{TPS{ComplexF64}}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
+function mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)
+  ret = @ccall MAD_TPSA.mad_ctpsa_new(t::Ref{TPS{ComplexF64}}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return ret
 end
 
 
 """
-    mad_ctpsa_del!(t::Ptr{TPS{ComplexF64}})
+    mad_ctpsa_del!(t::Ref{TPS{ComplexF64}})
 
 Calls the destructor for the complex TPSA.
 
 ### Input
 - `t` -- Complex TPSA to destruct
 """
-function mad_ctpsa_del!(t::Ptr{TPS{ComplexF64}})
-  @ccall MAD_TPSA.mad_ctpsa_del(t::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_del!(t::Ref{TPS{ComplexF64}})
+  @ccall MAD_TPSA.mad_ctpsa_del(t::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -65,7 +65,7 @@ Gets the descriptor for the complex TPSA.
 - `ret` -- Descriptor for the TPSA
 """
 function mad_ctpsa_desc(t::ComplexTPS)::Ptr{Desc}
-  ret = @ccall MAD_TPSA.mad_ctpsa_desc(t::Ptr{TPS{ComplexF64}})::Ptr{Desc}
+  ret = @ccall MAD_TPSA.mad_ctpsa_desc(t::Ref{TPS{ComplexF64}})::Ptr{Desc}
   return ret
 end
 
@@ -83,7 +83,7 @@ Sets the TPSA `uid` if `uid_ != 0`, and returns the current (previous if set) TP
 - `ret`  -- Current (previous if set) TPSA `uid`
 """
 function mad_ctpsa_uid!(t::ComplexTPS, uid_::Cint)::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_uid(t::Ptr{TPS{ComplexF64}}, uid_::Cint)::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_uid(t::Ref{TPS{ComplexF64}}, uid_::Cint)::Cint
   return ret
 end
 
@@ -101,7 +101,7 @@ Gets the length of the TPSA itself (e.g. the descriptor may be order 10 but TPSA
 - `ret` -- Length of TPS{ComplexF64}
 """
 function mad_ctpsa_len(t::ComplexTPS, hi_::Bool)::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ptr{TPS{ComplexF64}}, hi_::Bool)::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_len(t::Ref{TPS{ComplexF64}}, hi_::Bool)::Cint
   return ret
 end
 
@@ -119,7 +119,7 @@ Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
 - `ret` -- Original `mo` of the TPSA
 """
 function mad_ctpsa_mo!(t::ComplexTPS, mo::Cuchar)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_mo(t::Ptr{TPS{ComplexF64}}, mo::Cuchar)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_mo(t::Ref{TPS{ComplexF64}}, mo::Cuchar)::Cuchar
   return ret
 end
 
@@ -137,7 +137,7 @@ Get the name of the TPSA, and will optionally set if `nam_ != null`
 - `ret`  -- Name of TPS{ComplexF64} (Null terminated in C)
 """
 function mad_ctpsa_nam(t::ComplexTPS, nam_::Cstring)::Cstring
-  ret = @ccall MAD_TPSA.mad_ctpsa_nam(t::Ptr{TPS{ComplexF64}}, nam_::Cstring)::Cstring
+  ret = @ccall MAD_TPSA.mad_ctpsa_nam(t::Ref{TPS{ComplexF64}}, nam_::Cstring)::Cstring
   return ret
 end
 
@@ -155,7 +155,7 @@ Gets the TPSA maximum order, or `hi` if `hi_` is true.
 - `ret` -- Order of TPSA
 """
 function mad_ctpsa_ord(t::ComplexTPS, hi_::Bool)::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ptr{TPS{ComplexF64}}, hi_::Bool)::Cuchar
+  ret = @ccall MAD_TPSA.mad_ctpsa_ord(t::Ref{TPS{ComplexF64}}, hi_::Bool)::Cuchar
   return ret
 end
 
@@ -172,7 +172,7 @@ Returns maximum order of all TPSAs provided.
 - `mo` -- Maximum order of all TPSAs provided
 """
 function mad_ctpsa_ordv(t::ComplexTPS, ts::ComplexTPS...)::Cuchar
-  # mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ptr{TPS{ComplexF64}}, ts::Ptr{TPS{ComplexF64}}..., 0::Cint)::Cuchar # null pointer after args for safe use
+  # mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ref{TPS{ComplexF64}}, ts::Ref{TPS{ComplexF64}}..., 0::Cint)::Cuchar # null pointer after args for safe use
   ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{ComplexF64}, TPS{ComplexF64}...), (t, ts...))
   return mo
 end
@@ -189,7 +189,7 @@ Makes a copy of the complex TPSA `t` to `r`.
 - `r` -- Destination complex TPSA
 """
 function mad_ctpsa_copy!(t::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_copy(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_copy(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -208,7 +208,7 @@ by 1/order (integration).
 - `r`   -- Destination complex TPSA
 """
 function mad_ctpsa_sclord!(t::ComplexTPS, r::ComplexTPS, inv::Bool, prm::Bool)
-  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, inv::Bool, prm::Bool)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sclord(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, inv::Bool, prm::Bool)::Cvoid
 end
 
 
@@ -225,7 +225,7 @@ Extract one homogeneous polynomial of the given order
 - `r`   -- Destination complex TPSA
 """
 function mad_ctpsa_getord!(t::ComplexTPS, r::ComplexTPS, ord::Cuchar)
-  @ccall MAD_TPSA.mad_ctpsa_getord(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, ord::Cuchar)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_getord(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, ord::Cuchar)::Cvoid
 end
 
 
@@ -243,7 +243,7 @@ Cuts the TPSA off at the given order and above, or if `ord` is negative, will cu
 - `r`   -- Destination complex TPSA
 """
 function mad_ctpsa_cutord!(t::ComplexTPS, r::ComplexTPS, ord::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_cutord(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, ord::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cutord(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, ord::Cint)::Cvoid
 end
 
 """
@@ -256,11 +256,11 @@ Clears all monomial coefficients of the TPSA at order `ord`
 - `ord` -- Order to clear monomial coefficients
 """
 function mad_ctpsa_clrord!(t::ComplexTPS, ord::Cuchar)
-  @ccall MAD_TPSA.mad_ctpsa_clrord(t::Ptr{TPS{ComplexF64}}, ord::Cuchar)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_clrord(t::Ref{TPS{ComplexF64}}, ord::Cuchar)::Cvoid
 end
 
 """
-    mad_ctpsa_maxord(t::ComplexTPS, n::Cint, idx_::Vector{Cint})::Cint
+    mad_ctpsa_maxord(t::ComplexTPS, n::Cint, idx_)::Cint
 
 Returns the index to the monomial with maximum abs(coefficient) in the TPSA for all orders 0 to `n`. If `idx_` 
 is provided, it is filled with the indices for the maximum abs(coefficient) monomial for each order up to `n`. 
@@ -273,13 +273,14 @@ is provided, it is filled with the indices for the maximum abs(coefficient) mono
 - `idx_` -- (Optional) If provided, is filled with indices to the monomial for each order up to `n` with maximum abs(coefficient)
 - `mi`   -- Index to the monomial in the TPSA with maximum abs(coefficient)
 """
-function mad_ctpsa_maxord(t::ComplexTPS, n::Cint, idx_::Vector{Cint})::Cint
-  mi = @ccall MAD_TPSA.mad_ctpsa_maxord(t::Ptr{TPS{ComplexF64}}, n::Cint, idx_::Ptr{Cint})::Cint
+function mad_ctpsa_maxord(t::ComplexTPS, n::Cint, idx_)::Cint
+  typeof(idx_) == Ptr{Nothing} || eltype(idx_) == Cint || error("idx_ must have eltype Cint if provided!")
+  mi = @ccall MAD_TPSA.mad_ctpsa_maxord(t::Ref{TPS{ComplexF64}}, n::Cint, idx_::Ptr{Cint})::Cint
   return mi
 end
 
 """
-    mad_ctpsa_convert!(t::ComplexTPS, r::ComplexTPS, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+    mad_ctpsa_convert!(t::ComplexTPS, r::ComplexTPS, n::Cint, t2r_, pb::Cint)
 
 General function to convert TPSAs to different orders and reshuffle canonical coordinates. The destination TPSA will 
 be of order `n`, and optionally have the variable reshuffling defined by `t2r_` and poisson bracket sign. e.g. if 
@@ -295,8 +296,9 @@ will be negated. Useful for comparing with different differential algebra packag
 ### Output
 - `r`    -- Destination complex TPSA with specified order and canonical coordinate reshuffling.
 """
-function mad_ctpsa_convert!(t::ComplexTPS, r::ComplexTPS, n::Cint, t2r_::Vector{Cint}, pb::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_convert(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+function mad_ctpsa_convert!(t::ComplexTPS, r::ComplexTPS, n::Cint, t2r_, pb::Cint)
+  typeof(t2r_) == Ptr{Nothing} || eltype(t2r_) == Cint || error("t2r_ must have eltype Cint if provided!")
+  @ccall MAD_TPSA.mad_ctpsa_convert(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
 end
 
 
@@ -312,7 +314,7 @@ end
   - `scl_` -- 1st order variable value (typically will be 1)
   """
 function mad_ctpsa_setvar!(t::ComplexTPS, v::ComplexF64, iv::Cint, scl_::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_setvar(t::Ptr{TPS{ComplexF64}}, v::ComplexF64, iv::Cint, scl_::ComplexF64)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setvar(t::Ref{TPS{ComplexF64}}, v::ComplexF64, iv::Cint, scl_::ComplexF64)::Cvoid
 end
 
 """
@@ -327,7 +329,7 @@ The 1st order value `scl_` of a parameter is always 1.
 - `ip`   -- Parameter index (e.g. iv = 1 is nn-nv+1)
 """
 function mad_ctpsa_setprm!(t::ComplexTPS, v::ComplexF64, ip::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_setprm(t::Ptr{TPS{ComplexF64}}, v::ComplexF64, ip::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setprm(t::Ref{TPS{ComplexF64}}, v::ComplexF64, ip::Cint)::Cvoid
 end
 
 """
@@ -344,7 +346,7 @@ Sets the 0th and 1st order values for the specified variable. Equivalent to `mad
 - `scl_im_` -- (Optional)Imaginary part of 1st order variable value
 """
 function mad_ctpsa_setvar_r!(t::ComplexTPS, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setvar_r(t::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, iv::Cint, scl_re_::Cdouble, scl_im_::Cdouble)::Cvoid
 end
 
 """
@@ -360,7 +362,7 @@ The 1st order value `scl_` of a parameter is always 1.
 - `ip`      -- Parameter index
 """
 function mad_ctpsa_setprm_r!(t::ComplexTPS, v_re::Cdouble, v_im::Cdouble, ip::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_setprm_r(t::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, ip::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setprm_r(t::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, ip::Cint)::Cvoid
 end
 
 
@@ -374,7 +376,7 @@ Sets the scalar part of the TPSA to `v` and all other values to 0 (sets the TPSA
 - `v` -- Scalar value to set TPSA
 """
 function mad_ctpsa_setval!(t::ComplexTPS, v::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_setval(t::Ptr{TPS{ComplexF64}}, v::ComplexF64)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setval(t::Ref{TPS{ComplexF64}}, v::ComplexF64)::Cvoid
 end
 
 """
@@ -384,7 +386,7 @@ Updates the `lo` and `hi` fields of the TPSA to reflect the current state
 given the lowest/highest nonzero monomial coefficients.
 """
 function mad_ctpsa_update!(t::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_update(t::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_update(t::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -399,7 +401,7 @@ Equivalent to `mad_ctpsa_setval` but without complex-by-value arguments.
 - `v_im` -- Imaginary part of scalar value to set TPSA
 """
 function mad_ctpsa_setval_r!(t::ComplexTPS, v_re::Cdouble, v_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setval_r(t::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_setval_r(t::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble)::Cvoid
 end
 
 """
@@ -411,7 +413,7 @@ Clears the TPSA (reset to 0)
 - `t` -- Complex TPSA
 """
 function mad_ctpsa_clear!(t::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_clear(t::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_clear(t::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -427,7 +429,7 @@ Checks if TPSA is 0 or not
 - `ret`  -- True or false
 """
 function mad_ctpsa_isnul(t::ComplexTPS)::Bool
-  ret = @ccall MAD_TPSA.mad_ctpsa_isnul(t::Ptr{TPS{ComplexF64}})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isnul(t::Ref{TPS{ComplexF64}})::Bool
   return ret
 end
 
@@ -446,7 +448,19 @@ Creates a TPS{ComplexF64} with real and imaginary parts from the TPS{Float64}s `
 - `r`   -- Destination TPS{ComplexF64} with `r = re_ + im*im_`
 """
 function mad_ctpsa_cplx!(re_, im_, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{TPS{Float64}}, im_::Ptr{TPS{Float64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  if typeof(re_) != Ptr{Nothing}
+    if typeof(im_) != Ptr{Nothing}
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
+    else
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
+    end
+  else
+    if typeof(im_) != Ptr{Nothing}
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
+    else
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
+    end
+  end  
 end
 
 
@@ -462,7 +476,7 @@ Sets the TPS{Float64} `r` equal to the real part of TPS{ComplexF64} `t`.
 - `r` -- Destination TPS{Float64} with `r = Re(t)`
 """
 function mad_ctpsa_real!(t::ComplexTPS, r::RealTPS)
-  @ccall MAD_TPSA.mad_ctpsa_real(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_real(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -478,7 +492,7 @@ Sets the TPS{Float64} `r` equal to the imaginary part of TPS{ComplexF64} `t`.
 - `r` -- Destination TPS{Float64} with `r = Im(t)`
 """
 function mad_ctpsa_imag!(t::ComplexTPS, r::RealTPS)
-  @ccall MAD_TPSA.mad_ctpsa_imag(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_imag(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{Float64}})::Cvoid
 end
 
 """ 
@@ -494,7 +508,7 @@ result contains a TPSA with the `abs` of all coefficients.
 - `r` -- Destination TPS{Float64} with `r = |t|`
 """
 function mad_ctpsa_cabs!(t::ComplexTPS, r::RealTPS)
-  @ccall MAD_TPSA.mad_ctpsa_cabs(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cabs(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -510,7 +524,7 @@ Sets the TPS{Float64} `r` equal to the argument (phase) of TPS{ComplexF64} `t`
 - `r` -- Destination TPS{Float64} with `r = carg(t)`
 """
 function mad_ctpsa_carg!(t::ComplexTPS, r::RealTPS)
-  @ccall MAD_TPSA.mad_ctpsa_carg(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_carg(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -526,7 +540,7 @@ Interpreting TPSA as a vector, gets the "unit vector", e.g. `c = a/norm(a)`. May
 - `c` -- Destination TPSA `c`
 """
 function mad_ctpsa_unit!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_unit(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_unit(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -540,7 +554,7 @@ Sets `r = Re(t)*cos(Im(t)) + im*Re(t)*sin(Im(t))`
 - `r` -- Destination TPS{ComplexF64}
 """
 function mad_ctpsa_rect!(t::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_rect(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_rect(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -554,12 +568,12 @@ Sets `r = |t| + im*atan2(Im(t), Re(t))`
 - `r` -- Destination TPS{ComplexF64}
 """
 function mad_ctpsa_polar!(t::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_polar(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_polar(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
 """
-    mad_ctpsa_mono!(t::ComplexTPS, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
+    mad_ctpsa_mono!(t::ComplexTPS, i::Cint, n::Cint, m_, p_)::Cuchar
 
 Returns the order of the monomial at index `i` in the TPSA and optionally the monomial at that index is returned in `m_`
 and the order of parameters in the monomial in `p_`
@@ -574,8 +588,10 @@ and the order of parameters in the monomial in `p_`
 - `p_`  -- (Optional) Order of parameters in monomial
 - `ret` -- Order of monomial in TPSA `a` index `i`
 """
-function mad_ctpsa_mono!(t::ComplexTPS, i::Cint, n::Cint, m_::Vector{Cuchar}, p_::Vector{Cuchar})::Cuchar
-  ret = @ccall MAD_TPSA.mad_ctpsa_mono(t::Ptr{TPS{ComplexF64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
+function mad_ctpsa_mono!(t::ComplexTPS, i::Cint, n::Cint, m_, p_)::Cuchar
+  typeof(m_) == Ptr{Nothing} || eltype(m_) == Cuchar || error("m_ must have eltype Cuchar if provided!")
+  typeof(p_) == Ptr{Nothing} || eltype(p_) == Cuchar || error("p_ must have eltype Cuchar if provided!")
+  ret = @ccall MAD_TPSA.mad_ctpsa_mono(t::Ref{TPS{ComplexF64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, p_::Ptr{Cuchar})::Cuchar
   return ret
 end
 
@@ -595,14 +611,14 @@ are no assumptions about which monomial is attached to which index.
 - `ret` -- Index of monomial in TPSA
 """
 function mad_ctpsa_idxs(t::ComplexTPS, n::Cint, s::Cstring)::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_idxs(t::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring)::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_idxs(t::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring)::Cint
   return ret
 end
 
 
 
 """
-    mad_ctpsa_idxm(t::ComplexTPS, n::Cint, m::Vector{Cuchar})::Cint
+    mad_ctpsa_idxm(t::ComplexTPS, n::Cint, m)::Cint
 
 
 Returns index of monomial in the TPSA given the monomial as a byte array. This generally should not be used, as there 
@@ -616,14 +632,15 @@ are no assumptions about which monomial is attached to which index.
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_ctpsa_idxm(t::ComplexTPS, n::Cint, m::Vector{Cuchar})::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_idxm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cint
+function mad_ctpsa_idxm(t::ComplexTPS, n::Cint, m)::Cint
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_idxm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cint
   return ret
 end
 
 
 """
-    mad_ctpsa_idxsm(t::ComplexTPS, n::Cint, m::Vector{Cint})::Cint
+    mad_ctpsa_idxsm(t::ComplexTPS, n::Cint, m)::Cint
 
 Returns index of monomial in the TPSA given the monomial as a sparse monomial. This generally should not be used, as there 
 are no assumptions about which monomial is attached to which index.
@@ -636,8 +653,9 @@ are no assumptions about which monomial is attached to which index.
 ### Output
 - `ret` -- Index of monomial in TPSA
 """
-function mad_ctpsa_idxsm(t::ComplexTPS, n::Cint, m::Vector{Cint})::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_idxsm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::Cint
+function mad_ctpsa_idxsm(t::ComplexTPS, n::Cint, m)::Cint
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_idxsm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::Cint
   return ret
 end
 
@@ -660,7 +678,9 @@ return the next NONZERO monomial index in the TPSA. This is useful for building 
 - `i`  -- Index of next nonzero monomial in the TPSA, or -1 if reached the end
 """
 function mad_ctpsa_cycle!(t::ComplexTPS, i::Cint, n::Cint, m_, v_)::Cint
-  i = @ccall MAD_TPSA.mad_ctpsa_cycle(t::Ptr{TPS{ComplexF64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{ComplexF64})::Cint
+  typeof(m_) == Ptr{Nothing} || eltype(m_) == Cuchar || error("m_ must have eltype Cuchar if provided!")
+  typeof(v_) == Ptr{Nothing} || eltype(v_) == ComplexF64 || error("v_ must have eltype ComplexF64 if provided!")
+  i = @ccall MAD_TPSA.mad_ctpsa_cycle(t::Ref{TPS{ComplexF64}}, i::Cint, n::Cint, m_::Ptr{Cuchar}, v_::Ptr{ComplexF64})::Cint
   return i
 end
 
@@ -678,7 +698,7 @@ Gets the coefficient of the monomial at index `i`.  Generally should use `mad_tp
 - `ret` -- Coefficient of monomial at index `i`
 """
 function mad_ctpsa_geti(t::ComplexTPS, i::Cint)::ComplexF64
-  ret = @ccall MAD_TPSA.mad_ctpsa_geti(t::Ptr{TPS{ComplexF64}}, i::Cint)::ComplexF64
+  ret = @ccall MAD_TPSA.mad_ctpsa_geti(t::Ref{TPS{ComplexF64}}, i::Cint)::ComplexF64
   return ret
 end
 
@@ -697,13 +717,13 @@ Gets the coefficient of the monomial `s` defined as a string. Generally should u
 - `ret` -- Coefficient of monomial `s` in TPSA 
 """
 function mad_ctpsa_gets(t::ComplexTPS, n::Cint, s::Cstring)::ComplexF64
-  ret = @ccall MAD_TPSA.mad_ctpsa_gets(t::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring)::ComplexF64
+  ret = @ccall MAD_TPSA.mad_ctpsa_gets(t::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring)::ComplexF64
   return ret
 end
 
 
 """
-    mad_ctpsa_getm(t::ComplexTPS, n::Cint, m::Vector{Cuchar})::ComplexF64
+    mad_ctpsa_getm(t::ComplexTPS, n::Cint, m)::ComplexF64
 
 Gets the coefficient of the monomial `m` defined as a byte array. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -715,14 +735,15 @@ Gets the coefficient of the monomial `m` defined as a byte array. Generally shou
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_ctpsa_getm(t::ComplexTPS, n::Cint, m::Vector{Cuchar})::ComplexF64
-  ret = @ccall MAD_TPSA.mad_ctpsa_getm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::ComplexF64
+function mad_ctpsa_getm(t::ComplexTPS, n::Cint, m)::ComplexF64
+  eltype(m) == Cuchar || error("m must have eltype Cuchar")
+  ret = @ccall MAD_TPSA.mad_ctpsa_getm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::ComplexF64
   return ret
 end
 
 
 """
-    mad_ctpsa_getsm(t::ComplexTPS, n::Cint, m::Vector{Cint})::ComplexF64
+    mad_ctpsa_getsm(t::ComplexTPS, n::Cint, m)::ComplexF64
 
 Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -734,8 +755,9 @@ Gets the coefficient of the monomial `m` defined as a sparse monomial. Generally
 ### Output
 - `ret` -- Coefficient of monomial `m` in TPSA
 """
-function mad_ctpsa_getsm(t::ComplexTPS, n::Cint, m::Vector{Cint})::ComplexF64
-  ret = @ccall MAD_TPSA.mad_ctpsa_getsm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::ComplexF64
+function mad_ctpsa_getsm(t::ComplexTPS, n::Cint, m)::ComplexF64
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_getsm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::ComplexF64
   return ret
 end
 
@@ -752,7 +774,7 @@ Sets the coefficient of monomial at index `i` to `coef[i] = a*coef[i] + b`. Does
 - `b` -- Constant added to current coefficient
 """
 function mad_ctpsa_seti!(t::ComplexTPS, i::Cint, a::ComplexF64, b::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_seti(t::Ptr{TPS{ComplexF64}}, i::Cint, a::ComplexF64, b::ComplexF64)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_seti(t::Ref{TPS{ComplexF64}}, i::Cint, a::ComplexF64, b::ComplexF64)::Cvoid
 end
 
 
@@ -769,12 +791,12 @@ Sets the coefficient of monomial defined by string `s` to `coef = a*coef + b`. D
 - `b` -- Constant added to current coefficient
 """
 function mad_ctpsa_sets!(t::ComplexTPS, n::Cint, s::Cstring, a::ComplexF64, b::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_sets(t::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring, a::ComplexF64, b::ComplexF64)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sets(t::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring, a::ComplexF64, b::ComplexF64)::Cvoid
 end
 
 
 """
-    mad_ctpsa_setm!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64)
+    mad_ctpsa_setm!(t::ComplexTPS, n::Cint, m, a::ComplexF64, b::ComplexF64)
 
 Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -785,8 +807,9 @@ Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_ctpsa_setm!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, a::ComplexF64, b::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_setm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, a::ComplexF64, b::ComplexF64)::Cvoid
+function mad_ctpsa_setm!(t::ComplexTPS, n::Cint, m, a::ComplexF64, b::ComplexF64)
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  @ccall MAD_TPSA.mad_ctpsa_setm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, a::ComplexF64, b::ComplexF64)::Cvoid
 end
 
 
@@ -802,7 +825,7 @@ same monomial coefficient in `r`
 - `i` -- Index of monomial
 """
 function mad_ctpsa_cpyi!(t::ComplexTPS, r::ComplexTPS, i::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_cpyi(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, i::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cpyi(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, i::Cint)::Cvoid
 end
 
 """
@@ -818,11 +841,11 @@ Copies the monomial coefficient at the monomial-as-string-of-order
 - `s` -- Monomial as string
 """
 function mad_ctpsa_cpys!(t::ComplexTPS, r::ComplexTPS, n::Cint, s::Cstring)
-  @ccall MAD_TPSA.mad_ctpsa_cpys(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cpys(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring)::Cvoid
 end
 
 """
-    mad_ctpsa_cpym!(t::ComplexTPS, r::ComplexTPS, n::Cint, m::Vector{Cuchar})
+    mad_ctpsa_cpym!(t::ComplexTPS, r::ComplexTPS, n::Cint, m)
 
 Copies the monomial coefficient at the monomial-as-vector-of-orders
 `m` in `t` into the same monomial coefficient in `r`
@@ -833,12 +856,13 @@ Copies the monomial coefficient at the monomial-as-vector-of-orders
 - `n` -- Length of monomial `m`
 - `m` -- Monomial as vector of orders
 """
-function mad_ctpsa_cpym!(t::ComplexTPS, r::ComplexTPS, n::Cint, m::Vector{Cuchar})
-  @ccall MAD_TPSA.mad_ctpsa_cpym(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
+function mad_ctpsa_cpym!(t::ComplexTPS, r::ComplexTPS, n::Cint, m)
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  @ccall MAD_TPSA.mad_ctpsa_cpym(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
 """
-    mad_ctpsa_cpysm!(t::ComplexTPS, r::ComplexTPS, n::Cint, m::Vector{Cint})
+    mad_ctpsa_cpysm!(t::ComplexTPS, r::ComplexTPS, n::Cint, m)
 
 Copies the monomial coefficient at the monomial-as-sparse-monomial
 `m` in `t` into the same monomial coefficient in `r`
@@ -849,13 +873,14 @@ Copies the monomial coefficient at the monomial-as-sparse-monomial
 - `n` -- Length of sparse monomial `m`
 - `m` -- Monomial as sparse-monomial
 """
-function mad_ctpsa_cpysm!(t::ComplexTPS, r::ComplexTPS, n::Cint, m::Vector{Cint})
-  @ccall MAD_TPSA.mad_ctpsa_cpysm(t::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::Cvoid
+function mad_ctpsa_cpysm!(t::ComplexTPS, r::ComplexTPS, n::Cint, m)
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  @ccall MAD_TPSA.mad_ctpsa_cpysm(t::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint})::Cvoid
 end
 
 
 """
-    mad_ctpsa_setsm!(t::ComplexTPS, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)
+    mad_ctpsa_setsm!(t::ComplexTPS, n::Cint, m, a::ComplexF64, b::ComplexF64)
 
 Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 
@@ -866,15 +891,16 @@ Sets the coefficient of monomial defined by sparse monomial `m` to `coef = a*coe
 - `a` -- Scaling of current coefficient
 - `b` -- Constant added to current coefficient
 """
-function mad_ctpsa_setsm!(t::ComplexTPS, n::Cint, m::Vector{Cint}, a::ComplexF64, b::ComplexF64)
-  @ccall MAD_TPSA.mad_ctpsa_setsm(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, a::ComplexF64, b::ComplexF64)::Cvoid
+function mad_ctpsa_setsm!(t::ComplexTPS, n::Cint, m, a::ComplexF64, b::ComplexF64)
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  @ccall MAD_TPSA.mad_ctpsa_setsm(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, a::ComplexF64, b::ComplexF64)::Cvoid
 end
 
 
 # Accessors without complex-by-value
 
 """
-    mad_ctpsa_geti_r!(t::ComplexTPS, i::Cint,  r::Ref{ComplexF64})
+    mad_ctpsa_geti_r!(t::ComplexTPS, i::Cint,  r)
 
 Gets the coefficient of the monomial at index `i` in place. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -885,14 +911,15 @@ Gets the coefficient of the monomial at index `i` in place. Generally should use
 ### Output
 - `r` -- Coefficient of monomial at index `i`
 """
-function mad_ctpsa_geti_r!(t::ComplexTPS, i::Cint, r::Ref{ComplexF64})
-  ret = @ccall MAD_TPSA.mad_ctpsa_geti_r(t::Ptr{TPS{ComplexF64}}, i::Cint, r::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_geti_r!(t::ComplexTPS, i::Cint, r)
+  eltype(r) == ComplexF64 || error("r must have eltype ComplexF64 !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_geti_r(t::Ref{TPS{ComplexF64}}, i::Cint, r::Ptr{ComplexF64})::Cvoid
   return ret
 end
 
 
 """
-    mad_ctpsa_gets_r!(t::ComplexTPS, n::Cint, s::Cstring, r::Ref{ComplexF64})
+    mad_ctpsa_gets_r!(t::ComplexTPS, n::Cint, s::Cstring, r)
 
 Gets the coefficient of the monomial `s` defined as a string in place. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -904,14 +931,15 @@ Gets the coefficient of the monomial `s` defined as a string in place. Generally
 ### Output
 - `r` -- Coefficient of monomial `s` in TPSA
 """
-function mad_ctpsa_gets_r!(t::ComplexTPS, n::Cint, s::Cstring, r::Ref{ComplexF64})
-  ret = @ccall MAD_TPSA.mad_ctpsa_gets_r(t::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring, r::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_gets_r!(t::ComplexTPS, n::Cint, s::Cstring, r)
+  eltype(r) == ComplexF64 || error("r must have eltype ComplexF64 !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_gets_r(t::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring, r::Ptr{ComplexF64})::Cvoid
   return ret
 end
 
 
 """
-    mad_ctpsa_getm_r!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, r::Ref{ComplexF64})
+    mad_ctpsa_getm_r!(t::ComplexTPS, n::Cint, m, r)
 
 Gets the coefficient of the monomial `m` defined as a byte array in place. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -923,14 +951,16 @@ Gets the coefficient of the monomial `m` defined as a byte array in place. Gener
 ### Output
 - `r` -- Coefficient of monomial `m` in TPSA
 """
-function mad_ctpsa_getm_r!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, r::Ref{ComplexF64})
-  ret = @ccall MAD_TPSA.mad_ctpsa_getm_r(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, r::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_getm_r!(t::ComplexTPS, n::Cint, m, r)
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  eltype(r) == ComplexF64 || error("r must have eltype ComplexF64 !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_getm_r(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, r::Ptr{ComplexF64})::Cvoid
   return ret
 end
 
 
 """
-    mad_ctpsa_getsm_r!(t::ComplexTPS, n::Cint, m::Vector{Cint}, r::Ref{ComplexF64})
+    mad_ctpsa_getsm_r!(t::ComplexTPS, n::Cint, m, r)
 
 Gets the coefficient of the monomial `m` defined as a sparse monomial in place. Generally should use `mad_tpsa_cycle` instead of this.
 
@@ -942,8 +972,10 @@ Gets the coefficient of the monomial `m` defined as a sparse monomial in place. 
 ### Output
 - `r` -- Coefficient of monomial `m` in TPSA
 """
-function mad_ctpsa_getsm_r!(t::ComplexTPS, n::Cint, m::Vector{Cint}, r::Ref{ComplexF64})
-  ret = @ccall MAD_TPSA.mad_ctpsa_getsm_r(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, r::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_getsm_r!(t::ComplexTPS, n::Cint, m, r)
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  eltype(r) == ComplexF64 || error("r must have eltype ComplexF64 !")
+  ret = @ccall MAD_TPSA.mad_ctpsa_getsm_r(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, r::Ptr{ComplexF64})::Cvoid
   return ret
 end
 
@@ -963,7 +995,7 @@ Equivalent to `mad_ctpsa_seti` but without complex-by-value arguments.
 - `b_im` -- Imaginary part of `b`
 """
 function mad_ctpsa_seti_r!(t::ComplexTPS, i::Cint, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_seti_r(t::Ptr{TPS{ComplexF64}}, i::Cint, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_seti_r(t::Ref{TPS{ComplexF64}}, i::Cint, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
 end
 
 
@@ -983,12 +1015,12 @@ Equivalent to `mad_ctpsa_set` but without complex-by-value arguments.
 - `b_im` -- Imaginary part of `b`
 """
 function mad_ctpsa_sets_r!(t::ComplexTPS, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_sets_r(t::Ptr{TPS{ComplexF64}}, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sets_r(t::Ref{TPS{ComplexF64}}, n::Cint, s::Cstring, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
 end
 
 
 """
-    mad_ctpsa_setm_r!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
+    mad_ctpsa_setm_r!(t::ComplexTPS, n::Cint, m, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
 
 Sets the coefficient of monomial defined by byte array `m` to `coef = a*coef + b`. Does not modify other values in TPSA.
 Equivalent to `mad_ctpsa_setm` but without complex-by-value arguments.
@@ -1002,13 +1034,14 @@ Equivalent to `mad_ctpsa_setm` but without complex-by-value arguments.
 - `b_re` -- Real part of `b`
 - `b_im` -- Imaginary part of `b`
 """
-function mad_ctpsa_setm_r!(t::ComplexTPS, n::Cint, m::Vector{Cuchar}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setm_r(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
+function mad_ctpsa_setm_r!(t::ComplexTPS, n::Cint, m, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  @ccall MAD_TPSA.mad_ctpsa_setm_r(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
 end
 
 
 """
-    mad_ctpsa_setsm_r!(t::ComplexTPS, n::Cint, m::Vector{Cint}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
+    mad_ctpsa_setsm_r!(t::ComplexTPS, n::Cint, m, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
 
 Sets the coefficient of monomial defined by sparse monomial m to `coef = a*coef + b`. Does not modify other values in TPSA.
 Equivalent to `mad_ctpsa_setsm` but without complex-by-value arguments.
@@ -1022,8 +1055,9 @@ Equivalent to `mad_ctpsa_setsm` but without complex-by-value arguments.
 - `b_re` -- Real part of `b`
 - `b_im` -- Imaginary part of `b`
 """
-function mad_ctpsa_setsm_r!(t::ComplexTPS, n::Cint, m::Vector{Cint}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
-  @ccall MAD_TPSA.mad_ctpsa_setsm_r(t::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
+function mad_ctpsa_setsm_r!(t::ComplexTPS, n::Cint, m, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)
+  eltype(m) == Cint || error("m must have eltype Cint !")
+  @ccall MAD_TPSA.mad_ctpsa_setsm_r(t::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cint}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble)::Cvoid
 end
 
 
@@ -1042,13 +1076,13 @@ a TPSA to construct a matrix (`i = 1`, `n = nv+np = nn`).
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
 function mad_ctpsa_getv!(t::ComplexTPS, i::Cint, n::Cint, v)
-  @ccall MAD_TPSA.mad_ctpsa_getv(t::Ptr{TPS{ComplexF64}}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_getv(t::Ref{TPS{ComplexF64}}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
 end
 
 
 
 """
-    mad_ctpsa_setv!(t::ComplexTPS, i::Cint, n::Cint, v::Vector{ComplexF64})
+    mad_ctpsa_setv!(t::ComplexTPS, i::Cint, n::Cint, v)
 
 Vectorized setter of the coefficients for monomials with indices `i..i+n`. Useful for putting a matrix into a map.
 
@@ -1058,8 +1092,9 @@ Vectorized setter of the coefficients for monomials with indices `i..i+n`. Usefu
 - `n` -- Number of monomials to set coefficients of starting at `i`
 - `v` -- Array of coefficients for monomials `i..i+n`
 """
-function mad_ctpsa_setv!(t::ComplexTPS, i::Cint, n::Cint, v::Vector{ComplexF64})
-  @ccall MAD_TPSA.mad_ctpsa_setv(t::Ptr{TPS{ComplexF64}}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
+function mad_ctpsa_setv!(t::ComplexTPS, i::Cint, n::Cint, v)
+  eltype(v) == ComplexF64 || error("v must have eltype ComplexF64")
+  @ccall MAD_TPSA.mad_ctpsa_setv(t::Ref{TPS{ComplexF64}}, i::Cint, n::Cint, v::Ptr{ComplexF64})::Cvoid
 end
 
 
@@ -1077,7 +1112,7 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 - `ret`   - True if `a == b` within `tol_`
 """
 function mad_ctpsa_equ(a::ComplexTPS, b::ComplexTPS, tol_::Cdouble)::Bool
-  ret = @ccall MAD_TPSA.mad_ctpsa_equ(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, tol_::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_equ(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, tol_::Cdouble)::Bool
   return ret
 end
 
@@ -1099,7 +1134,7 @@ error is computed. This is very useful for comparing maps between codes or doing
 - `c` -- Destination TPSA `c`
 """
 function mad_ctpsa_dif!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_dif(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_dif(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1116,7 +1151,7 @@ Sets the destination TPSA `c = a + b`
 - `c` -- Destination TPSA `c = a + b`
 """
 function mad_ctpsa_add!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_add(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_add(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1133,7 +1168,7 @@ Sets the destination TPSA `c = a - b`
 - `c` -- Destination TPSA `c = a - b`
 """
 function mad_ctpsa_sub!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sub(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sub(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1150,7 +1185,7 @@ Sets the destination TPSA `c = a * b`
 - `c` -- Destination TPSA `c = a * b`
 """
 function mad_ctpsa_mul!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_mul(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_mul(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1167,7 +1202,7 @@ Sets the destination TPSA `c = a / b`
 - `c` -- Destination TPSA `c = a / b`
 """
 function mad_ctpsa_div!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_div(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_div(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1184,7 +1219,7 @@ Sets the destination TPSA `c = a ^ b`
 - `c` -- Destination TPSA `c = a ^ b`
 """
 function mad_ctpsa_pow!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_pow(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_pow(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1201,7 +1236,7 @@ Sets the destination TPSA `c = a ^ n` where `n` is an integer.
 - `c` -- Destination TPSA `c = a ^ n`
 """
 function mad_ctpsa_powi!(a::ComplexTPS, n::Cint, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_powi(a::Ptr{TPS{ComplexF64}}, n::Cint, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_powi(a::Ref{TPS{ComplexF64}}, n::Cint, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1218,7 +1253,7 @@ Sets the destination TPSA `c = a ^ v` where `v` is of double precision.
 - `c` -- Destination TPSA `c = a ^ v`
 """
 function mad_ctpsa_pown!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_pown(a::Ptr{TPS{ComplexF64}}, v::ComplexF64, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_pown(a::Ref{TPS{ComplexF64}}, v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1236,7 +1271,7 @@ Sets the destination TPSA `c = a ^ v` where `v` is of double precision. Without 
 - `c`    -- Destination TPSA `c = a ^ v`
 """
 function mad_ctpsa_pown_r!(a::ComplexTPS,  v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_pown_r(a::Ptr{TPS{ComplexF64}},  v_re::Cdouble, v_im::Cdouble, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_pown_r(a::Ref{TPS{ComplexF64}},  v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1255,7 +1290,7 @@ Checks if the TPS{ComplexF64} `a` is equal to the TPS{Float64} `b` within the sp
 - `ret`   - True if `a == b` within `tol_`
 """
 function mad_ctpsa_equt(a::ComplexTPS, b::RealTPS, tol::Cdouble)::Bool
-  ret = @ccall MAD_TPSA.mad_ctpsa_equt(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, tol::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_equt(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, tol::Cdouble)::Bool
   return ret
 end
 
@@ -1277,7 +1312,7 @@ error is computed. This is very useful for comparing maps between codes or doing
 - `c` -- Destination TPS{ComplexF64} `c`
 """
 function mad_ctpsa_dift!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_dift(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_dift(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1298,7 +1333,7 @@ error is computed. This is very useful for comparing maps between codes or doing
 - `c` -- Destination TPS{ComplexF64} `c`
 """
 function mad_ctpsa_tdif!(a::RealTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tdif(a::Ptr{TPS{Float64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tdif(a::Ref{TPS{Float64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -1314,7 +1349,7 @@ Sets the destination TPS{ComplexF64} `c = a + b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a + b`
 """
 function mad_ctpsa_addt!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_addt(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_addt(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1331,7 +1366,7 @@ Sets the destination TPS{ComplexF64} `c = a - b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a - b`
 """
 function mad_ctpsa_subt!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_subt(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_subt(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1348,7 +1383,7 @@ Sets the destination TPS{ComplexF64} `c = a - b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a - b`
 """
 function mad_ctpsa_tsub!(a::RealTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tsub(a::Ptr{TPS{Float64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tsub(a::Ref{TPS{Float64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1365,7 +1400,7 @@ Sets the destination TPS{ComplexF64} `c = a * b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a * b`
 """
 function mad_ctpsa_mult!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_mult(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_mult(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1382,7 +1417,7 @@ Sets the destination TPS{ComplexF64} `c = a / b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a / b`
 """
 function mad_ctpsa_divt!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_divt(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_divt(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1399,7 +1434,7 @@ Sets the destination TPS{ComplexF64} `c = a / b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a / b`
 """
 function mad_ctpsa_tdiv!(a::RealTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tdiv(a::Ptr{TPS{Float64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tdiv(a::Ref{TPS{Float64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -1415,7 +1450,7 @@ Sets the destination TPS{ComplexF64} `c = a ^ b` (internal real-to-complex conve
 - `c` -- Destination TPS{ComplexF64} `c = a ^ b`
 """
 function mad_ctpsa_powt!(a::ComplexTPS, b::RealTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_powt(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_powt(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1432,7 +1467,7 @@ Sets the destination TPS{ComplexF64} `c = a ^ b` (internal real-to-complex conve
 - `c` -- Destination TPSA `c = a ^ b`
 """
 function mad_ctpsa_tpow!(a::RealTPS, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tpow(a::Ptr{TPS{Float64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tpow(a::Ref{TPS{Float64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1448,7 +1483,7 @@ Calculates the 1-norm of TPSA `a` (sum of `abs` of all coefficients)
 - `nrm` -- 1-Norm of TPSA `a`
 """
 function mad_ctpsa_nrm(a::ComplexTPS)::Cdouble
-  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ptr{TPS{ComplexF64}})::Cdouble
+  nrm = @ccall MAD_TPSA.mad_ctpsa_nrm(a::Ref{TPS{ComplexF64}})::Cdouble
   return nrm
 end
 
@@ -1464,7 +1499,7 @@ Calculates the complex conjugate of of TPSA `a`.
 - `c` -- Destination TPSA `c = conj(a)`
 """
 function mad_ctpsa_conj!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_conj(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_conj(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -1479,7 +1514,7 @@ Sets TPSA `c` to the `sqrt` of TPSA `a`.
 - `c` -- Destination TPSA `c = sqrt(a)`
 """
 function mad_ctpsa_sqrt!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sqrt(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sqrt(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1495,7 +1530,7 @@ Sets TPSA `c` to the `exp` of TPSA `a`.
 - `c` -- Destination TPSA `c = exp(a)`
 """
 function mad_ctpsa_exp!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_exp(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_exp(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1512,7 +1547,7 @@ Sets TPSA `c` to the `log` of TPSA `a`.
 - `c` -- Destination TPSA `c = log(a)`
 """
 function mad_ctpsa_log!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_log(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_log(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1529,7 +1564,7 @@ Sets TPSA `s = sin(a)` and TPSA `c = cos(a)`
 - `c` -- Destination TPSA `c = cos(a)`
 """
 function mad_ctpsa_sincos!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sincos(a::Ptr{TPS{ComplexF64}}, s::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincos(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1545,7 +1580,7 @@ Sets TPSA `c` to the `sin` of TPSA `a`.
 - `c` -- Destination TPSA `c = sin(a)`
 """
 function mad_ctpsa_sin!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sin(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sin(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1561,7 +1596,7 @@ Sets TPSA `c` to the `cos` of TPSA `a`.
 - `c` -- Destination TPSA `c = cos(a)`
 """
 function mad_ctpsa_cos!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_cos(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cos(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1577,7 +1612,7 @@ Sets TPSA `c` to the `tan` of TPSA `a`.
 - `c` -- Destination TPSA `c = tan(a)`
 """
 function mad_ctpsa_tan!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tan(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tan(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1593,7 +1628,7 @@ Sets TPSA `c` to the `cot` of TPSA `a`.
 - `c` -- Destination TPSA `c = cot(a)`
 """
 function mad_ctpsa_cot!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_cot(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cot(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1609,7 +1644,7 @@ Sets TPSA `c` to the `sinc` of TPSA `a`
 - `c` -- Destination TPSA `c = sinc(a)`
 """
 function mad_ctpsa_sinc!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sinc(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sinc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1626,7 +1661,7 @@ Sets TPSA `s = sinh(a)` and TPSA `c = cosh(a)`
 - `c` -- Destination TPSA `c = cosh(a)`
 """
 function mad_ctpsa_sincosh!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sincosh(a::Ptr{TPS{ComplexF64}}, s::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincosh(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1642,7 +1677,7 @@ end
 - `c` -- Destination TPSA `c = sinh(a)`
 """
 function mad_ctpsa_sinh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sinh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sinh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1658,7 +1693,7 @@ Sets TPSA `c` to the `cosh` of TPSA `a`
 - `c` -- Destination TPSA `c = cosh(a)`
 """
 function mad_ctpsa_cosh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_cosh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_cosh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1674,7 +1709,7 @@ Sets TPSA `c` to the `tanh` of TPSA `a`
 - `c` -- Destination TPSA `c = tanh(a)`
 """
 function mad_ctpsa_tanh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_tanh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tanh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1690,7 +1725,7 @@ Sets TPSA `c` to the `coth` of TPSA `a`
 - `c` -- Destination TPSA `c = coth(a)`
 """
 function mad_ctpsa_coth!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_coth(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_coth(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1706,7 +1741,7 @@ Sets TPSA `c` to the `sinhc` of TPSA `a`
 - `c` -- Destination TPSA `c = sinhc(a)`
 """
 function mad_ctpsa_sinhc!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_sinhc(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sinhc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1722,7 +1757,7 @@ Sets TPSA `c` to the `asin` of TPSA `a`
 - `c` -- Destination TPSA `c = asin(a)`
 """
 function mad_ctpsa_asin!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_asin(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_asin(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1738,7 +1773,7 @@ Sets TPSA `c` to the `acos` of TPSA `a`
 - `c` -- Destination TPSA `c = acos(a)`
 """
 function mad_ctpsa_acos!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acos(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acos(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1754,7 +1789,7 @@ Sets TPSA `c` to the `atan` of TPSA `a`
 - `c` -- Destination TPSA `c = atan(a)`
 """
 function mad_ctpsa_atan!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_atan(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_atan(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1770,7 +1805,7 @@ Sets TPSA `c` to the `acot` of TPSA `a`
 - `c` -- Destination TPSA `c = acot(a)`
 """
 function mad_ctpsa_acot!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acot(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acot(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -1785,7 +1820,7 @@ Sets TPSA `c` to the `asinc(a) = asin(a)/a`
 - `c` -- Destination TPSA `c = asinc(a) = asin(a)/a`
 """
 function mad_ctpsa_asinc!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_asinc(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_asinc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1801,7 +1836,7 @@ Sets TPSA `c` to the `asinh` of TPSA `a`
 - `c` -- Destination TPSA `c = asinh(a)`
 """
 function mad_ctpsa_asinh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_asinh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_asinh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1817,7 +1852,7 @@ Sets TPSA `c` to the `acosh` of TPSA `a`
 - `c` -- Destination TPSA `c = acosh(a)`
 """
 function mad_ctpsa_acosh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acosh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acosh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1833,7 +1868,7 @@ Sets TPSA `c` to the `atanh` of TPSA `a`
 - `c` -- Destination TPSA `c = atanh(a)`
 """
 function mad_ctpsa_atanh!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_atanh(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_atanh(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1849,7 +1884,7 @@ Sets TPSA `c` to the `acoth` of TPSA `a`
 - `c` -- Destination TPSA `c = acoth(a)`
 """
 function mad_ctpsa_acoth!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acoth(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acoth(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1865,7 +1900,7 @@ Sets TPSA `c` to the `asinhc` of TPSA `a`
 - `c` -- Destination TPSA `c = asinhc(a)`
 """
 function mad_ctpsa_asinhc!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_asinhc(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_asinhc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1881,7 +1916,7 @@ Sets TPSA `c` to the `erf` of TPSA `a`
 - `c` -- Destination TPSA `c = erf(a)`
 """
 function mad_ctpsa_erf!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_erf(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_erf(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1897,7 +1932,7 @@ Sets TPSA `c` to the `erfc` of TPSA `a`
 - `c` -- Destination TPSA `c = erfc(a)`
 """
 function mad_ctpsa_erfc!(a::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_erfc(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_erfc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -1958,7 +1993,7 @@ Adds `a*v` to TPSA `c`. Aliasing OK.
 - `c` -- Destination TPSA `c += v*a`
 """
 function mad_ctpsa_acc!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acc(a::Ptr{TPS{ComplexF64}}, v::ComplexF64, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acc(a::Ref{TPS{ComplexF64}}, v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1975,7 +2010,7 @@ Sets TPSA `c` to `v*a`.
 - `c` -- Destination TPSA `c = v*a`
 """
 function mad_ctpsa_scl!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_scl(a::Ptr{TPS{ComplexF64}}, v::ComplexF64, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_scl(a::Ref{TPS{ComplexF64}}, v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -1992,7 +2027,7 @@ Sets TPSA `c` to `v/a`.
 - `c` -- Destination TPSA `c = v/a`
 """
 function mad_ctpsa_inv!(a::ComplexTPS,  v::ComplexF64, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_inv(a::Ptr{TPS{ComplexF64}},  v::ComplexF64, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_inv(a::Ref{TPS{ComplexF64}},  v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2009,7 +2044,7 @@ Sets TPSA `c` to `v/sqrt(a)`.
 - `c` -- Destination TPSA `c = v/sqrt(a)`
 """
 function mad_ctpsa_invsqrt!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_invsqrt(a::Ptr{TPS{ComplexF64}}, v::ComplexF64, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_invsqrt(a::Ref{TPS{ComplexF64}}, v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2026,7 +2061,7 @@ Sets TPSA `r` to `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 - `r` -- Destination TPSA `sqrt(real(x)^2+real(y)^2) + im*sqrt(imag(x)^2+imag(y)^2)`
 """
 function  mad_ctpsa_hypot!(x::ComplexTPS, y::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_hypot(x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_hypot(x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -2043,7 +2078,7 @@ Sets TPSA `r` to `sqrt(x^2+y^2+z^2)`.  Does NOT allow for r = x, y, z !!!
 - `r` -- Destination TPSA `r = sqrt(x^2+y^2+z^2)`
 """
 function  mad_ctpsa_hypot3!(x::ComplexTPS, y::ComplexTPS, z::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_hypot3(x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, z::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_hypot3(x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, z::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2060,7 +2095,7 @@ Integrates TPSA with respect to the variable with index `iv`.
 - `c`  -- Destination TPSA
 """
 function mad_ctpsa_integ!(a::ComplexTPS, c::ComplexTPS, iv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_integ(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}}, iv::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_integ(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, iv::Cint)::Cvoid
 end
 
 
@@ -2077,12 +2112,12 @@ Differentiates TPSA with respect to the variable with index `iv`.
 - `c`  -- Destination TPSA
 """
 function mad_ctpsa_deriv!(a::ComplexTPS, c::ComplexTPS, iv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_deriv(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}}, iv::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_deriv(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, iv::Cint)::Cvoid
 end
 
 
 """
-    mad_ctpsa_derivm!(a::ComplexTPS, c::ComplexTPS, n::Cint, m::Vector{Cuchar})
+    mad_ctpsa_derivm!(a::ComplexTPS, c::ComplexTPS, n::Cint, m)
 
 Differentiates TPSA with respect to the monomial defined by byte array `m`.
 
@@ -2094,8 +2129,9 @@ Differentiates TPSA with respect to the monomial defined by byte array `m`.
 ### Output
 - `c` -- Destination TPSA
 """
-function mad_ctpsa_derivm!(a::ComplexTPS, c::ComplexTPS, n::Cint, m::Vector{Cuchar})
-  @ccall MAD_TPSA.mad_ctpsa_derivm(a::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
+function mad_ctpsa_derivm!(a::ComplexTPS, c::ComplexTPS, n::Cint, m)
+  eltype(m) == Cuchar || error("m must have eltype Cuchar !")
+  @ccall MAD_TPSA.mad_ctpsa_derivm(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, n::Cint, m::Ptr{Cuchar})::Cvoid
 end
 
 
@@ -2113,12 +2149,12 @@ Sets TPSA `c` to the poisson bracket of TPSAs `a` and `b`.
 - `c`  -- Destination TPSA `c`
 """
 function mad_ctpsa_poisbra!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS, nv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_poisbra(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}}, nv::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_poisbra(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, nv::Cint)::Cvoid
 end
 
 
 """
-    mad_ctpsa_taylor!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
+    mad_ctpsa_taylor!(a::ComplexTPS, n::Cint, coef, c::ComplexTPS)
 
 Computes the result of the Taylor series up to order `n-1` with Taylor coefficients `coef` for the scalar value in `a`. That is,
 `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` is the scalar part of TPSA `a`
@@ -2129,12 +2165,13 @@ Computes the result of the Taylor series up to order `n-1` with Taylor coefficie
 - `coef` -- Array of coefficients in Taylor `s`
 - `c`    -- Result
 """
-function mad_ctpsa_taylor!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_taylor(a::Ptr{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_taylor!(a::ComplexTPS, n::Cint, coef, c::ComplexTPS)
+  eltype(coef) == ComplexF64 || error("coef must have eltype ComplexF64")
+  @ccall MAD_TPSA.mad_ctpsa_taylor(a::Ref{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
-    mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
+    mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef, c::ComplexTPS)
 
 Computes the result of the Taylor series up to order `n-1` with Taylor coefficients `coef` for 
 the scalar value in `a`. That is, `c = coef[0] + coef[1]*a_0 + coef[2]*a_0^2 + ...` where `a_0` 
@@ -2149,8 +2186,9 @@ always full order).
 - `coef` -- Array of coefficients in Taylor `s`
 - `c`    -- Result
 """
-function mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef::Vector{ComplexF64}, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_taylor_h(a::Ptr{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_taylor_h!(a::ComplexTPS, n::Cint, coef, c::ComplexTPS)
+  eltype(coef) == ComplexF64 || error("coef must have eltype ComplexF64")
+  @ccall MAD_TPSA.mad_ctpsa_taylor_h(a::Ref{TPS{ComplexF64}}, n::Cint, coef::Ptr{ComplexF64}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2168,7 +2206,7 @@ Sets TPSA `c` to the poisson bracket of TPS{ComplexF64} `a`and TPS{Float64} `b` 
 - `c`  -- Destination TPS{ComplexF64} `c`
 """
 function mad_ctpsa_poisbrat!(a::ComplexTPS, b::RealTPS, c::ComplexTPS, nv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_poisbrat(a::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{Float64}}, c::Ptr{TPS{ComplexF64}}, nv::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_poisbrat(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{ComplexF64}}, nv::Cint)::Cvoid
 end
 
 
@@ -2186,7 +2224,7 @@ Sets TPSA `c` to the poisson bracket of TPS{Float64} `a` and TPS{ComplexF64} `b`
 - `c`  -- Destination TPS{ComplexF64} `c`
 """
 function mad_ctpsa_tpoisbra!(a::RealTPS, b::ComplexTPS, c::ComplexTPS, nv::Cint)
-  @ccall MAD_TPSA.mad_ctpsa_tpoisbra(a::Ptr{TPS{Float64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}}, nv::Cint)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_tpoisbra(a::Ref{TPS{Float64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, nv::Cint)::Cvoid
 end
 
 
@@ -2204,7 +2242,7 @@ Adds `a*v` to TPSA `c`. Aliasing OK. Without complex-by-value arguments.
 - `c`    -- Destination TPSA `c += v*a`
 """
 function mad_ctpsa_acc_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_acc_r(a::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_acc_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2222,7 +2260,7 @@ Sets TPSA `c` to `v*a`.  Without complex-by-value arguments.
 - `c`    -- Destination TPSA `c = v*a`
 """
 function mad_ctpsa_scl_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_scl_r(a::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_scl_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2240,7 +2278,7 @@ Sets TPSA `c` to `v/a`.  Without complex-by-value arguments.
 - `c`    -- Destination TPSA `c = v*a`
 """
 function mad_ctpsa_inv_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_inv_r(a::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_inv_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 """
@@ -2257,7 +2295,7 @@ Sets TPSA `c` to `v/sqrt(a)`. Without complex-by-value arguments.
 - `c`    -- Destination TPSA `c = v*a`
 """
 function mad_ctpsa_invsqrt_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_invsqrt_r(a::Ptr{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_invsqrt_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2275,7 +2313,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpb!(a::ComplexF64, x::ComplexTPS, b::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpb(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, b::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpb(a::ComplexF64, x::Ref{TPS{ComplexF64}}, b::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2295,7 +2333,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpbypc!(a::ComplexF64, x::ComplexTPS, b::ComplexF64, y::ComplexTPS, c::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpbypc(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, b::ComplexF64, y::Ptr{TPS{ComplexF64}}, c::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpbypc(a::ComplexF64, x::Ref{TPS{ComplexF64}}, b::ComplexF64, y::Ref{TPS{ComplexF64}}, c::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2314,7 +2352,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypb!(a::ComplexF64, x::ComplexTPS, y::ComplexTPS, b::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypb(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypb(a::ComplexF64, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2335,7 +2373,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypbzpc!(a::ComplexF64, x::ComplexTPS, y::ComplexTPS, b::ComplexF64, z::ComplexTPS, c::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypbzpc(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b::ComplexF64, z::Ptr{TPS{ComplexF64}}, c::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypbzpc(a::ComplexF64, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b::ComplexF64, z::Ref{TPS{ComplexF64}}, c::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2357,7 +2395,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypbvwpc!(a::ComplexF64, x::ComplexTPS, y::ComplexTPS, b::ComplexF64, v::ComplexTPS, w::ComplexTPS, c::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b::ComplexF64, v::Ptr{TPS{ComplexF64}}, w::Ptr{TPS{ComplexF64}}, c::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc(a::ComplexF64, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b::ComplexF64, v::Ref{TPS{ComplexF64}}, w::Ref{TPS{ComplexF64}}, c::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2378,7 +2416,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_ax2pby2pcz2!(a::ComplexF64, x::ComplexTPS, b::ComplexF64, y::ComplexTPS, c::ComplexF64, z::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2(a::ComplexF64, x::Ptr{TPS{ComplexF64}}, b::ComplexF64, y::Ptr{TPS{ComplexF64}}, c::ComplexF64, z::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2(a::ComplexF64, x::Ref{TPS{ComplexF64}}, b::ComplexF64, y::Ref{TPS{ComplexF64}}, c::ComplexF64, z::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2397,7 +2435,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpsqrtbpcx2!(x::ComplexTPS, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2(x::Ptr{TPS{ComplexF64}}, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2(x::Ref{TPS{ComplexF64}}, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2416,7 +2454,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_logaxpsqrtbpcx2!(x::ComplexTPS, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2(x::Ptr{TPS{ComplexF64}}, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2(x::Ref{TPS{ComplexF64}}, a::ComplexF64, b::ComplexF64, c::ComplexF64, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2433,7 +2471,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_logxdy!(x::ComplexTPS, y::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_logxdy(x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_logxdy(x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2453,7 +2491,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpb_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, b_re::Cdouble, b_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpb_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpb_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2476,7 +2514,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpbypc_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, b_re::Cdouble, b_im::Cdouble, y::ComplexTPS, c_re::Cdouble, c_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpbypc_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, y::Ptr{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpbypc_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, y::Ref{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2497,7 +2535,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypb_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, y::ComplexTPS, b_re::Cdouble, b_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypb_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypb_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2521,7 +2559,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypbzpc_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, y::ComplexTPS, b_re::Cdouble, b_im::Cdouble, z::ComplexTPS, c_re::Cdouble, c_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypbzpc_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, z::Ptr{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypbzpc_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, z::Ref{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2546,7 +2584,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axypbvwpc_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, y::ComplexTPS, b_re::Cdouble, b_im::Cdouble, v::ComplexTPS, w::ComplexTPS, c_re::Cdouble, c_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, y::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, v::Ptr{TPS{ComplexF64}}, w::Ptr{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axypbvwpc_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, y::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, v::Ref{TPS{ComplexF64}}, w::Ref{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2570,7 +2608,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_ax2pby2pcz2_r!(a_re::Cdouble, a_im::Cdouble, x::ComplexTPS, b_re::Cdouble, b_im::Cdouble, y::ComplexTPS, c_re::Cdouble, c_im::Cdouble, z::ComplexTPS, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2_r(a_re::Cdouble, a_im::Cdouble, x::Ptr{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, y::Ptr{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, z::Ptr{TPS{ComplexF64}}, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_ax2pby2pcz2_r(a_re::Cdouble, a_im::Cdouble, x::Ref{TPS{ComplexF64}}, b_re::Cdouble, b_im::Cdouble, y::Ref{TPS{ComplexF64}}, c_re::Cdouble, c_im::Cdouble, z::Ref{TPS{ComplexF64}}, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2591,7 +2629,7 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_axpsqrtbpcx2_r!(x::ComplexTPS, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2_r(x::Ptr{TPS{ComplexF64}}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_axpsqrtbpcx2_r(x::Ref{TPS{ComplexF64}}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2612,12 +2650,12 @@ end
 - `r` -- Destination TPSA `r`
 """
 function mad_ctpsa_logaxpsqrtbpcx2_r!(x::ComplexTPS, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2_r(x::Ptr{TPS{ComplexF64}}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_logaxpsqrtbpcx2_r(x::Ref{TPS{ComplexF64}}, a_re::Cdouble, a_im::Cdouble, b_re::Cdouble, b_im::Cdouble, c_re::Cdouble, c_im::Cdouble, r::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
 """
-    mad_ctpsa_vec2fld!(na::Cint, a::ComplexTPS, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_vec2fld!(na::Cint, a::ComplexTPS, mc)
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the vector field (Hamilton's 
@@ -2630,13 +2668,16 @@ equations) from the passed Hamiltonian, defined as `[da/dp1, -da/dq1, ...]`
 ### Output
 - `mc`  -- Vector field derived from `a` using Hamilton's equations 
 """
-function mad_ctpsa_vec2fld!(na::Cint, a::ComplexTPS, mc::Vector{<:ComplexTPS})
-  @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_vec2fld!(na::Cint, a::ComplexTPS, mc)
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve mc begin
+  @ccall MAD_TPSA.mad_ctpsa_vec2fld(na::Cint, a::Ref{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_fld2vec!(na::Cint, ma::Vector{<:ComplexTPS}, c::ComplexTPS)
+    mad_ctpsa_fld2vec!(na::Cint, ma, c::ComplexTPS)
 
 Assuming the variables in the TPSA are canonically-conjugate, and ordered so that the canonically-
 conjugate variables are consecutive (q1, p1, q2, p2, ...), calculates the Hamiltonian one obtains 
@@ -2649,13 +2690,16 @@ from ther vector field (in the form `[da/dp1, -da/dq1, ...]`)
 ### Output
 - `c`   -- Hamiltonian as a TPSA derived from the vector field `ma`
 """
-function mad_ctpsa_fld2vec!(na::Cint, ma::Vector{<:ComplexTPS}, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_fld2vec!(na::Cint, ma, c::ComplexTPS)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
+  @ccall MAD_TPSA.mad_ctpsa_fld2vec(na::Cint, ma::Ptr{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_fgrad!(na::Cint, ma::Vector{<:ComplexTPS}, b::ComplexTPS, c::ComplexTPS)
+    mad_ctpsa_fgrad!(na::Cint, ma, b::ComplexTPS, c::ComplexTPS)
 
 Calculates `dot(ma, grad(b))`
 
@@ -2667,13 +2711,16 @@ Calculates `dot(ma, grad(b))`
 ### Output
 - `c`  -- `dot(ma, grad(b))`
 """
-function mad_ctpsa_fgrad!(na::Cint, ma::Vector{<:ComplexTPS}, b::ComplexTPS, c::ComplexTPS)
-  @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{TPS{ComplexF64}}, b::Ptr{TPS{ComplexF64}}, c::Ptr{TPS{ComplexF64}})::Cvoid
+function mad_ctpsa_fgrad!(na::Cint, ma, b::ComplexTPS, c::ComplexTPS)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
+  @ccall MAD_TPSA.mad_ctpsa_fgrad(na::Cint, ma::Ptr{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_liebra!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_liebra!(na::Cint, ma, mb, mc)
 
 Computes the Lie bracket of the vector fields `ma` and `mb`, defined as 
 sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
@@ -2686,13 +2733,18 @@ sum_i ma_i (dmb/dx_i) - mb_i (dma/dx_i).
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_ctpsa_liebra!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+function mad_ctpsa_liebra!(na::Cint, ma, mb, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_liebra(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_exppb!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_exppb!(na::Cint, ma, mb, mc)
 
 Computes the exponential of fgrad of the vector fields `ma` and `mb`,
 literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
@@ -2705,13 +2757,18 @@ literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ..
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_ctpsa_exppb!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+function mad_ctpsa_exppb!(na::Cint, ma, mb, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_logpb!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_logpb!(na::Cint, ma, mb, mc)
 
 Computes the log of the Poisson bracket of the vector of TPSA `ma` and `mb`; the result 
 is the vector field `F` used to evolve to `ma` from `mb`.
@@ -2724,12 +2781,17 @@ is the vector field `F` used to evolve to `ma` from `mb`.
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_ctpsa_logpb!(na::Cint, ma::Vector{<:ComplexTPS}, mb::Vector{<:ComplexTPS}, mc::Vector{<:ComplexTPS})
+function mad_ctpsa_logpb!(na::Cint, ma, mb, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_logpb(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 """
-    mad_ctpsa_mord(na::Cint, ma::Vector{<:ComplexTPS}, hi::Bool)::Cuchar
+    mad_ctpsa_mord(na::Cint, ma, hi::Bool)::Cuchar
 
 If `hi` is false, getting the maximum `mo` among all TPSAs in `ma`. 
 If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
@@ -2742,14 +2804,17 @@ If `hi` is `true`, gets the maximum `hi` of the map instead of `mo`
 ### Output
 - `ret` -- Maximum `hi` of the map if `hi` is `true`, else returns maximum `mo` of the map
 """
-function mad_ctpsa_mord(na::Cint, ma::Vector{<:ComplexTPS}, hi::Bool)::Cuchar
+function mad_ctpsa_mord(na::Cint, ma, hi::Bool)::Cuchar
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   ret = @ccall MAD_TPSA.mad_ctpsa_mord(na::Cint, ma::Ptr{TPS{ComplexF64}}, hi::Bool)::Cuchar
+  end
   return ret
 end
 
 
 """
-    mad_ctpsa_mnrm(na::Cint, ma::Vector{<:ComplexTPS})::Cdouble
+    mad_ctpsa_mnrm(na::Cint, ma)::Cdouble
 
 Computes the norm of the map (sum of absolute value of coefficients of all TPSAs in the map).
 
@@ -2760,14 +2825,17 @@ Computes the norm of the map (sum of absolute value of coefficients of all TPSAs
 ### Output
 - `nrm` -- Norm of map (sum of absolute value of coefficients of all TPSAs in the map)
 """
-function mad_ctpsa_mnrm(na::Cint, ma::Vector{<:ComplexTPS})::Cdouble
+function mad_ctpsa_mnrm(na::Cint, ma)::Cdouble
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  GC.@preserve ma begin
   nrm = @ccall MAD_TPSA.mad_ctpsa_mnrm(na::Cint, ma::Ptr{TPS{ComplexF64}})::Cdouble
+  end
   return nrm
 end
 
 
 """
-    mad_ctpsa_minv!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_minv!(na::Cint, ma, nb::Cint, mc)
 
 Inverts the map. To include the parameters in the inversion, `na` = `nn` and the output map 
 length only need be `nb` = `nv`.
@@ -2780,13 +2848,17 @@ length only need be `nb` = `nv`.
 ### Output
 - `mc` -- Inversion of map `ma`
 """
-function mad_ctpsa_minv!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, mc::Vector{<:ComplexTPS})
+function mad_ctpsa_minv!(na::Cint, ma, nb::Cint, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_minv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_pminv!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, mc::Vector{<:ComplexTPS}, select::Vector{Cint})
+    mad_ctpsa_pminv!(na::Cint, ma, nb::Cint, mc, select)
 
 Computes the partial inverse of the map with only the selected variables, specified by 0s or 1s in select.
 To include the parameters in the inversion, `na` = `nn` and the output map length only need be `nb` = `nv`.
@@ -2800,8 +2872,13 @@ To include the parameters in the inversion, `na` = `nn` and the output map lengt
 ### Output
 - `mc`     -- Partially inverted map using variables specified as 1 in the select array
 """
-function mad_ctpsa_pminv!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, mc::Vector{<:ComplexTPS}, select::Vector{Cint})
+function mad_ctpsa_pminv!(na::Cint, ma, nb::Cint, mc, select)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  eltype(select) == Cint || error("select must have eltype Cint !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_pminv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mc::Ptr{TPS{ComplexF64}}, select::Ptr{Cint})::Cvoid
+  end
 end
 
 
@@ -2820,12 +2897,17 @@ Composes two maps.
 - `mc` -- Composition of maps `ma` and `mb`
 """
 function mad_ctpsa_compose!(na::Cint, ma, nb::Cint, mb, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  GC.@preserve ma mb mc begin
   @ccall MAD_TPSA.mad_ctpsa_compose(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_translate!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, tb::Vector{ComplexF64}, mc::Vector{<:ComplexTPS})
+    mad_ctpsa_translate!(na::Cint, ma, nb::Cint, tb, mc)
 
 Translates the expansion point of the map by the amount `tb`.
 
@@ -2838,13 +2920,18 @@ Translates the expansion point of the map by the amount `tb`.
 ### Output
 - `mc` -- Map evaluated at the new point translated `tb` from the original evaluation point
 """
-function mad_ctpsa_translate!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, tb::Vector{ComplexF64}, mc::Vector{<:ComplexTPS})
+function mad_ctpsa_translate!(na::Cint, ma, nb::Cint, tb, mc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  eltype(tb) == ComplexF64 || error("tb must have eltype ComplexF64 !")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_translate(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_eval!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64})
+    mad_ctpsa_eval!(na::Cint, ma, nb::Cint, tb, tc)
 
 Evaluates the map at the point `tb`
 
@@ -2857,13 +2944,18 @@ Evaluates the map at the point `tb`
 ### Output
 - `tc` -- Values for each TPSA in the map evaluated at the point `tb`
 """
-function mad_ctpsa_eval!(na::Cint, ma::Vector{<:ComplexTPS}, nb::Cint, tb::Vector{ComplexF64}, tc::Vector{ComplexF64})
+function mad_ctpsa_eval!(na::Cint, ma, nb::Cint, tb, tc)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(tb) == ComplexF64 || error("tb must have eltype ComplexF64 !")
+  eltype(tc) == ComplexF64 || error("tc must have eltype ComplexF64 !")
+  GC.@preserve ma begin
   @ccall MAD_TPSA.mad_ctpsa_eval(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, tb::Ptr{ComplexF64}, tc::Ptr{ComplexF64})::Cvoid
+  end
 end
 
 
 """
-    mad_ctpsa_mconv!(na::Cint, ma::Vector{<:ComplexTPS}, nc::Cint, mc::Vector{<:ComplexTPS}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+    mad_ctpsa_mconv!(na::Cint, ma, nc::Cint, mc, n::Cint, t2r_, pb::Cint)
 
 Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the map `ma`.
 
@@ -2878,8 +2970,13 @@ Equivalent to `mad_tpsa_convert`, but applies the conversion to all TPSAs in the
 ### Output
 - `mc`   -- Map `mc` with specified conversions 
 """
-function mad_ctpsa_mconv!(na::Cint, ma::Vector{<:ComplexTPS}, nc::Cint, mc::Vector{<:ComplexTPS}, n::Cint, t2r_::Vector{Cint}, pb::Cint)
+function mad_ctpsa_mconv!(na::Cint, ma, nc::Cint, mc, n::Cint, t2r_, pb::Cint)
+  eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
+  eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
+  typeof(t2r_) == Ptr{Nothing} || eltype(t2r_) == Cint || error("t2r_ must have eltype Cint if provided!")
+  GC.@preserve ma mc begin
   @ccall MAD_TPSA.mad_ctpsa_mconv(na::Cint, ma::Ptr{TPS{ComplexF64}}, nc::Cint, mc::Ptr{TPS{ComplexF64}}, n::Cint, t2r_::Ptr{Cint}, pb::Cint)::Cvoid
+  end
 end
 
 
@@ -2897,7 +2994,7 @@ the header is not printed.
 - `stream_` -- (Optional) `FILE` pointer of output stream. Default is `stdout`
 """
 function mad_ctpsa_print(t::ComplexTPS, name_, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_ctpsa_print(t::Ptr{TPS{ComplexF64}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_print(t::Ref{TPS{ComplexF64}}, name_::Cstring, eps_::Cdouble, nohdr_::Cint, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
@@ -2951,7 +3048,7 @@ this library where the memory is managed NOT on the C side.
 - `t`       -- TPSA with coefficients scanned from `stream_`
 """
 function mad_ctpsa_scan_coef!(t::ComplexTPS, stream_::Ptr{Cvoid})
-  @ccall MAD_TPSA.mad_ctpsa_scan_coef(t::Ptr{TPS{ComplexF64}}, stream_::Ptr{Cvoid})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_scan_coef(t::Ref{TPS{ComplexF64}}, stream_::Ptr{Cvoid})::Cvoid
 end
 
 
@@ -2971,7 +3068,7 @@ Prints TPSA with all information of data structure.
 - `ret` -- `Cint` reflecting internal state of TPSA
 """
 function mad_ctpsa_debug(t::ComplexTPS, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
-  ret = @ccall MAD_TPSA.mad_ctpsa_debug(t::Ptr{TPS{ComplexF64}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
+  ret = @ccall MAD_TPSA.mad_ctpsa_debug(t::Ref{TPS{ComplexF64}}, name_::Cstring, fnam_::Cstring, line_::Cint, stream_::Ptr{Cvoid})::Cint
   return ret
 end
 
@@ -2987,7 +3084,7 @@ Sanity check of the TPSA integrity.
 - `ret`  -- True if valid TPSA, false otherwise
 """
 function mad_ctpsa_isval(t::ComplexTPS)::Bool
-  ret = @ccall MAD_TPSA.mad_ctpsa_isval(t::Ptr{TPS{ComplexF64}})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isval(t::Ref{TPS{ComplexF64}})::Bool
   return ret
 end
 
@@ -3003,7 +3100,7 @@ Sanity check of the TPSA integrity.
 - `ret`  -- True if valid TPSA, false otherwise
 """
 function mad_ctpsa_isvalid(t::ComplexTPS)::Bool
-  ret = @ccall MAD_TPSA.mad_ctpsa_isvalid(t::Ptr{TPS{ComplexF64}})::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_isvalid(t::Ref{TPS{ComplexF64}})::Bool
   return ret
 end
 
@@ -3014,7 +3111,7 @@ end
 Computes the ratio of `nz`/`nc` in `[0] U [lo,hi]` or `stat_`
 """
 function mad_ctpsa_density(t::ComplexTPS, stat_, reset::Bool)::Cdouble
-  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ptr{TPS{ComplexF64}}, stat_::Ptr{Cdouble}, reset::Bool)::Cdouble
+  ret = @ccall MAD_TPSA.mad_ctpsa_density(t::Ref{TPS{ComplexF64}}, stat_::Ptr{Cdouble}, reset::Bool)::Cdouble
   return ret
 end
 
@@ -3034,6 +3131,6 @@ the maximum order of the descriptor. `t` is modified in place and also returned.
 - `t`  -- TPSA initialized to descriptor `d` with maximum order `mo`
 """
 function mad_ctpsa_init!(t::ComplexTPS, d::Ptr{Desc}, mo::Cuchar)::ComplexTPS
-  t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ptr{TPS{ComplexF64}}, d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
+  t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ref{TPS{ComplexF64}}, d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return t
 end

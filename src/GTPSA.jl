@@ -14,6 +14,7 @@ import Base:  +,
               sqrt  ,
               exp   ,
               log   ,
+              log10 ,
               sin   ,
               cos   ,
               tan   ,
@@ -73,7 +74,7 @@ import Base:  +,
               floatmax,
               delete!
 
-import LinearAlgebra: norm, mul!
+import LinearAlgebra: norm, mul!, copy_oftype, copymutable_oftype
 import SpecialFunctions: erf, erfc, erfi, erfcx
 
 using GTPSA_jll, Printf, PrettyTables

@@ -168,7 +168,7 @@ end
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv,
   :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :erfcx, 
   :erfi, :wf, :sinc, :sincu, :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, 
-  :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
+  :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect, :log10)
 @eval begin
 ($t)(t1::TPS) = (t = zero(t1); $(Symbol(t,:!))(t, t1); return t)
 end
@@ -196,3 +196,4 @@ complex(tre::Real,    tim::TPS{Float64}) = (t = TPS{ComplexF64}(use=tim); comple
 # --- hypot ---
 hypot(a::TPS, b::Number...) = (t = TPS{Float64}(use=a); hypot!(t, a, b...); return t)
 hypot(a::TPS...) = (t = TPS{Float64}(use=a[1]); hypot!(t, a...); return t)
+

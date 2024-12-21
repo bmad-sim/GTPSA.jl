@@ -155,7 +155,7 @@ end
 for t = (:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv,
   :coth, :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :erfcx, 
   :erfi, :wf, :sinc, :sincu, :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, 
-  :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect)
+  :acsc, :acsch, :sec, :sech, :asec, :asech, :conj, :rect, :log10)
 @eval begin
 ($(Symbol("__t_",t)))(t1::TPS)     = (t = TempTPS{numtype(t1)}(t1); $(Symbol(t,:!))(t, t1); return t)
 ($(Symbol("__t_",t)))(t::TempTPS)  = ($(Symbol(t,:!))(t, t); return t)

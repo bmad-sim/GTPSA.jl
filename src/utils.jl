@@ -10,11 +10,22 @@ numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
 
 numparams(t::TPS) = unsafe_load(t.d).np
 numparams(d::Descriptor) = unsafe_load(d.desc).np
-numparams(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).np
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
 
 numnn(t::TPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
+
+# If the ar
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
+_promote_arrays_numtype(t::AbstractArray{TPS{U}}, ::Type{U}) where {U} = t
+_promote_arrays_numtype(t::AbstractArray{TPS{T}}, ::Type{U}) where {U,T} = TPS{U}.(t)
+
+function promote_arrays_numtype(arrays...)
+  return map(t->_promote_arrays_numtype(t, numtype(Base.promote_eltype(arrays...))), arrays)
+  #eltype(t) == Base.promote_eltype(arrays...) ? t : copy_oftype(t, Base.promote_eltype(arrays...)), arrays)
+end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
 function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}

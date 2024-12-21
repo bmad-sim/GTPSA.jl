@@ -85,13 +85,19 @@ The `@FastGTPSA`/`@FastGTPSA!` macros work by changes all arithmetic operators i
 
 All arithmetic operators are changed to `GTPSA.:<special symbols>`, e.g. `+` → `GTPSA.:±`. All non-arithmetic operators that are supported by GTPSA are then changed to `GTPSA.__t_<operator>`, e.g. `sin` → `GTPSA.__t_sin`, where the prefix `__t_` is also chosen somewhat arbitrarily. These operators are all defined in `fastgtpsa/operators.jl`, and when they encounter a TPS type, they use the temporaries, and when other number types are detected, they fallback to the regular, non-`__t_` operator. This approach works extraordinarily well, and introduces no problems externally because none of these functions/symbols are exported.
 
-## Calling the C-library with pointer-to-pointers
+## Calling the C-library with pointers and pointer-to-pointers
 
-All of the GTPSA map functions required a vector of `TPS` as input, in C `**tpsa`. In Julia, this works automatically for `Vector{<:Union{TPS64,ComplexTPS64}}` by specifying the C argument type in the C call as `::Ptr{TPS64}` or `::Ptr{ComplexTPS64}`. However, in some cases, one might have only a single `TPS64` and would like the call the corresponding map function without having to allocate an array. After some experimenting, I've found the following solution to have zero allocations, using `compose!` as an example:
+All of the GTPSA map functions require a vector of `TPS` as input, in C `**tpsa`. In Julia, this works automatically for `AbstractArray{<:Union{TPS64,ComplexTPS64}}` by specifying the C argument type in the C call as `::Ptr{TPS64}` or `::Ptr{ComplexTPS64}`. 
+However, this can be misleading to those C inputs which require `*tpsa`, e.g. also `::Ptr{TPS64}`. For consistency in the low level library interface, all *pointers* are specified as `::Ref{TPS64}` and `::Ref{ComplexTPS64}`, and *pointers-to-pointers* are specified as `Ptr`s. For single `TPS`s, the `cconvert` to `Ref` in the `ccall` is handled automatically.
 
+ However, in some cases, one might have only a single `TPS64` and would like the call the corresponding map functions without having to allocate an array. After some experimenting, I've found the following overrides to gives zero allocations:
 ```julia
-mad_compose!(na, ma::TPS64, nb, mb::AbstractVector{TPS64}, mc::TPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, r))
+Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objref(t))
 ```
+NOTE: We need to have a `GC.@preserve` before the cconvert to keep `t` valid! As such, you will see in all map functions a call to `GC.@preserve`. 
+
+This override is only necessary for the mutable `TPS`. The other array inputs of `isbits` types are ok and basically have the above defined for them. See [this discussion for more details](https://github.com/JuliaLang/julia/issues/56873#event-15727452235).
 
 ## Low-Level
 
