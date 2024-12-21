@@ -43,8 +43,8 @@ function compare(fun_decs_c, fun_decs_jl)
     fun_jl = funs_jl[idx_jl]
     used[idx_jl] = 1
     types_c_to_jl = c_to_jl_type.(fun_c.types)
-    if (c_to_jl_type(fun_c.ret) != fun_jl.ret)
-      println(io_out, "$(fun_c.name): Different returns types! C: $(fun_c.ret) => $(c_to_jl_type(fun_c.ret)) not equal to Julia $(fun_jl.ret)")
+    if (c_to_jl_type(fun_c.ret,true) != fun_jl.ret)
+      println(io_out, "$(fun_c.name): Different returns types! C: $(fun_c.ret) => $(c_to_jl_type(fun_c.ret,true)) not equal to Julia $(fun_jl.ret)")
     end
     if (length(fun_c.types) != length(fun_jl.types))
       println(io_out, "$(fun_c.name): Number of C variables different from number of Julia variables! Skipping variable check...")
@@ -65,10 +65,10 @@ function compare(fun_decs_c, fun_decs_jl)
 end
 
 
-function c_to_jl_type(type_c)
+function c_to_jl_type(type_c, return_type=false)
   type_jl = ""
   ptr = findfirst("*", type_c)
-  if !isnothing(ptr)
+  if !isnothing(ptr) && !occursin("tpsa_t", type_c) 
     type_jl = type_jl * "Ptr{"
   end
 
@@ -92,10 +92,14 @@ function c_to_jl_type(type_c)
     type_jl = type_jl * "Cuchar"
   elseif occursin("desc_t", type_c)
     type_jl = type_jl * "Desc"
+  elseif occursin("ctpsa_t**", type_c)
+    type_jl = type_jl * "Ptr{TPS{ComplexF64}}"
   elseif occursin("ctpsa_t", type_c)
-    type_jl = type_jl * "TPS{ComplexF64}"
+    return_type ? type_jl = type_jl * "Ptr{TPS{ComplexF64}}" : type_jl = type_jl * "Ref{TPS{ComplexF64}}"
+  elseif occursin("tpsa_t**", type_c)
+    type_jl = type_jl * "Ptr{TPS{Float64}}"
   elseif occursin("tpsa_t", type_c)
-    type_jl = type_jl * "TPS{Float64}"
+    return_type ? type_jl = type_jl * "Ptr{TPS{Float64}}" : type_jl = type_jl * "Ref{TPS{Float64}}"
   elseif occursin("FILE", type_c)
     type_jl = type_jl * "Cvoid"
   elseif occursin("void", type_c)
@@ -103,7 +107,7 @@ function c_to_jl_type(type_c)
   else
     println(io_out, "ERROR TYPE NOT FOUND! type_c = $(type_c)")
   end
-  if !isnothing(ptr)
+  if !isnothing(ptr) && !occursin("tpsa_t", type_c) 
     type_jl = type_jl * "}"
   end
 

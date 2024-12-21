@@ -448,20 +448,19 @@ Creates a TPS{ComplexF64} with real and imaginary parts from the TPS{Float64}s `
 - `r`   -- Destination TPS{ComplexF64} with `r = re_ + im*im_`
 """
 function mad_ctpsa_cplx!(re_, im_, r::ComplexTPS)
-  if typeof(re_) == Ptr{Nothing}
-    if typeof(im_) == Ptr{Nothing}
-      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
+  if typeof(re_) != Ptr{Nothing}
+    if typeof(im_) != Ptr{Nothing}
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
     else
-      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
     end
   else
-    if typeof(im_) == Ptr{Nothing}
-      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
+    if typeof(im_) != Ptr{Nothing}
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
     else
-      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ref{TPS{Float64}}, im_::Ref{TPS{Float64}}, r::Ref{TPS{ComplexF64}})::Cvoid
+      @ccall MAD_TPSA.mad_ctpsa_cplx(re_::Ptr{Cvoid}, im_::Ptr{Cvoid}, r::Ref{TPS{ComplexF64}})::Cvoid
     end
-  end
-  
+  end  
 end
 
 
