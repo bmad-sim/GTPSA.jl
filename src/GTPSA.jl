@@ -74,7 +74,7 @@ import Base:  +,
               floatmax,
               delete!
 
-import LinearAlgebra: norm, mul!
+import LinearAlgebra: norm, mul!, copy_oftype, copymutable_oftype
 import SpecialFunctions: erf, erfc
 
 using GTPSA_jll, Printf, PrettyTables

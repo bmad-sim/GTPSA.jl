@@ -223,10 +223,10 @@ function show(io::IO, t::TPS)
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
-show(io::IO, m::Vector{<:TPS}) = show_vec(io, m)
-show(io::IO, ::MIME"text/plain", m::Vector{<:TPS}) = show_vec(io, m)
+show(io::IO, m::AbstractArray{<:TPS}) = show_vec(io, m)
+show(io::IO, ::MIME"text/plain", m::AbstractArray{<:TPS}) = show_vec(io, m)
 
-function show_vec(io::IO, m::Vector{<:TPS})
+function show_vec(io::IO, m::AbstractArray{<:TPS})
   N = length(m)
   lines_used=Ref{Int}(0)
   if N < 1
@@ -265,7 +265,7 @@ end
 
 # WARNING: only_vars should ONLY be set by developers who know what they're doing!
 # Same for varnames!
-function show_map!(io::IO, m::Vector{<:TPS}, lines_used::Ref=Ref{Int}(0), only_vars=false, varnames=1:length(m))
+function show_map!(io::IO, m::AbstractArray{<:TPS}, lines_used::Ref=Ref{Int}(0), only_vars=false, varnames=1:length(m))
   N = only_vars ? min(numvars(first(m)),length(m)) : length(m)
   length(varnames)== N  || error("invalid varnames length")
   tf_GTPSA = TextFormat(up_right_corner     = '-',
@@ -309,16 +309,16 @@ function show_map!(io::IO, m::Vector{<:TPS}, lines_used::Ref=Ref{Int}(0), only_v
   cols = length(out[1,:])
   if GTPSA.show_sparse
     if eltype(m) == TPS{Float64}
-      println(io, "  Out  Coefficient                Order   Monomial")
+      println(io, " Index Coefficient                Order   Monomial")
     elseif eltype(m) == TPS{ComplexF64}
-      println(io, "  Out  Real                     Imag                       Order   Monomial")
+      println(io, " Index Real                     Imag                       Order   Monomial")
     end
   else
     if eltype(m) == TPS{Float64}
-      println(io, "  Out  Coefficient                Order   Exponent")
+      println(io, " Index Coefficient                Order   Exponent")
       cols += 105
     elseif eltype(m) == TPS{ComplexF64}
-      println(io, "  Out  Real                     Imag                       Order   Exponent")
+      println(io, " Index Real                     Imag                       Order   Exponent")
       cols += 108
     end
   end
