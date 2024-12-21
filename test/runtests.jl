@@ -6247,6 +6247,9 @@ end
   Comparing mad_tpsa.h to rtpsa.jl...
   mad_ctpsa.h downloaded.
   Comparing mad_ctpsa.h to ctpsa.jl...
+  mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
+  mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
+  mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
   """
   @test compare_MAD() == expected_out
 end
