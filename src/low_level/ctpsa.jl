@@ -1935,6 +1935,50 @@ function mad_ctpsa_erfc!(a::ComplexTPS, c::ComplexTPS)
   @ccall MAD_TPSA.mad_ctpsa_erfc(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
+"""
+    mad_ctpsa_erfcx!(a::ComplexTPS, c::ComplexTPS)
+
+Sets TPSA `c` to the `erfcx` of TPSA `a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `c` -- Destination TPSA `c = erfcx(a)`
+"""
+function mad_ctpsa_erfcx!(a::ComplexTPS, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_erfcx(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+"""
+    mad_ctpsa_erfi!(a::ComplexTPS, c::ComplexTPS)
+
+Sets TPSA `c` to the `erfi` of TPSA `a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `c` -- Destination TPSA `c = erfi(a)`
+"""
+function mad_ctpsa_erfi!(a::ComplexTPS, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_erfi(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+"""
+    mad_ctpsa_wf!(a::ComplexTPS, c::ComplexTPS)
+
+Sets TPSA `c` to the Fadeeva function `wf` of TPSA `a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `c` -- Destination TPSA `c = wf(a)`
+"""
+function mad_ctpsa_wf!(a::ComplexTPS, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_wf(a::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
 
 """
     mad_ctpsa_acc!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)

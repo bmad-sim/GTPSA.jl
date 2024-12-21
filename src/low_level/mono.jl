@@ -249,6 +249,51 @@ end
 
 
 """
+    mad_mono_ok(n::Cint, a, b)::Bool
+
+Returns `true` if the sum of all orders in `a` (order of `a`) is less than or equal to the single maximum 
+order in `b`.
+
+### Input
+- `n`   -- Length of monomials
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
+
+### Output
+- `ret` -- `true` if `sum(a) <= max(b)`
+"""
+function mad_mono_ok(n::Cint, a, b)::Bool
+  eltype(a) == Cuchar || error("a must have eltype Cuchar !")
+  eltype(b) == Cuchar || error("b must have eltype Cuchar !")
+  ret = @ccall MAD_TPSA.mad_mono_ok(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Bool
+  return ret
+end
+
+
+"""
+    mad_mono_ok_(n::Cint, a, b)::Bool
+
+Returns `true` if the sum of only nonzero orders in `a` (order of `a`) is less than or equal to the 
+single maximum order in `b` *considering only those nonzero variables as a*
+
+### Input
+- `n`   -- Length of monomials
+- `a`   -- Monomial `a`
+- `b`   -- Monomial `b`
+
+### Output
+- `ret` -- `true` if `sum(a[a .!= 0]) <= max(b[a .!= 0])`
+"""
+function mad_mono_ok_(n::Cint, a, b)::Bool
+  eltype(a) == Cuchar || error("a must have eltype Cuchar !")
+  eltype(b) == Cuchar || error("b must have eltype Cuchar !")
+  ret = @ccall MAD_TPSA.mad_mono_ok_(n::Cint, a::Ptr{Cuchar}, b::Ptr{Cuchar})::Bool
+  return ret
+end
+
+
+
+"""
     mad_mono_cmp(n::Cint, a, b)::Cint
 
 Compares monomial `a` to monomial `b`, and returns the first difference in the lowest order variables.
