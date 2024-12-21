@@ -1387,7 +1387,7 @@ Sets TPSA `c` to the `erfcx` of TPSA `a`.
 - `c` -- Destination TPSA `c = erfcx(a)'
 """
 function mad_tpsa_erfcx!(a::RealTPS, c::RealTPS)
-  @ccall MAD_TPSA.mad_tpsa_erfcx(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_erfcx(a::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -1403,7 +1403,7 @@ Sets TPSA `c` to the `erfi` of TPSA `a`.
 - `c` -- Destination TPSA `c = erfi(a)'
 """
 function mad_tpsa_erfi!(a::RealTPS, c::RealTPS)
-  @ccall MAD_TPSA.mad_tpsa_erfi(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_erfi(a::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -1419,7 +1419,7 @@ Sets TPSA `c` to the Fadeeva function `wf` of TPSA `a`.
 - `c` -- Destination TPSA `c = wf(a)'
 """
 function mad_tpsa_wf!(a::RealTPS, c::RealTPS)
-  @ccall MAD_TPSA.mad_tpsa_wf(a::Ptr{TPS{Float64}}, c::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_wf(a::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
 
