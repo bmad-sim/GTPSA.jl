@@ -120,6 +120,8 @@ numtype
 
 numtype(::Type{TPS{T}}) where {T} = T
 numtype(::TPS{T}) where {T} = T
+numtype(::Type{T}) where {T<:Number} = T
+numtype(::T) where {T<:Number} = T
 
 promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
 promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}

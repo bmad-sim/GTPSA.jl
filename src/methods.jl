@@ -54,76 +54,68 @@ end
 
 
 # --- Evaluate ---
-mad_eval!(na, ma::AbstractArray{<:RealTPS},    nb, tb::AbstractArray{Float64},    tc::AbstractArray{Float64})    = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
-mad_eval!(na, ma::AbstractArray{<:ComplexTPS}, nb, tb::AbstractArray{ComplexF64}, tc::AbstractArray{ComplexF64}) = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
+mad_eval!(na, ma::Union{AbstractArray{TPS{T}},TPS{T}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:Float64} = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
+mad_eval!(na, ma::Union{AbstractArray{TPS{T}},TPS{T}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:ComplexF64} = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
 
-# Note that the cconvert here only will  work on TPS, not TempTPS
-# tc here will be a Ref
-mad_eval!(na, ma::TPS64,        nb, tb::AbstractArray{Float64},    tc::Ref{Float64})    = GC.@preserve ma @ccall MAD_TPSA.mad_tpsa_eval(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, tb::Ptr{Float64}, tc::Ptr{Float64})::Cvoid
-mad_eval!(na, ma::ComplexTPS64, nb, tb::AbstractArray{ComplexF64}, tc::Ref{ComplexF64}) = GC.@preserve ma @ccall MAD_TPSA.mad_ctpsa_eval(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, tb::Ptr{Float64}, tc::Ptr{ComplexF64})::Cvoid
+#mad_eval!(na, ma::TPS{T}, nb, tb::AbstractArray{T}, tc::Ref{T}) where {T<:Float64} = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
+#mad_eval!(na, ma::TPS{T}, nb, tb::AbstractArray{T}, tc::Ref{T}) where {T<:ComplexF64} = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
 
-"""
-    evaluate!(y::Union{AbstractVector{T},Ref{T}}, F::Union{AbstractVector{
-      TPS{T}},TPS{T}}, x::AbstractVector{<:Number}) where {T} -> y
-
-Evaluates the scalar or vector function `F` at the point `x`, and fills `y` with the result. 
-"""
-evaluate!
 
 """
-    evaluate(F::Union{AbstractVector{TPS{T}},TPS{T}}, x::AbstractVector{T}) where {T}
+    evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractArray{TPS{T}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64}} -> y
+  
+Evaluates the `TPS` function `m` at the point `x` and fills `y` with the result.
+"""
+function evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractArray{TPS{T}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64}}
+  ny = length(y)
+  n = length(m)
+  nx = length(x)
 
-Evaluates the scalar or vector function `F` at the point `x`, and returns the result.
+  ny == n || error("Incorrect output length, received length $ny but need $n")
+  numnn(first(m)) == nx || error("Not enough input arguments")
+  ismutable(y) || error("Output y must be mutable!")
+  !(y === x) || error("Cannot evaluate!(y, m, x) with y === x")
+
+  mad_eval!(n, m, nx, x, y)
+  return y
+end
+
+
+"""
+    evaluate(m::Union{TPS,AbstractArray{<:TPS}}, x::AbstractArray{<:Number})
+
+Evaluates the `TPS` function `m` at the result `x`.
 """
 evaluate
 
-# Vector function ---
-function evaluate!(y::AbstractVector{T}, F::AbstractVector{TPS{T}}, x::AbstractVector{T}) where {T}
-  Base.require_one_based_indexing(y, F, x)
-  require_mutable(y, x)
-  length(x) == numnn(first(F)) || error("Not enough input arguments")
-  length(y) == length(F) || error("Not enough output arguments")
-  # If the TPS vector function is immutable, we can just evaluate each (mutable) TPS element
-  if ismutable(F)
-    mad_eval!(length(F), F, length(x), x, y)
-  else
-    for i=1:length(y)
-
-    end
-  end
+function evaluate(m::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
+  (mprom, xprom) = promote_arrays_numtype(m, x)
+  y = copymutable_oftype(xprom, eltype(xprom))
+  evaluate!(y, mprom, xprom)
   return y
 end
 
-function evaluate(F::AbstractVector{TPS{T}}, x::AbstractVector{<:Number}) where {T}
-  y = similar(x, T, length(F)); 
-  # Mutable input x is necessary for the C library
-  x1 = (eltype(x) == T && ismutable(x)) ? x : LinearAlgebra.copymutable_oftype(x, T)
-  evaluate!(y, F, x1); 
-  return y
+function evaluate(f::TPS, x::AbstractArray{<:Number})
+  T = promote_type(typeof(f), eltype(x))
+  T == typeof(f) ? fprom = f : fprom = T(f)
+  numtype(T) == eltype(x) ? xprom = x : xprom = numtype(T).(x)
+  g = Ref{numtype(T)}() #(use=f)
+  evaluate!(g, fprom, xprom)
+  return g[]
 end
-
-# Scalar function ---
-function evaluate!(y::Ref{T}, f::TPS{T}, x::Vector{<:Number}) where {T}
-  length(x) == numnn(f) || error("Not enough input arguments")
-  mad_eval!(1, f, length(x), convert(Vector{T}, x), y)
-  return y
-end
-
-evaluate(f::TPS{T}, x::Vector{<:Number}) where {T} = (y = Ref{T}(); evaluate!(y, f, x); return y[])
-
 
 
 # --- F . grad ---
 """
-    fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}} -> g
+    fgrad!(g::T, F::AbstractArray{<:T}, h::T) where {T<:TPS} -> g
 
 Calculates `F⋅∇h` and sets `g` equal to the result.
 """
-function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
-  Base.require_one_based_indexing(F)
+function fgrad!(g::T, F::AbstractArray{<:T}, h::T) where {T<:TPS} 
   nv = numvars(h)
-  @assert length(F) == nv "Incorrect length of F; received $(length(F)), should be $nv"
-  @assert !(g === h) "Aliasing g === h not allowed for fgrad!"
+  length(F) == nv || error("Incorrect length of F; received $(length(F)), should be $nv")
+  !(g === h) || error("Cannot fgrad!(g, F, h) with g === h")
+  
   if numtype(T) != Float64
       GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
   else
@@ -133,17 +125,18 @@ function fgrad!(g::T, F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, Com
 end
   
 """
-    fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{TPS64,ComplexTPS64}}
+    fgrad(F::AbstractArray{<:TPS}, h::TPS)
 
 Calculates `F⋅∇h`.
 """
-function fgrad(F::AbstractVector{<:T}, h::T) where {T<:Union{RealTPS, ComplexTPS}} 
-  g = zero(h)
-  fgrad!(g, F, h)
+function fgrad(F::AbstractArray{<:TPS}, h::TPS)
+  T = promote_type(typeof(h), eltype(F))
+  T == typeof(h) ? hprom = h : hprom = T(h)
+  numtype(T) == eltype(F) ? Fprom = F : Fprom = numtype(T).(F)
+  g = zero(hprom)
+  fgrad!(g, Fprom, hprom)
   return g
 end
-
-
 
 
 # --- Integral ---
@@ -397,17 +390,21 @@ scalar(t::TPS) = t[0]
 scalar(t::Number) = t[1]
 
 # --- composition ---
-mad_compose!(na, ma::T, nb, mb::AbstractArray{TPS64}, mc::T) where {T<:Union{AbstractArray{TPS64},TPS64}} = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
-mad_compose!(na, ma::T, nb, mb::AbstractArray{ComplexTPS64}, mc::T) where {T<:Union{AbstractArray{ComplexTPS64},ComplexTPS64}} = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{T},T}, nb, mb::AbstractArray{T}, mc::Union{AbstractArray{T},T}) where {T<:TPS64}        = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{T},T}, nb, mb::AbstractArray{T}, mc::Union{AbstractArray{T},T}) where {T<:ComplexTPS64} = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
-function compose!(m::T, m2::T, m1::AbstractVector{U}) where {U<:Union{TPS64,ComplexTPS64}, T<:Union{AbstractVector{U},U}}
-  Base.require_one_based_indexing(m, m2, m1)
+"""
+    compose!(m::Union{AbstractArray{T},T}, m2::Union{AbstractArray{T},T}, m1::AbstractArray{T}) where {T<:Union{TPS64,ComplexTPS64}} -> m
+
+Composes the `TPS`s `m2 ∘ m1`, and stores the result in-place in `m`. 
+"""
+function compose!(m::Union{AbstractArray{T},T}, m2::Union{AbstractArray{T},T}, m1::AbstractArray{T}) where {T<:Union{TPS64,ComplexTPS64}}
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
 
   # Checks:
-  n == n2 || error("Incorrect output length, received length $(length(m)) but need $(length(m2))")
+  n == n2 || error("Incorrect output length, received length $n but need $n2")
   numnn(first(m2)) == n1 || error("Not enough input arguments")
   !(m === m1) || error("Cannot compose!(m, m2, m1) with m === m1")
 
@@ -415,56 +412,79 @@ function compose!(m::T, m2::T, m1::AbstractVector{U}) where {U<:Union{TPS64,Comp
   return m
 end
 
+"""
+    compose(m2::Union{TPS,AbstractArray{<:TPS}}, m1::AbstractArray{<:TPS})
+
+Composes the `TPS`s `m2 ∘ m1`
+"""
+compose
+
 function compose(m2::AbstractArray{<:TPS}, m1::AbstractArray{<:TPS})
-  (m2prom, m1prom) = promote_to_mutable_arrays(m2, m1)
+  (m2prom, m1prom) = promote_arrays_numtype(m2, m1)
   m = similar(m2prom)
   for i in eachindex(m)
     m[i] = eltype(m2prom)(use=first(m2prom))
   end
-  compose!(m, m2, m1)
+  compose!(m, m2prom, m1prom)
   return m
 end
 
 function compose(f::TPS, m1::AbstractArray{<:TPS})
   T = promote_type(typeof(f), eltype(m1))
+  T == typeof(f) ? fprom = f : fprom = T(f)
+  T == eltype(m1) ? m1prom = m1 : m1prom = T.(m1)
   g = T(use=f)
-  compose!(g, f, m1)
+  compose!(g, fprom, m1prom)
+  return g
 end
 
-∘(m2::Union{TPS,AbstractVector{<:TPS}}, m1::AbstractVector{<:TPS}) = compose(m2, m1)
+∘(m2::Union{TPS,AbstractArray{<:TPS}}, m1::AbstractArray{<:TPS}) = compose(m2, m1)
 
 # --- translate ---
-mad_translate!(na, ma::Vector{TPS{Float64}},    nb, tb, mc::Vector{TPS{Float64}})    = mad_tpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{Float64}, tb), mc)
-mad_translate!(na, ma::Vector{TPS{ComplexF64}}, nb, tb, mc::Vector{TPS{ComplexF64}}) = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), convert(Vector{ComplexF64}, tb), mc)
-
-# This is for translating single TPSs with ZERO allocations:
-#mad_compose!(na, ma::TPS64,        nb, tb::AbstractVector{TPS64},        mc::TPS64)        = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{TPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
-#mad_compose!(na, ma::ComplexTPS64, nb, tb::AbstractVector{ComplexTPS64}, mc::ComplexTPS64) = GC.@preserve ma mc @ccall MAD_TPSA.mad_tpsa_compose(Cint(na)::Cint, Ref(pointer_from_objref(ma))::Ptr{Cvoid}, Cint(nb)::Cint, mb::Ptr{ComplexTPS64}, Ref(pointer_from_objref(mc))::Ptr{Cvoid})::Cvoid
+mad_translate!(na, ma::Union{AbstractArray{T},T}, nb, tb::AbstractArray{Float64},    mc::Union{AbstractArray{T},T}) where {T<:TPS64}        = mad_tpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
+mad_translate!(na, ma::Union{AbstractArray{T},T}, nb, tb::AbstractArray{ComplexF64}, mc::Union{AbstractArray{T},T}) where {T<:ComplexTPS64} = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
 
 """
-    translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T} -> m
+    translate!(m::Union{AbstractArray{T},T}, m1::Union{AbstractArray{T},T}, x::AbstractArray{U}) where {U<:Union{Float64,ComplexF64},T<:TPS{U}} -> m
 
-Fills `m` with the vector function equal to `m1` with its expansion point translated by `x`.
+Sets `m` to `m1` with its expansion point translated by `x`.
 """
-function translate!(m::Vector{<:TPS{T}}, m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
-  numnn(first(m1)) == length(x) || error("Not enough input arguments!")
-  length(m) == length(m1) || error("Incorrect output length (should be $(length(m1)), received $(length(m)))")
-  mad_translate!(length(m1), m1, length(x), x, m)
+function translate!(m::Union{AbstractArray{T},T}, m1::Union{AbstractArray{T},T}, x::AbstractArray{U}) where {U<:Union{Float64,ComplexF64},T<:TPS{U}}
+  n = length(m)
+  n1 = length(m1)
+  nx = length(x)
+
+  # Checks:
+  n == n1 || error("Incorrect output length, received length $n but need $n1")
+  numnn(first(m1)) == nx || error("Not enough input arguments")
+  !(m === m1) || error("Cannot translate!(m, m1, x) with m === m1")
+
+  mad_translate!(n1, m1, nx, x, m)
   return m
 end
 
 """
-    translate(m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
+    translate(m1::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
 
-returns a vector function equal to `m1` with its expansion point translated by `x`.
+Translates the expansion point of `m1` by `x`.
 """
-function translate(m1::Vector{<:TPS{T}}, x::Vector{<:Number}) where {T}
-  n = length(m1)
-  m = Vector{TPS{T}}(undef, n)
-  desc = getdesc(first(m1))
-  for i=1:n
-    @inbounds m[i] = TPS{T}(use=desc)
+translate
+
+function translate(m1::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
+  (m1prom, xprom) = promote_arrays_numtype(m1, x)
+  m = similar(m1prom)
+  for i in eachindex(m)
+    m[i] = eltype(m1prom)(use=first(m1prom))
   end
-  translate!(m, m1, x)
+  translate!(m, m1prom, xprom)
   return m
+end
+
+function translate(f::TPS, x::AbstractArray{<:Number})
+  T = promote_type(typeof(f), eltype(x))
+  T == typeof(f) ? fprom = f : fprom = T(f)
+  numtype(T) == eltype(x) ? xprom = x : xprom = numtype(T).(x)
+  g = T(use=f)
+  translate!(g, fprom, xprom)
+  return g
 end

@@ -16,11 +16,14 @@ numnn(t::TPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
-_promote_to_mutable_arrays(t::AbstractArray{T}, ::Type{T}) where {T} = ismutable(t) ? t : copymutable_oftype(t,T)
-_promote_to_mutable_arrays(t::AbstractArray{T}, ::Type{U}) where {T,U} = copymutable_oftype(t, U)
+# If the ar
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
+_promote_arrays_numtype(t::AbstractArray{TPS{U}}, ::Type{U}) where {U} = t
+_promote_arrays_numtype(t::AbstractArray{TPS{T}}, ::Type{U}) where {U,T} = TPS{U}.(t)
 
-function promote_to_mutable_arrays(arrays...)
-  return map(t->_promote_to_mutable_arrays(t, Base.promote_eltype(arrays...)), arrays)
+function promote_arrays_numtype(arrays...)
+  return map(t->_promote_arrays_numtype(t, numtype(Base.promote_eltype(arrays...))), arrays)
   #eltype(t) == Base.promote_eltype(arrays...) ? t : copy_oftype(t, Base.promote_eltype(arrays...)), arrays)
 end
 
