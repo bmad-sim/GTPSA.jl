@@ -132,7 +132,7 @@ Base.broadcastable(o::TempTPS) = Ref(o)
 # NOTE: for some reason, merely overloading this function causes allocations 
 # in Julia 1.9. This is not the case in 1.10, so presumably this is a bug.
 # Therefore, allocation tests only are performed on >=1.10
-function Base.setindex!(A::Array{T}, x::TempTPS, i1::Int) where {T<:TPS}
+function Base.setindex!(A::(Array{TPS{T}} where {T <: Union{Float64, ComplexF64}}), x::TempTPS, i1::Int)
   copy!(A[i1], x)
   rel_temp!(x)
 end
