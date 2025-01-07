@@ -318,7 +318,7 @@ end
 # --- gradient, jacobian, hessian getters ---
 
 """
-    GTPSA.gradient!(result, t::TPS; include_params=false)
+    GTPSA.gradient!(result, t::TPS; include_params=false, unsafe_inbounds=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the TPS and fills the `result` 
 vector in-place. The partial derivatives wrt the parameters will also be extracted 
@@ -327,22 +327,23 @@ calculating anything - just extracting the first-order monomial coefficients alr
 in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS64` to extract the gradient from
-- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `t`               -- `TPS`/`ComplexTPS64` to extract the gradient from
+- `include_params`  -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `unsafe_inbounds` -- (Optional) Flag which, if false, ignores checking the size of `result`. The size of `result` is used to index the `TPS`. Default is `false`
 
 ### Output
 - `result`         -- Vector to fill with the gradient of the TPS, must be 1-based indexing
 """
-function gradient!(result, t::TPS; include_params=false)
+function gradient!(result, t::TPS; include_params=false, unsafe_inbounds=false)
   Base.require_one_based_indexing(result)
   n = numvars(t)
   if include_params
     n += numparams(t)
   end
-  if length(result) != n
+  if !unsafe_inbounds && length(result) != n
     error("Incorrect size for result")
   end
-  getv!(t, 1, n, result)
+  getv!(t, 1, length(result), result)
   return
 end
 
@@ -372,7 +373,7 @@ function gradient(t::TPS; include_params=false)
 end
 
 """
-    GTPSA.jacobian!(result, m::AbstractArray{<:TPS}; include_params=false)
+    GTPSA.jacobian!(result, m::AbstractArray{<:TPS}; include_params=false, unsafe_inbounds=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the array of TPSs. 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -381,26 +382,27 @@ is not calculating anything - just extracting the first-order monomial coefficie
 in the TPSs.
 
 ### Input
-- `m`              -- Array of TPSs to extract the Jacobian from, must be 1-based indexing
-- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `m`               -- Array of TPSs to extract the Jacobian from, must be 1-based indexing
+- `include_params`  -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `unsafe_inbounds` -- (Optional) Flag which, if false, ignores checking the size of `result`. The size of `result` is used to index the `TPS`. Default is `false`
 
 ### Output
 - `result`         -- Matrix to fill with the Jacobian of `m`, must be 1-based indexing
 """
-function jacobian!(result, m::AbstractArray{<:TPS}; include_params=false)
+function jacobian!(result, m::AbstractArray{<:TPS}; include_params=false, unsafe_inbounds=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
   
-  if size(result) != (length(m), n)
+  if !unsafe_inbounds && size(result) != (length(m), n)
     error("Incorrect size for result")
   end
 
 
-  for i=1:n
-    for j=1:length(m)
+  for i=1:size(result, 2)
+    for j=1:size(result, 1)
       result[j,i] = geti(m[j], i)
     end
   end
@@ -434,7 +436,7 @@ function jacobian(m::AbstractArray{<:TPS}; include_params=false)
 end
 
 """
-    GTPSA.jacobiant!(result, m::AbstractArray{<:TPS}; include_params=false)
+    GTPSA.jacobiant!(result, m::AbstractArray{<:TPS}; include_params=false, unsafe_inbounds=false)
 
 Extracts the first-order partial derivatives (evaluated at 0) from the array of TPSs, 
 as the transpose of the Jacobian. The partial derivatives wrt the parameters will also 
@@ -443,23 +445,24 @@ not calculating anything - just extracting the first-order monomial coefficients
 in the TPSs and filling `result`.
 
 ### Input
-- `m`              -- Vector of TPSs to extract the Jacobian from, must be 1-based indexing
-- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `m`               -- Vector of TPSs to extract the Jacobian from, must be 1-based indexing
+- `include_params`  -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `unsafe_inbounds` -- (Optional) Flag which, if false, ignores checking the size of `result`. The size of `result` is used to index the `TPS`. Default is `false`
 
 ### Output
 - `result`         -- Matrix to fill with the transpose of the Jacobian of `m`, must be 1-based indexing
 """
-function jacobiant!(result, m::AbstractArray{<:TPS}; include_params=false)
+function jacobiant!(result, m::AbstractArray{<:TPS}; include_params=false, unsafe_inbounds=false)
   Base.require_one_based_indexing(result, m)
   n = numvars(first(m))
   if include_params
     n += numparams(first(m))
   end
-  if size(result) != (n, length(m))
+  if !unsafe_inbounds && size(result) != (n, length(m))
     error("Incorrect size for result")
   end
-  for i=1:length(m)
-    getv!(m[i], 1, n, pointer(result, n*(i-1)+1))
+  for i=1:size(result, 2)
+    getv!(m[i], 1, size(result, 1), pointer(result, size(result, 1)*(i-1)+1))
   end
 end
 
@@ -492,7 +495,7 @@ end
 
 
 """
-    GTPSA.hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,Vector{UInt8}}=nothing, unsafe_fast::Bool=false)
+    GTPSA.hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,Vector{UInt8}}=nothing, unsafe_fast=false, unsafe_inbounds=false)
 
 Extracts the second-order partial derivatives (evaluated at 0) from the TPS 
 and fills the `result` matrix in-place. The partial derivatives wrt the parameters will 
@@ -501,21 +504,27 @@ is not calculating anything - just extracting the second-order monomial coeffici
 in the TPS.
 
 ### Input
-- `t`              -- `TPS`/`ComplexTPS64` to extract the Hessian from
-- `include_params` -- (Optional) Extract partial derivatives wrt parameters. Default is false
-- `tmp_mono`       -- (Optional) `Vector{UInt8}` to store the monomial, when different orders of truncation are used
-- `unsafe_fast`    -- (Optional) Flag to specify that "fast" indexing should be used without checking. This will give incorrect results if any variable has a TO < 2. Default is `false`.
+- `t`               -- `TPS`/`ComplexTPS64` to extract the Hessian from
+- `include_params`  -- (Optional) Extract partial derivatives wrt parameters. Default is false
+- `tmp_mono`        -- (Optional) `Vector{UInt8}` to store the monomial, when different orders of truncation are used
+- `unsafe_fast`     -- (Optional) Flag to specify that "fast" indexing should be used without checking. This will give incorrect results if any variable has a TO < 2. Default is `false`.
+- `unsafe_inbounds` -- (Optional) Flag which, if false, ignores checking the size of `result`. The size of `result` is used to index the `TPS`. Default is `false`
 
 ### Output
 - `result`         -- Matrix to fill with the Hessian of the TPS, must be 1-based indexing
 """
-function hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,Vector{UInt8}}=nothing, unsafe_fast::Bool=false)
+function hessian!(result, t::TPS; include_params=false, tmp_mono::Union{Nothing,Vector{UInt8}}=nothing, unsafe_fast=false, unsafe_inbounds=false)
   Base.require_one_based_indexing(result)
   desc = unsafe_load(t.d)
   n = desc.nv
   if include_params
     n += desc.np
   end
+
+  if !unsafe_inbounds && size(result) != (n, n)
+    error("Incorrect size for result")
+  end
+
   nn = desc.nn
 
   result .= 0.
