@@ -72,6 +72,7 @@ import Base:  +,
               eps,
               floatmin,
               floatmax,
+              signbit,
               delete!
 
 import LinearAlgebra: norm, mul!, copy_oftype, copymutable_oftype

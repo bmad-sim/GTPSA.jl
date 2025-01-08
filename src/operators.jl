@@ -94,6 +94,7 @@ isnan(t1::TPS) = isnan(geti(t1, 0))
 eps(t1::TPS) = eps(numtype(t1))
 floatmin(t1::TPS) = floatmin(numtype(t1))
 floatmax(t1::TPS) = floatmax(numtype(t1))
+signbit(t1::TPS) = signbit(geti(t1, 0))
 
 # --- Compare entire TPS (monomial-by-monomial) ---
 isequal(t1::TPS{Float64},    t2::TPS{Float64})    = equ(t1, t2, 0)
