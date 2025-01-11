@@ -75,7 +75,7 @@ import Base:  +,
               signbit,
               delete!
 
-import LinearAlgebra: norm, mul!, copy_oftype, copymutable_oftype
+import LinearAlgebra: norm, copy_oftype, copymutable_oftype
 import SpecialFunctions: erf, erfc, erfi, erfcx
 
 using GTPSA_jll, Printf, PrettyTables
