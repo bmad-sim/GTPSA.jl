@@ -1,26 +1,22 @@
-getdesc(t::TPS) = Descriptor(t.d)
+getdesc(::TPS{T,D}) where {T,D} = D
+#getdesc(::TPS{T}) where {T} = GTPSA.desc_current
 getdesc(d::Descriptor) = d
-getdesc(n::Nothing) = GTPSA.desc_current
-getdesc(t::TempTPS{Float64}) = Descriptor(mad_tpsa_desc(t))
-getdesc(t::TempTPS{ComplexF64}) = Descriptor(mad_ctpsa_desc(t))
+#getdesc(::TempTPS{T,D}) where {T,D} = D 
 
-numvars(t::TPS) = unsafe_load(t.d).nv
+numvars(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nv
 numvars(d::Descriptor) = unsafe_load(d.desc).nv
-numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
 
-numparams(t::TPS) = unsafe_load(t.d).np
+numparams(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).np
 numparams(d::Descriptor) = unsafe_load(d.desc).np
-numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
 
-numnn(t::TPS) = unsafe_load(t.d).nn
+numnn(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
-numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
 # If the ar
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
-_promote_arrays_numtype(t::AbstractArray{TPS{U}}, ::Type{U}) where {U} = t
-_promote_arrays_numtype(t::AbstractArray{TPS{T}}, ::Type{U}) where {U,T} = TPS{U}.(t)
+_promote_arrays_numtype(t::AbstractArray{TPS{U,D}}, ::Type{U}) where {U,D} = t
+_promote_arrays_numtype(t::AbstractArray{TPS{T,D}}, ::Type{U}) where {U,T,D} = TPS{U,D}.(t)
 
 function promote_arrays_numtype(arrays...)
   return map(t->_promote_arrays_numtype(t, numtype(Base.promote_eltype(arrays...))), arrays)

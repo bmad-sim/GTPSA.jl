@@ -2,7 +2,7 @@
 # TPS and TempTPS using TPSType and RealTPS/ComplexTPS
 
 # Internal constant to aid multiple dispatch
-const TPSType    = Union{TempTPS, TPS}
+const TPSType{D}    = Union{TempTPS{D}, TPS{D}} where {D}
 
 # --- clear! ---
 """

@@ -1,5 +1,5 @@
 #=
-    `mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number`
+    `mutable struct TPS{T<:Union{Float64,ComplexF64}, D} <: Number`
 
 Struct representing a truncated power series. The definition here is 1-to-1 
 with the GTPSA C library definition.
@@ -14,7 +14,7 @@ with the GTPSA C library definition.
 - `nam::NTuple{16,UInt8}` -- TPS name, max string length = GTPSA.NAMSZ = 15 chars
 - `coef::Ptr{T}`             -- An array containing all of the monomial coefficients up to the TPS max order
 =#
-mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
+mutable struct TPS{T, D} <: Number
   d::Ptr{Desc}                                            
   lo::UInt8                
   hi::UInt8     
@@ -26,9 +26,18 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
                # In the C code: change [] to * and fix malloc
   
   # Analog to C code mad_tpsa_newd
-  function TPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
+  function TPS{T,D}(; use::Union{Descriptor,TPS,Nothing}=nothing, _mo::UInt8=MAD_TPSA_DEFAULT) where {T,D}
+    if !isnothing(use)
+      Base.depwarn("Keyword argument `use` is deprecated. Please specify the `Descriptor` in the `TPS` type parameter, e.g. `TPS{Float64,d}` where `d isa Descriptor`", :TPS, force=false)
+      D1 = getdesc(use)
+    else
+      D isa Descriptor || error("Type parameter D must be a Descriptor!")
+      D1 = D
+    end
+
+    d = D1.desc
     d != C_NULL || error("No Descriptor defined!")
-    mo = min(mo, unsafe_load(d).mo)
+    mo = min(_mo, unsafe_load(d).mo)
     sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
     coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
     ao = mo
@@ -39,7 +48,7 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
     hi = 0x0
     unsafe_store!(coef, T(0))
 
-    t = new{T}(d, lo, hi, mo, ao, uid, nam, coef)
+    t = new{T,D1}(d, lo, hi, mo, ao, uid, nam, coef)
 
     f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
     finalizer(f, t)
@@ -51,6 +60,63 @@ end
 const TPS64 = TPS{Float64}
 const ComplexTPS64 = TPS{ComplexF64}
 
+function TPS{T,D}(
+  ta::Number;
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
+) where {T,D}
+  t = TPS{T,D}(use=use, _mo=_mo)
+
+  if ta isa TPS
+    if getdesc(t) == getdesc(ta)
+      copy!(t, ta)
+    else
+      setTPS!(t, ta, change=true)
+    end
+  else
+    t[0] = ta
+  end
+  return t
+end
+
+# Note that if use is specified it will override GTPSA.desc_current
+TPS{T}(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {T<:Union{Float64,ComplexF64}} = TPS{T,ta isa TPS ? getdesc(ta) : GTPSA.desc_current}(ta; use=use, _mo=_mo)
+
+
+TPS{T}(; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT,
+) where {T} = TPS{T,GTPSA.desc_current}(; use=use, _mo=_mo) 
+#=
+TPS{D}(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {D} = D isa Descriptor ? TPS{promote_type(numtype(ta),Float64),D}(ta; use=use, _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
+
+
+TPS{D}(; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {D} = D isa Descriptor ? TPS{Float64,D}(; use=use, _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
+=#
+TPS(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{promote_type(numtype(ta),Float64)}(ta; use=use, _mo=_mo)
+
+TPS(; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{Float64}(; use=use, _mo=_mo)
+
+
+#=
 """
     TPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing)
     TPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}}
@@ -78,25 +144,8 @@ TPS{T}(ta::TPS;                        use::Union{Descriptor,TPS,Nothing}=nothin
 TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promote_type(Float64,typeof(ta))}(ta, use=use)
 TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
 TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{numtype(ta)}(ta, use=use)
+=#
 
-function low_TPS(T, ta, use)
-  if ta isa Nothing          # --- Blank TPS ---
-    return TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
-  elseif ta isa TPS
-    if use isa Nothing       # --- Copy ctor ---
-      t = TPS{T}(getdesc(ta).desc, ta.mo)
-      copy!(t, ta)
-    else                     # --- Change descriptor ---
-      t = TPS{T}(getdesc(use).desc, ta.mo)
-      setTPS!(t, ta, change=true)
-      return t
-    end
-  else                       # --- promote number ---
-    t = TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
-    t[0] = ta
-  end
-  return t
-end
 
 # To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
 # For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},
@@ -112,9 +161,11 @@ Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objre
 
 
 """
-    numtype(::Union{Type{TPS{T}},TPS{T}}) where T
+    numtype(t::Number)
+    numtype(::Type{T}) where {T<:Number}
 
-Returns the type of number that the `TPS` represents.
+If a `TPS`, then returns the type of number which the `TPS` 
+represents. Else, returns that number type.
 """
 numtype
 
@@ -123,19 +174,19 @@ numtype(::TPS{T}) where {T} = T
 numtype(::Type{T}) where {T<:Number} = T
 numtype(::T) where {T<:Number} = T
 
-promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
-promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}
-promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
-promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
-promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
-promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:AbstractIrrational} = TPS{ComplexF64}
-promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:Rational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
-promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:Rational} = TPS{ComplexF64}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TPS{Float64,D} 
+promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{ComplexF64}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
+promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:AbstractIrrational,D} = TPS{ComplexF64,D}
+promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:Rational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:Rational,D} = TPS{ComplexF64,D}
 
-complex(::Type{TPS{T}}) where{T} = TPS{complex(T)}
-eps(::Type{TPS{T}}) where {T} = eps(T)
-floatmin(::Type{TPS{T}}) where {T} = floatmin(T)
-floatmax(::Type{TPS{T}}) where {T} = floatmax(T)
+complex(::Type{TPS{T,D}}) where {T,D} = TPS{complex(T),D}
+eps(::Type{TPS{T,D}}) where {T,D} = eps(T)
+floatmin(::Type{TPS{T,D}}) where {T,D} = floatmin(T)
+floatmax(::Type{TPS{T,D}}) where {T,D} = floatmax(T)
 
 Base.broadcastable(o::TPS) = Ref(o)
 
