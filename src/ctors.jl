@@ -14,9 +14,20 @@ Returns a vector of `TPS`s corresponding to the variables for the
 function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
-  x = Vector{TPS{Float64,Nothing}}(undef, nv)
+  x = Vector{TPS{Float64,Dynamic}}(undef, nv)
   for i=1:nv
     t = TPS{Float64}(use=use)
+    @inbounds t[i] = 1.0
+    @inbounds x[i] = t
+  end
+  return x
+end
+
+function vars(::Val{D}) where {D}
+  nv = numvars(D)
+  x = Vector{TPS{Float64,D}}(undef, nv)
+  for i=1:nv
+    t = TPS{Float64,D}()
     @inbounds t[i] = 1.0
     @inbounds x[i] = t
   end
@@ -39,9 +50,21 @@ function params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   np = numparams(use)
   nv = numvars(use)
-  k = Vector{TPS{Float64,Nothing}}(undef, np)
+  k = Vector{TPS{Float64,Dynamic}}(undef, np)
   for i=1:np
     t = TPS{Float64}(use=use)
+    @inbounds t[nv+i] = 1.0
+    @inbounds k[i] = t
+  end
+  return k
+end
+
+function params(::Val{D}) where {D}
+  np = numparams(D)
+  nv = numvars(D)
+  k = Vector{TPS{Float64,D}}(undef, np)
+  for i=1:np
+    t = TPS{Float64,D}()
     @inbounds t[nv+i] = 1.0
     @inbounds k[i] = t
   end

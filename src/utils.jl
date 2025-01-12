@@ -1,12 +1,12 @@
-getdesc(t::TPS{T,Nothing}) where {T} = Descriptor(t.d)
-numvars(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).nv
-numparams(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).np
-numnn(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).nn
+getdesc(t::TPS{T,Dynamic}) where {T} = Descriptor(t.d)
+numvars(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).nv
+numparams(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).np
+numnn(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).nn
 
-getdesc(t::TempTPS{Float64,Nothing}) = Descriptor(mad_tpsa_desc(t))
-getdesc(t::TempTPS{ComplexF64,Nothing}) = Descriptor(mad_ctpsa_desc(t))
+getdesc(t::TempTPS{Float64,Dynamic}) = Descriptor(mad_tpsa_desc(t))
+getdesc(t::TempTPS{ComplexF64,Dynamic}) = Descriptor(mad_ctpsa_desc(t))
 
-getdesc(::TPS{T,D}) where {T,D} = D
+getdesc(t::TPS{T,D}) where {T,D} = Descriptor(t.d) #D
 numvars(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nv
 numparams(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).np
 numnn(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nn
