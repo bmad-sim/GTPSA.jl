@@ -39,7 +39,8 @@ function track_qf(z0, k1, hkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(hkick))}(undef, length(z0))
   lbend=0.1
   
-  @FastGTPSA begin
+  #@FastGTPSA
+  begin
   L  = 0.5/(1.0+z0[6])
   h  = -L*(z0[2]^2+k1*z0[1]^2+ z0[4]^2-k1*z0[3]^2)/(1.0+z0[6])/2.0
   z[1] = cos(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sin(sqrt(k1)*L)*z0[2]
@@ -56,7 +57,8 @@ end
 function track_qd(z0, k1, vkick)
   z = Vector{promote_type(eltype(z0),typeof(k1),typeof(vkick))}(undef, length(z0))
 
-  @FastGTPSA begin
+  #@FastGTPSA 
+  begin
   L  = 0.5/(1.0+z0[6])
   h  = -L*(z0[2]^2-k1*z0[1]^2+z0[4]^2+k1*z0[3]^2)/(1.0+z0[6])/2.0
   z[1] = cosh(sqrt(k1)*L)*z0[1]+1/sqrt(k1)*sinh(sqrt(k1)*L)*z0[2]
@@ -74,7 +76,8 @@ function track_drift(z0)
   z = Vector{eltype(z0)}(undef, length(z0))
 
   L = 0.75
-  @FastGTPSA begin
+  #@FastGTPSA 
+  begin
   z[1] = z0[1]+z0[2]*L/(1.0+z0[6])
   z[2] = z0[2]
   z[3] = z0[3]+z0[4]*L/(1.0+z0[6])
@@ -99,7 +102,8 @@ end
 function track_sextupole(z0, k2l)
   z = Vector{promote_type(eltype(z0),typeof(k2l))}(undef, length(z0))
 
-  @FastGTPSA begin
+  #@FastGTPSA 
+  begin
   z[1] = z0[1]
   z[2] = z0[2]-k2l*(z0[1]^2-z0[3]^2)
   z[3] = z0[3]

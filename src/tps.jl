@@ -25,17 +25,11 @@ mutable struct TPS{T, D} <: Number
   coef::Ptr{T} # CRITICAL: Flexible array members in C must NOT BE USED! 
                # In the C code: change [] to * and fix malloc
   
-  # Analog to C code mad_tpsa_newd
-  function TPS{T,D}(; use::Union{Descriptor,TPS,Nothing}=nothing, _mo::UInt8=MAD_TPSA_DEFAULT) where {T,D}
-    if !isnothing(use)
-      Base.depwarn("Keyword argument `use` is deprecated. Please specify the `Descriptor` in the `TPS` type parameter, e.g. `TPS{Float64,d}` where `d isa Descriptor`", :TPS, force=false)
-      D1 = getdesc(use)
-    else
-      D isa Descriptor || error("Type parameter D must be a Descriptor!")
-      D1 = D
-    end
 
-    d = D1.desc
+              
+  function TPS{T,D}(; _mo::UInt8=MAD_TPSA_DEFAULT) where {T<:Union{Float64,ComplexF64},D}
+    D isa Descriptor || error("Type parameter D must be a Descriptor!")
+    d = D.desc
     d != C_NULL || error("No Descriptor defined!")
     mo = min(_mo, unsafe_load(d).mo)
     sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
@@ -43,30 +37,85 @@ mutable struct TPS{T, D} <: Number
     ao = mo
     uid = Cint(0)
     nam = (0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
-    
     lo = 0x1
     hi = 0x0
     unsafe_store!(coef, T(0))
-
-    t = new{T,D1}(d, lo, hi, mo, ao, uid, nam, coef)
-
+    t = new{T,D}(d, lo, hi, mo, ao, uid, nam, coef)
     f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
     finalizer(f, t)
+  end
 
+  # DEPRECATED: runtime descriptor getting ================================= #
+  function TPS{T}(; use::Union{Descriptor,TPS,Nothing}=nothing, _mo::UInt8=MAD_TPSA_DEFAULT) where {T<:Union{Float64,ComplexF64}}
+    Base.depwarn("You are using a `TPS` type which is being deprecated. Please use the new type which specifies 
+    the `Descriptor` in the `TPS` type parameter statically, e.g. `TPS{Float64,d}` where `d isa Descriptor`", :TPS, force=false)
+    d = getdesc(use).desc
+    d != C_NULL || error("No Descriptor defined!")
+    mo = min(_mo, unsafe_load(d).mo)
+    sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
+    coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
+    ao = mo
+    uid = Cint(0)
+    nam = (0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
+    lo = 0x1
+    hi = 0x0
+    unsafe_store!(coef, T(0))
+    t = new{T,Nothing}(d, lo, hi, mo, ao, uid, nam, coef)
+    f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
+    finalizer(f, t)
     return t
   end
+
+  TPS{T,D}(; use::Union{Descriptor,TPS,Nothing}=nothing, _mo::UInt8=MAD_TPSA_DEFAULT
+  ) where {T<:Union{Float64,ComplexF64},D<:Nothing} = TPS{T}(; use=use, _mo=_mo)
+  # End deprecated ========================================================= #
 end
 
 const TPS64 = TPS{Float64}
 const ComplexTPS64 = TPS{ComplexF64}
 
-function TPS{T,D}(
+function TPS{T,D}(ta::Number; _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT) where {T<:Union{Float64,ComplexF64},D}
+  t = TPS{T,D}(; _mo=_mo)
+  if ta isa TPS
+
+    if getdesc(t) == getdesc(ta)
+      return t
+      copy!(t, ta)
+      
+    else
+      return 1
+      setTPS!(t, ta, change=true)
+    end
+  else
+    t[0] = ta
+  end
+  return t
+end
+
+TPS{D}(ta::Number; _mo::UInt8=MAD_TPSA_DEFAULT
+) where {D} = D isa Descriptor ? TPS{promote_type(numtype(ta),Float64),D}(ta; _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
+
+TPS{D}(; _mo::UInt8=MAD_TPSA_DEFAULT
+) where {D} = D isa Descriptor ? TPS{Float64,D}(; _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
+
+TPS(t::TPS{T,D}) where {T,D} = TPS{T,D}(t)
+
+# DEPRECATED =============================================================== #
+function TPS{T}(
   ta::Number;
   use::Union{Descriptor,TPS,Nothing}=nothing, 
   _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
-) where {T,D}
-  t = TPS{T,D}(use=use, _mo=_mo)
-
+) where {T<:Union{Float64,ComplexF64}}
+  if !isnothing(use)
+    D = use
+  else
+    if ta isa TPS
+      D = getdesc(ta)
+    else
+      D = GTPSA.desc_current
+    end
+  end
+  t = TPS{T}(; use=use, _mo=_mo)
   if ta isa TPS
     if getdesc(t) == getdesc(ta)
       copy!(t, ta)
@@ -79,6 +128,26 @@ function TPS{T,D}(
   return t
 end
 
+TPS{T,D}(ta::Number;
+use::Union{Descriptor,TPS,Nothing}=nothing, 
+_mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
+) where {T<:Union{Float64,ComplexF64},D<:Nothing} = TPS{T}(ta; use=use, _mo=_mo)
+
+TPS(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{promote_type(numtype(ta),Float64)}(ta; use=use, _mo=_mo)
+
+TPS(; 
+  use::Union{Descriptor,TPS,Nothing}=nothing, 
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{Float64}(; use=use, _mo=_mo)
+
+
+# End deprecated =========================================================== #
+
+#=
 # Note that if use is specified it will override GTPSA.desc_current
 TPS{T}(
   ta::Number; 
@@ -91,29 +160,10 @@ TPS{T}(;
   use::Union{Descriptor,TPS,Nothing}=nothing, 
   _mo::UInt8=MAD_TPSA_DEFAULT,
 ) where {T} = TPS{T,GTPSA.desc_current}(; use=use, _mo=_mo) 
-#=
-TPS{D}(
-  ta::Number; 
-  use::Union{Descriptor,TPS,Nothing}=nothing, 
-  _mo::UInt8=MAD_TPSA_DEFAULT
-) where {D} = D isa Descriptor ? TPS{promote_type(numtype(ta),Float64),D}(ta; use=use, _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
 
 
-TPS{D}(; 
-  use::Union{Descriptor,TPS,Nothing}=nothing, 
-  _mo::UInt8=MAD_TPSA_DEFAULT
-) where {D} = D isa Descriptor ? TPS{Float64,D}(; use=use, _mo=_mo) : error("For single type parameter constructors, the type must be either `::Union{Float64,ComplexF64}` or `Descriptor`!")
 =#
-TPS(
-  ta::Number; 
-  use::Union{Descriptor,TPS,Nothing}=nothing, 
-  _mo::UInt8=MAD_TPSA_DEFAULT
-) = TPS{promote_type(numtype(ta),Float64)}(ta; use=use, _mo=_mo)
 
-TPS(; 
-  use::Union{Descriptor,TPS,Nothing}=nothing, 
-  _mo::UInt8=MAD_TPSA_DEFAULT
-) = TPS{Float64}(; use=use, _mo=_mo)
 
 
 #=
@@ -147,13 +197,23 @@ TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{numtype(
 =#
 
 
+# We do NOT want to specialize the low-level routines for every Descriptor.
+# And, it would be nice to just keep every ::RealTPS instead of ::RealTPS{D} ... where {D}
+# However, cconvert/unsafe_convert need concrete types or to convert to or 
+# else there will be allocations
+
+# So here we will override the conversion:
+Base.cconvert(::Type{Ref{TPS{T}}}, t::TPS{T,D}) where {T,D} = Base.cconvert(Ref{TPS{T,D}}, t)
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, r)
+
+
 # To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
 # For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},
 # while it probably should be Ptr{Ref{TPS{T}}} because of the mutability of TPS.
 # This is a problem when trying to do basically Ref{Ref{TPS{T}}} (pointer to pointer 
 # of single TPS). So the workaround is to define the following:
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, r))
-Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objref(t))
+Base.unsafe_convert(::Type{Ptr{TPS{T,D}}}, r::Base.RefValue{Ptr{Nothing}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, Base.unsafe_convert(Ptr{Cvoid}, r))
+Base.cconvert(::Type{Ptr{TPS{T,D}}}, t::TPS{T,D}) where {T,D} = Ref(pointer_from_objref(t))
 # NOTE: We need to have a GC.@preserve before the cconvert to keep t valid !!!!!
 # This is only necessary for my mutable type. The other array inputs including isbits 
 # types are ok and basically have the above defined for them.

@@ -1,18 +1,31 @@
+getdesc(t::TPS{T,Nothing}) where {T} = Descriptor(t.d)
+numvars(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).nv
+numparams(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).np
+numnn(t::TPS{T,Nothing}) where {T} = unsafe_load(t.d).nn
+
+getdesc(t::TempTPS{Float64,Nothing}) = Descriptor(mad_tpsa_desc(t))
+getdesc(t::TempTPS{ComplexF64,Nothing}) = Descriptor(mad_ctpsa_desc(t))
+
 getdesc(::TPS{T,D}) where {T,D} = D
-#getdesc(::TPS{T}) where {T} = GTPSA.desc_current
-getdesc(d::Descriptor) = d
-#getdesc(::TempTPS{T,D}) where {T,D} = D 
-
 numvars(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nv
-numvars(d::Descriptor) = unsafe_load(d.desc).nv
-
 numparams(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).np
-numparams(d::Descriptor) = unsafe_load(d.desc).np
-
 numnn(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nn
+
+getdesc(::TempTPS{T,D}) where {T,D} = D
+
+getdesc(d::Descriptor) = d
+numvars(d::Descriptor) = unsafe_load(d.desc).nv
+numparams(d::Descriptor) = unsafe_load(d.desc).np
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 
-# If the ar
+# Deprecated:
+getdesc(n::Nothing) = GTPSA.desc_current
+numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
+numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
+
+
+
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
 _promote_arrays_numtype(t::AbstractArray{TPS{U,D}}, ::Type{U}) where {U,D} = t

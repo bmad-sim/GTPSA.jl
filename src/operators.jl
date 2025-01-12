@@ -1,12 +1,12 @@
 # Here, all out of place operators are defined ONLY for TPS
 # --- zero ---
-zero(t::TPS) = typeof(t)(getdesc(t).desc, t.mo)
+zero(t::TPS) = typeof(t)(_mo=t.mo)
 
 function zero(t::AbstractArray{<:TPS{<:T}}) where {T}
   out = similar(t)
   d = getdesc(first(t))
   for i in eachindex(out)
-    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
+    out[i] = eltype(t)(; use=d.desc, _mo=MAD_TPSA_DEFAULT)
   end
   return out
 end
@@ -15,7 +15,7 @@ function one(t::AbstractArray{<:TPS{<:T}}) where {T}
   out = similar(t)
   d = getdesc(first(t))
   for i in eachindex(out)
-    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
+    out[i] = eltype(t)(; use=d.desc, _mo=MAD_TPSA_DEFAULT)
     seti!(out[i], 0, 0, 1)
   end
   return out
