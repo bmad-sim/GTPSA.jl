@@ -103,7 +103,6 @@ export
   polar,
   rect, 
   clear!,
-  mul!,
 
   # Monomial as TPS creators:
   vars,

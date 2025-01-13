@@ -18,13 +18,14 @@ numvars(d::Descriptor) = unsafe_load(d.desc).nv
 numparams(d::Descriptor) = unsafe_load(d.desc).np
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
 
-# Deprecated:
 getdesc(n::Nothing) = GTPSA.desc_current
 numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
 numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
-
+# These are used only for "show":
+desctype(::Type{TPS{T,D}}) where {T,D} = D
+desctype(::Type{<:TPS{T}}) where {T} = Nothing
 
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)

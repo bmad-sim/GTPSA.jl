@@ -24,8 +24,8 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
       $fname(::Type{T}, dims::Base.DimOrInd...) where {T<:TPS} = $fname(T, dims)
       $fname(::Type{T}, dims::NTuple{N, Union{Integer, Base.OneTo}}) where {T<:TPS,N} = $fname(T, map(to_dim, dims))
       function $fname(::Type{T}, dims::NTuple{N, Integer}) where {T<:TPS,N}
-          if T == TPS64
-            T1 = TPS64{Dynamic}
+          if !isconcretetype(T)
+            T1 = T{Dynamic}
           else
             T1 = T
           end
@@ -36,11 +36,11 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
           return a
       end
       function $fname(::Type{T}, dims::Tuple{}) where {T<:TPS}
-        if T == TPS64
-          T1 = TPS64{Dynamic}
-        else
-          T1 = T
-        end
+          if !isconcretetype(T)
+            T1 = T{Dynamic}
+          else
+            T1 = T
+          end
           a = Array{T1}(undef)
           for idx in eachindex(a)
             a[idx] = $felt(T1)

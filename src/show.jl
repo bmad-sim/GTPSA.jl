@@ -36,10 +36,39 @@ function show_GTPSA_info(io::IO, d::Descriptor)
 end
 
 function show(io::IO, d::Descriptor)
-  println(io, "GTPSA Descriptor")
-  println(io, "-----------------------")
-  d.desc == C_NULL && (println(io, "Null"); return)
-  show_GTPSA_info(io, d)
+  if get(io, :compact, false)
+    print(io, "Descriptor(")
+    desc = unsafe_load(d.desc)
+    mo = desc.mo
+    nv = desc.nv
+    np = desc.np
+    nn = desc.nn
+    po = desc.po
+    no_ = unsafe_wrap(Vector{Cuchar}, desc.no, nn)
+    no = convert(Vector{Int}, no_)
+    print(io, "NV=$nv, ")
+    if !(all(no[1] .== no[1:nv]))
+      print(io, "VOS=")
+      print(io, no[1:nv])
+      print(io, ", ")
+    end
+    print(io, "MO=$mo")
+    if np > 0
+      print(io, ", NP=$np, ")
+      if !(all(no[nv+1] .== no[nv+1:end]))
+        print(io, "POS=")
+        print(io, no[nv+1:end])
+        print(io, ", ")
+      end
+      print(io, "PO=$po")
+    end
+    print(io, ")")
+  else
+    println(io, "GTPSA Descriptor")
+    println(io, "-----------------------")
+    d.desc == C_NULL && (println(io, "Null"); return)
+    show_GTPSA_info(io, d)
+  end
 end
 
 struct MonoDisplay
@@ -196,9 +225,16 @@ function format(t::TPS; coloffset=0, max_nn=-1)
   return out, formatters
 end
 
-function show(io::IO, t::TPS)
+function show(io::IO, t::TPS{T,D}) where {T,D}
   out, formatters = format(t)
-  println(io, "$(typeof(t)):")
+  
+  if D != Dynamic
+    iot = IOContext(io, :compact=>true)
+  else
+    iot = io
+  end
+  print(iot, typeof(t))
+  print(io, ":\n")
   extralines = 0
   if GTPSA.show_header
     println(io, "-----------------------")
@@ -229,11 +265,17 @@ show(io::IO, ::MIME"text/plain", m::AbstractArray{<:TPS}) = show_vec(io, m)
 function show_vec(io::IO, m::AbstractArray{<:TPS})
   N = length(m)
   lines_used=Ref{Int}(0)
+  D = desctype(eltype(m))
+  if D == Nothing || D == Dynamic
+    iot = io
+  else
+    iot = IOContext(io, :compact=>true)
+  end
   if N < 1
-    print(io, "$(eltype(m))[]")
+    print(iot, "$(eltype(m))[]")
     return
   end
-  println(io, N, "-element $(typeof(m)):")
+  println(iot, N, "-element ", typeof(m), ":")
   lines_used[] += 1
   for i in eachindex(m)
     if !isassigned(m, i)
@@ -308,16 +350,16 @@ function show_map!(io::IO, m::AbstractArray{<:TPS}, lines_used::Ref=Ref{Int}(0),
   !get(io, :limit, false) || lines_used[] < displaysize(io)[1]-5 || (println(io, "\t⋮"); return)
   cols = length(out[1,:])
   if GTPSA.show_sparse
-    if eltype(m) == TPS{Float64}
+    if eltype(m) <: TPS{Float64}
       println(io, " Index Coefficient                Order   Monomial")
-    elseif eltype(m) == TPS{ComplexF64}
+    elseif eltype(m) <: TPS{ComplexF64}
       println(io, " Index Real                     Imag                       Order   Monomial")
     end
   else
-    if eltype(m) == TPS{Float64}
+    if eltype(m) <: TPS{Float64}
       println(io, " Index Coefficient                Order   Exponent")
       cols += 105
-    elseif eltype(m) == TPS{ComplexF64}
+    elseif eltype(m) <: TPS{ComplexF64}
       println(io, " Index Real                     Imag                       Order   Exponent")
       cols += 108
     end

@@ -59,8 +59,9 @@ const ComplexTPS64 = TPS{ComplexF64}
 TPS{TD}(;
   use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=MAD_TPSA_DEFAULT
-) where {TD} = TD <: Number ? TPS{TD,Dynamic}(; use=use, _mo=_mo) : 
-                              TPS{Float64,TD}(; use=use, _mo=_mo)
+) where {TD} = TD isa Descriptor ? TPS{Float64,TD}(; use=use, _mo=_mo) :
+                                   TPS{TD,Dynamic}(; use=use, _mo=_mo)  
+                              
 
 TPS(;
   use::Union{Descriptor,TPS,Nothing}=nothing,
@@ -82,8 +83,8 @@ TPS{TD}(
   ta::Number; 
   use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=MAD_TPSA_DEFAULT
-) where {TD} = TD <: Number ? TPS{TD,Dynamic}(ta; use=use, _mo=_mo) : 
-                              TPS{promote_type(typeof(ta),Float64),TD}(ta; use=use, _mo=_mo)
+) where {TD} = TD isa Descriptor ? TPS{promote_type(typeof(ta),Float64),TD}(ta; use=use, _mo=_mo) : 
+                                   TPS{TD,Dynamic}(ta; use=use, _mo=_mo)                              
 
 TPS(
   ta::Number; 
@@ -110,8 +111,9 @@ TPS{TD}(
   ta::TPS{TA,DA}; 
   use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=MAD_TPSA_DEFAULT
-) where {TD,TA<:Union{Float64,ComplexF64},DA} = TD <: Number ? TPS{TD,DA}(ta; use=use, _mo=_mo) : 
-                                                               TPS{TA,TD}(ta; use=use, _mo=_mo)
+) where {TD,TA<:Union{Float64,ComplexF64},DA} = TD isa Descriptor ? TPS{TA,TD}(ta; use=use, _mo=_mo) : 
+                                                                    TPS{TD,DA}(ta; use=use, _mo=_mo)
+                                                               
 TPS(
   ta::TPS{TA,DA}; 
   use::Union{Descriptor,TPS,Nothing}=nothing,
