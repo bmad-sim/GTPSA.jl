@@ -15,8 +15,9 @@ the stack.
 struct TempTPS{T<:Union{Float64,ComplexF64},D}
   t::Ptr{TPS{T,D}}
 
-  function TempTPS{T,D}(::Union{TPS{T,D},TempTPS{T,D}}) where {T<:Union{Float64,ComplexF64},D}
-    desc = unsafe_load(D.desc)
+  function TempTPS{T,D}(in::Union{TPS{<:Number,D},TempTPS{<:Number,D}}) where {T<:Union{Float64,ComplexF64},D}
+    d = getdesc(in)
+    desc = unsafe_load(d.desc)
     ti = T == Float64 ? desc.ti : desc.cti
     buf = T == Float64 ? desc.t : desc.ct
     tmpidx = unsafe_load(ti, Threads.threadid())
@@ -29,7 +30,7 @@ struct TempTPS{T<:Union{Float64,ComplexF64},D}
       try
         error("Permanent temporaries buffer out of memory (max $DESC_MAX_TMP). To use @FastGTPSA, please split expression into subexpressions.")
       finally
-        GTPSA.cleartemps!(D)
+        GTPSA.cleartemps!(d)
       end
     end
     idx = (Threads.threadid()-1)*DESC_MAX_TMP+tmpidx+1 # Julia is one based with unsafe_load! First this is 0
@@ -38,14 +39,16 @@ struct TempTPS{T<:Union{Float64,ComplexF64},D}
 
     #println("threadid = ", Threads.threadid(), ", getting temp t[", idx-1,"], incrementing ti[", Threads.threadid()-1, "] = ", tmpidx, "->", tmpidx+1)
     unsafe_store!(ti, tmpidx+Cint(1), Threads.threadid())
-    return new(t,D)
+    return new{T,D}(t)
   end
+
+  TempTPS{T}(in::Union{TPS{<:Number,D},TempTPS{<:Number,D}}) where {T<:Union{Float64,ComplexF64},D} = TempTPS{T,D}(in)
 end
 
 # --- "destructors" ---
 # These release a temporary from the stack
 function rel_temp!(t::TempTPS{T,D}) where {T,D}
-  desc = unsafe_load(D.desc)
+  desc = unsafe_load(getdesc(t).desc)
   ti = T == Float64 ? desc.ti : desc.cti
   buf = T == Float64 ? desc.t : desc.ct
 
@@ -69,7 +72,7 @@ necessary to run if `GTPSA.checktemps(d::Descriptor=GTPSA.desc_current)` returns
 using `@FastGTPSA` or `@FastGTPSA!`, and the Julia session is not terminated.
 """
 function cleartemps!(d::Descriptor=GTPSA.desc_current)
-  if GTPSA.desc_current.desc == C_NULL
+  if d.desc == C_NULL
     return
   end
   desc = unsafe_load(d.desc)
@@ -90,7 +93,7 @@ occur if an error is thrown during evaluation of an expression using `@FastGTPSA
 or `@FastGTPSA!`.
 """
 function checktemps(d::Descriptor=GTPSA.desc_current)
-  if GTPSA.desc_current.desc == C_NULL
+  if d.desc == C_NULL
     return false
   end
   desc = unsafe_load(d.desc)
@@ -106,7 +109,7 @@ Base.broadcastable(o::TempTPS) = Ref(o)
 # NOTE: for some reason, merely overloading this function causes allocations 
 # in Julia 1.9. This is not the case in 1.10, so presumably this is a bug.
 # Therefore, allocation tests only are performed on >=1.10
-function Base.setindex!(A::(Array{TPS{T}} where {T <: Union{Float64, ComplexF64}}), x::TempTPS, i1::Int)
+function Base.setindex!(A::(Array{<:TPS{T}} where {T<:Union{Float64, ComplexF64}}), x::TempTPS, i1::Int)
   copy!(A[i1], x)
   rel_temp!(x)
 end
@@ -120,8 +123,11 @@ end
 ^(t::TPS, t1::TempTPS) = (pow!(t, t, t1); rel_temp!(t1); return t)
 
 # Note that this Ptr is owned by C and so is safe from GC
-Base.convert(::Type{Ref{TPS{T}}}, t::TempTPS{T}) where {T} = t.t # convert to Ptr instead of Ref
-numtype(::Type{TempTPS{T}}) where {T} = T
+#Base.convert(::Type{Ref{TPS{T,D}}}, t::TempTPS{T,D}) where {T,D} = t.t # convert to Ptr instead of Ref
+Base.cconvert(::Type{Ref{TPS{T}}}, t::TempTPS{T,D}) where {T,D} = t.t #Base.cconvert(Ref{TPS{T,D}}, t)
+#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, r)
+
+numtype(::Type{<:TempTPS{T}}) where {T} = T
 numtype(::TempTPS{T}) where {T} = T
 
 promote_rule(::Type{TempTPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TempTPS{Float64,D} 

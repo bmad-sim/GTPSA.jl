@@ -6,7 +6,7 @@ numnn(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).nn
 getdesc(t::TempTPS{Float64,Dynamic}) = Descriptor(mad_tpsa_desc(t))
 getdesc(t::TempTPS{ComplexF64,Dynamic}) = Descriptor(mad_ctpsa_desc(t))
 
-getdesc(t::TPS{T,D}) where {T,D} = Descriptor(t.d) #D
+getdesc(::TPS{T,D}) where {T,D} = D
 numvars(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nv
 numparams(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).np
 numnn(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nn

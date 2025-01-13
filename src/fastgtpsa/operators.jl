@@ -10,9 +10,9 @@ function get_out(t1::T1, t2::T2) where {T1,T2}
   # If both are TempTPS's and of same type, put result into t1
   # If promotion is occuring, then put result into promoted one
   if T1 <: TempTPS && T2 <: TempTPS
-    if T1 == TempTPS{ComplexF64}
+    if T1 <: TempTPS{ComplexF64}
       return t1
-    elseif T2 == TempTPS{ComplexF64}
+    elseif T2 <: TempTPS{ComplexF64}
       return t2
     else
       return t1
@@ -36,11 +36,11 @@ function get_out(t1::T1, t2::T2) where {T1,T2}
     end
   else
     # None are TempTPS, so depending on output type we'll need to get one
-    outtype = promote_type(TempTPS{Float64},T1,T2)
+    outtype = promote_type(Float64,T1,T2)
     if T1 <: TPS
-      return (outtype)(t1)
+      return TempTPS{numtype(outtype)}(t1)
     else
-      return (outtype)(t2)
+      return TempTPS{numtype(outtype)}(t2)
     end
   end
 end
@@ -55,9 +55,9 @@ function rel_op!(t1::T1, t2::T2) where {T1,T2}
   # If both are TempTPS's and of same type, release t2
   # If promotion is occuring, then release real type
   if T1 <: TempTPS && T2 <: TempTPS
-    if T1 == TempTPS{ComplexF64}
+    if T1 <: TempTPS{ComplexF64}
       rel_temp!(t2)
-    elseif T2 == TempTPS{ComplexF64}
+    elseif T2 <: TempTPS{ComplexF64}
       rel_temp!(t1)
     else
       rel_temp!(t2)

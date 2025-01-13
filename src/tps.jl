@@ -55,46 +55,70 @@ end
 const TPS64 = TPS{Float64}
 const ComplexTPS64 = TPS{ComplexF64}
 
+# Other empty ctors:
 TPS{TD}(;
   use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=MAD_TPSA_DEFAULT
-) where {TD} = TD <: Number ? TPS{TD,Dynamic}(; use=use, _mo=_mo) : TPS{Float64,TD}(; use=use, _mo=_mo)
+) where {TD} = TD <: Number ? TPS{TD,Dynamic}(; use=use, _mo=_mo) : 
+                              TPS{Float64,TD}(; use=use, _mo=_mo)
 
+TPS(;
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{Float64,Dynamic}(; use=use, _mo=_mo)
+
+# Now ctors including regular numbers:
 function TPS{T,D}(
   ta::Number; 
   use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
 ) where {T<:Union{Float64,ComplexF64},D}
   t = TPS{T,D}(; use=use, _mo=_mo)
-  if ta isa TPS
-    if getdesc(t) == getdesc(ta)
-      copy!(t, ta)
-    else
-      setTPS!(t, ta, change=true)
-    end
+  t[0] = ta
+  return t
+end
+ 
+TPS{TD}(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TD} = TD <: Number ? TPS{TD,Dynamic}(ta; use=use, _mo=_mo) : 
+                              TPS{promote_type(typeof(ta),Float64),TD}(ta; use=use, _mo=_mo)
+
+TPS(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{promote_type(typeof(ta),Float64),Dynamic}(ta; use=use, _mo=_mo)
+                     
+# Now ctors including TPSs:
+function TPS{T,D}(
+  ta::TPS{TA,DA}; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
+) where {T<:Union{Float64,ComplexF64},TA<:Union{Float64,ComplexF64},D,DA}
+  t = TPS{T,D}(; use=use, _mo=_mo);
+  if getdesc(t) == getdesc(ta)
+    copy!(t, ta)
   else
-    t[0] = ta
+    setTPS!(t, ta, change=true)
   end
   return t
 end
 
-function TPS{TD}(
-  ta::Number; 
+TPS{TD}(
+  ta::TPS{TA,DA}; 
   use::Union{Descriptor,TPS,Nothing}=nothing,
-  _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
-) where {TD}
-  t = TPS{TD}(; use=use, _mo=_mo)
-  if ta isa TPS
-    if getdesc(t) == getdesc(ta)
-      copy!(t, ta)
-    else
-      setTPS!(t, ta, change=true)
-    end
-  else
-    t[0] = ta
-  end
-  return t
-end
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TD,TA<:Union{Float64,ComplexF64},DA} = TD <: Number ? TPS{TD,DA}(ta; use=use, _mo=_mo) : 
+                                                               TPS{TA,TD}(ta; use=use, _mo=_mo)
+TPS(
+  ta::TPS{TA,DA}; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TA<:Union{Float64,ComplexF64},DA} = TPS{TA,DA}(ta; use=use, _mo=_mo)
+
+
 
 #=
 """
@@ -153,13 +177,13 @@ represents. Else, returns that number type.
 """
 numtype
 
-numtype(::Type{TPS{T}}) where {T} = T
+numtype(::Type{<:TPS{T}}) where {T} = T
 numtype(::TPS{T}) where {T} = T
 numtype(::Type{T}) where {T<:Number} = T
 numtype(::T) where {T<:Number} = T
 
 promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TPS{Float64,D} 
-promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{ComplexF64}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{ComplexF64,D}}) where {D} = TPS{ComplexF64,D}
 promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
 promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
