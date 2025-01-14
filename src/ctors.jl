@@ -11,7 +11,10 @@ Returns a vector of `TPS`s corresponding to the variables for the
 ### Output
 - `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each variable
 """
-function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current; warn_deprecated::Bool=true)
+  if warn_deprecated 
+    Base.depwarn("Direct use of `vars` is being deprecated! Please use the @vars macro instead.", , :vars, force=true)
+  end
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   x = Vector{TPS{Float64,Dynamic}}(undef, nv)
@@ -23,7 +26,10 @@ function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   return x
 end
 
-function vars(::Val{D}) where {D}
+function vars(::Val{D}; warn_deprecated::Bool=true) where {D}
+  if warn_deprecated 
+    Base.depwarn("Direct use of `vars` is being deprecated! Please use the @vars macro instead.", :vars, force=true)
+  end
   nv = numvars(D)
   x = Vector{TPS{Float64,D}}(undef, nv)
   for i=1:nv
@@ -46,7 +52,10 @@ Returns a vector of `TPS`s corresponding to the parameters for the
 ### Output
 - `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each parameters
 """
-function params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+function params(use::Union{Descriptor,TPS}=GTPSA.desc_current; warn_deprecated::Bool=true)
+  if warn_deprecated 
+    Base.depwarn("Direct use of `params` is being deprecated! Please use the @params macro instead.", :params, force=true)
+  end
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   np = numparams(use)
   nv = numvars(use)
@@ -59,7 +68,10 @@ function params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
   return k
 end
 
-function params(::Val{D}) where {D}
+function params(::Val{D}; warn_deprecated::Bool=true) where {D}
+  if warn_deprecated 
+    Base.depwarn("Direct use of `params` is being deprecated! Please use the @params macro instead.", :params, force=true)
+  end
   np = numparams(D)
   nv = numvars(D)
   k = Vector{TPS{Float64,D}}(undef, np)

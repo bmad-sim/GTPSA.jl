@@ -59,8 +59,6 @@ ComplexTPS64:
 
 The GTPSA library currently only supports truncated power series representing `Float64` and `ComplexF64` number types.
 
-For more details, including using TPSs with differing truncation orders for each variable, see the [GTPSA documentation](https://bmad-sim.github.io/GTPSA.jl/).
-
 ## Acknowledgements
 Much thanks must be given to Laurent Deniau, the creator of the C GTPSA library, for his time and great patience in explaining his code. 
 

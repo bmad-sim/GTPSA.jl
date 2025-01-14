@@ -1,6 +1,8 @@
 using Pkg
 using Documenter, GTPSA
 
+cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
+
 makedocs(
   sitename="GTPSA.jl",
   authors = "Matt Signorelli",
