@@ -272,7 +272,7 @@ function show_vec(io::IO, m::AbstractArray{<:TPS})
     iot = IOContext(io, :compact=>true)
   end
   if N < 1
-    print(iot, "$(eltype(m))[]")
+    print(iot,  eltype(m), "[]")
     return
   end
   println(iot, N, "-element ", typeof(m), ":")

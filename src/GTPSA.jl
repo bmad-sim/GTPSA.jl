@@ -104,7 +104,11 @@ export
   rect, 
   clear!,
 
-  # Monomial as TPS creators:
+  # TPS ctors:
+  @vars,
+  @params,
+
+  # DEPRECATED: Monomial as TPS creators:
   vars,
   params,
   complexvars,
@@ -161,7 +165,7 @@ include("fastgtpsa/fastgtpsa.jl") # Definition of the @FastGTPSA macro
 include("fastgtpsa/operators.jl") # TempTPS special math operators/functions
 include("global.jl")              # Global variables
 include("getset.jl")              # Indexing/slicing TPS, par, convenience getters (gradient, jacobian, hessian)
-include("ctors.jl")               # @vars @params macros
+include("ctors.jl")               # @vars @params @mono macros
 include("deprecated_ctors.jl")    # (DEPRECATED) Convenience constructors (vars, params, mono)
 include("show.jl")                # Output
 include("methods.jl")             # Higher-level TPS functions (setTPS!, clear!, derivatives, integrals, evaluate, etc)
