@@ -6,8 +6,23 @@
 *A full-featured Julia interface to the Generalised Truncated Power Series Algebra library.*
 
 ```julia
+julia> using GTPSA
 
+julia> const D = Descriptor(2, 6); # 2 variables to 6th order
 
+julia> Δx = @vars(D);
+
+julia> f = cos(Δx[1]) + im*sin(Δx[2])
+ComplexTPS64{GTPSA.Dynamic}:
+Descriptor(NV=2, MO=6)
+ Real                     Imag                       Order   Exponent
+  1.0000000000000000e+00   0.0000000000000000e+00      0      0   0
+  0.0000000000000000e+00   1.0000000000000000e+00      1      0   1
+ -5.0000000000000000e-01   0.0000000000000000e+00      2      2   0
+  0.0000000000000000e+00  -1.6666666666666666e-01      3      0   3
+  4.1666666666666664e-02   0.0000000000000000e+00      4      4   0
+  0.0000000000000000e+00   8.3333333333333332e-03      5      0   5
+ -1.3888888888888887e-03   0.0000000000000000e+00      6      6   0
 ```
 
 

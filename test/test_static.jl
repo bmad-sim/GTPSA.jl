@@ -512,8 +512,8 @@ end
 
 @testset "Static: Indexing" begin
   d = Descriptor(3,10,2,10)
-  v = vars(d)
-  p = params(d)
+  v = @vars(d)
+  p = @params(d)
   tol = 1e-18
 
   f = sin(v[1])
@@ -3558,7 +3558,7 @@ end
 end
 
 @testset "Static: FastGTPSA - Block + Block Allocations" begin
-  d = Descriptor(3, 7); x = vars(d); y= rand(3)
+  d = Descriptor(3, 7); x = @vars(d); y= rand(3)
   tol = 1e-14
   @FastGTPSA begin
     t1 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
@@ -6414,8 +6414,8 @@ end
 @testset "Static: Taylor map benchmark against ForwardDiff" begin
   include("../benchmark/track.jl")
   d = Descriptor(6,2,52,2)
-  z = vars(Val{d}())
-  k = params(Val{d}())
+  z = @vars(d)
+  k = @params(d)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   jFD, hFD = benchmark_ForwardDiff2()
   tol = 1e-10
