@@ -36,7 +36,8 @@ function show_GTPSA_info(io::IO, d::Descriptor)
 end
 
 function show(io::IO, d::Descriptor)
-  if get(io, :compact, false)
+  #if get(io, :compact, false)
+    d.desc == C_NULL && (println(io, "Null"); return)
     print(io, "Descriptor(")
     desc = unsafe_load(d.desc)
     mo = desc.mo
@@ -63,12 +64,7 @@ function show(io::IO, d::Descriptor)
       print(io, "PO=$po")
     end
     print(io, ")")
-  else
-    println(io, "GTPSA Descriptor")
-    println(io, "-----------------------")
-    d.desc == C_NULL && (println(io, "Null"); return)
-    show_GTPSA_info(io, d)
-  end
+    return
 end
 
 struct MonoDisplay
@@ -227,19 +223,12 @@ end
 
 function show(io::IO, t::TPS{T,D}) where {T,D}
   out, formatters = format(t)
-  
-  if D != Dynamic
-    iot = IOContext(io, :compact=>true)
-  else
-    iot = io
-  end
-  print(iot, typeof(t))
+  print(io, typeof(t))
   print(io, ":\n")
   extralines = 0
-  if GTPSA.show_header
-    println(io, "-----------------------")
-    extralines += 2 + show_GTPSA_info(io, Descriptor(t.d))
-    println(io, "-----------------------")
+  if D == Dynamic
+    println(io, getdesc(t))
+    extralines += 1
   end
   # Check if sparse monomial or exponent:
   if GTPSA.show_sparse
@@ -266,16 +255,11 @@ function show_vec(io::IO, m::AbstractArray{<:TPS})
   N = length(m)
   lines_used=Ref{Int}(0)
   D = desctype(eltype(m))
-  if D == Nothing || D == Dynamic
-    iot = io
-  else
-    iot = IOContext(io, :compact=>true)
-  end
   if N < 1
-    print(iot,  eltype(m), "[]")
+    print(io,  eltype(m), "[]")
     return
   end
-  println(iot, N, "-element ", typeof(m), ":")
+  println(io, N, "-element ", typeof(m), ":")
   lines_used[] += 1
   for i in eachindex(m)
     if !isassigned(m, i)
@@ -292,15 +276,9 @@ function show_vec(io::IO, m::AbstractArray{<:TPS})
       lines_used[] += 1
     end
   end
-  if GTPSA.show_header
-    if diffdescs
-      println(io, "Cannot show GTPSA header (non-unique Descriptor).")
-      lines_used[] += 1
-    else
-      println(io, "-----------------------")
-      lines_used[] += 2 + show_GTPSA_info(io, Descriptor(desc))
-      println(io, "-----------------------")
-    end
+  if !diffdescs && D == Dynamic
+    println(io, Descriptor(desc))
+    lines_used[] += 1
   end
   show_map!(io, m, lines_used)
 end

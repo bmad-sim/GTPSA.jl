@@ -1,6 +1,7 @@
 # Here, all out of place operators are defined ONLY for TPS
 # --- zero ---
-zero(t::TPS) = typeof(t)(_mo=t.mo)
+zero(t::TPS{T,D}) where {T,D<:Dynamic} = typeof(t)(use=t, _mo=t.mo)
+zero(t::TPS{T,D}) where {T,D} = typeof(t)(_mo=t.mo)
 
 function zero(t::AbstractArray{<:TPS{T}}) where {T<:Number}
   return map(ti->zero(ti), t)

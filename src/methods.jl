@@ -54,19 +54,15 @@ end
 
 
 # --- Evaluate ---
-mad_eval!(na, ma::Union{AbstractArray{TPS{T}},TPS{T}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:Float64} = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
-mad_eval!(na, ma::Union{AbstractArray{TPS{T}},TPS{T}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:ComplexF64} = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
-
-#mad_eval!(na, ma::TPS{T}, nb, tb::AbstractArray{T}, tc::Ref{T}) where {T<:Float64} = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
-#mad_eval!(na, ma::TPS{T}, nb, tb::AbstractArray{T}, tc::Ref{T}) where {T<:ComplexF64} = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
-
+mad_eval!(na, ma::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:Float64,D} = mad_tpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
+mad_eval!(na, ma::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, nb, tb::AbstractArray{T}, tc::Union{Ref{T},AbstractArray{T}}) where {T<:ComplexF64,D} = mad_ctpsa_eval!(Cint(na), ma, Cint(nb), tb, tc)
 
 """
-    evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractArray{TPS{T}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64}} -> y
+    evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractArray{TPS{T}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D} -> y
   
 Evaluates the `TPS` function `m` at the point `x` and fills `y` with the result.
 """
-function evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractArray{TPS{T}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64}}
+function evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T,D},AbstractArray{TPS{T,D}}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D}
   ny = length(y)
   n = length(m)
   nx = length(x)
@@ -75,51 +71,55 @@ function evaluate!(y::Union{Ref{T},AbstractArray{T}}, m::Union{TPS{T},AbstractAr
   numnn(first(m)) == nx || error("Not enough input arguments")
   ismutable(y) || error("Output y must be mutable!")
   !(y === x) || error("Cannot evaluate!(y, m, x) with y === x")
-
   mad_eval!(n, m, nx, x, y)
   return y
 end
 
 
 """
-    evaluate(m::Union{TPS,AbstractArray{<:TPS}}, x::AbstractArray{<:Number})
+    evaluate(m::Union{TPS,AbstractArray{TPS{T,D}}}, x::AbstractArray{<:Number}) where {T,D}
 
 Evaluates the `TPS` function `m` at the result `x`.
 """
 evaluate
 
-function evaluate(m::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
+function evaluate(m::AbstractArray{TPS{T,D}}, x::AbstractArray{<:Number}) where {T,D}
   (mprom, xprom) = promote_arrays_numtype(m, x)
-  y = copymutable_oftype(xprom, eltype(xprom))
+  y = similar(mprom, eltype(xprom))
   evaluate!(y, mprom, xprom)
   return y
 end
 
 function evaluate(f::TPS, x::AbstractArray{<:Number})
-  T = promote_type(typeof(f), eltype(x))
-  T == typeof(f) ? fprom = f : fprom = T(f)
-  numtype(T) == eltype(x) ? xprom = x : xprom = numtype(T).(x)
-  g = Ref{numtype(T)}() #(use=f)
+  T1 = promote_type(typeof(f), eltype(x))
+  T1 == typeof(f) ? fprom = f : fprom = T1(f)
+  numtype(T1) == eltype(x) ? xprom = x : xprom = numtype(T1).(x)
+  g = Ref{numtype(T1)}()
   evaluate!(g, fprom, xprom)
   return g[]
 end
 
+(f::TPS)(x::AbstractArray{<:Number}) = evaluate(f, x)
+(f::TPS)(x::Number...) = evaluate(f, collect(x))
+(f::AbstractArray{TPS{T,D}})(x::AbstractArray{<:Number}) where {T,D} = evaluate(f, x)
+(f::AbstractArray{TPS{T,D}})(x::Number...) where {T,D} = evaluate(f, collect(x))
+
 
 # --- F . grad ---
 """
-    fgrad!(g::T, F::AbstractArray{<:T}, h::T) where {T<:TPS} -> g
+    fgrad!(g::TPS{T}, F::AbstractArray{TPS{T,D}}, h::TPS{T}) where {T,D} -> g
 
 Calculates `F⋅∇h` and sets `g` equal to the result.
 """
-function fgrad!(g::T, F::AbstractArray{<:T}, h::T) where {T<:TPS} 
+function fgrad!(g::TPS{T}, F::AbstractArray{TPS{T,D}}, h::TPS{T}) where {T,D} 
   nv = numvars(h)
   length(F) == nv || error("Incorrect length of F; received $(length(F)), should be $nv")
   !(g === h) || error("Cannot fgrad!(g, F, h) with g === h")
   
-  if numtype(T) != Float64
-      GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
-  else
+  if T == Float64
       GTPSA.mad_tpsa_fgrad!(Cint(length(F)), F, h, g)
+  else
+      GTPSA.mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
   end
   return g
 end
@@ -129,10 +129,10 @@ end
 
 Calculates `F⋅∇h`.
 """
-function fgrad(F::AbstractArray{<:TPS}, h::TPS)
-  T = promote_type(typeof(h), eltype(F))
-  T == typeof(h) ? hprom = h : hprom = T(h)
-  numtype(T) == eltype(F) ? Fprom = F : Fprom = numtype(T).(F)
+function fgrad(F::AbstractArray{TPS{T,D}}, h::TPS{T,D}) where {T,D}
+  T1 = promote_type(typeof(h), eltype(F))
+  T1 == typeof(h) ? hprom = h : hprom = T1(h)
+  T1 == eltype(F) ? Fprom = F : Fprom = T1.(F)
   g = zero(hprom)
   fgrad!(g, Fprom, hprom)
   return g
@@ -321,7 +321,7 @@ getord(t1::TPS, order::Integer) = (t = zero(t1); getord!(t, t1, order); return t
 
 # --- cutord ---
 """
-    cutord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T<:TPS} -> t
+    cutord!(t::TPS{T}, t1::TPS{T}, order::Integer) where {T} -> t
 
 Cuts out the monomials in `t1` at the given order and above. Or, if `order` 
 is negative, will cut monomials with orders at and below `abs(order)`. `t` 
@@ -390,15 +390,19 @@ scalar(t::TPS) = t[0]
 scalar(t::Number) = t[1]
 
 # --- composition ---
-mad_compose!(na, ma::Union{AbstractArray{T},T}, nb, mb::AbstractArray{T}, mc::Union{AbstractArray{T},T}) where {T<:TPS64}        = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
-mad_compose!(na, ma::Union{AbstractArray{T},T}, nb, mb::AbstractArray{T}, mc::Union{AbstractArray{T},T}) where {T<:ComplexTPS64} = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::AbstractArray{TPS{T,DB}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:Float64,DA,DB,DC}     = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::AbstractArray{TPS{T,DB}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:ComplexF64,DA,DB,DC}  = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
 """
-    compose!(m::Union{AbstractArray{T},T}, m2::Union{AbstractArray{T},T}, m1::AbstractArray{T}) where {T<:Union{TPS64,ComplexTPS64}} -> m
+    compose!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m2::Union{AbstractArray{TPS{T,D2}},TPS{T,D2}}, m1::AbstractArray{TPS{T,D1}}) where {T<:Union{Float64,ComplexF64},D,D1,D2}
 
 Composes the `TPS`s `m2 ∘ m1`, and stores the result in-place in `m`. 
 """
-function compose!(m::Union{AbstractArray{T},T}, m2::Union{AbstractArray{T},T}, m1::AbstractArray{T}) where {T<:Union{TPS64,ComplexTPS64}}
+function compose!(
+  m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, 
+  m2::Union{AbstractArray{TPS{T,D2}},TPS{T,D2}},
+  m1::AbstractArray{TPS{T,D1}}
+) where {T<:Union{Float64,ComplexF64},D,D1,D2}
   n = length(m)
   n2 = length(m2)
   n1 = length(m1)
@@ -407,7 +411,6 @@ function compose!(m::Union{AbstractArray{T},T}, m2::Union{AbstractArray{T},T}, m
   n == n2 || error("Incorrect output length, received length $n but need $n2")
   numnn(first(m2)) == n1 || error("Not enough input arguments")
   !(m === m1) || error("Cannot compose!(m, m2, m1) with m === m1")
-
   mad_compose!(-n, m2, n1, m1, m)
   return m
 end
@@ -419,37 +422,42 @@ Composes the `TPS`s `m2 ∘ m1`
 """
 compose
 
-function compose(m2::AbstractArray{<:TPS}, m1::AbstractArray{<:TPS})
+function compose(m2::AbstractArray{TPS{T2,D}}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D}
   (m2prom, m1prom) = promote_arrays_numtype(m2, m1)
   m = similar(m2prom)
   for i in eachindex(m)
-    m[i] = eltype(m2prom)(use=first(m2prom))
+    m[i] = zero(first(m2prom)) 
   end
   compose!(m, m2prom, m1prom)
   return m
 end
 
-function compose(f::TPS, m1::AbstractArray{<:TPS})
+function compose(f::TPS{T2,D}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D}
   T = promote_type(typeof(f), eltype(m1))
   T == typeof(f) ? fprom = f : fprom = T(f)
   T == eltype(m1) ? m1prom = m1 : m1prom = T.(m1)
-  g = T(use=f)
+  g = zero(fprom)
   compose!(g, fprom, m1prom)
   return g
 end
 
-∘(m2::Union{TPS,AbstractArray{<:TPS}}, m1::AbstractArray{<:TPS}) = compose(m2, m1)
+∘(m2::Union{TPS{T2,D},AbstractArray{TPS{T2,D}}}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D} = compose(m2, m1)
+(f::TPS)(g::AbstractArray{TPS{T,D}}) where {T,D} = compose(f, g)
+(f::TPS)(g::TPS{T,D}...) where {T,D} = compose(f, collect(g))
+(f::AbstractArray{TPS{TF,DF}})(g::AbstractArray{TPS{TG,DG}}) where {TF,DF,TG,DG} = compose(f, g)
+(f::AbstractArray{TPS{TF,DF}})(g::TPS{TG,DG}...) where {TF,DF,TG,DG}= compose(f, collect(g))
+
 
 # --- translate ---
-mad_translate!(na, ma::Union{AbstractArray{T},T}, nb, tb::AbstractArray{Float64},    mc::Union{AbstractArray{T},T}) where {T<:TPS64}        = mad_tpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
-mad_translate!(na, ma::Union{AbstractArray{T},T}, nb, tb::AbstractArray{ComplexF64}, mc::Union{AbstractArray{T},T}) where {T<:ComplexTPS64} = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
+mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::AbstractArray{T}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:Float64,DA,DC} = mad_tpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
+mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::AbstractArray{T}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:ComplexF64,DA,DC} = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
 
 """
-    translate!(m::Union{AbstractArray{T},T}, m1::Union{AbstractArray{T},T}, x::AbstractArray{U}) where {U<:Union{Float64,ComplexF64},T<:TPS{U}} -> m
+    translate!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D,D1} -> m
 
 Sets `m` to `m1` with its expansion point translated by `x`.
 """
-function translate!(m::Union{AbstractArray{T},T}, m1::Union{AbstractArray{T},T}, x::AbstractArray{U}) where {U<:Union{Float64,ComplexF64},T<:TPS{U}}
+function translate!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D,D1}
   n = length(m)
   n1 = length(m1)
   nx = length(x)
@@ -464,27 +472,27 @@ function translate!(m::Union{AbstractArray{T},T}, m1::Union{AbstractArray{T},T},
 end
 
 """
-    translate(m1::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
+    translate(m1::AbstractArray{TPS{T,D}}, x::AbstractArray{<:Number}) where {T,D}
 
 Translates the expansion point of `m1` by `x`.
 """
 translate
 
-function translate(m1::AbstractArray{<:TPS}, x::AbstractArray{<:Number})
+function translate(m1::AbstractArray{TPS{T,D}}, x::AbstractArray{<:Number}) where {T,D}
   (m1prom, xprom) = promote_arrays_numtype(m1, x)
   m = similar(m1prom)
   for i in eachindex(m)
-    m[i] = eltype(m1prom)(use=first(m1prom))
+    m[i] = zero(first(m1prom))
   end
   translate!(m, m1prom, xprom)
   return m
 end
 
 function translate(f::TPS, x::AbstractArray{<:Number})
-  T = promote_type(typeof(f), eltype(x))
-  T == typeof(f) ? fprom = f : fprom = T(f)
-  numtype(T) == eltype(x) ? xprom = x : xprom = numtype(T).(x)
-  g = T(use=f)
+  T1 = promote_type(typeof(f), eltype(x))
+  T1 == typeof(f) ? fprom = f : fprom = T1(f)
+  numtype(T1) == eltype(x) ? xprom = x : xprom = numtype(T1).(x)
+  g = zero(fprom)
   translate!(g, fprom, xprom)
   return g
 end

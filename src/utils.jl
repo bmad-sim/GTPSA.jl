@@ -28,13 +28,12 @@ desctype(::Type{TPS{T,D}}) where {T,D} = D
 desctype(::Type{<:TPS{T}}) where {T} = Nothing
 
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
-_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t)
 _promote_arrays_numtype(t::AbstractArray{TPS{U,D}}, ::Type{U}) where {U,D} = t
 _promote_arrays_numtype(t::AbstractArray{TPS{T,D}}, ::Type{U}) where {U,T,D} = TPS{U,D}.(t)
 
 function promote_arrays_numtype(arrays...)
   return map(t->_promote_arrays_numtype(t, numtype(Base.promote_eltype(arrays...))), arrays)
-  #eltype(t) == Base.promote_eltype(arrays...) ? t : copy_oftype(t, Base.promote_eltype(arrays...)), arrays)
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)

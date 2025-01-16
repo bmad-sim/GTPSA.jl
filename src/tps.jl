@@ -182,18 +182,24 @@ TPS
 Base.cconvert(::Type{Ref{TPS{T}}}, t::TPS{T,D}) where {T,D} = Base.cconvert(Ref{TPS{T,D}}, t)
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, r)
 
-
+# And for array types:
+#Base.cconvert(::Type{Ptr{TPS{T}}}, t::AbstractArray{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
+#Base.cconvert(::Type{Ptr{TPS{T}}}, t::Array{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
+@static if VERSION >= v"1.11.0"
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, mr::Base.MemoryRef{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{TPS{T,D}}, mr))
+end
 # To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
 # For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},
 # while it probably should be Ptr{Ref{TPS{T}}} because of the mutability of TPS.
 # This is a problem when trying to do basically Ref{Ref{TPS{T}}} (pointer to pointer 
 # of single TPS). So the workaround is to define the following:
-Base.unsafe_convert(::Type{Ptr{TPS{T,D}}}, r::Base.RefValue{Ptr{Nothing}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, Base.unsafe_convert(Ptr{Cvoid}, r))
-Base.cconvert(::Type{Ptr{TPS{T,D}}}, t::TPS{T,D}) where {T,D} = Ref(pointer_from_objref(t))
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{TPS{T,D}}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{TPS{T,D}}, Base.unsafe_convert(Ptr{Cvoid}, r)))
+Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T,D}) where {T,D} = Ref(Base.unsafe_convert(Ptr{TPS{T,D}}, pointer_from_objref(t)))
 # NOTE: We need to have a GC.@preserve before the cconvert to keep t valid !!!!!
 # This is only necessary for my mutable type. The other array inputs including isbits 
 # types are ok and basically have the above defined for them.
 # See https://github.com/JuliaLang/julia/issues/56873#event-15727452235
+
 
 
 """
@@ -211,7 +217,17 @@ numtype(::Type{T}) where {T<:Number} = T
 numtype(::T) where {T<:Number} = T
 
 promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TPS{Float64,D} 
+
+promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{Float64,D}}) where {D} = TPS{Float64,D}
 promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{ComplexF64,D}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{TPS{Float64,D}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{TPS{ComplexF64,D}}) where {D} = TPS{ComplexF64,D}
+
+promote_rule(::Type{TPS{Float64,D1}}, ::Type{TPS{Float64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{ComplexF64,D1}}, ::Type{TPS{Float64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{Float64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{ComplexF64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+
 promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
 promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
