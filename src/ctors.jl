@@ -17,15 +17,7 @@ function check_kwargs(fn, kwargs...)
   end
 end
 
-macro vars(args...)
-  if length(args) == 0 || Meta.isexpr(args[1], :(=)) # No descriptor provided first; use GTPSA.desc_current
-    d = :(GTPSA.desc_current) 
-    kwargs = args
-  else
-    d = args[1]
-    kwargs = args[2:end]
-  end
-
+macro vars(d, kwargs...)
   # Check each kwarg:
   check_kwargs(:vars, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))
@@ -48,15 +40,7 @@ macro vars(args...)
   end
 end
 
-macro params(args...)
-  if length(args) == 0 || Meta.isexpr(args[1], :(=)) # No descriptor provided first; use GTPSA.desc_current
-    d = :(GTPSA.desc_current) 
-    kwargs = args
-  else
-    d = args[1]
-    kwargs = args[2:end]
-  end
-
+macro params(d, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))
   kwargvals = map(t->t[2],map(t->Pair(t.args...), kwargs))
 
