@@ -13,7 +13,7 @@ unsafe_convert, eps, floatmin, floatmax, signbit
 `zeros` and `ones` are overloaded from Base so that allocated `TPS`s are placed in each element. Because of the mutability of `TPS`, if we didn't explicity overload these functions every element would correspond to the exact same heap-allocated TPS.
 
 `GTPSA.jl` overloads (and exports) the following functions from the corresponding packages:
- **`LinearAlgebra`**: `norm`, `mul!` 
+ **`LinearAlgebra`**: `norm`
 **`SpecialFunctions`**: `erf`, `erfc`, `erfcx`, `erfi`
 
 `GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [TPS Methods](@ref tpsmethods)):

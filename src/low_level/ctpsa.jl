@@ -1,5 +1,5 @@
 # Internal constant to aid multiple dispatch including temporaries 
-const ComplexTPS = Union{TempTPS{ComplexF64}, TPS{ComplexF64}}
+const ComplexTPS{D} = Union{TempTPS{ComplexF64,D}, TPS{ComplexF64,D}}
 
 """
     mad_ctpsa_newd(d::Ptr{Desc}, mo::Cuchar)
@@ -109,11 +109,11 @@ end
     mad_ctpsa_mo!(t::ComplexTPS, mo::Cuchar)::Cuchar
 
 Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
-`mo_` should be less than or equal to the allocated order `ao`.
+`mo` should be less than or equal to the allocated order `ao`.
 
 ### Input
 - `t`   -- TPSA
-- `mo_` -- Maximum order to set the TPSA
+- `mo` -- Maximum order to set the TPSA
 
 ### Output
 - `ret` -- Original `mo` of the TPSA
@@ -173,7 +173,7 @@ Returns maximum order of all TPSAs provided.
 """
 function mad_ctpsa_ordv(t::ComplexTPS, ts::ComplexTPS...)::Cuchar
   # mo = @ccall MAD_TPSA.mad_ctpsa_ordv(t::Ref{TPS{ComplexF64}}, ts::Ref{TPS{ComplexF64}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-  ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{ComplexF64}, TPS{ComplexF64}...), (t, ts...))
+  #ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{ComplexF64}, TPS{ComplexF64}...), (t, ts...))
   return mo
 end
 

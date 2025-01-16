@@ -429,8 +429,8 @@ macro FastGTPSA!(expr_or_block)
   end
 end 
 
-function to_TPS(t1::TempTPS{T}) where {T}
-  t = TPS{T}(getdesc(t1).desc, getmo(t1)) #get_and_zero_mo!(t1))
+function to_TPS(t1::TempTPS{T,D}) where {T,D}
+  t = TPS{T,D}(; _mo=getmo(t1))
   copy!(t,t1)
   rel_temp!(t1)
   return t

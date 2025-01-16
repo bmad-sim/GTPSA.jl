@@ -92,7 +92,7 @@ function track_cav(z0)
   z[3] = z0[3]
   z[4] = z0[4]
   z[5] = z0[5]
-  z[6] = z0[6]+0.0001*z0[5]
+  z[6] = @FastGTPSA z0[6]+0.0001*z0[5]
   return z
 end
 
@@ -130,24 +130,24 @@ end
 
 function benchmark_GTPSA1()
   d = Descriptor(6,1,52,1)
-  z = vars()
-  k = params()
+  z = @vars(d)
+  k = @params(d)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end
 
 function benchmark_GTPSA2()
   d = Descriptor(6,2,52,2)
-  z = vars()
-  k = params()
+  z = @vars(d)
+  k = @params(d)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end
 
 function benchmark_GTPSA3()
   d = Descriptor(6,3,52,3)
-  z = vars()
-  k = params()
+  z = @vars(d)
+  k = @params(d)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end

@@ -1,34 +1,46 @@
-getdesc(t::TPS) = Descriptor(t.d)
+getdesc(t::TPS{T,Dynamic}) where {T} = Descriptor(t.d)
+numvars(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).nv
+numparams(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).np
+numnn(t::TPS{T,Dynamic}) where {T} = unsafe_load(t.d).nn
+
+getdesc(t::TempTPS{Float64,Dynamic}) = Descriptor(mad_tpsa_desc(t))
+getdesc(t::TempTPS{ComplexF64,Dynamic}) = Descriptor(mad_ctpsa_desc(t))
+
+getdesc(::TPS{T,D}) where {T,D} = D
+numvars(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nv
+numparams(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).np
+numnn(::TPS{T,D}) where {T,D} = unsafe_load(D.desc).nn
+
+getdesc(::TempTPS{T,D}) where {T,D} = D
+
 getdesc(d::Descriptor) = d
-getdesc(n::Nothing) = GTPSA.desc_current
-getdesc(t::TempTPS{Float64}) = Descriptor(mad_tpsa_desc(t))
-getdesc(t::TempTPS{ComplexF64}) = Descriptor(mad_ctpsa_desc(t))
-
-numvars(t::TPS) = unsafe_load(t.d).nv
 numvars(d::Descriptor) = unsafe_load(d.desc).nv
-numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
-
-numparams(t::TPS) = unsafe_load(t.d).np
 numparams(d::Descriptor) = unsafe_load(d.desc).np
-numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
-
-numnn(t::TPS) = unsafe_load(t.d).nn
 numnn(d::Descriptor) = unsafe_load(d.desc).nn
+
+getdesc(n::Nothing) = GTPSA.desc_current
+numvars(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nv
+numparams(n::Nothing) = unsafe_load(GTPSA.desc_currentt.desc).np
 numnn(n::Nothing) = unsafe_load(GTPSA.desc_current.desc).nn
 
-# If the ar
+# These are used only for "show":
+desctype(::Type{TPS{T,D}}) where {T,D} = D
+desctype(::Type{<:TPS{T}}) where {T} = Nothing
+
 _promote_arrays_numtype(t::AbstractArray{T}, ::Type{T}) where {T} = t 
-_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t) #copy_oftype(t, U)
-_promote_arrays_numtype(t::AbstractArray{TPS{U}}, ::Type{U}) where {U} = t
-_promote_arrays_numtype(t::AbstractArray{TPS{T}}, ::Type{U}) where {U,T} = TPS{U}.(t)
+_promote_arrays_numtype(t::AbstractArray{T}, ::Type{U}) where {T,U} = U.(t)
+_promote_arrays_numtype(t::AbstractArray{TPS{U,D}}, ::Type{U}) where {U,D} = t
+_promote_arrays_numtype(t::AbstractArray{TPS{T,D}}, ::Type{U}) where {U,T,D} = TPS{U,D}.(t)
 
 function promote_arrays_numtype(arrays...)
   return map(t->_promote_arrays_numtype(t, numtype(Base.promote_eltype(arrays...))), arrays)
-  #eltype(t) == Base.promote_eltype(arrays...) ? t : copy_oftype(t, Base.promote_eltype(arrays...)), arrays)
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
+# vars simply must be some kind of iterable with eltype Pair{<:Integer,<:Integer}, same for param if provided
+function pairs_to_sm(t::TPS, vars; params=nothing)::Tuple{Vector{Cint}, Cint}
+  eltype(vars) <: Pair{<:Integer,<:Integer} || error("Invalid input for vars!")
+  isnothing(params) || eltype(params) <: Pair{<:Integer,<:Integer} || error("Invalid input for params!")
   # WE MUST Order THE VARIABLES !!!
   nv = numvars(t)
   numv = Cint(length(vars))
@@ -55,7 +67,9 @@ function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tu
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::TPS, vars; params=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+  eltype(vars) <: Pair{<:Integer,<:Integer} || error("Invalid input for vars!")
+  isnothing(params) || eltype(params) <: Pair{<:Integer,<:Integer} || error("Invalid input for params!")
   nv = numvars(t)
   n = Cint(0)
   if isempty(params)
@@ -76,41 +90,3 @@ function pairs_to_m(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tup
   end
   return ords, n
 end
-
-# Prevent undefined behavior
-# Until AbstractComplex is implemented, I make the ctor return error because this should never happen 
-# asumming I wrapped enough
-#=
-Complex(t1::TPS) = complex(t1) 
-Complex(t1::TPS, t2::TPS) = complex(t1, t2)
-Complex(t1::TPS, a::Real) = complex(t1, a)
-Complex(a::Real, t1::TPS) = complex(a, t1)
-Complex{TPS}(t1::TPS) = complex(t1) 
-Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
-Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
-Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)
-Complex(t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(t1::TPS, t2::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(t1::TPS, a::Real) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(a::Real, t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-
-promote_rule(::Type{TPS}, ::Type{T}) where {T<:Real} = TPS #::Union{Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = TPS
-promote_rule(::Type{ComplexTPS64}, ::Type{T}) where {T<:Number} = ComplexTPS64 #::Union{Type{Complex{<:Real}},Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = ComplexTPS64
-promote_rule(::Type{TPS}, ::Type{T}) where {T<:Number}= ComplexTPS64
-
-# Handle bool which is special for some reason
-+(t::TPS, z::Complex{Bool}) = t + Complex{Int}(z)
-+(z::Complex{Bool}, t::TPS) = Complex{Int}(z) + t
--(t::TPS, z::Complex{Bool}) = t - Complex{Int}(z)
--(z::Complex{Bool}, t::TPS) = Complex{Int}(z) - t
-*(t::TPS, z::Complex{Bool}) = t * Complex{Int}(z)
-*(z::Complex{Bool}, t::TPS) = Complex{Int}(z) * t
-/(t::TPS, z::Complex{Bool}) = t / Complex{Int}(z)
-/(z::Complex{Bool}, t::TPS) = Complex{Int}(z) / t
-^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
-^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
-=#

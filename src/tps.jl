@@ -1,5 +1,7 @@
+struct Dynamic end
+
 #=
-    `mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number`
+    `mutable struct TPS{T<:Union{Float64,ComplexF64}, D} <: Number`
 
 Struct representing a truncated power series. The definition here is 1-to-1 
 with the GTPSA C library definition.
@@ -14,7 +16,7 @@ with the GTPSA C library definition.
 - `nam::NTuple{16,UInt8}` -- TPS name, max string length = GTPSA.NAMSZ = 15 chars
 - `coef::Ptr{T}`             -- An array containing all of the monomial coefficients up to the TPS max order
 =#
-mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
+mutable struct TPS{T, D} <: Number
   d::Ptr{Desc}                                            
   lo::UInt8                
   hi::UInt8     
@@ -25,25 +27,27 @@ mutable struct TPS{T<:Union{Float64,ComplexF64}} <: Number
   coef::Ptr{T} # CRITICAL: Flexible array members in C must NOT BE USED! 
                # In the C code: change [] to * and fix malloc
   
-  # Analog to C code mad_tpsa_newd
-  function TPS{T}(d::Ptr{Desc}, mo::UInt8) where {T}
+  function TPS{T,D}(; use::Union{Descriptor,TPS,Nothing}=nothing, _mo::UInt8=MAD_TPSA_DEFAULT) where {T<:Union{Float64,ComplexF64},D}
+    if D != Dynamic
+      D isa Descriptor || error("Type parameter D must be a Descriptor or GTPSA.Dynamic!")
+      isnothing(use) || error("`use` kwarg is incompatible with static Descriptor `TPS` constructor.")
+      d = D.desc
+    else
+      d = getdesc(use).desc
+    end
     d != C_NULL || error("No Descriptor defined!")
-    mo = min(mo, unsafe_load(d).mo)
+    mo = min(_mo, unsafe_load(d).mo)
     sz = unsafe_load(unsafe_load(d).ord2idx, mo+2)*sizeof(T)
-    coef = @ccall jl_malloc(sz::Csize_t)::Ptr{T}
+    coef = Base.unsafe_convert(Ptr{T}, @ccall jl_malloc(sz::Csize_t)::Ptr{Cvoid})
     ao = mo
     uid = Cint(0)
     nam = (0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
-    
     lo = 0x1
     hi = 0x0
     unsafe_store!(coef, T(0))
-
-    t = new{T}(d, lo, hi, mo, ao, uid, nam, coef)
-
+    t = new{T,D}(d, lo, hi, mo, ao, uid, nam, coef)
     f(t) = @ccall jl_free(t.coef::Ptr{Cvoid})::Cvoid
     finalizer(f, t)
-
     return t
   end
 end
@@ -51,91 +55,190 @@ end
 const TPS64 = TPS{Float64}
 const ComplexTPS64 = TPS{ComplexF64}
 
-"""
-    TPS(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing)
-    TPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}}
+# Other empty ctors:
+TPS{TD}(;
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TD} = TD isa Descriptor ? TPS{Float64,TD}(; use=use, _mo=_mo) :
+                                   TPS{TD,Dynamic}(; use=use, _mo=_mo)  
+                              
 
-Constructor to create a new `TPS` equal to the real value `ta`. If `ta` is a `TPS`, this 
-is equivalent to a copy constructor, with the result by default having the same `Descriptor` as `ta`.
-If `ta` is not a `TPS`, then the `Descriptor` used will by default be `GTPSA.desc_current`. The `Descriptor` 
-for the constructed `TPS` can be set using `use`. If a `TPS` or `ComplexTPS64` is passed to `use`, 
-the `Descriptor` for that TPS will be used.
+TPS(;
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{Float64,Dynamic}(; use=use, _mo=_mo)
 
-The constructor can also be used to create a copy of a `TPS` under one `Descriptor` to instead 
-have a different `Descriptor`. In this case, invalid monomials under the new `Descriptor` are removed.
+# Now ctors including regular numbers:
+function TPS{T,D}(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
+) where {T<:Union{Float64,ComplexF64},D}
+  t = TPS{T,D}(; use=use, _mo=_mo)
+  t[0] = ta
+  return t
+end
+ 
+TPS{TD}(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TD} = TD isa Descriptor ? TPS{promote_type(typeof(ta),Float64),TD}(ta; use=use, _mo=_mo) : 
+                                   TPS{TD,Dynamic}(ta; use=use, _mo=_mo)                              
 
-### Input
-- `ta`  -- Any `Number`
-- `use` -- (Optional) specify which `Descriptor` to use, default is `nothing` which uses the `Descriptor` for `ta` if `ta isa TPS`, else uses `GTPSA.desc_current`
-
-### Output
-- `ret` -- New `TPS` equal to `ta`, with removal of invalid monomials if `ta` is a `TPS` and a new `Descriptor` is specified
-"""
-TPS
-TPS{T}(ta::Union{Number,Nothing}=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_TPS(T, ta,use)
-TPS{T}(ta::TPS;                        use::Union{Descriptor,TPS,Nothing}=nothing) where {T<:Union{Float64,ComplexF64}} = low_TPS(T, ta,use)
-
-TPS(ta::Number;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{promote_type(Float64,typeof(ta))}(ta, use=use)
-TPS(ta::Nothing=nothing; use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{Float64}(ta, use=use)
-TPS(ta::TPS;          use::Union{Descriptor,TPS,Nothing}=nothing) = TPS{numtype(ta)}(ta, use=use)
-
-function low_TPS(T, ta, use)
-  if ta isa Nothing          # --- Blank TPS ---
-    return TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
-  elseif ta isa TPS
-    if use isa Nothing       # --- Copy ctor ---
-      t = TPS{T}(getdesc(ta).desc, ta.mo)
-      copy!(t, ta)
-    else                     # --- Change descriptor ---
-      t = TPS{T}(getdesc(use).desc, ta.mo)
-      setTPS!(t, ta, change=true)
-      return t
-    end
-  else                       # --- promote number ---
-    t = TPS{T}(getdesc(use).desc, use isa TPS ? use.mo : MAD_TPSA_DEFAULT)
-    t[0] = ta
+TPS(
+  ta::Number; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) = TPS{promote_type(typeof(ta),Float64),Dynamic}(ta; use=use, _mo=_mo)
+                     
+# Now ctors including TPSs:
+function TPS{T,D}(
+  ta::TPS{TA,DA}; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
+) where {T<:Union{Float64,ComplexF64},TA<:Union{Float64,ComplexF64},D,DA}
+  t = TPS{T,D}(; use=use, _mo=_mo);
+  if getdesc(t) == getdesc(ta)
+    copy!(t, ta)
+  else
+    setTPS!(t, ta, change=true)
   end
   return t
 end
 
+TPS{TD}(
+  ta::TPS{TA,DA}; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TD,TA<:Union{Float64,ComplexF64},DA} = TD isa Descriptor ? TPS{TA,TD}(ta; use=use, _mo=_mo) : 
+                                                                    TPS{TD,DA}(ta; use=use, _mo=_mo)
+                                                               
+TPS(
+  ta::TPS{TA,DA}; 
+  use::Union{Descriptor,TPS,Nothing}=nothing,
+  _mo::UInt8=MAD_TPSA_DEFAULT
+) where {TA<:Union{Float64,ComplexF64},DA} = TPS{TA,DA}(ta; use=use, _mo=_mo)
+
+
+
+"""
+    TPS([number] [, use=(descriptor|tps)])
+
+    TPS{T}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
+    TPS{T,GTPSA.Dynamic}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
+
+    TPS{D}([number]) where {D}
+    TPS{T,D}([number]) where {T<:Union{Float64,ComplexF64}}
+    
+Constructor to create a new `TPS`, equal to `number` if provided. 
+
+A constructed `TPS` must correspond to some previously defined `Descriptor`. As such, two "modes" of the `TPS` type may be 
+constructed to determine how the `Descriptor` to use is resolved:
+
+1. Dynamic `Descriptor` resolution -- The `Descriptor` is inferred at runtime, based on the passed arguments:
+
+| Ctor Call                                | Descriptor                                                      |
+| :-------------------                     | :--------------------------------------------                   |
+| `TPS()`                                  | `GTPSA.desc_current`                                            |
+| `TPS(use=descriptor)`                    | `descriptor`                                                    |
+| `TPS(use=tps1)`                          | That of `tps1`                                                  |
+| `TPS(tps)`                               | That of `tps`                                                   |
+| `TPS(number)`                            | `GTPSA.desc_current`                                            |
+| `TPS(number, use=(descriptor or tps1) )` | `descriptor` or that of `tps1`                                  |
+| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor!`) |
+
+The same applies for all of the above constructor calls with the constructors `TPS64(...)` and `ComplexTPS64(...)`.
+The created type will be a `TPS{T,GTPSA.Dynamic} where {T<:Union{Float64,ComplexF64}}`. Dynamic `Descriptor` resolution 
+will always be type stable, as the `Descriptor` for each `TPS` is not stored in the type definition. E.g., one can have 
+an array with elements of the concrete type `TPS{T,GTPSA.Dynamic}` even though the individual `TPS`s in the array may 
+have differing `Descriptor`s. Another example is typing the field of a struct as `TPS{T,GTPSA.Dynamic}`, so that field 
+can contain `TPS`s of different `Descriptor`s in a type-stable fashion. However, with dynamic `Descriptor` resolution 
+the `use` kwarg must be specified if the `Descriptor` is both not inferrable nor `GTPSA.desc_current` is the desired 
+`Descriptor`. For calls such as `zeros(TPS64, N)` or `TPS64(5.0)`, only `GTPSA.desc_current` can be inferred.
+
+2. Static `Descriptor` resolution -- The `Descriptor` is stored explicitly in the `TPS` type:
+
+| Ctor Call                                | Descriptor                                                     |
+| :-------------------                     | :--------------------------------------------                  |
+| `TPS{descriptor}([number])`              | `descriptor`                                                   |
+| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor!`)                 |  
+| `TPS(::TPS{T,descriptor})`               | `descriptor`                                                   |
+
+The same applies for all of the above constructor calls with the constructors `TPS64{...}(...)` and `ComplexTPS64{...}(...)`.
+The created type will be a `TPS{T,descriptor} where {T<:Union{Float64,ComplexF64}}`. Care must be taken with static 
+`Descriptor` resolution to ensure type-stability, and in some cases it may not be possible. However, static resolution has 
+the benefit that the `Descriptor` is stored explicitly in the type. As such, `GTPSA.desc_current` is never used with this mode, 
+nor is the `use` kwarg. Calls such as `zeros(TPS64{descriptor}, N)` can be made ensuring the `Descriptor` of the output is correct.
+"""
+TPS
+
+
+# We do NOT want to specialize the low-level routines for every Descriptor.
+# And, it would be nice to just keep every ::RealTPS instead of ::RealTPS{D} ... where {D}
+# However, cconvert/unsafe_convert need concrete types or to convert to or 
+# else there will be allocations
+# So here we will override the conversion:
+Base.cconvert(::Type{Ref{TPS{T}}}, t::TPS{T,D}) where {T,D} = Base.cconvert(Ref{TPS{T,D}}, t)
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, r)
+
+# And for array types:
+#Base.cconvert(::Type{Ptr{TPS{T}}}, t::AbstractArray{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
+#Base.cconvert(::Type{Ptr{TPS{T}}}, t::Array{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
+@static if VERSION >= v"1.11.0"
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, mr::Base.MemoryRef{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{TPS{T,D}}, mr))
+end
 # To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
 # For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},
 # while it probably should be Ptr{Ref{TPS{T}}} because of the mutability of TPS.
 # This is a problem when trying to do basically Ref{Ref{TPS{T}}} (pointer to pointer 
 # of single TPS). So the workaround is to define the following:
-Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{Nothing}}) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, r))
-Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T}) where {T} = Ref(pointer_from_objref(t))
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{Ptr{TPS{T,D}}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{TPS{T,D}}, Base.unsafe_convert(Ptr{Cvoid}, r)))
+Base.cconvert(::Type{Ptr{TPS{T}}}, t::TPS{T,D}) where {T,D} = Ref(Base.unsafe_convert(Ptr{TPS{T,D}}, pointer_from_objref(t)))
 # NOTE: We need to have a GC.@preserve before the cconvert to keep t valid !!!!!
 # This is only necessary for my mutable type. The other array inputs including isbits 
 # types are ok and basically have the above defined for them.
 # See https://github.com/JuliaLang/julia/issues/56873#event-15727452235
 
 
-"""
-    numtype(::Union{Type{TPS{T}},TPS{T}}) where T
 
-Returns the type of number that the `TPS` represents.
+"""
+    numtype(t::Number)
+    numtype(::Type{T}) where {T<:Number}
+
+If a `TPS`, then returns the type of number which the `TPS` 
+represents. Else, returns that number type.
 """
 numtype
 
-numtype(::Type{TPS{T}}) where {T} = T
+numtype(::Type{<:TPS{T}}) where {T} = T
 numtype(::TPS{T}) where {T} = T
 numtype(::Type{T}) where {T<:Number} = T
 numtype(::T) where {T<:Number} = T
 
-promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Real} = TPS{Float64} 
-promote_rule(::Type{TPS{Float64}}, ::Type{TPS{ComplexF64}}) = TPS{ComplexF64}
-promote_rule(::Type{TPS{ComplexF64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
-promote_rule(::Type{TPS{Float64}}, ::Type{T}) where {T<:Number} = TPS{ComplexF64}
-promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:AbstractIrrational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
-promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:AbstractIrrational} = TPS{ComplexF64}
-promote_rule(::Type{T}, ::Type{TPS{Float64}}) where {T<:Rational} = (T <: Real ? TPS{Float64} : TPS{ComplexF64})
-promote_rule(::Type{T}, ::Type{TPS{ComplexF64}}) where {T<:Rational} = TPS{ComplexF64}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TPS{Float64,D} 
 
-complex(::Type{TPS{T}}) where{T} = TPS{complex(T)}
-eps(::Type{TPS{T}}) where {T} = eps(T)
-floatmin(::Type{TPS{T}}) where {T} = floatmin(T)
-floatmax(::Type{TPS{T}}) where {T} = floatmax(T)
+promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{Float64,D}}) where {D} = TPS{Float64,D}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{TPS{ComplexF64,D}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{TPS{Float64,D}}) where {D} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{TPS{ComplexF64,D}}) where {D} = TPS{ComplexF64,D}
+
+promote_rule(::Type{TPS{Float64,D1}}, ::Type{TPS{Float64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{ComplexF64,D1}}, ::Type{TPS{Float64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{Float64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+promote_rule(::Type{TPS{ComplexF64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
+
+promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
+promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
+promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:AbstractIrrational,D} = TPS{ComplexF64,D}
+promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:Rational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
+promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:Rational,D} = TPS{ComplexF64,D}
+
+complex(::Type{TPS{T,D}}) where {T,D} = TPS{complex(T),D}
+eps(::Type{TPS{T,D}}) where {T,D} = eps(T)
+floatmin(::Type{TPS{T,D}}) where {T,D} = floatmin(T)
+floatmax(::Type{TPS{T,D}}) where {T,D} = floatmax(T)
 
 Base.broadcastable(o::TPS) = Ref(o)
 

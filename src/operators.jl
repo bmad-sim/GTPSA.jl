@@ -1,24 +1,14 @@
 # Here, all out of place operators are defined ONLY for TPS
 # --- zero ---
-zero(t::TPS) = typeof(t)(getdesc(t).desc, t.mo)
+zero(t::TPS{T,D}) where {T,D<:Dynamic} = typeof(t)(use=t, _mo=t.mo)
+zero(t::TPS{T,D}) where {T,D} = typeof(t)(_mo=t.mo)
 
-function zero(t::AbstractArray{<:TPS{<:T}}) where {T}
-  out = similar(t)
-  d = getdesc(first(t))
-  for i in eachindex(out)
-    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
-  end
-  return out
+function zero(t::AbstractArray{<:TPS{T}}) where {T<:Number}
+  return map(ti->zero(ti), t)
 end
 
-function one(t::AbstractArray{<:TPS{<:T}}) where {T}
-  out = similar(t)
-  d = getdesc(first(t))
-  for i in eachindex(out)
-    out[i] = eltype(t)(d.desc, MAD_TPSA_DEFAULT)
-    seti!(out[i], 0, 0, 1)
-  end
-  return out
+function one(t::AbstractArray{<:TPS{T}}) where {T<:Number}
+  return map(ti->one(ti), t)
 end
 
 # --- one ---
@@ -28,6 +18,14 @@ function one(t1::TPS)
   return t
 end
 
+# --- array override ---
+# If one specifies Array{TPS{T},N}, make it default to Array{TPS{T,GTPSA.Dynamic},N}
+Base.Array{TPS{T},N}(::UndefInitializer, d::Vararg{Int,N}
+) where {T<:Union{Float64,ComplexF64},N} = Array{TPS{T,GTPSA.Dynamic},N}(undef, d...)
+
+Base.convert(::Type{U}, a::AbstractArray
+) where {T<:Union{Float64,ComplexF64}, U<:Array{TPS{T}}} = U(a)
+
 # --- zeros and ones (taken from Base.array.jl) --- 
 # We overload this because we want each element of the array to be a separate allocated TPS
 for (fname, felt) in ((:zeros, :zero), (:ones, :one))
@@ -35,6 +33,11 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
       $fname(::Type{T}, dims::Base.DimOrInd...) where {T<:TPS} = $fname(T, dims)
       $fname(::Type{T}, dims::NTuple{N, Union{Integer, Base.OneTo}}) where {T<:TPS,N} = $fname(T, map(to_dim, dims))
       function $fname(::Type{T}, dims::NTuple{N, Integer}) where {T<:TPS,N}
+          #=if !isconcretetype(T)
+            T1 = T{Dynamic}
+          else
+            T1 = T
+          end=#
           a = Array{T,N}(undef, dims)
           for idx in eachindex(a)
             a[idx] = $felt(T)
@@ -42,6 +45,11 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
           return a
       end
       function $fname(::Type{T}, dims::Tuple{}) where {T<:TPS}
+          #=if !isconcretetype(T)
+            T1 = T{Dynamic}
+          else
+            T1 = T
+          end=#
           a = Array{T}(undef)
           for idx in eachindex(a)
             a[idx] = $felt(T)
@@ -53,14 +61,14 @@ end
 
 # --- rand ---
 """
-    rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T<:TPS}
+    rand(::Type{T}) where {T<:TPS}
 
-Generate a `TPS`/`ComplexTPS64` with all random coefficients.
+Generate a `TPS` with all random coefficients.
 """
-function rand(::Type{T}; use::Union{Descriptor,TPS}=GTPSA.desc_current) where {T<:TPS}
-  t = T(use=use)
+function rand(::Type{T}) where {T<:TPS}
+  t = zero(T)
   len = numcoefs(t)
-  for i=0:len-1
+  for i in 0:len-1
     t[i] = rand(numtype(t))
   end
   return t
@@ -122,46 +130,45 @@ end
 norm(t1::TPS) = abs(t1)
 
 # --- Arithmetic +,-,*,/,^ ---
-for t = ((TPS,TPS),(TPS,Number),(Number,TPS))
+for (op, op!) in ((:+,:add!),(:-,:sub!),(:*,:mul!),(:/,:div!))
+for (t1, t2) in ((:(TPS{<:Number,D}),:(TPS{<:Number,D})), 
+                 (:(TPS{<:Number,D}),:Number), (:Number,:(TPS{<:Number,D})))
 @eval begin
-function +(t1::$t[1], t2::$t[2])
-  use = $(t[1] == TPS ? :t1 : :t2)
+
+function $op(t1::$t1, t2::$t2) where {D<:Dynamic}
+  use = $(t1 == :(TPS{<:Number,D}) ? :t1 : :t2)
   t = (promote_type(typeof(t1),typeof(t2)))(use=use)
-  add!(t, t1, t2)
+  $op!(t, t1, t2)
   return t
 end
 
-function -(t1::$t[1], t2::$t[2])
-  use = $(t[1] == TPS ? :t1 : :t2)
-  t = (promote_type(typeof(t1),typeof(t2)))(use=use)
-  sub!(t, t1, t2)
+function $op(t1::$t1, t2::$t2) where {D}
+  t = (promote_type(typeof(t1),typeof(t2)))()
+  $op!(t, t1, t2)
   return t
 end
 
-function *(t1::$t[1], t2::$t[2])
-  use = $(t[1] == TPS ? :t1 : :t2)
-  t = (promote_type(typeof(t1),typeof(t2)))(use=use)
-  mul!(t, t1, t2)
-  return t
-end
-
-function /(t1::$t[1], t2::$t[2])
-  use = $(t[1] == TPS ? :t1 : :t2)
-  t = (promote_type(typeof(t1),typeof(t2)))(use=use)
-  div!(t, t1, t2)
-  return t
 end
 end
 end
 
-for t = ((TPS,TPS),(TPS,Number),(Number,TPS),(Integer,TPS),(TPS,Integer))
+for (t1,t2) in ((:(TPS{<:Number,D}),:(TPS{<:Number,D})), 
+                (:(TPS{<:Number,D}),:Number), (:Number,:(TPS{<:Number,D})), 
+                (:Integer,:(TPS{<:Number,D})), (:(TPS{<:Number,D}),:Integer))
 @eval begin
-function ^(t1::$t[1], t2::$t[2])
-  use = $(t[1] == TPS ? :t1 : :t2)
+function ^(t1::$t1, t2::$t2) where {D<:Dynamic}
+  use = $(t1 == :(TPS{<:Number,D}) ? :t1 : :t2)
   t = (promote_type(typeof(t1),typeof(t2)))(use=use)
   pow!(t, t1, t2)
   return t
 end
+
+function ^(t1::$t1, t2::$t2) where {D}
+  t = (promote_type(typeof(t1),typeof(t2)))()
+  pow!(t, t1, t2)
+  return t
+end
+
 end
 end
 
@@ -176,25 +183,36 @@ end
 end
 
 # --- atan2 ---
-atan(t1::TPS{Float64}, t2::TPS{Float64}) = (t = zero(t1); atan!(t, t1, t2); return t)
-atan(t1::TPS{Float64}, a::Real)     = (t = TPS{Float64}(a,use=t1); atan!(t, t1, t);  return t)
-atan(a::Real, t1::TPS{Float64})     = (t = TPS{Float64}(a,use=t1); atan!(t, t, t1);  return t)
+atan(t1::TPS{Float64,D}, t2::TPS{Float64,D}) where {D} = (t = zero(t1); atan!(t, t1, t2); return t)
+atan(t1::TPS{Float64,Dynamic}, a::Real) = (t = TPS{Float64}(a,use=t1); atan!(t, t1, t);  return t)
+atan(a::Real, t1::TPS{Float64,Dynamic}) = (t = TPS{Float64}(a,use=t1); atan!(t, t, t1);  return t)
+atan(t1::TPS{Float64,D}, a::Real) where {D} = (t = TPS{Float64,D}(a); atan!(t, t1, t);  return t)
+atan(a::Real, t1::TPS{Float64,D}) where {D} = (t = TPS{Float64,D}(a); atan!(t, t, t1);  return t)
 
 # --- Unary functions that return TPS{Float64} ---
 for t = (:real,  :imag, :angle, :abs)
 @eval begin
-($t)(t1::TPS) = (t = TPS{real(numtype(t1))}(use=t1); $(Symbol(t,:!))(t, t1); return t)
+($t)(t1::TPS{T,Dynamic}) where {T<:Number} = (t = TPS{real(T),Dynamic}(use=t1); $(Symbol(t,:!))(t, t1); return t)
+($t)(t1::TPS{T,D}) where {T<:Number,D}     = (t = TPS{real(T),D}(); $(Symbol(t,:!))(t, t1); return t)
 end
 end
 
 # --- Unary functions that return TPS{ComplexF64} --- 
-polar(t1::TPS) = (t=TPS{ComplexF64}(use=t1); polar!(t,t1); return t)
-complex(t1::TPS) = TPS{ComplexF64}(t1)
-complex(tre::TPS{Float64}, tim::TPS{Float64}) = (t = TPS{ComplexF64}(use=tre); complex!(t, tre=tre, tim=tim); return t)
-complex(tre::TPS{Float64}, tim::Real)  = (t = TPS{ComplexF64}(use=tre); complex!(t, tre=tre, tim=tim); return t)
-complex(tre::Real,    tim::TPS{Float64}) = (t = TPS{ComplexF64}(use=tim); complex!(t, tre=tre, tim=tim); return t)
+polar(t1::TPS{T,Dynamic}) where {T<:Number} = (t=TPS{ComplexF64,Dynamic}(use=t1); polar!(t,t1); return t)
+polar(t1::TPS{T,D}) where {T<:Number,D} = (t=TPS{ComplexF64,D}(); polar!(t,t1); return t)
+
+complex(t1::TPS) = complex(typeof(t1))(t1)
+complex(tre::TPS{Float64,Dynamic}, tim::TPS{Float64,Dynamic}) = (t = TPS{ComplexF64,Dynamic}(use=tre); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::TPS{Float64,Dynamic}, tim::Real)  = (t = TPS{ComplexF64,Dynamic}(use=tre); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::Real,    tim::TPS{Float64,Dynamic}) = (t = TPS{ComplexF64,Dynamic}(use=tim); complex!(t, tre=tre, tim=tim); return t)
+
+complex(tre::TPS{Float64,D}, tim::TPS{Float64,D}) where {D} = (t = TPS{ComplexF64,D}(); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::TPS{Float64,D}, tim::Real) where {D} = (t = TPS{ComplexF64,D}(); complex!(t, tre=tre, tim=tim); return t)
+complex(tre::Real,    tim::TPS{Float64,D}) where {D} = (t = TPS{ComplexF64,D}(); complex!(t, tre=tre, tim=tim); return t)
 
 # --- hypot ---
-hypot(a::TPS, b::Number...) = (t = TPS{Float64}(use=a); hypot!(t, a, b...); return t)
-hypot(a::TPS...) = (t = TPS{Float64}(use=a[1]); hypot!(t, a...); return t)
+hypot(a::TPS{<:Number,Dynamic}, b::Number...) = (t = TPS{Float64,Dynamic}(use=a); hypot!(t, a, b...); return t)
+hypot(a::TPS{<:Number,D}, b::Number...) where {D} = (t = TPS{Float64,D}(); hypot!(t, a, b...); return t)
+hypot(a::TPS{<:Number,Dynamic}...)= (t = TPS{Float64,Dynamic}(use=a[1]); hypot!(t, a...); return t)
+hypot(a::TPS{<:Number,D}...) where {D} = (t = TPS{Float64,D}(); hypot!(t, a...); return t)
 

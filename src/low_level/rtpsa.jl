@@ -1,5 +1,5 @@
 # Internal constant to aid multiple dispatch including temporaries 
-const RealTPS = Union{TempTPS{Float64}, TPS{Float64}}
+const RealTPS{D} = Union{TempTPS{Float64,D}, TPS{Float64,D}}
 
 """
     mad_tpsa_newd(d::Ptr{Desc}, mo::Cuchar)
@@ -109,11 +109,11 @@ end
     mad_tpsa_mo!(t::RealTPS, mo::Cuchar)::Cuchar
 
 Sets the maximum order `mo` of the TPSA `t`, and returns the original `mo`.
-`mo_` should be less than or equal to the allocated order `ao`.
+`mo` should be less than or equal to the allocated order `ao`.
 
 ### Input
 - `t`   -- TPSA
-- `mo_` -- Maximum order to set the TPSA
+- `mo` -- Maximum order to set the TPSA
 
 ### Output
 - `ret` -- Original `mo` of the TPSA
@@ -173,7 +173,7 @@ Returns maximum order of all TPSAs provided.
 """
 function mad_tpsa_ordv(t::RealTPS, ts::RealTPS...)::Cuchar
   #mo = @ccall MAD_TPSA.mad_tpsa_ordv(t::Ref{TPS{Float64}}, ts::Ref{TPS{Float64}}..., 0::Cint)::Cuchar # null pointer after args for safe use
-  mo = ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{Float64}, TPS{Float64}...), (t, ts...))
+  #mo = ccall((:mad_tpsa_ordv, MAD_TPSA), Cuchar, (TPS{Float64}, TPS{Float64}...), (t, ts...))
   return mo
 end
 
