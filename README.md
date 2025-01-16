@@ -9,17 +9,19 @@
 
 Truncated Power Series Algebra (TPSA) performs forward-mode automatic differentation (AD) similar to the typical dual-number implementation, as in `ForwardDiff.jl`. However, instead of nesting derivatives for higher orders, TPSA naturally extends to arbitary orders by directly using the power series expansions. Furthermore, because TPSA is designed for high order AD, the storage, indexing, and propagation of all nonzero partial derivatives has been highly optimized.
 
-GTPSA provides several advantages over current Julia AD packages:
+`GTPSA.jl` provides several advantages over current Julia AD packages:
 
-1. **Speed**: `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has very similar performance at 1st-order. See [our example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) where **GTPSA was x3.5 faster than ForwardDiff to 2nd order, and x19.8 faster to 3rd order.**
+1. **Speed:** `GTPSA.jl` is significantly faster than `ForwardDiff.jl` for 2nd-order calculations and above, and has very similar performance at 1st-order. See [our example](https://github.com/bmad-sim/GTPSA.jl/blob/main/benchmark/track.jl) where **GTPSA was x3.5 faster than ForwardDiff to 2nd order, and x19.8 faster to 3rd order.**
 
-2. **Easy Monomial Indexing**: Beyond 2nd order, accessing/manipulating the partial derivatives in an organized way can be a significant challenge. GTPSA provides three simple indexing schemes for getting/setting monomial coefficients in a truncated power series, as well as a `cycle!` function for cycling through all nonzero monomials.
+2. **Easy Monomial Indexing:** Beyond 2nd order, accessing/manipulating the partial derivatives in an organized way can be a significant challenge. GTPSA provides three simple indexing schemes for getting/setting monomial coefficients in a truncated power series, as well as a `cycle!` function for cycling through all nonzero monomials.
 
-3. **Complex Numbers**: `GTPSA.jl` natively supports complex numbers and allows for mixing of complex and real truncated power series
+3. **Easy TPS slicing:** Suppose you would like to get all terms in a multivariable truncated power series proportional to a specific variable; `GTPSA.jl` provides a simple syntax similar to array slicing to extract parts of a TPS.
 
-4. **Custom Orders in Individual Variables**: Other AD packages use a single maximum order for all variables. With GTPSA, the maximum order can be set differently for individual variables, as well as for a separate part of the monomial. For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is possible.
+4. **Complex Numbers:** `GTPSA.jl` natively supports complex numbers and allows for mixing of complex and real truncated power series
 
-5. **Distinction Between State Variables and Parameters**: Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters can be advantageous in analysis
+5. **Custom Orders in Individual Variables:** Other AD packages use a single maximum order for all variables. With GTPSA, the maximum order can be set differently for individual variables, as well as for a separate part of the monomial. For example, computing the Taylor expansion of $f(x_1,x_2)$ to 2nd order in $x_1$ and 6th order in $x_2$ is possible.
+
+6. **Distinction Between State Variables and Parameters:** Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters can be advantageous in analysis
 
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
