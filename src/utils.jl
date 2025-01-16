@@ -37,7 +37,10 @@ function promote_arrays_numtype(arrays...)
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to low level sparse monomial format (varidx1, ord1, varidx2, ord2, paramidx, ordp1,...)
-function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer,<:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}},Nothing}=nothing)::Tuple{Vector{Cint}, Cint}
+# vars simply must be some kind of iterable with eltype Pair{<:Integer,<:Integer}, same for param if provided
+function pairs_to_sm(t::TPS, vars; params=nothing)::Tuple{Vector{Cint}, Cint}
+  eltype(vars) <: Pair{<:Integer,<:Integer} || error("Invalid input for vars!")
+  isnothing(params) || eltype(params) <: Pair{<:Integer,<:Integer} || error("Invalid input for params!")
   # WE MUST Order THE VARIABLES !!!
   nv = numvars(t)
   numv = Cint(length(vars))
@@ -64,7 +67,9 @@ function pairs_to_sm(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tu
 end
 
 # Function to convert var=>ord, params=(param=>ord,) to monomial format (byte array of orders)
-function pairs_to_m(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}; params::Union{Vector{<:Pair{<:Integer, <:Integer}},Tuple{Vararg{Pair{<:Integer,<:Integer}}}}=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+function pairs_to_m(t::TPS, vars; params=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
+  eltype(vars) <: Pair{<:Integer,<:Integer} || error("Invalid input for vars!")
+  isnothing(params) || eltype(params) <: Pair{<:Integer,<:Integer} || error("Invalid input for params!")
   nv = numvars(t)
   n = Cint(0)
   if isempty(params)
@@ -85,41 +90,3 @@ function pairs_to_m(t::TPS, vars::Union{Vector{<:Pair{<:Integer, <:Integer}},Tup
   end
   return ords, n
 end
-
-# Prevent undefined behavior
-# Until AbstractComplex is implemented, I make the ctor return error because this should never happen 
-# asumming I wrapped enough
-#=
-Complex(t1::TPS) = complex(t1) 
-Complex(t1::TPS, t2::TPS) = complex(t1, t2)
-Complex(t1::TPS, a::Real) = complex(t1, a)
-Complex(a::Real, t1::TPS) = complex(a, t1)
-Complex{TPS}(t1::TPS) = complex(t1) 
-Complex{TPS}(t1::TPS, t2::TPS) = complex(t1, t2)
-Complex{TPS}(t1::TPS, a::Real) = complex(t1, a)
-Complex{TPS}(a::Real, t1::TPS) = complex(a, t1)
-Complex(t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(t1::TPS, t2::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(t1::TPS, a::Real) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex(a::Real, t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS, t2::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(t1::TPS, a::Real) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-Complex{TPS}(a::Real, t1::TPS) = error("ComplexTPS64 can only be defined as an AbstractComplex type (to be implemented in Julia PR #35587). If this error was reached without explicitly attempting to create a Complex{TPS}, please submit an issue to GTPSA.jl with an example.")
-
-promote_rule(::Type{TPS}, ::Type{T}) where {T<:Real} = TPS #::Union{Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = TPS
-promote_rule(::Type{ComplexTPS64}, ::Type{T}) where {T<:Number} = ComplexTPS64 #::Union{Type{Complex{<:Real}},Type{<:AbstractFloat}, Type{<:Integer}, Type{<:Rational}, Type{<:AbstractIrrational}}) = ComplexTPS64
-promote_rule(::Type{TPS}, ::Type{T}) where {T<:Number}= ComplexTPS64
-
-# Handle bool which is special for some reason
-+(t::TPS, z::Complex{Bool}) = t + Complex{Int}(z)
-+(z::Complex{Bool}, t::TPS) = Complex{Int}(z) + t
--(t::TPS, z::Complex{Bool}) = t - Complex{Int}(z)
--(z::Complex{Bool}, t::TPS) = Complex{Int}(z) - t
-*(t::TPS, z::Complex{Bool}) = t * Complex{Int}(z)
-*(z::Complex{Bool}, t::TPS) = Complex{Int}(z) * t
-/(t::TPS, z::Complex{Bool}) = t / Complex{Int}(z)
-/(z::Complex{Bool}, t::TPS) = Complex{Int}(z) / t
-^(t::TPS, z::Complex{Bool}) = t ^ Complex{Int}(z)
-^(z::Complex{Bool}, t::TPS) = Complex{Int}(z) ^ t
-=#

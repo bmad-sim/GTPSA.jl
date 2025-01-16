@@ -1,8 +1,8 @@
 # Valid indexing types 
 # Sparse monomial:
-const SMIndexType = Union{Vector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
+const SMIndexType = Union{AbstractVector{<:Pair{<:Integer,<:Integer}}, Tuple{Vararg{Pair{<:Integer,<:Integer}}}}
 # Monomial:
-const MIndexType = Union{Vector{<:Integer}, Tuple{Vararg{Integer}}}
+const MIndexType = Union{AbstractVector{<:Integer}, Tuple{Vararg{Integer}}}
 # TPS Index:
 const TPSIndexType = Union{Integer,
                            MIndexType,
