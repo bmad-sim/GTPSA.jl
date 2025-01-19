@@ -1,6 +1,6 @@
 
 function check_kwargs(fn, kwargs...)
-  valid_kwargs = [:(static_desc)=>Bool, :(complex)=>Bool]
+  valid_kwargs = [:(dynamic)=>Bool, :(complex)=>Bool]
   #valid_types = [Bool, Bool]
   for k in kwargs
     if Meta.isexpr(k, :(=))
@@ -23,9 +23,9 @@ macro vars(d, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))
   kwargvals = map(t->t[2],map(t->Pair(t.args...), kwargs))
 
-  idx_static_desc = findfirst(t->t==:static_desc, kwargnames)
+  idx_dynamic = findfirst(t->t==:dynamic, kwargnames)
   idx_complex = findfirst(t->t==:complex, kwargnames)
-  if !isnothing(idx_static_desc) && kwargvals[idx_static_desc]
+  if isnothing(idx_dynamic) || !kwargvals[idx_dynamic]
     if !isnothing(idx_complex) && kwargvals[idx_complex]
       return :(_complexvars(Val{$(esc(d))}()))
     else
@@ -44,9 +44,9 @@ macro params(d, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))
   kwargvals = map(t->t[2],map(t->Pair(t.args...), kwargs))
 
-  idx_static_desc = findfirst(t->t==:static_desc, kwargnames)
+  idx_dynamic = findfirst(t->t==:dynamic, kwargnames)
   idx_complex = findfirst(t->t==:complex, kwargnames)
-  if !isnothing(idx_static_desc) && kwargvals[idx_static_desc]
+  if isnothing(idx_dynamic) ||!kwargvals[idx_dynamic]
     if !isnothing(idx_complex) && kwargvals[idx_complex]
       return :(_complexparams(Val{$(esc(d))}()))
     else

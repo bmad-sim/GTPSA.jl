@@ -390,8 +390,8 @@ scalar(t::TPS) = t[0]
 scalar(t::Number) = t[1]
 
 # --- composition ---
-mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::AbstractArray{TPS{T,DB}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:Float64,DA,DB,DC}     = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
-mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::AbstractArray{TPS{T,DB}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:ComplexF64,DA,DB,DC}  = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::Union{AbstractArray{TPS{T,DB}},TPS{T}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:Float64,DA,DB,DC}     = mad_tpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
+mad_compose!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T}}, nb, mb::Union{AbstractArray{TPS{T,DB}},TPS{T}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T}}) where {T<:ComplexF64,DA,DB,DC}  = mad_ctpsa_compose!(Cint(na), ma, Cint(nb), mb, mc)
 
 """
     compose!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m2::Union{AbstractArray{TPS{T,D2}},TPS{T,D2}}, m1::AbstractArray{TPS{T,D1}}) where {T<:Union{Float64,ComplexF64},D,D1,D2}
@@ -401,7 +401,7 @@ Composes the `TPS`s `m2 ∘ m1`, and stores the result in-place in `m`.
 function compose!(
   m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, 
   m2::Union{AbstractArray{TPS{T,D2}},TPS{T,D2}},
-  m1::AbstractArray{TPS{T,D1}}
+  m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}
 ) where {T<:Union{Float64,ComplexF64},D,D1,D2}
   n = length(m)
   n2 = length(m2)
@@ -422,42 +422,40 @@ Composes the `TPS`s `m2 ∘ m1`
 """
 compose
 
-function compose(m2::AbstractArray{TPS{T2,D}}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D}
-  (m2prom, m1prom) = promote_arrays_numtype(m2, m1)
-  m = similar(m2prom)
-  for i in eachindex(m)
-    m[i] = zero(first(m2prom)) 
-  end
+function compose(m2::Union{AbstractArray{TPS{T2,D}},TPS}, m1::Union{AbstractArray{TPS{T1,D}},TPS}) where {T2,T1,D}
+  T = promote_type(eltype(m1), eltype(m2))
+  T == eltype(m1) ? m1prom = m1 : m1prom = T.(m1)
+  T == eltype(m2) ? m2prom = m2 : m2prom = T.(m2)
+  m = zero(m2prom)
   compose!(m, m2prom, m1prom)
   return m
 end
 
-function compose(f::TPS{T2,D}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D}
-  T = promote_type(typeof(f), eltype(m1))
-  T == typeof(f) ? fprom = f : fprom = T(f)
-  T == eltype(m1) ? m1prom = m1 : m1prom = T.(m1)
-  g = zero(fprom)
-  compose!(g, fprom, m1prom)
-  return g
-end
+∘(m2::Union{AbstractArray{TPS{T2,D}},TPS}, m1::Union{AbstractArray{TPS{T1,D}},TPS}) where {T2,T1,D} = compose(m2, m1)
 
-∘(m2::Union{TPS{T2,D},AbstractArray{TPS{T2,D}}}, m1::AbstractArray{TPS{T1,D}}) where {T2,T1,D} = compose(m2, m1)
 (f::TPS)(g::AbstractArray{TPS{T,D}}) where {T,D} = compose(f, g)
-(f::TPS)(g::TPS{T,D}...) where {T,D} = compose(f, collect(g))
+(f::TPS)(g::TPS) = compose(f, g)
+(f::TPS)(g::TPS, gs::TPS...) = compose(f, vcat(g, collect(gs)))
+
 (f::AbstractArray{TPS{TF,DF}})(g::AbstractArray{TPS{TG,DG}}) where {TF,DF,TG,DG} = compose(f, g)
-(f::AbstractArray{TPS{TF,DF}})(g::TPS{TG,DG}...) where {TF,DF,TG,DG}= compose(f, collect(g))
+(f::AbstractArray{TPS{TF,DF}})(g::TPS) where {TF,DF}= compose(f, g)
+(f::AbstractArray{TPS{TF,DF}})(g::TPS, gs::TPS...) where {TF,DF}= compose(f, vcat(g, collect(gs)))
 
 
 # --- translate ---
-mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::AbstractArray{T}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:Float64,DA,DC} = mad_tpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
-mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::AbstractArray{T}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:ComplexF64,DA,DC} = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
+mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::Union{Ref{T},AbstractArray{T}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:Float64,DA,DC} = mad_tpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
+mad_translate!(na, ma::Union{AbstractArray{TPS{T,DA}},TPS{T,DA}}, nb, tb::Union{Ref{T},AbstractArray{T}}, mc::Union{AbstractArray{TPS{T,DC}},TPS{T,DC}}) where {T<:ComplexF64,DA,DC} = mad_ctpsa_translate!(Cint(na), ma, Cint(nb), tb, mc)
 
 """
     translate!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D,D1} -> m
 
 Sets `m` to `m1` with its expansion point translated by `x`.
 """
-function translate!(m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}, x::AbstractArray{T}) where {T<:Union{Float64,ComplexF64},D,D1}
+function translate!(
+  m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}, 
+  m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}, 
+  x::Union{Ref{T},AbstractArray{T}}
+) where {T<:Union{Float64,ComplexF64},D,D1}
   n = length(m)
   n1 = length(m1)
   nx = length(x)
