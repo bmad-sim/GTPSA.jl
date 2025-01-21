@@ -16,7 +16,7 @@ Creates a TPSA `Descriptor` with `nv` variables, and a maximum truncation order 
 - `mo` -- Maximum truncation order of the TPSA
 """
 function Descriptor(nv::Integer, mo::Integer)::Descriptor
-  d = Descriptor(mad_desc_newv(convert(Cint, nv), convert(Cuchar, mo)))
+  d = Descriptor(mad_desc_newv(Cint(nv), UInt8(mo)))
   GTPSA.desc_current = d
   return d
 end
@@ -38,7 +38,7 @@ function Descriptor(vos::Vector{<:Integer}, mo::Integer)::Descriptor
   np = 0
   po = 0
   no = vos
-  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(Cint(nv), UInt8(mo), Cint(np), UInt8(po), convert(Vector{Cuchar}, no)))
   GTPSA.desc_current = d
   return d
 end
@@ -57,7 +57,7 @@ the parameters part of a monomial is `po`.
 - `po` -- Truncation order of the parameters part of a monomial
 """
 function Descriptor(nv::Integer, mo::Integer, np::Integer, po::Integer)::Descriptor
-  d = Descriptor(mad_desc_newvp(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po)))
+  d = Descriptor(mad_desc_newvp(Cint(nv), UInt8(mo), Cint(np), UInt8(po)))
   GTPSA.desc_current = d
   return d
 end
@@ -81,7 +81,7 @@ function Descriptor(vos::Vector{<:Integer}, mo::Integer, pos::Vector{<:Integer},
   nv = length(vos)
   np = length(pos)
   no = vcat(vos,pos)
-  d = Descriptor(mad_desc_newvpo(convert(Cint, nv), convert(Cuchar, mo), convert(Cint, np), convert(Cuchar, po), convert(Vector{Cuchar}, no)))
+  d = Descriptor(mad_desc_newvpo(Cint(nv), UInt8(mo), Cint(np), UInt8(po), convert(Vector{Cuchar}, no)))
   GTPSA.desc_current = d
   return d
 end

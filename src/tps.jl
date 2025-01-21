@@ -123,13 +123,14 @@ TPS(
 
 
 """
-    TPS([number] [, use=(descriptor|tps)])
+    TPS{D}([number]) where {D}
+    TPS{T,D}([number]) where {T<:Union{Float64,ComplexF64}}
 
+    TPS([number] [, use=(descriptor|tps)])
     TPS{T}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
     TPS{T,GTPSA.Dynamic}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
 
-    TPS{D}([number]) where {D}
-    TPS{T,D}([number]) where {T<:Union{Float64,ComplexF64}}
+
     
 Constructor to create a new `TPS`, equal to `number` if provided. 
 

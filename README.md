@@ -23,6 +23,8 @@ Truncated Power Series Algebra (TPSA) performs forward-mode automatic differenta
 
 6. **Distinction Between State Variables and Parameters:** Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters can be advantageous in analysis
 
+`GTPSA.jl` also includes useful truncated power series operations such as evaluation, composition, translation, and inversion.
+
 ## Setup
 To use `GTPSA.jl`, in the Julia REPL run
 

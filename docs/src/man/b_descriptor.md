@@ -21,7 +21,7 @@ GTPSA.desc_current = d
 
 -----
 
-`GTPSA.desc_current` is a global variable that is set each time a user creates a new `Descriptor`, and can also be set manually by a user. `GTPSA.desc_current` defines the `Descriptor` to use when that information is not explicitly (or implicitly in a TPS copy constructor) available, e.g. when calling `TPS(a)` where `a` is not a `TPS`. This also allows one to use general `Number` commands like `convert(TPS, a)` and `zeros(TPS, 6)`.
+`GTPSA.desc_current` is a global variable that is set each time a user creates a new `Descriptor`, and can also be set manually by a user. `GTPSA.desc_current` defines the `Descriptor` to use when [dynamic `Descriptor` resolution](@ref descmodes) is used and a `Descriptor` cannot be inferred, e.g. when calling `TPS(a)` where `a` is not a `TPS`. 
 
 
 ## Examples

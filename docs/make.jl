@@ -11,6 +11,7 @@ makedocs(
   [
     "Home" => "index.md",
     "Quickstart Guide" => "quickstart.md",
+    "Advanced Usage" => "advanced.md",
     "Manual" => ["man/a_toc.md",
                  "man/b_definitions.md", 
                  "man/c_descriptor.md", 

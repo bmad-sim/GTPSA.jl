@@ -7,11 +7,14 @@ function zero(t::AbstractArray{<:TPS{T}}) where {T<:Number}
   return map(ti->zero(ti), t)
 end
 
+# --- copy ---
+copy(t1::TPS) = (t = zero(t1); copy!(t, t1); return t)
+
+# --- one ---
 function one(t::AbstractArray{<:TPS{T}}) where {T<:Number}
   return map(ti->one(ti), t)
 end
 
-# --- one ---
 function one(t1::TPS)
   t = zero(t1)
   seti!(t, 0, 0, 1)
