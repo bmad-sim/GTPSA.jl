@@ -512,8 +512,8 @@ end
 
 @testset "Dynamic: Indexing" begin
   d = Descriptor(3,10,2,10)
-  v = @vars(d)
-  p = @params(d)
+  v = @vars(d,dynamic=true)
+  p = @params(d,dynamic=true)
   tol = 1e-18
 
   f = sin(v[1])
@@ -3566,7 +3566,7 @@ end
 end
 
 @testset "Dynamic: FastGTPSA - Block + Block Allocations" begin
-  d = Descriptor(3, 7); x = @vars(d); y= rand(3)
+  d = Descriptor(3, 7); x = @vars(d,dynamic=true); y= rand(3)
   tol = 1e-14
   @FastGTPSA begin
     t1 = x[1]^3*sin(x[2])/log(2+x[3])-exp(x[1]*x[2])*im;
