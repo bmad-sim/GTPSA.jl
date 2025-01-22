@@ -19,7 +19,6 @@ getord!
 integ
 integ!
 inv!
-GTPSA.inv
 normTPS
 numcoefs
 numtype
