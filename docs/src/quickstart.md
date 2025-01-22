@@ -5,7 +5,7 @@ We first must define a `Descriptor` which includes all information about a GTPSA
 ```@example desc
 using GTPSA #hide
 # 2 variables with max truncation order 10
-d1 = Descriptor(2, 10)     
+d10 = Descriptor(2, 10)     
 ```
 
 ## Calculating a Truncated Power Series

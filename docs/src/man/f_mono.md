@@ -18,14 +18,14 @@ m = mono(TPS{Float64|ComplexF64 [, GTPSA.Dynamic]} monomialindex [, use=(descrip
 ## Examples
 ```@repl desc
 using GTPSA; GTPSA.show_sparse = false; # hide
-d1 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
+d15 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
 mono(1)
-mono(TPS64{d}, 1)
-mono(ComplexTPS64{d}, param=1)
-mono(TPS64, [3,1,2], use=d1)
-mono(TPS64{d}, (3,1,2,2,1))
+mono(TPS64{d15}, 1)
+mono(ComplexTPS64{d15}, param=1)
+mono(TPS64, [3,1,2], use=d15)
+mono(TPS64{d15}, (3,1,2,2,1))
 mono([1=>3, 2=>1, 3=>3])
-mono((1=>3, 2=>1, 3=>2), params=(1=>2, 2=>1), use=d1)
+mono((1=>3, 2=>1, 3=>2), params=(1=>2, 2=>1), use=d15)
 ```
 
 ## Documentation
