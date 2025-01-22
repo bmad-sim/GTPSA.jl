@@ -16,7 +16,7 @@ show_sparse::Bool = false    # Use sparse monomial print
 ```@repl
 using GTPSA; GTPSA.show_sparse = false; #hide
 d = Descriptor(100, 1, 10, 1)
-x = @vars() # Doesn't fit on screen
+x = @vars(d) # Doesn't fit on screen
 GTPSA.show_sparse = true;
 x
 ```
