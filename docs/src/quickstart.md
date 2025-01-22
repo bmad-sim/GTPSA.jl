@@ -1,6 +1,6 @@
 # Quickstart Guide
 ## Defining the GTPSA
-We first must define a `Descriptor` which includes all information about a GTPSA, including the number of variables and truncation order. The constructors for a `Descriptor` including only variables are:
+We first must define a `Descriptor` which includes all information about a GTPSA, including the number of variables and truncation order:
 
 ```@example desc
 using GTPSA #hide
@@ -15,7 +15,7 @@ d1 = Descriptor(2, 10)
 f(\vec{x}) = f(\vec{a}) + \sum_{n=1}^{MO} \left.\frac{\partial f}{\partial x_{i_1} \partial x_{i_2}\ldots \partial x_{i_n}}\right\rvert_{\vec{a}} \Delta x_{i_1} \Delta x_{i_2} \ldots\Delta x_{i_n}
 ```
 
-The `TPS` type stores all of the monomial coefficients in this Taylor series up to the chosen order (e.g. ``f(\vec{a})``, ``\partial f /\partial x_i |_{\vec{a}}``, etc.). You can manipulate and propagate a `TPS` through some functions like any other number type, and the result will be a `TPS` containing the Taylor expansion representing all preceding operations. If you have some familiarity with automatic differentiation, then you can view a `TPS` as basically a Dual number which has been highly optimized for high order automatic differentiation with high numbers of variables/parameters.
+The `TPS` type stores all of the monomial coefficients in this Taylor series up to the chosen order (e.g. ``f(\vec{a})``, ``\partial f /\partial x_i |_{\vec{a}}``, etc.). You can manipulate and propagate a `TPS` through functions like any other number type, and the result will be a `TPS` containing the Taylor expansion representing all preceding operations. If you have some familiarity with automatic differentiation, then you can view a `TPS` as basically a Dual number which has been highly optimized for high order automatic differentiation with high numbers of variables/parameters.
 
 **In the context of `GTPSA.jl`, we refer to "variables" as each ``\Delta x_i`` in the `TPS`.** The reason for this is that one can always choose a coordinate system where ``\vec{a}=\vec{0}``, and such a choice greatly simplifies the terminology and analysis. This brings up an important point: the `TPS` type itself does NOT explicitly store any expansion point. It just stores the monomial coefficients of each term in the Taylor series, truncated at the chosen order of the (tiny) variables. The setup of the problem, done by you our dear user, will decide the expansion point. In the parlance of Dual numbers, the quantity ``\Delta x_i`` is equivalent to ``0+1\epsilon_i``.
 
@@ -115,7 +115,7 @@ ft = translate(ft1, -scalar(gt));
 fg_composed = ft ∘ gt
 ```
 
-The two now fully agree. 
+`fg_composed` now fully agrees with `fg_exact`.
 
 This example shows the care that must be taken when composing two separate truncated power series. Another, perhaps simpler, way of dealing with this problem is to always chose a coordinate system such that the scalar part of a `TPS` is equal to zero.
 
@@ -347,7 +347,7 @@ The advantages of using the macros become especially apparent in more complicate
 At the time of writing this documentation, a pull request is ready for merge with Julia's [`DifferentiationInterface.jl`](https://github.com/JuliaDiff/DifferentiationInterface.jl) package, which provides a generic interface for computing pushforwards (Jacobian vector products), derivatives, gradients, Jacobians, Hessians, and Hessian vector products using any automatic differentiation (AD) backend. If you are only interested in using GTPSA for these computations, then we strongly recommend using `DifferentiationInterface.jl` with the `AutoGTPSA` AD type.
 
 !!! note
-    GTPSA has been highly optimized for high order AD with large numbers of variables and parameters. If you are only interested in first order AD, then other AD backends will likely be faster. GTPSA, however, may likely
+    GTPSA has been highly optimized for high order AD with large numbers of variables and parameters. If you are only interested in first order AD, then other AD backends will likely be faster. GTPSA, however, will likely
     be faster in cases where the entire Hessian must be materialized.
 
 ## Compatibility with `DifferentialEquations.jl`
