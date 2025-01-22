@@ -55,7 +55,7 @@ t3_2 = ComplexTPS64{d2}(t3_1) # Promotes and changes Descriptor
 | `TPS(tps)`                               | That of `tps`                                                   |
 | `TPS(number)`                            | `GTPSA.desc_current`                                            |
 | `TPS(number, use=(descriptor or tps1) )` | `descriptor` or that of `tps1`                                  |
-| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor!`) |
+| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor`!) |
 
 `t = TPS{Float64|ComplexF64 [, GTPSA.Dynamic]}([number] [, use=(descriptor|tps)]) ` is the same as `TPS([number] [, use=(descriptor|tps)])` but with the monomial coefficient number type explicitly specified, and optionally the `GTPSA.Dynamic` dynamic mode identifier explicitly specified.
 
