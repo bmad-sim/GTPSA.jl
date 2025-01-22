@@ -3575,7 +3575,7 @@ end
   @test normTPS(tt2-t2) < tol
   @test norm(tz-z) < tol
 
-  y = TPS.(y)
+  y = TPS{d}.(y)
   z = rand(3)
   w = rand(3)
   @FastGTPSA begin
@@ -4876,21 +4876,21 @@ end
   t[1][0] = 1
   ct[1][0] = 1
   # Now do operators
-  t1 = TPS.(t)
+  t1 = TPS{d}.(t)
   t1[1][0] = 1
-  t2 = TPS.(t)
+  t2 = TPS{d}.(t)
   t2[1][0] = 2
-  t3 = TPS.(t)
+  t3 = TPS{d}.(t)
   t3[1][0] = 3
 
-  ct1 = ComplexTPS64.(ct)
+  ct1 = ComplexTPS64{d}.(ct)
   ct1[1][0] = 1 + 1im
-  ct2 = ComplexTPS64.(ct)
+  ct2 = ComplexTPS64{d}.(ct)
   ct2[1][0] = 2 + 2im
-  ct3 = ComplexTPS64.(ct)
+  ct3 = ComplexTPS64{d}.(ct)
   ct3[1][0] = 3 + 3im
 
-  t = ComplexTPS64.(t)
+  t = ComplexTPS64{d}.(t)
   t[1][0] = 0.5+0.5im; t[1][[1]] = 2+2im; t[1][[2]] = 3+3im; t[1][[3]] = 4+4im; t[1][[4]] = 5+5im; t[1][[5]] = 6+6im
   v = [0.5+0.5im]
   tol = 1e-10
@@ -5927,21 +5927,21 @@ if VERSION >= v"1.10"
   t[1][0] = 1
   ct[1][0] = 1
   # Now do operators
-  t1 = TPS.(t)
+  t1 = TPS{d}.(t)
   t1[1][0] = 1
-  t2 = TPS.(t)
+  t2 = TPS{d}.(t)
   t2[1][0] = 2
-  t3 = TPS.(t)
+  t3 = TPS{d}.(t)
   t3[1][0] = 3
 
-  ct1 = ComplexTPS64.(ct)
+  ct1 = ComplexTPS64{d}.(ct)
   ct1[1][0] = 1 + 1im
-  ct2 = ComplexTPS64.(ct)
+  ct2 = ComplexTPS64{d}.(ct)
   ct2[1][0] = 2 + 2im
-  ct3 = ComplexTPS64.(ct)
+  ct3 = ComplexTPS64{d}.(ct)
   ct3[1][0] = 3 + 3im
 
-  t = ComplexTPS64.(t)
+  t = ComplexTPS64{d}.(t)
   t[1][0] = 0.5+0.5im; t[1][[1]] = 2+2im; t[1][[2]] = 3+3im; t[1][[3]] = 4+4im; t[1][[4]] = 5+5im; t[1][[5]] = 6+6im
   v = [0.5+0.5im]
   tol = 1e-10
