@@ -147,7 +147,7 @@ constructed to determine how the `Descriptor` to use is resolved:
 | `TPS(tps)`                               | That of `tps`                                                   |
 | `TPS(number)`                            | `GTPSA.desc_current`                                            |
 | `TPS(number, use=(descriptor or tps1) )` | `descriptor` or that of `tps1`                                  |
-| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor!`) |
+| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor`!) |
 
 The same applies for all of the above constructor calls with the constructors `TPS64(...)` and `ComplexTPS64(...)`.
 The created type will be a `TPS{T,GTPSA.Dynamic} where {T<:Union{Float64,ComplexF64}}`. Dynamic `Descriptor` resolution 
@@ -163,7 +163,7 @@ the `use` kwarg must be specified if the `Descriptor` is both not inferrable nor
 | Ctor Call                                | Descriptor                                                     |
 | :-------------------                     | :--------------------------------------------                  |
 | `TPS{descriptor}([number])`              | `descriptor`                                                   |
-| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor!`)                 |  
+| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor`!)                 |  
 | `TPS(::TPS{T,descriptor})`               | `descriptor`                                                   |
 
 The same applies for all of the above constructor calls with the constructors `TPS64{...}(...)` and `ComplexTPS64{...}(...)`.
