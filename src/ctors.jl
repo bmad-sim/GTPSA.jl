@@ -205,7 +205,7 @@ julia> mono(ComplexTPS64{d}, param=2)
 ComplexTPS64{Descriptor(NV=3, MO=10, NP=2, PO=10)}:
  Real                     Imag                       Order   Exponent
   1.0000000000000000e+00   0.0000000000000000e+00      1      0   0   0   |   0   1
-
+```
 
 # Examples: Monomial Index-by-Order
 ```julia-repl
