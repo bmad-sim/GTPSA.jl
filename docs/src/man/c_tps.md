@@ -38,10 +38,10 @@ d1 = Descriptor(1, 1); # 1 variable to order 1
 t1_1 = TPS{d1}()
 t2_1 = TPS{d1}(5im)
 t3_1 = TPS{d1}(t2_1)
-d2 = Descriptor(1, 10); # New Descriptor to order 10
-t1_2 = TPS64{d2}() # Uses d2
-t2_2 = ComplexTPS64{d2}(6)
-t3_2 = ComplexTPS64{d2}(t3_1) # Promotes and changes Descriptor
+d10 = Descriptor(1, 10); # New Descriptor to order 10
+t1_2 = TPS64{d10}() # Uses d10
+t2_2 = ComplexTPS64{d10}(6)
+t3_2 = ComplexTPS64{d10}(t3_1) # Promotes and changes Descriptor
 ```
 
 ## Dynamic `Descriptor` Resolution
@@ -70,10 +70,10 @@ d1 = Descriptor(1, 1); # 1 variable to order 1
 t1_1 = TPS()
 t2_1 = TPS(5im)
 t3_1 = TPS(t2_1)
-d2 = Descriptor(1, 10); # New Descriptor to order 10
-t1_2 = TPS64() # Uses d2
+d10 = Descriptor(1, 10); # New Descriptor to order 10
+t1_2 = TPS64() # Uses d10
 t2_2 = ComplexTPS64(6)
-t3_2 = ComplexTPS64(t3_1, use=d2) # Promotes and changes Descriptor
+t3_2 = ComplexTPS64(t3_1, use=d10) # Promotes and changes Descriptor
 ```
 
 ## Documentation

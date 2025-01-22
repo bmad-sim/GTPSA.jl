@@ -23,11 +23,11 @@
 ## Examples
 ```@repl desc
 using GTPSA; GTPSA.show_sparse = false; #hide
-d1 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
-Δx = @vars(d1)
-Δxc = @vars(d1, complex=true)
-Δxd = @vars(d1, dynamic=true)
-Δk = @params(d1, complex=true, dynamic=true)
+d5 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
+Δx = @vars(d5)
+Δxc = @vars(d5, complex=true)
+Δxd = @vars(d5, dynamic=true)
+Δk = @params(d5, complex=true, dynamic=true)
 ```
 
 ## Documentation

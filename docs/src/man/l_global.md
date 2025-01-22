@@ -20,9 +20,9 @@ show_sparse::Bool = false    # Use sparse monomial print
 ```@repl
 using GTPSA; GTPSA.show_sparse = false; #hide
 GTPSA.desc_current
-d1 = Descriptor(1, 6);
+d6 = Descriptor(1, 6);
 GTPSA.desc_current
-x = @vars()
+t = TPS()
 GTPSA.show_sparse = true;
 x
 GTPSA.show_sparse = false;

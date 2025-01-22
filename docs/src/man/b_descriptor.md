@@ -25,12 +25,12 @@ GTPSA.desc_current = d # Used in dynamic Descriptor resolution
 
 
 ## Examples
-```@repl desc
+```@repl
 using GTPSA #hide
-d1 = Descriptor(2, 10)         
-d2 = Descriptor([1, 2, 3], 5)     
-d3 = Descriptor(3, 4, 1, 2)    
-d4 = Descriptor([6, 5], 8, [4, 3], 7)   
+da = Descriptor(2, 10)         
+db = Descriptor([1, 2, 3], 5)     
+dc = Descriptor(3, 4, 1, 2)    
+dd = Descriptor([6, 5], 8, [4, 3], 7)   
 GTPSA.desc_current = d1
 ```
 
