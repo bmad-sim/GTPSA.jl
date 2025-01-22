@@ -21,7 +21,7 @@ Truncated Power Series Algebra (TPSA) performs forward-mode automatic differenta
 
 5. **Distinction Between State Variables and Parameters:** Distinguishing between dependent variables and parameters in the solution of a differential equation expressed as a power series in the dependent variables/parameters can be advantageous in analysis.
 
-6. **Different Orders in Variables/Parameters:** The truncation order can be set differently for the variables and parameters. For example, computing the expansion of a function $f(x_1,k_1)$ to 6th order in $\Delta x_1$, but ignoring terms $O(\Delta k_1^2)$, is possible in GTPSA.
+6. **Different Orders in Variables/Parameters:** The truncation order can be set differently for the variables and parameters. For example, computing the expansion of a function $f(x,k)$ to 6th order in $\Delta x$, but ignoring terms $O(\Delta k^2)$, is possible in GTPSA.
 
 
 `GTPSA.jl` also includes useful truncated power series operations such as evaluation, composition, translation, and inversion.
@@ -39,7 +39,7 @@ julia> using GTPSA
 
 julia> d = Descriptor(2, 6); # 2 variables to 6th order
 
-julia> Δx = @vars(d)  # Get truncated power series (TPSs) corresponding to the variables
+julia> Δx = @vars(d);  # Get truncated power series (TPSs) corresponding to the variables
 
 julia> f = cos(Δx[1]) + im*sin(Δx[2]) # Manipulate TPSs as you would any other number
 ComplexTPS64{Descriptor(NV=2, MO=6)}:
