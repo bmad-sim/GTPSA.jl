@@ -526,6 +526,8 @@ Inverts the `TPS` map `m1` and sets `m` equal to the result. The scalar part of
 `m1` is ignored, so the user is responsible for ensuring the coordinate system 
 is correct by either translating `m` or translating the coordinate system.
 
+Also see `GTPSA.inv`, which only acts on `AbstractArray{TPS{T,D}}` types.
+
 # Arguments
 - `m::Union{AbstractArray{TPS{T,D}},TPS{T,D}}`
 - `m1::Union{AbstractArray{TPS{T,D1}},TPS{T,D1}}`
