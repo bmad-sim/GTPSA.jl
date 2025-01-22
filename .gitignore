@@ -2,4 +2,5 @@
 /docs/build/
 /docs/Manifest.toml
 /docs/.DS_Store
+/docs/src/index.md
 .vscode

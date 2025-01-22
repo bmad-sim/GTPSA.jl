@@ -17,6 +17,15 @@ function check_kwargs(fn, kwargs...)
   end
 end
 
+"""
+    @vars(descriptor [,complex=bool] [, dynamic=bool])
+
+Constructs a vector of `TPS`s corresponding to each of the variables in the GTPSA `descriptor`
+
+# Keyword Arguments
+- `complex` -- If `true`, returns the variables as `ComplexTPS64`s. Default is `false`.
+- `dynamic` -- If `true`, the variables will use dynamic `Descriptor` resolution. Default is `false`.
+"""
 macro vars(d, kwargs...)
   # Check each kwarg:
   check_kwargs(:vars, kwargs...)
@@ -40,6 +49,15 @@ macro vars(d, kwargs...)
   end
 end
 
+"""
+    @params(descriptor [,complex=bool] [, dynamic=bool])
+
+Constructs a vector of `TPS`s corresponding to each of the parameters in the GTPSA `descriptor`
+
+# Keyword Arguments
+- `complex` -- If `true`, returns the parameters as `ComplexTPS64`s. Default is `false`.
+- `dynamic` -- If `true`, the parameters will use dynamic `Descriptor` resolution. Default is `false`.
+"""
 macro params(d, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))
   kwargvals = map(t->t[2],map(t->Pair(t.args...), kwargs))
@@ -157,7 +175,7 @@ end
 
 
 """
-    mono([tpstype, ] monomialindex [, use=(descriptor|tps|nothing)])
+    mono([tpstype, ] monomialindex [, use=(descriptor|tps)])
 
 Returns a `TPS` of type `tpstype` (which defaults to `TPS{Float64,GTPSA.Dynamic}`) with 
 the specified monomial set to 1. Any of the three monomial indexing schemes (by order, sparse 

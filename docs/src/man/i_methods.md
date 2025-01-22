@@ -1,4 +1,4 @@
-# [TPS Methods](@id tpsmethods)
+# [`TPS`-Specific Functions](@id tpsmethods)
 ```@docs
 clearord
 clearord!
@@ -18,6 +18,8 @@ getord
 getord!
 integ
 integ!
+inv!
+GTPSA.inv
 normTPS
 numcoefs
 numtype

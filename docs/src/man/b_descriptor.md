@@ -7,7 +7,7 @@ d = Descriptor(vars_orders, max_order)
 d = Descriptor(num_vars, max_order, num_params, param_order)   
 d = Descriptor(vars_orders, max_order, params_orders, param_order)
 
-GTPSA.desc_current = d
+GTPSA.desc_current = d # Used in dynamic Descriptor resolution
 ```
 
 ## Description

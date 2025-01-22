@@ -8,11 +8,11 @@
 ```
 
 ## Description
-`Δx = @vars(descriptor)` creates a vector of `TPS64{descriptor}`s corresponding to each of the variables in the GTPSA `descriptor`
+`Δx = @vars(descriptor)` creates a vector of `TPS`s corresponding to each of the variables in the GTPSA `descriptor`
 
 ------
 
-`Δk = params(descriptor)` creates a vector of `TPS64{descriptor}`s corresponding to each of the parameters in the GTPSA `descriptor``
+`Δk = params(descriptor)` creates a vector of `TPS`s corresponding to each of the parameters in the GTPSA `descriptor``
 
 ### Optional Argument
 

@@ -13,7 +13,7 @@ t[param=param_idx]
 
 ### Examples
 ```@repl
-using GTPSA; GTPSA.show_sparse = false;  GTPSA.show_header=false; #hide
+using GTPSA; GTPSA.show_sparse = false; #hide
 # Example of indexing by monomial index -----------
 d = Descriptor(2, 10, 1, 10);
 t = TPS{d}(); # Create zero TPS based on d

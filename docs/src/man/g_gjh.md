@@ -49,9 +49,9 @@ GTPSA.hessian!(H, f [, include_params=bool])
 ```@repl
 using GTPSA; #hide
 d = Descriptor(2,10);
-x = vars(d);
-f = x[1] + 2*x[2] + 3*x[1]^2 + 4*x[1]*x[2] + 5*x[2]^2;
-g = 5*x[1] + 4*x[2] + 3*x[1]^2 + 2*x[1]*x[2] + x[2]^2;
+Δx = @vars(d);
+f = Δx[1] + 2*Δx[2] + 3*Δx[1]^2 + 4*Δx[1]*Δx[2] + 5*Δx[2]^2;
+g = 5*Δx[1] + 4*Δx[2] + 3*Δx[1]^2 + 2*Δx[1]*Δx[2] + Δx[2]^2;
 grad = GTPSA.gradient(f)
 J = GTPSA.jacobian([f, g])
 H = GTPSA.hessian(f)
