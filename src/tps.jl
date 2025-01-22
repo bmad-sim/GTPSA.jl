@@ -123,13 +123,14 @@ TPS(
 
 
 """
-    TPS([number] [, use=(descriptor|tps)])
+    TPS{D}([number]) where {D}
+    TPS{T,D}([number]) where {T<:Union{Float64,ComplexF64}}
 
+    TPS([number] [, use=(descriptor|tps)])
     TPS{T}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
     TPS{T,GTPSA.Dynamic}([number] [, use=(descriptor|tps)]) where {T<:Union{Float64,ComplexF64}}
 
-    TPS{D}([number]) where {D}
-    TPS{T,D}([number]) where {T<:Union{Float64,ComplexF64}}
+
     
 Constructor to create a new `TPS`, equal to `number` if provided. 
 
@@ -234,6 +235,11 @@ promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} 
 promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:AbstractIrrational,D} = TPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:Rational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
 promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:Rational,D} = TPS{ComplexF64,D}
+
+promote_rule(::Type{TPS{T}}, ::Type{G}) where {T<:Union{Float64,ComplexF64},G} = promote_rule(TPS{T,GTPSA.Dynamic}, G)
+promote_rule(::Type{G}, ::Type{TPS{T}}) where {T<:Union{Float64,ComplexF64},G<:Rational} = promote_rule(G, TPS{T,GTPSA.Dynamic})
+promote_rule(::Type{G}, ::Type{TPS{T}}) where {T<:Union{Float64,ComplexF64},G<:AbstractIrrational} = promote_rule(G, TPS{T,GTPSA.Dynamic})
+
 
 complex(::Type{TPS{T,D}}) where {T,D} = TPS{complex(T),D}
 eps(::Type{TPS{T,D}}) where {T,D} = eps(T)

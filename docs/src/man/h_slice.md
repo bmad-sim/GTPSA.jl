@@ -7,9 +7,9 @@ A polynomial within the TPS with certain variable orders can be extracted by sli
 ```@repl slice
 using GTPSA; GTPSA.show_sparse = false; GTPSA.show_header = false; #hide
 d = Descriptor(5, 10, 2, 10);
-x = vars(d);
-k = params(d);
- f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5]*k[1] + 6*x[3] + 5
+Δx = @vars(d);
+Δk = @params(d);
+f = 2*Δx[1]^2*Δx[3] + 3*Δx[1]^2*Δx[2]*Δx[3]*Δx[4]^2*Δx[5]*Δk[1] + 6*Δx[3] + 5
 g = f[[2,:,1]]
 h = f[[2,:,1,:]]
 ```
@@ -24,8 +24,8 @@ h = f[(1=>2, 3=>1, :)]  # Colon position is irrelevant in slicing with sparse mo
 When indexing by monomial index, a colon simply needs to be included after the variable index, or just a colon if a parameter is specified:
 
 ```@repl slice
-fx3 = f[3,:]
-fk1 = f[:,param=1]
+fΔx3 = f[3,:]
+fΔk1 = f[:,param=1]
 ```
 
 ## `par`
@@ -37,43 +37,21 @@ fk1 = f[:,param=1]
 
 ### Syntax
 ```
-f = par(tps, orders)
-
-f = par(tps [, vars_sparse_mono] [, params=params_sparse_mono])
-
-f = par(tps, idx)
-f = par(tps, param=param_idx)
+f = par(tps, monomialindex)
 ```
 
 ### Description
-#### Indexing by Order
-`f = par(tps, orders)` extracts the polynomial from the TPS with the monomial indexed-by-order in `orders`, and removes the variables/parameters included in the indexing from the polynomial
-
-------
-
-#### Indexing by Sparse Monomial
-`f = par(tps, vars_sparse_mono)` extracts the polynomial from the TPS with the monomial indexed-by-sparse monomial in `vars_sparse_mono`, and removes the variables included in the indexing from the polynomial
-
-`f = par(tps, params=params_sparse_mono)` extracts the polynomial from the TPS with the monomial indexed-by-sparse monomial in `params_sparse_mono`, and removes the parameters included in the indexing from the polynomial
-
-`f = par(tps, vars_sparse_mono, params=params_sparse_mono)` extracts the polynomial from the TPS with the monomial indexed-by-sparse monomial in `vars_sparse_mono` and `params_sparse_mono`, and removes the variables and/or parameters included in the indexing from the polynomial
-
-------
-
-#### Indexing by Monomial Index
-`f = par(tps, idx)` extracts the polynomial from the TPS with a first-order dependence on the specified monomial, and removes the variable from the polynomial
-
-`f = par(tps, param=param_idx)` extracts the polynomial from the TPS with a first-order dependence on the specified monomial with index `param_idx+nv` where `nv` is the number of variables in the GTPSA, and removes the parameter from the polynomial
-
+## Description
+`monomialindex` can be any of kind monomial indexing: by index, by order, and by sparse monomial. See the [monomial indexing](@ref monoindex) for more details on each.
 
 ### Examples
 
 ```@repl par
 using GTPSA; GTPSA.show_sparse = false; GTPSA.show_header=false; #hide
 d = Descriptor(5, 10, 2, 10);
-x = vars(d);
-k = params(d);
-f = 2*x[1]^2*x[3] + 3*x[1]^2*x[2]*x[3]*x[4]^2*x[5]*k[1] + 6*x[3] + 5
+Δx = @vars(d);
+Δk = @params(d);
+f = 2*Δx[1]^2*Δx[3] + 3*Δx[1]^2*Δx[2]*Δx[3]*Δx[4]^2*Δx[5]*Δk[1] + 6*Δx[3] + 5
 par(f, 3)
 par(f, param=1)
 par(f, [2,:,1])

@@ -130,24 +130,24 @@ end
 
 function benchmark_GTPSA1()
   d = Descriptor(6,1,52,1)
-  z = @vars(d)
-  k = @params(d)
+  z = @vars(d,dynamic=true)
+  k = @params(d,dynamic=true)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end
 
 function benchmark_GTPSA2()
   d = Descriptor(6,2,52,2)
-  z = @vars(d)
-  k = @params(d)
+  z = @vars(d,dynamic=true)
+  k = @params(d,dynamic=true)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end
 
 function benchmark_GTPSA3()
   d = Descriptor(6,3,52,3)
-  z = @vars(d)
-  k = @params(d)
+  z = @vars(d,dynamic=true)
+  k = @params(d,dynamic=true)
   map = track_ring(z, 0.36+k[1], 1.2+k[2], k[3:end])
   return map
 end

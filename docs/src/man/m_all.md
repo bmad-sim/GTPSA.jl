@@ -6,8 +6,8 @@ tan, csc, sec, cot, sinc, sinh, cosh, tanh, csch, sech, coth, asin,
 acos, atan, acsc, asec, acot, asinh, acosh, atanh, acsch, asech, 
 acoth, zero, zeros, one, ones, real, imag, conj, angle, complex, 
 promote_rule, getindex, setindex!, ==, <, >, <=, >=, !=, isequal, 
-isless, isinf, isnan, show, copy!, lastindex, firstindex, rand, 
-unsafe_convert, eps, floatmin, floatmax, signbit
+isless, isinf, isnan, show, copy, copy!, lastindex, firstindex, 
+rand, unsafe_convert, eps, floatmin, floatmax, signbit
 ```
 
 `zeros` and `ones` are overloaded from Base so that allocated `TPS`s are placed in each element. Because of the mutability of `TPS`, if we didn't explicity overload these functions every element would correspond to the exact same heap-allocated TPS.
@@ -16,11 +16,10 @@ unsafe_convert, eps, floatmin, floatmax, signbit
  **`LinearAlgebra`**: `norm`
 **`SpecialFunctions`**: `erf`, `erfc`, `erfcx`, `erfi`
 
-`GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [TPS Methods](@ref tpsmethods)):
+`GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [`TPS`-Specific Functions](@ref tpsmethods)):
 ```
 unit, sincu, sinhc, sinhcu, asinc, asincu, asinhc, asinhcu, wf, polar, rect
 ```
-
 If there is a mathematical function in Base which you'd like and is not included in the above list, feel free to submit an [issue](https://github.com/bmad-sim/GTPSA.jl/issues).
 
 ## Mutable Mathematics Interface

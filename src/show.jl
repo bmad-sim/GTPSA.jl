@@ -94,12 +94,12 @@ function show(io::IO, m::MonoDisplay)
   for i=1:length(m.varidxs)
     varidx = m.varidxs[i]
     varord = m.varords[i]
-    print(io, "(x" * subscript(varidx) * ")" * superscript(varord) * " ")
+    print(io, "(Δx" * subscript(varidx) * ")" * superscript(varord) * " ")
   end
   for i=1:length(m.paramidxs)
     paramidx = m.paramidxs[i]
     paramord = m.paramords[i]
-    print(io, "(k" * subscript(paramidx) * ")" * superscript(paramord) * " ")
+    print(io, "(Δk" * subscript(paramidx) * ")" * superscript(paramord) * " ")
   end
 end
 
@@ -117,6 +117,14 @@ function format(t::TPS; coloffset=0, max_nn=-1)
     cmplx = false
   end
 
+  function printcoef(v)
+    if typeof(v) <: Complex
+      return [abs(real(v)) > GTPSA.show_eps ? real(v) : 0.0 , abs(imag(v)) > GTPSA.show_eps ? imag(v) : 0.0 ]
+    else
+      return [abs(v) > GTPSA.show_eps ? v : 0.0 ]
+    end
+  end
+
   v = Ref{numtype(t)}()
   mono = Vector{UInt8}(undef, nn)
 
@@ -130,36 +138,20 @@ function format(t::TPS; coloffset=0, max_nn=-1)
     idx = cycle!(t, idx, nn, mono, v)
     while idx >= 0
       order = Int(sum(mono))
-      if abs(v[]) > GTPSA.show_eps
+      if abs(real(v[])) > GTPSA.show_eps || abs(imag(v[])) > GTPSA.show_eps
         if np > 0
-          if cmplx
-            out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])... repeat([nothing], max_nn-nn)...])
-          else
-            out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])... repeat([nothing], max_nn-nn)...])
-          end
+          out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(v[])... nothing order nothing convert(Vector{Int}, mono[1:nv])... " |" convert(Vector{Int}, mono[nv+1:end])... repeat([nothing], max_nn-nn)...])
         else
-          if cmplx
-            out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing convert(Vector{Int}, mono)... nothing repeat([nothing], max_nn-nn)...])
-          else
-            out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing convert(Vector{Int}, mono)... nothing repeat([nothing], max_nn-nn)...])
-          end
+          out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(v[])... nothing order nothing convert(Vector{Int}, mono)... nothing repeat([nothing], max_nn-nn)...])
         end
       end
       idx = cycle!(t, idx, nn, mono, v)
     end
     if size(out)[1] == 0
       if np > 0
-        if cmplx
-          out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)... repeat([nothing], max_nn-nn)...])
-        else
-          out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)... repeat([nothing], max_nn-nn)...])
-        end
+        out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(0*v[])... nothing Int(0) nothing zeros(Int,nv)... " |" zeros(Int,np)... repeat([nothing], max_nn-nn)...])
       else
-        if cmplx
-          out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing zeros(Int,nn)... nothing repeat([nothing], max_nn-nn)...])
-        else
-          out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing zeros(Int,nn)... nothing repeat([nothing], max_nn-nn)...])
-        end
+        out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(0*v[])... nothing Int(0) nothing zeros(Int,nn)... nothing repeat([nothing], max_nn-nn)...])
       end
     end
     if cmplx
@@ -196,21 +188,13 @@ function format(t::TPS; coloffset=0, max_nn=-1)
       else
         mono_display = MonoDisplay(varidxs, varords, paramidxs, paramords)
       end
-      if abs(v[]) > GTPSA.show_eps
-        if cmplx
-          out = vcat(out, Any[repeat([nothing], coloffset)... real(v[]) imag(v[]) nothing order nothing mono_display])
-        else
-          out = vcat(out, Any[repeat([nothing], coloffset)... v[] nothing order nothing mono_display])
-        end
+      if abs(real(v[])) > GTPSA.show_eps || abs(imag(v[])) > GTPSA.show_eps
+        out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(v[])... nothing order nothing mono_display])
       end
       idx = cycle!(t, idx, nn, mono, v)
     end
     if size(out)[1] == 0
-      if cmplx
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 0.0 nothing Int(0) nothing 1])
-      else
-        out = vcat(out, Any[repeat([nothing], coloffset)... 0.0 nothing Int(0) nothing 1])
-      end
+      out = vcat(out, Any[repeat([nothing], coloffset)... printcoef(0*v[])... nothing Int(0) nothing 1])
     end
     if cmplx
       formatters = (ft_printf("%23.16le", [coloffset+1]),ft_printf("%23.16le", [coloffset+2]), ft_printf("%2i", coloffset+4), ft_nonothing)

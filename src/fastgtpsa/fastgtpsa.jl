@@ -126,12 +126,12 @@ while still maintaining type-generic code.
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3,7); x = vars(d);
+julia> d = Descriptor(3,7); Δx = @vars(d);
 
-julia> t = @btime \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+julia> t = @btime \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   3.458 μs (20 allocations: 11.88 KiB)
 
-julia> t = @btime @FastGTPSA \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+julia> t = @btime @FastGTPSA \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   3.172 μs (2 allocations: 1.94 KiB)
 ```
 
@@ -140,8 +140,8 @@ is applied after every `=` sign in the block:
 
 ```julia-repl
 julia> @btime @FastGTPSA begin
-       t1 = \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
-       t2 = \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+       t1 = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
+       t2 = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
        a = t1+t2
        L = 5+3*exp(7)
        end
@@ -154,10 +154,10 @@ per `TPS` and one allocation per `Array`):
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3, 7); x = vars(d); y = rand(3);
+julia> d = Descriptor(3, 7); Δx = @vars(d); y = rand(3);
 
 julia> @btime @FastGTPSA begin
-        out = @. \$x^3*sin(\$y)/log(2+\$x)-exp(\$x*\$y)*im;
+        out = @. \$Δx^3*sin(\$y)/log(2+\$x)-exp(\$x*\$y)*im;
        end;
   7.573 μs (7 allocations: 5.89 KiB)
 ```
@@ -204,14 +204,14 @@ regardless of whether or not the type is a `TPS`:
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3,7); x = vars(d); 
+julia> d = Descriptor(3,7); Δx = @vars(d); 
 
 julia> t = ComplexTPS64(); # Pre-allocate
 
-julia> @btime @FastGTPSA! \$t = \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+julia> @btime @FastGTPSA! \$t = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   2.972 μs (0 allocations: 0 bytes)
 
-julia> @btime @FastGTPSA! \$t ^= \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+julia> @btime @FastGTPSA! \$t ^= \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   6.550 μs (0 allocations: 0 bytes)
 
 julia> y = rand(3); z = 2; # transparent to non-TPS types 
@@ -227,8 +227,8 @@ which case it is applied before every line in the block containing assignment:
 julia> t1 = zero(ComplexTPS64); t2 = zero(ComplexTPS64); z = 0; 
 
 julia> @btime @FastGTPSA! begin
-       \$t1 = \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
-       \$t2 -= \$x[1]^3*sin(\$x[2])/log(2+\$x[3])-exp(\$x[1]*\$x[2])*im;
+       \$t1 = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
+       \$t2 -= \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
        \$z += 7
        end
   5.965 μs (0 allocations: 0 bytes)
@@ -239,12 +239,12 @@ Broadcasting is also compatible with `@FastGTPSA!`:
 ```julia-repl
 julia> using GTPSA, BenchmarkTools
 
-julia> d = Descriptor(3, 7); x = vars(d); y = rand(3);
+julia> d = Descriptor(3, 7); Δx = @vars(d); y = rand(3);
 
 julia> out = zeros(ComplexTPS64, 3) # pre-allocate
 
 julia> @btime @FastGTPSA! begin
-        @. \$out = \$x^3*sin(\$y)/log(2+\$x)-exp(\$x*\$y)*im;
+        @. \$out = \$Δx^3*sin(\$y)/log(2+\$Δx)-exp(\$Δx*\$y)*im;
        end;
   7.312 μs (0 allocations: 0 bytes)
 ```
