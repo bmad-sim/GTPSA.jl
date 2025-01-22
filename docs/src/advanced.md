@@ -8,7 +8,7 @@ A constructed `TPS` must correspond to some previously defined `Descriptor`. Two
 | Ctor Call                                | Descriptor                                                     |
 | :-------------------                     | :--------------------------------------------                  |
 | `TPS{descriptor}([number])`              | `descriptor`                                                   |
-| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor!`)                 |  
+| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor`!)                 |  
 | `TPS(::TPS{T,descriptor})`               | `descriptor`                                                   |
 
 The same applies for all of the above constructor calls with the constructors `TPS64{...}(...)` and `ComplexTPS64{...}(...)`. The created type will be a `TPS{T,descriptor} where {T<:Union{Float64,ComplexF64}}`. Care must be taken with static `Descriptor` resolution to ensure type-stability, and in some cases it may not be possible. However, static resolution has the benefit that the `Descriptor` is stored explicitly in the type. Calls such as `zeros(TPS64{descriptor}, N)` can be made ensuring the `Descriptor` of the output is correct.
@@ -23,7 +23,7 @@ The same applies for all of the above constructor calls with the constructors `T
 | `TPS(tps)`                               | That of `tps`                                                   |
 | `TPS(number)`                            | `GTPSA.desc_current`                                            |
 | `TPS(number, use=(descriptor or tps1) )` | `descriptor` or that of `tps1`                                  |
-| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor!`) |
+| `TPS(tps, use=(descriptor or tps1) )`    | `descriptor` or that of `tps1` (copies + changes `Descriptor`!) |
 
 The same applies for all of the above constructor calls with the constructors `TPS64(...)` and `ComplexTPS64(...)`. The created type will be a `TPS{T,GTPSA.Dynamic} where {T<:Union{Float64,ComplexF64}}`. Dynamic `Descriptor` resolution will always be type stable, as the `Descriptor` for each `TPS` is not stored in the type definition. E.g., one can have an array with elements of the concrete type `TPS{T,GTPSA.Dynamic}` even though the individual `TPS`s in the array may have differing `Descriptor`s. Another example is typing the field of a struct as `TPS{T,GTPSA.Dynamic}`, so that field can contain `TPS`s of different `Descriptor`s in a type-stable fashion. However, with dynamic `Descriptor` resolution the `use` kwarg must be specified if the `Descriptor` is both not inferrable nor `GTPSA.desc_current` is the desired `Descriptor`. For calls such as `zeros(TPS64, N)` or `TPS64(5.0)`, only `GTPSA.desc_current` can be inferred.
 
@@ -53,9 +53,9 @@ The parameters part of a monomial may be specified with its own truncation order
 ## [Custom Truncation Orders](@id cto)
 GTPSA allows for significant customization in the truncation of specific variables within a monomial of the truncated power series (TPS). One can specify individually the truncation orders for each variable in a truncated power series, as well as the maximum truncation order for an entire monomial in the TPS. This is best shown with an example:
 
-Suppose we'd like to express a function ``f(x_1,x_2)`` as a truncated power series, and keep only terms that are up to 1st-order in ``x_1`` but up to 2nd order in ``x_2``; basically, we should not have any monomials where ``x_1`` has an exponent > 1, nor any monomials where ``x_2`` has an exponent > 2. GTPSA allows one to select the **individual truncation orders** for variables in a monomial in this manner. The next question to consider is the **maximum truncation order** for the entire monomial; in the above example, note that the 3rd-order term ``x_1x_2^2`` follows the rules we layed out so far. But what if we'd also like to truncate all monomials with order 3 and above, and not allow this monomial? This can be achieved by setting the maximum truncation order equal to 2. When defining a GTPSA, the user must always specify the maximum truncation order, which when specifying individual truncation orders must lie within the range ``[\textrm{max}{(\textrm{individual truncation orders})}, \textrm{sum}{(\textrm{individual truncation orders})}]``. If individual truncation orders are not specified, then they are automatically set to the maximum truncation order.
+Suppose we'd like to express a function ``f(x_1,x_2)`` as a truncated power series, and keep only terms that are up to 1st-order in ``\Delta x_1`` but up to 2nd order in ``\Delta x_2``; basically, we should not have any monomials where ``\Delta x_1`` has an exponent > 1, nor any monomials where ``\Delta x_2`` has an exponent > 2. GTPSA allows one to select the **individual truncation orders** for variables in a monomial in this manner. The next question to consider is the **maximum truncation order** for the entire monomial; in the above example, note that the 3rd-order term ``\Delta x_1\Delta x_2^2`` follows the rules we layed out so far. But what if we'd also like to truncate all monomials with order 3 and above, and not allow this monomial? This can be achieved by setting the maximum truncation order equal to 2. When defining a GTPSA, the user must always specify the maximum truncation order, which when specifying individual truncation orders must lie within the range ``[\textrm{max}{(\textrm{individual truncation orders})}, \textrm{sum}{(\textrm{individual truncation orders})}]``. If individual truncation orders are not specified, then they are automatically set to the maximum truncation order.
 
-**Example: allowed monomials for ``f(x_1,x_2)`` with individual variable truncation orders [1,2] and different maximum truncation orders:**
+**Example: allowed monomials for a GTPSA with two variables, individual variable truncation orders [1,2], and different maximum truncation orders:**
 
 | Exponents | Max Order = 2 | Max Order = 3 |
 | :-------: | :-----------: | :-----------: |
@@ -79,7 +79,7 @@ d3 = Descriptor([1, 2], 3) # Variable truncation orders [1, 2] and MO=2
 
 Individual truncation orders for the parameters may be specified too. The parameters part of a monomial is treated separately, truncated at the parameter order always.
 
-**Example: allowed monomials for ``f(x_1,k_1,k_2)`` (one variable, two parameters) with individual variable truncation order [1], individual parameter truncation orders [1,1], maximum order = 3, and different parameter orders:**
+**Example: allowed monomials for a GTPSA with one variable, two parameters, individual variable truncation order [1], individual parameter truncation orders [1,1], maximum order = 3, and different parameter orders:**
 
 | Exponents | Parameter Order = 1 | Parameter Order = 2 |
 | :-------: | :-----------: | :-----------: |
