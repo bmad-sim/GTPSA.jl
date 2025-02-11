@@ -182,12 +182,15 @@ TPS
 # So here we will override the conversion:
 Base.cconvert(::Type{Ref{TPS{T}}}, t::TPS{T,D}) where {T,D} = Base.cconvert(Ref{TPS{T,D}}, t)
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, r::Base.RefValue{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T,D}}, r)
-
+#
 # And for array types:
 #Base.cconvert(::Type{Ptr{TPS{T}}}, t::AbstractArray{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
 #Base.cconvert(::Type{Ptr{TPS{T}}}, t::Array{TPS{T,D}}) where {T,D} = Base.cconvert(Ptr{TPS{T,D}}, t)
+# Supports static array types:
+Base.unsafe_convert(::Type{Ptr{TPS{T}}}, mr::Base.RefValue) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{Cvoid}, mr))
 @static if VERSION >= v"1.11.0"
 Base.unsafe_convert(::Type{Ptr{TPS{T}}}, mr::Base.MemoryRef{TPS{T,D}}) where {T,D} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{TPS{T,D}}, mr))
+#Base.unsafe_convert(::Type{Ptr{TPS{T}}}, mr::GenericMemoryRef) where {T} = Base.unsafe_convert(Ptr{TPS{T}}, Base.unsafe_convert(Ptr{eltype(mr)}, mr))
 end
 # To call functions accepting tpsa*, Julia requires using Ref{TPS{T}} (single TPSA pointer).
 # For arrays of mutable types, Julia's (inconsistent) syntax is Ptr{TPS{T}},

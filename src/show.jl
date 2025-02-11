@@ -232,10 +232,10 @@ function show(io::IO, t::TPS{T,D}) where {T,D}
   pretty_table(io, out,tf=tf_borderless,formatters=formatters,show_header=false, alignment=:l,display_size=(displaysize(io)[1]-4-extralines,displaysize(io)[2]),vlines=[])
 end
 
-show(io::IO, m::AbstractArray{<:TPS}) = show_vec(io, m)
-show(io::IO, ::MIME"text/plain", m::AbstractArray{<:TPS}) = show_vec(io, m)
+show(io::IO, m::AbstractArray{<:TPS{T}}) where {T} = show_vec(io, m)
+show(io::IO, ::MIME"text/plain", m::AbstractArray{<:TPS{T}}) where {T} = show_vec(io, m)
 
-function show_vec(io::IO, m::AbstractArray{<:TPS})
+function show_vec(io::IO, m::AbstractArray{<:TPS{T}}) where {T}
   N = length(m)
   lines_used=Ref{Int}(0)
   D = desctype(eltype(m))
