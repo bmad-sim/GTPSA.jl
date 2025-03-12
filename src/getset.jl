@@ -39,7 +39,7 @@ end
 
 # Monomial
 function lowset!(t::TPS, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
-  setm!(t, length(ords), collect(Cuchar, ords), 0, v)
+  setm!(t, length(ords), convert(Vector{Cuchar}, ords), 0, v)
 end
 
 # By sparse monomial
@@ -93,7 +93,7 @@ end
 
 # Monomial
 function lowget(t::TPS, ords::MIndexType, param::Nothing, params::Nothing)
-  return getm(t, length(ords), collect(Cuchar, ords))
+  return getm(t, length(ords), convert(Vector{Cuchar}, ords))
 end
 
 # By sparse monomial

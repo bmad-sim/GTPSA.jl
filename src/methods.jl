@@ -123,8 +123,8 @@ end
 Calculates `F⋅∇h` and sets `g` equal to the result.
 """
 function fgrad!(g::TPS{T}, F::AbstractArray{TPS{T,D}}, h::TPS{T}) where {T,D} 
-  nv = numvars(h)
-  length(F) == nv || error("Incorrect length of F; received $(length(F)), should be $nv")
+  nn = numnn(h)
+  length(F) <= nn || error("Incorrect length of F; received $(length(F)), should be <= $nn")
   !(g === h) || error("Cannot fgrad!(g, F, h) with g === h")
   T == Float64 ? mad_tpsa_fgrad!(Cint(length(F)), F, h, g) : mad_ctpsa_fgrad!(Cint(length(F)), F, h, g)
   return g
@@ -151,7 +151,6 @@ end
     ∫!(t::TPS{T}, t1::TPS{T}, var=1) where {T} -> t
 
 Integrates `t1` wrt the variable `var` and sets `t` equal to the result. 
-Integration with respect to parameters is not allowed.
 """
 function integ!(t::TPS{T}, t1::TPS{T}, var=1) where {T}
   T == Float64 ? mad_tpsa_integ!(t1, t, Cint(var)) : mad_ctpsa_integ!(t1, t, Cint(var))
@@ -163,9 +162,7 @@ const ∫! = integ!
     integ(t1::TPS, var::Integer=1)
     ∫(t1::TPS, var::Integer=1)
 
-Integrates `t1` wrt the variable `var`. Integration wrt 
-parameters is not allowed, and integration wrt higher order 
-monomials is not currently supported.
+Integrates `t1` wrt the variable `var`. 
 """
 integ(t1::TPS, var=1) = (t = zero(t1); integ!(t, t1, var); return t)
 const ∫ = integ
