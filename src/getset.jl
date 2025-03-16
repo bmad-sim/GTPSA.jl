@@ -93,7 +93,7 @@ end
 
 # Monomial
 function lowget(t::TPS, ords::MIndexType, param::Nothing, params::Nothing)
-  return getm(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords), ords))
+  return getm(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords))
 end
 
 # By sparse monomial
