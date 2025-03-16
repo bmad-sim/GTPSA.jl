@@ -1,7 +1,7 @@
 name = "GTPSA"
 uuid = "b27dd330-f138-47c5-815b-40db9dd9b6e8"
 authors = ["Matt Signorelli"]
-version = "1.4.0"
+version = "1.4.1"
 
 [deps]
 GTPSA_jll = "a4739e29-4b97-5c0b-bbcf-46f08034c990"
