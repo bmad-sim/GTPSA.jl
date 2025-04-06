@@ -63,6 +63,9 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
       end
   end
 end
+# -- float --
+float(t::Type{T}) where {T<:TPS} = T
+float(t::TPS) = t
 
 # --- rand ---
 """
