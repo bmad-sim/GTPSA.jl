@@ -344,7 +344,7 @@ The advantages of using the macros become especially apparent in more complicate
 
 ## Automatic Differentiation using `GTPSA.jl`
 
-At the time of writing this documentation, a pull request is ready for merge with Julia's [`DifferentiationInterface.jl`](https://github.com/JuliaDiff/DifferentiationInterface.jl) package, which provides a generic interface for computing pushforwards (Jacobian vector products), derivatives, gradients, Jacobians, Hessians, and Hessian vector products using any automatic differentiation (AD) backend. If you are only interested in using GTPSA for these computations, then we strongly recommend using `DifferentiationInterface.jl` with the `AutoGTPSA` AD type.
+GTPSA is a supported backend in Julia's [`DifferentiationInterface.jl`](https://github.com/JuliaDiff/DifferentiationInterface.jl) package, which provides a generic interface for computing pushforwards (Jacobian vector products), derivatives, gradients, Jacobians, Hessians, and Hessian vector products using any automatic differentiation (AD) backend. If you are only interested in using GTPSA for these computations, then we strongly recommend using `DifferentiationInterface.jl` with the `AutoGTPSA` AD type.
 
 !!! note
     GTPSA has been highly optimized for high order AD with large numbers of variables and parameters. If you are only interested in first order AD, then other AD backends will likely be faster. GTPSA, however, will likely
