@@ -10,6 +10,8 @@ end
 # --- copy ---
 copy(t1::TPS) = (t = zero(t1); copy!(t, t1); return t)
 
+deepcopy_internal(t::TPS, stackdict::IdDict) = get!(()->copy(t), stackdict, t)::typeof(t)
+
 # --- one ---
 function one(t::AbstractArray{<:TPS{T}}) where {T<:Number}
   return map(ti->one(ti), t)
@@ -61,6 +63,9 @@ for (fname, felt) in ((:zeros, :zero), (:ones, :one))
       end
   end
 end
+# -- float --
+float(t::Type{T}) where {T<:TPS} = T
+float(t::TPS) = t
 
 # --- rand ---
 """
