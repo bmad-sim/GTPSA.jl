@@ -81,7 +81,7 @@ import Base:  +,
 import LinearAlgebra: norm
 import SpecialFunctions: erf, erfc, erfi, erfcx
 
-using GTPSA_jll, Printf, PrettyTables
+using GTPSA_jll, Printf, PrettyTables, MacroTools
 
 export  
   # Layer 2 structs + functions NOT in Base:

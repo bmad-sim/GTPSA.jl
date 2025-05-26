@@ -2,6 +2,7 @@
 # taken from https://jkrumbiegel.com/pages/2022-08-09-composing-macros/
 function apply_macro(exp::Expr)
   if exp isa Expr && exp.head == :macrocall
+    @show exp
       exp.args[3] = apply_macro(exp.args[3])
       return macroexpand(@__MODULE__, exp, recursive = false)
   else
@@ -164,6 +165,18 @@ julia> @btime @FastGTPSA begin
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
+    block = MacroTools.postwalk(esc(expr_or_block)) do x
+      @capture(x, lhs_ = rhs_) || return x #x isa Symbol ? :($(esc(x)))  : x # isa Symbol ? :($(esc(x))) : x
+      if !(rhs isa Expr) 
+        return x
+      end
+      rhs = change_dots(rhs)
+      rhs = munge_expr(rhs)
+      rhs = change_functions(rhs)
+      return  :($(lhs) = to_TPS.($rhs))
+    end
+    return block #MacroTools.prettify(block)
+    #=
     block = expr_or_block
     for i in eachindex(block.args)
       if !(block.args[i] isa LineNumberNode)
@@ -177,9 +190,10 @@ macro FastGTPSA(expr_or_block)
       end
     end
     return esc(block)
+    =#
   else
     expr = expr_or_block
-    expr = esc(apply_macro(expr))
+    #expr = esc(apply_macro(expr))
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
@@ -251,7 +265,8 @@ julia> @btime @FastGTPSA! begin
 """
 macro FastGTPSA!(expr_or_block)
   if expr_or_block.head == :block
-    block = expr_or_block
+    #=block = expr_or_block
+    
     for i in eachindex(block.args)
       if !(block.args[i] isa LineNumberNode)
         expr = esc(apply_macro(block.args[i]))
@@ -341,6 +356,41 @@ macro FastGTPSA!(expr_or_block)
           continue
         end
       end
+    end
+    return block
+    =#
+     block = MacroTools.postwalk(esc(expr_or_block)) do x
+      if @capture(x, lhs_ = rhs_) 
+        return :(@FastGTPSA! $(lhs) = $(rhs))
+      elseif @capture(x, lhs_ += rhs_) 
+        return :(@FastGTPSA! $(lhs) += $(rhs))
+      elseif @capture(x, lhs_ -= rhs_) 
+        return :(@FastGTPSA! $(lhs) -= $(rhs))
+      elseif @capture(x, lhs_ *= rhs_) 
+        return :(@FastGTPSA! $(lhs) *= $(rhs))
+      elseif @capture(x, lhs_ /= rhs_) 
+        return :(@FastGTPSA! $(lhs) /= $(rhs))
+      elseif @capture(x, lhs_ ^= rhs_) 
+        return :(@FastGTPSA! $(lhs) ^= $(rhs))
+      elseif @capture(x, lhs_ .= rhs_) 
+        return :(@FastGTPSA! $(lhs) .= $(rhs))
+      elseif @capture(x, lhs_ .+= rhs_) 
+        return :(@FastGTPSA! $(lhs) .+= $(rhs))
+      elseif @capture(x, lhs_ .-= rhs_) 
+        return :(@FastGTPSA! $(lhs) .-= $(rhs))
+      elseif @capture(x, lhs_ .*= rhs_) 
+        return :(@FastGTPSA! $(lhs) .*= $(rhs))
+      elseif @capture(x, lhs_ ./= rhs_) 
+        return :(@FastGTPSA! $(lhs) ./= $(rhs))
+      elseif @capture(x, lhs_ .^= rhs_) 
+        return :(@FastGTPSA! $(lhs) .^= $(rhs))
+      else
+        return x
+      end
+      @show eq
+      @show lhs
+      @show rhs
+      return  :(@FastGTPSA! $(lhs) += $(rhs))
     end
     return block
   else
