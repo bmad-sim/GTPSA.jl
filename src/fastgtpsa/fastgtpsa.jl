@@ -167,13 +167,14 @@ macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
     block = MacroTools.postwalk(esc(expr_or_block)) do x
       @capture(x, lhs_ = rhs_) || return x #x isa Symbol ? :($(esc(x)))  : x # isa Symbol ? :($(esc(x))) : x
+      #=
       if !(rhs isa Expr) 
         return x
       end
       rhs = change_dots(rhs)
       rhs = munge_expr(rhs)
-      rhs = change_functions(rhs)
-      return  :($(lhs) = to_TPS.($rhs))
+      rhs = change_functions(rhs)=#
+      return  :($lhs = @FastGTPSA $rhs)
     end
     return block #MacroTools.prettify(block)
     #=
