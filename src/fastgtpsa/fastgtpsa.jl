@@ -2,7 +2,6 @@
 # taken from https://jkrumbiegel.com/pages/2022-08-09-composing-macros/
 function apply_macro(exp::Expr)
   if exp isa Expr && exp.head == :macrocall
-    @show exp
       exp.args[3] = apply_macro(exp.args[3])
       return macroexpand(@__MODULE__, exp, recursive = false)
   else
