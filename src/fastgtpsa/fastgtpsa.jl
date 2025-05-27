@@ -193,7 +193,7 @@ macro FastGTPSA(expr_or_block)
     =#
   else
     expr = expr_or_block
-    #expr = esc(apply_macro(expr))
+    expr = esc(apply_macro(expr))
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
@@ -387,10 +387,6 @@ macro FastGTPSA!(expr_or_block)
       else
         return x
       end
-      @show eq
-      @show lhs
-      @show rhs
-      return  :(@FastGTPSA! $(lhs) += $(rhs))
     end
     return block
   else
