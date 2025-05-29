@@ -164,19 +164,18 @@ julia> @btime @FastGTPSA begin
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block.head == :block
-    block = expr_or_block
-    for i in eachindex(block.args)
-      if !(block.args[i] isa LineNumberNode)
-        expr = esc(apply_macro(block.args[i]))
-        lhs = expr.args[1].args[1]
-        rhs = expr.args[1].args[2]
-        rhs = change_dots(rhs)
-        rhs = munge_expr(rhs)
-        rhs = change_functions(rhs)
-        block.args[i] = :($lhs = GTPSA.to_TPS.($rhs))
+    MacroTools.postwalk(esc(expr_or_block)) do x
+      if @capture(x,  for i_ in range_ body_ end) 
+        error("for loops are not currently supported within a @FastGTPSA block. Please use a while loop")
+      else
+        return x
       end
     end
-    return esc(block)
+    block = MacroTools.postwalk(esc(expr_or_block)) do x
+      @capture(x, lhs_ = rhs_) || return x 
+      return  :($lhs = @FastGTPSA $rhs)
+    end
+    return block
   else
     expr = expr_or_block
     expr = esc(apply_macro(expr))
@@ -251,95 +250,40 @@ julia> @btime @FastGTPSA! begin
 """
 macro FastGTPSA!(expr_or_block)
   if expr_or_block.head == :block
-    block = expr_or_block
-    for i in eachindex(block.args)
-      if !(block.args[i] isa LineNumberNode)
-        expr = esc(apply_macro(block.args[i]))
-        lhs = esc(expr.args[1].args[1])
-        rhs = esc(expr.args[1].args[2])
-        rhs = change_dots(rhs)
-        rhs = munge_expr(rhs)
-        rhs = change_functions(rhs)
-        
-        op! = false
-        if expr.args[1].head == :(=)
-          op! = nothing
-        elseif expr.args[1].head == :(+=)
-          op! = add!
-        elseif expr.args[1].head == :(-=)
-          op! = sub!
-        elseif expr.args[1].head == :(*=)
-          op! = mul!
-        elseif expr.args[1].head == :(/=)
-          op! = div!
-        elseif expr.args[1].head == :(^=)
-          op! = pow!
-        end
-
-        if op! != false
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              to_TPS!.($lhs, $rhs, $op!)
-                            else
-                              $(expr)
-                            end)
-          continue
-        end
-
-        if expr.args[1].head == :(.=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs .= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        elseif expr.args[1].head == :(.+=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs .+= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        elseif expr.args[1].head == :(.-=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs .-= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        elseif expr.args[1].head == :(.*=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs .*= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        elseif expr.args[1].head == :(./=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs ./= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        elseif expr.args[1].head == :(.^=)
-          # broadcasted assignment
-          # leave rhs as is:
-          block.args[i] = :(if eltype($lhs) <: TPS
-                              $lhs .^= $rhs
-                            else
-                              $(expr)
-                            end)
-          continue
-        end
+    MacroTools.postwalk(esc(expr_or_block)) do x
+      if @capture(x,  for i_ in range_ body_ end) 
+        error("for loops are not currently supported within a @FastGTPSA! block. Please use a while loop")
+      else
+        return x
+      end
+    end
+    block = MacroTools.postwalk(esc(expr_or_block)) do x
+      if @capture(x,  lhs_ = rhs_) 
+        return :(@FastGTPSA! $(lhs) = $(rhs))
+      elseif @capture(x, lhs_ += rhs_) 
+        return :(@FastGTPSA! $(lhs) += $(rhs))
+      elseif @capture(x, lhs_ -= rhs_) 
+        return :(@FastGTPSA! $(lhs) -= $(rhs))
+      elseif @capture(x, lhs_ *= rhs_) 
+        return :(@FastGTPSA! $(lhs) *= $(rhs))
+      elseif @capture(x, lhs_ /= rhs_) 
+        return :(@FastGTPSA! $(lhs) /= $(rhs))
+      elseif @capture(x, lhs_ ^= rhs_) 
+        return :(@FastGTPSA! $(lhs) ^= $(rhs))
+      elseif @capture(x, lhs_ .= rhs_) 
+        return :(@FastGTPSA! $(lhs) .= $(rhs))
+      elseif @capture(x, lhs_ .+= rhs_) 
+        return :(@FastGTPSA! $(lhs) .+= $(rhs))
+      elseif @capture(x, lhs_ .-= rhs_) 
+        return :(@FastGTPSA! $(lhs) .-= $(rhs))
+      elseif @capture(x, lhs_ .*= rhs_) 
+        return :(@FastGTPSA! $(lhs) .*= $(rhs))
+      elseif @capture(x, lhs_ ./= rhs_) 
+        return :(@FastGTPSA! $(lhs) ./= $(rhs))
+      elseif @capture(x, lhs_ .^= rhs_) 
+        return :(@FastGTPSA! $(lhs) .^= $(rhs))
+      else
+        return x
       end
     end
     return block
