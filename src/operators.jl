@@ -112,6 +112,10 @@ floatmin(t1::TPS) = floatmin(numtype(t1))
 floatmax(t1::TPS) = floatmax(numtype(t1))
 signbit(t1::TPS) = signbit(geti(t1, 0))
 
+isapprox(t1::TPS, t2::TPS) = isapprox(scalar(t1), scalar(t2))
+isapprox(t1::TPS, t2::Number) = isapprox(scalar(t1), t2)
+isapprox(t1::Number, t2::TPS) = isapprox(t1, scalar(t2))
+
 # --- Compare entire TPS (monomial-by-monomial) ---
 isequal(t1::TPS{Float64},    t2::TPS{Float64})    = equ(t1, t2, 0)
 isequal(t1::TPS{ComplexF64}, t2::TPS{ComplexF64}) = equ(t1, t2, 0)

@@ -76,7 +76,8 @@ import Base:  +,
               signbit,
               delete!,
               deepcopy_internal,
-              float
+              float,
+              isapprox
 
 import LinearAlgebra: norm
 import SpecialFunctions: erf, erfc, erfi, erfcx
