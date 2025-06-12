@@ -393,10 +393,7 @@ function to_TPS(t1::TempTPS{T,D}) where {T,D}
   return t
 end
 
-to_TPS(t1::TPS) = TPS(t1)
-
-# The question is really, when do I assume mutating vs non mutating 
-
+#to_TPS(t1::TPS) = TPS(t1)
 
 #to_TPS(t1::AbstractArray{<:TPS}) = map(t->to_TPS(t), t1)
 
