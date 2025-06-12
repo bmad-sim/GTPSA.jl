@@ -393,7 +393,15 @@ function to_TPS(t1::TempTPS{T,D}) where {T,D}
   return t
 end
 
-to_TPS(t1::AbstractArray{<:Union{TPS,TempTPS}}) = map(t->t isa TempTPS ? to_TPS(t) : t, t1)
+function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
+  t = map(t1) do t1i
+    x = TPS{T,D}(; _mo=getmo(t1i))
+    copy!(x,t1i)
+    return x
+  end
+  GTPSA.cleartemps!()
+  return t
+end
 
 #to_TPS(t1::TPS) = TPS(t1)
 
