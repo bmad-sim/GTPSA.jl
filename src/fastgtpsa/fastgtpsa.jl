@@ -1,6 +1,6 @@
 # 1. Apply other macros to expression first
 # taken from https://jkrumbiegel.com/pages/2022-08-09-composing-macros/
-function apply_macro(exp::Expr)
+function apply_macro(exp)
   if exp isa Expr && exp.head == :macrocall
       exp.args[3] = apply_macro(exp.args[3])
       return macroexpand(@__MODULE__, exp, recursive = false)
@@ -163,7 +163,7 @@ julia> @btime @FastGTPSA begin
 ```
 """
 macro FastGTPSA(expr_or_block)
-  if expr_or_block.head == :block
+  if expr_or_block isa Expr && expr_or_block.head == :block
     MacroTools.postwalk(esc(expr_or_block)) do x
       if @capture(x,  for i_ in range_ body_ end) 
         error("for loops are not currently supported within a @FastGTPSA block. Please use a while loop")
@@ -172,8 +172,21 @@ macro FastGTPSA(expr_or_block)
       end
     end
     block = MacroTools.postwalk(esc(expr_or_block)) do x
-      @capture(x, lhs_ = rhs_) || return x 
-      return  :($lhs = @FastGTPSA $rhs)
+      if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
+        return  :($(lhs) = @FastGTPSA($(rhs)))
+      elseif @capture(x, lhs_ += rhs_)
+        return  :($(lhs) = $(lhs) + $(rhs))
+      elseif @capture(x, lhs_ -= rhs_)
+        return  :($(lhs) = $(lhs) - $(rhs))
+      elseif @capture(x, lhs_ *= rhs_)
+        return  :($(lhs) = $(lhs) * $(rhs))
+      elseif @capture(x, lhs_ /= rhs_)
+        return  :($(lhs) = $(lhs) / $(rhs))
+      elseif @capture(x, lhs_ ^= rhs_)
+        return  :($(lhs) = $(lhs) ^ $(rhs))
+      else
+        return x
+      end
     end
     return block
   else
