@@ -380,7 +380,7 @@ macro FastGTPSA!(expr_or_block)
 end 
 
 function to_TPS(t1::TempTPS{T,D}) where {T,D}
-  t = TPS{T,D}(; _mo=getmo(t1))
+  t = TPS{T,D}(; use=getdesc(t1), _mo=getmo(t1))
   copy!(t,t1)
   rel_temp!(t1)
   return t
@@ -388,11 +388,11 @@ end
 
 function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
   t = map(t1) do t1i
-    x = TPS{T,D}(; _mo=getmo(t1i))
+    x = TPS{T,D}(; use=getdesc(t1), _mo=getmo(t1i))
     copy!(x,t1i)
     return x
   end
-  GTPSA.cleartemps!()
+  GTPSA.cleartemps!.(getdesc.(t1))
   return t
 end
 
