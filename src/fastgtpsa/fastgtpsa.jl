@@ -393,7 +393,7 @@ function to_TPS(t1::TempTPS{T,D}) where {T,D}
   return t
 end
 
-to_TPS(t1::AbstractArray{<:Union{TPS,TempTPS}}) = to_TPS.(t1)
+to_TPS(t1::AbstractArray{<:Union{TempTPS}}) = to_TPS.(t1)
 
 #to_TPS(t1::TPS) = TPS(t1)
 
