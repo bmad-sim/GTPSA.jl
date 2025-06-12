@@ -175,15 +175,15 @@ macro FastGTPSA(expr_or_block)
       if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
         return  :($(lhs) = @FastGTPSA($(rhs)))
       elseif @capture(x, lhs_ += rhs_)
-        return  :($(lhs) = $(lhs) + $(rhs))
+        return  :($(lhs) = @FastGTPSA($(lhs) + $(rhs)))
       elseif @capture(x, lhs_ -= rhs_)
-        return  :($(lhs) = $(lhs) - $(rhs))
+        return  :($(lhs) = @FastGTPSA($(lhs) - $(rhs)))
       elseif @capture(x, lhs_ *= rhs_)
-        return  :($(lhs) = $(lhs) * $(rhs))
+        return  :($(lhs) = @FastGTPSA($(lhs) * $(rhs)))
       elseif @capture(x, lhs_ /= rhs_)
-        return  :($(lhs) = $(lhs) / $(rhs))
+        return  :($(lhs) = @FastGTPSA($(lhs) / $(rhs)))
       elseif @capture(x, lhs_ ^= rhs_)
-        return  :($(lhs) = $(lhs) ^ $(rhs))
+        return  :($(lhs) = @FastGTPSA($(lhs) ^ $(rhs)))
       else
         return x
       end
@@ -195,7 +195,7 @@ macro FastGTPSA(expr_or_block)
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
-    return :(to_TPS.($expr))
+    return :(to_TPS($expr))
   end
 end 
 
@@ -394,6 +394,11 @@ function to_TPS(t1::TempTPS{T,D}) where {T,D}
 end
 
 to_TPS(t1::TPS) = TPS(t1)
+
+# The question is really, when do I assume mutating vs non mutating 
+
+
+#to_TPS(t1::AbstractArray{<:TPS}) = map(t->to_TPS(t), t1)
 
 function to_TPS!(t::TPS, t1, op!)
   if isnothing(op!)
