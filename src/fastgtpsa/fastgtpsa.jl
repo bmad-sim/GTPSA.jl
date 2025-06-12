@@ -393,6 +393,8 @@ function to_TPS(t1::TempTPS{T,D}) where {T,D}
   return t
 end
 
+to_TPS(t1::TPS) = TPS(t1)
+
 function to_TPS!(t::TPS, t1, op!)
   if isnothing(op!)
     if t1 isa TPS || t1 isa TempTPS
