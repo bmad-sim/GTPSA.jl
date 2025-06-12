@@ -164,13 +164,6 @@ julia> @btime @FastGTPSA begin
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block isa Expr && expr_or_block.head == :block
-    MacroTools.postwalk(esc(expr_or_block)) do x
-      if @capture(x,  for i_ in range_ body_ end) 
-        error("for loops are not currently supported within a @FastGTPSA block. Please use a while loop")
-      else
-        return x
-      end
-    end
     block = MacroTools.postwalk(esc(expr_or_block)) do x
       if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
         return  :($(lhs) = @FastGTPSA($(rhs)))
