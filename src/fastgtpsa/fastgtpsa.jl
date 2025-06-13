@@ -404,7 +404,7 @@ function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
   end
 
   for t1i in t1
-    desc = getdesc(t1i).desc
+    desc = unsafe_load(getdesc(t1i).desc)
     unsafe_store!(desc.ti, Cint(0), Threads.threadid())
     unsafe_store!(desc.cti, Cint(0), Threads.threadid())
   end
