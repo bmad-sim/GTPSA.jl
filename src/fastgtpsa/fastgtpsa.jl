@@ -393,11 +393,11 @@ end
 function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
   t = map(t1) do t1i
     if D == GTPSA.Dynamic
-      x = TPS{T,D}(; use=getdesc(t1), _mo=getmo(t1))
+      x = TPS{T,D}(; use=getdesc(t1i), _mo=getmo(t1i))
       copy!(x, t1i)
       return x
     else
-      x = TPS{T,D}(;  _mo=getmo(t1))
+      x = TPS{T,D}(;  _mo=getmo(t1i))
       copy!(x, t1i)
       return x
     end
