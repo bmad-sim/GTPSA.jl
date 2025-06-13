@@ -402,8 +402,11 @@ function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
       return x
     end
   end
+
   for t1i in t1
-    GTPSA.cleartemps!(getdesc(t1i))
+    desc = getdesc(t1i)
+    unsafe_store!(desc.ti, Cint(0), Threads.threadid())
+    unsafe_store!(desc.cti, Cint(0), Threads.threadid())
   end
   return t
 end
