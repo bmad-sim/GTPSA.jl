@@ -164,13 +164,6 @@ julia> @btime @FastGTPSA begin
 """
 macro FastGTPSA(expr_or_block)
   if expr_or_block isa Expr && expr_or_block.head == :block
-    MacroTools.postwalk(esc(expr_or_block)) do x
-      if @capture(x,  for i_ in range_ body_ end) 
-        error("for loops are not currently supported within a @FastGTPSA block. Please use a while loop")
-      else
-        return x
-      end
-    end
     block = MacroTools.postwalk(esc(expr_or_block)) do x
       if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
         return  :($(lhs) = @FastGTPSA($(rhs)))
@@ -387,16 +380,35 @@ macro FastGTPSA!(expr_or_block)
 end 
 
 function to_TPS(t1::TempTPS{T,D}) where {T,D}
-  t = TPS{T,D}(; _mo=getmo(t1))
+  if D == GTPSA.Dynamic
+    t = TPS{T,D}(; use=getdesc(t1), _mo=getmo(t1))
+  else
+    t = TPS{T,D}(;  _mo=getmo(t1))
+  end
   copy!(t,t1)
   rel_temp!(t1)
   return t
 end
 
-to_TPS(t1::TPS) = TPS(t1)
+function to_TPS(t1::AbstractArray{<:TempTPS{T,D}}) where {T,D}
+  t = map(t1) do t1i
+    if D == GTPSA.Dynamic
+      x = TPS{T,D}(; use=getdesc(t1i), _mo=getmo(t1i))
+      copy!(x, t1i)
+      return x
+    else
+      x = TPS{T,D}(;  _mo=getmo(t1i))
+      copy!(x, t1i)
+      return x
+    end
+  end
+  for t1i in t1
+    GTPSA.cleartemps!(getdesc(t1i))
+  end
+  return t
+end
 
-# The question is really, when do I assume mutating vs non mutating 
-
+#to_TPS(t1::TPS) = TPS(t1)
 
 #to_TPS(t1::AbstractArray{<:TPS}) = map(t->to_TPS(t), t1)
 

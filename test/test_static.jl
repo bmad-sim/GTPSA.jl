@@ -6123,7 +6123,7 @@ if VERSION >= v"1.10"
     y170 =@. complex($t) - $t
   end
 
-  @test a1.allocs == 170*3
+  @test a1.allocs == 170*4
   a2 = @benchmark @FastGTPSA! begin
     @. $w[1  ]= $t1 + $t2 - $t3
     @. $w[2  ]= $t2 + $t1 - $t3
@@ -6351,7 +6351,7 @@ if VERSION >= v"1.10"
     y229 = @. rect(-$ct1) - (-1*cos(-1) + im*-1*sin(-1))
     y248 = @. abs(-$t) - abs(-$v) 
   end
-  @test a1.allocs == 50*3
+  @test a1.allocs == 50*4
 
   a2 = @benchmark @FastGTPSA! begin
     @. $w[171] = sqrt($t) - sqrt($v)
