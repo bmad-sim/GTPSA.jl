@@ -55,6 +55,39 @@ ComplexTPS64{Descriptor(NV=2, MO=6)}:
 
 The GTPSA library currently only supports truncated power series representing `Float64` and `ComplexF64` number types.
 
+## Citation
+If you find `GTPSA.jl` useful in your work, please cite the following papers:
+```
+@inproceedings{signorelli:napac2025-mop044,
+    author = {M. G. Signorelli et al.},
+    title = {GTPSA.jl: A SciBmad interface to the Generalised Truncated Power Series Algebra library},
+    booktitle = {Proc. NAPAC2025},
+    %  booktitle = {Proc. North American Particle Accelerator Conference (NAPAC2025)},
+    pages = {145-148},
+    paper = {MOP044},
+    venue = {Sacramento, CA, USA},
+    series = {North American Particle Accelerator Conference},
+    number = {2025},
+    publisher = {JACoW Publishing, Geneva, Switzerland},
+    month = {08},
+    year = {2025},
+    issn = {2673-7000},
+    isbn = {978-3-95450-261-5},
+    doi = {10.18429/JACoW-NAPAC2025-MOP044},
+    url = {https://indico.jacow.org/event/97/contributions/10611},
+    language = {English}
+}
+
+@inproceedings{Deniau:2015yyo,
+    author = "Deniau, Laurent and Tomoiag{\u{a}}, Ciprian",
+    title = "{Generalised Truncated Power Series Algebra for Fast Particle Accelerator Transport Maps}",
+    booktitle = "{6th International Particle Accelerator Conference}",
+    doi = "10.18429/JACoW-IPAC2015-MOPJE039",
+    pages = "MOPJE039",
+    year = "2015"
+}
+```
+
 ## Acknowledgements
 Much thanks must be given to Laurent Deniau, the creator of the C GTPSA library, for his time and great patience in explaining his code. 
 
