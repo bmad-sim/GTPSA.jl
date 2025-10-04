@@ -12,7 +12,7 @@ d10 = Descriptor(2, 10)
 `GTPSA.jl` centers around the `TPS` (truncated power series) type, which represents a multivariable Taylor series truncated at the chosen order in the `Descriptor`. Using [Einstein notation](https://en.wikipedia.org/wiki/Einstein_notation) for the variable indices, and letting ``n`` specify the order up to a maximum truncation order ``MO``, we can express a function ``f`` expanded around ``\vec{a}`` as a `TPS`:
 
 ```math
-f(\vec{x}) = f(\vec{a}) + \sum_{n=1}^{MO} \left.\frac{\partial f}{\partial x_{i_1} \partial x_{i_2}\ldots \partial x_{i_n}}\right\rvert_{\vec{a}} \Delta x_{i_1} \Delta x_{i_2} \ldots\Delta x_{i_n}
+f(\vec{x}) = f(\vec{a}) + \sum_{n=1}^{MO} \frac{1}{n!} \left.\frac{\partial f}{\partial x_{i_1} \partial x_{i_2}\ldots \partial x_{i_n}}\right\rvert_{\vec{a}} \Delta x_{i_1} \Delta x_{i_2} \ldots\Delta x_{i_n}
 ```
 
 The `TPS` type stores all of the monomial coefficients in this Taylor series up to the chosen order (e.g. ``f(\vec{a})``, ``\partial f /\partial x_i |_{\vec{a}}``, etc.). You can manipulate and propagate a `TPS` through functions like any other number type, and the result will be a `TPS` containing the Taylor expansion representing all preceding operations. If you have some familiarity with automatic differentiation, then you can view a `TPS` as basically a Dual number which has been highly optimized for high order automatic differentiation with high numbers of variables/parameters.

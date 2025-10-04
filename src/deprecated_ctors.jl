@@ -1,4 +1,4 @@
-# ===== DEPRECATED ===== #
+# ===== These will be un-deprecated in a future release for python support ===== #
 
 """
     vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
@@ -13,7 +13,7 @@ Returns a vector of `TPS`s corresponding to the variables for the
 - `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each variable
 """
 function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
-  Base.depwarn("`vars` is deprecated, use the @vars macro instead.", :vars, force=true)
+  #Base.depwarn("`vars` is deprecated, use the @vars macro instead.", :vars)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   x = Vector{TPS{Float64,Dynamic}}(undef, nv)
@@ -40,7 +40,7 @@ Returns a vector of `TPS`s corresponding to the parameters for the
 - `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each parameters
 """
 function params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
-  Base.depwarn("`params` is deprecated, use the @params macro instead.", :params, force=true)
+  #Base.depwarn("`params` is deprecated, use the @params macro instead.", :params)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   np = numparams(use)
   nv = numvars(use)
@@ -68,7 +68,7 @@ Returns a vector of `ComplexTPS64`s corresponding to the variables for the
 - `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each variable
 """
 function complexvars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
-  Base.depwarn("`complexvars` is deprecated, use the @vars macro instead.", :complexvars, force=true)
+  #Base.depwarn("`complexvars` is deprecated, use the @vars macro instead.", :complexvars)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   nv = numvars(use)
   x = Vector{TPS{ComplexF64}}(undef, nv)
@@ -93,7 +93,7 @@ Returns a vector of `ComplexTPS64`s corresponding to the parameters for the
 - `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each parameters
 """
 function complexparams(use::Union{Descriptor,TPS}=GTPSA.desc_current)
-  Base.depwarn("`complexparams` is deprecated, use the @params macro instead.", :complexparams, force=true)
+  #Base.depwarn("`complexparams` is deprecated, use the @params macro instead.", :complexparams)
   getdesc(use).desc != C_NULL || error("Descriptor not defined!")
   np = numparams(use)
   nv = numvars(use)
