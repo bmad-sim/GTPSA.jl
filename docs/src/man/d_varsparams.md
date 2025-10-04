@@ -12,7 +12,7 @@
 
 ------
 
-`Δk = params(descriptor)` creates a vector of `TPS`s corresponding to each of the parameters in the GTPSA `descriptor``
+`Δk = @params(descriptor)` creates a vector of `TPS`s corresponding to each of the parameters in the GTPSA `descriptor``
 
 ### Optional Argument
 
