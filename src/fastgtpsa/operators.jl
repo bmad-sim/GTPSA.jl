@@ -304,11 +304,11 @@ function $t(a::Number, t1::TempTPS)
   return ($t)(a, geti(t1, 0))
 end
 
-function $t(t1::TempTPS, t1::TPS)
+function $t(t1::TempTPS, t2::TPS)
   return ($t)(geti(t1, 0), geti(t2, 0))
 end
 
-function $t(t1::TPS, t1::TempTPS)
+function $t(t1::TPS, t2::TempTPS)
   return ($t)(geti(t1, 0), geti(t2, 0))
 end
 
