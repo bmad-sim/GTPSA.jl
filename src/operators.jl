@@ -83,10 +83,12 @@ function rand(::Type{T}) where {T<:TPS}
 end
 
 # --- Compare ---
-# For the general comparison operators (==, >, <, >=, etc) the scalar part is used
-# For comparing every coefficient in a TPS, we use isequal, just as Dual Numbers. 
+# For the general comparison operators (==, >, <, >=, etc) only the scalar part is used.
+# TODO: modify these to also include partials checking like ForwardDiff (v1.0?)
+# For comparing every coefficient in a TPS, we use isequal.
 
-for t = (:(<), :(>), :(<=), :(>=), :(==))
+
+for t = (:(<), :(<=), :isless)
 @eval begin
 
 function $t(t1::TPS, t2::TPS)
@@ -104,7 +106,6 @@ end
 end
 end
 
-isless(t1::TPS, t2::TPS) = t1 < t2
 isinf(t1::TPS) = isinf(geti(t1, 0))
 isnan(t1::TPS) = isnan(geti(t1, 0))
 eps(t1::TPS) = eps(numtype(t1))
