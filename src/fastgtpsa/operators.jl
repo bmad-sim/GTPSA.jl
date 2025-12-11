@@ -293,23 +293,34 @@ __t_normTPS(a) = normTPS(a)
 for t = (:(<), :(<=), :isless, :(==))
 @eval begin
 function $t(t1::TempTPS, t2::TempTPS)
-  return ($t)(geti(t1, 0), geti(t2, 0))
+  out = ($t)(geti(t1, 0), geti(t2, 0))
+  rel_temp!(t1)
+  rel_temp!(t2)
+  return out
 end
 
 function $t(t1::TempTPS, a::Number)
-  return ($t)(geti(t1, 0), a)
+  out = ($t)(geti(t1, 0), a)
+  rel_temp!(t1)
+  return out
 end
 
 function $t(a::Number, t1::TempTPS)
-  return ($t)(a, geti(t1, 0))
+  out = ($t)(a, geti(t1, 0))
+  rel_temp!(t1)
+  return out
 end
 
 function $t(t1::TempTPS, t2::TPS)
-  return ($t)(geti(t1, 0), geti(t2, 0))
+  out = ($t)(geti(t1, 0), geti(t2, 0))
+  rel_temp!(t1)
+  return out
 end
 
 function $t(t1::TPS, t2::TempTPS)
-  return ($t)(geti(t1, 0), geti(t2, 0))
+  out = ($t)(geti(t1, 0), geti(t2, 0))
+  rel_temp!(t2)
+  return out
 end
 
 end
