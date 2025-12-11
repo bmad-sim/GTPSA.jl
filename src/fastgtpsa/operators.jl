@@ -311,5 +311,7 @@ end
 function $t(t1::TPS, t1::TempTPS)
   return ($t)(geti(t1, 0), geti(t2, 0))
 end
+
+end
 end
 
