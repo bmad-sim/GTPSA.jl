@@ -290,7 +290,7 @@ __t_normTPS(t1::TempTPS{ComplexF64}) = (nrm = mad_ctpsa_nrm(t1); rel_temp!(t1); 
 __t_normTPS(a) = normTPS(a)
 
 # Comparison operators
-for t = (:(<), :(<=), :isless)
+for t = (:(<), :(<=), :isless, :(==))
 @eval begin
 function $t(t1::TempTPS, t2::TempTPS)
   return ($t)(geti(t1, 0), geti(t2, 0))

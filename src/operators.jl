@@ -88,7 +88,7 @@ end
 # For comparing every coefficient in a TPS, we use isequal.
 
 
-for t = (:(<), :(<=), :isless)
+for t = (:(<), :(<=), :isless, :(==))
 @eval begin
 
 function $t(t1::TPS, t2::TPS)
