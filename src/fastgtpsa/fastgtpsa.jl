@@ -74,10 +74,14 @@ function change_functions(expr::Expr)
   fcns = [:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv, :coth, 
           :asin, :acos, :atan, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu, 
           :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
-          :conj, :rect, :real, :imag, :angle, :abs, :atan, :polar, :complex, :zero, :one,
+          :conj, :rect, :real, :imag, :angle, :abs, :polar, :complex, :zero, :one,
           :norm, :normTPS]
-
-  __t_fcns = map(fcn->:(GTPSA.$(Symbol("__t_" * string(fcn)))), fcns)
+  
+  unitaryfcns = [:unit, :sqrt, :exp, :log, :sin, :cos, :tan, :cot, :sinh, :cosh, :tanh, :inv, :coth, 
+          :asin, :acos, :acot, :asinh, :acosh, :atanh, :acoth, :erf, :erfc, :sinc, :sincu, 
+          :sinhc, :sinhcu, :asinc, :asincu, :asinhc, :asinhcu, :csc, :csch, :acsc, :acsch, :sec, :sech, :asec, :asech, 
+          :conj, :rect, :real, :imag, :angle, :abs, :polar, :zero, :one,
+          :norm, :normTPS, :+, :-, :*, :/, :^]
 
   function map_to_temp(fun::Symbol)
       if fun == :+
@@ -99,8 +103,8 @@ function change_functions(expr::Expr)
 
   for i in eachindex(expr.args)
     if expr.args[i] isa Expr
-      if expr.args[i].head == :call && !(expr.args[i].args[1] in [fcns..., :+, :-, :*, :/, :^] )# || !(expr.args[i].args[1] in __t_fcns))
-        # IGNORE! external fcn call
+      if expr.args[i].head == :call && !(expr.args[i].args[1] in unitaryfcns)
+        # IGNORE! external or incompatible fcn call
         continue
       else
         # keep going, compatible fcn call
