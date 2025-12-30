@@ -77,6 +77,8 @@ function change_functions(expr::Expr)
           :conj, :rect, :real, :imag, :angle, :abs, :atan, :polar, :complex, :zero, :one,
           :norm, :normTPS]
 
+  __t_fcns = map(fcn->:(GTPSA.$(Symbol("__t_" * string(fcn)))), fcns)
+
   function map_to_temp(fun::Symbol)
       if fun == :+
         return :(GTPSA.:±)  # \pm  (allowed as unary operator)
@@ -95,20 +97,19 @@ function change_functions(expr::Expr)
       end
   end
 
-  # Check if we are calling a function in GTPSA module (with qualified GTPSA. ) and change if so
-  if expr.head == :. && expr.args[2] isa QuoteNode && expr.args[1] == :GTPSA && expr.args[end].value in fcns
-    expr.args[end] = QuoteNode(map_to_temp(expr.args[end].value))
-    return expr
-  end
-
   for i in eachindex(expr.args)
     if expr.args[i] isa Expr
-      change_functions(expr.args[i])
+      if expr.args[i].head == :call && !(expr.args[i].args[1] in [fcns..., :+, :-, :*, :/, :^] )# || !(expr.args[i].args[1] in __t_fcns))
+        # IGNORE! external fcn call
+        continue
+      else
+        # keep going, compatible fcn call
+        change_functions(expr.args[i])
+      end
     elseif expr.args[i] isa Symbol
       expr.args[i] = map_to_temp(expr.args[i])
     end
   end
-
   return expr
 end
 
