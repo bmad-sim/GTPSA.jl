@@ -20,7 +20,7 @@ function show(io::IO, d::Descriptor)
   if uno != 0
     # print variables
     print(io, ", NO=[")
-    for i in 1:2:nv
+    for i in 1:2:nv-1
       if i == 1
         @printf(io, " %hhu %hhu", no[i], no[i+1])
       else
@@ -28,12 +28,12 @@ function show(io::IO, d::Descriptor)
       end
     end
     if mod(nv, 2) != 0
-      @printf(io, "  %hhu", ords[nv-1])
+      @printf(io, "  %hhu", no[nv])
     end
 
     for i in nv+1:nv+np
       if no[i] != po
-        @printf(io, "  %d^%hhu", i+1, no[i])
+        @printf(io, "  %d^%hhu", i, no[i])
       end
     end
     print(io, "]")
