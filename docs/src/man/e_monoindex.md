@@ -13,7 +13,7 @@ t[param=param_idx]
 
 ### Examples
 ```@repl
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 # Example of indexing by monomial index -----------
 d = Descriptor(2, 10, 1, 10);
 t = TPS{d}(); # Create zero TPS based on d
@@ -43,7 +43,7 @@ A particular monomial can be indexed by specifying the orders of each variable a
 
 ### Examples
 ```@repl
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 d = Descriptor(2, 6, 3, 6); # 2 variables, 3 parameters all to 6th order
 Δx = @vars(d);
 Δk = @params(d);
@@ -64,7 +64,7 @@ In GTPSAs with many variables and parameters, indexing-by-order is inconvenient 
 
 ### Examples
 ```@repl
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 d = Descriptor(15, 6, 10, 6); # 15 variables, 10 parameters all to 6th order
 GTPSA.show_sparse = true; # Use sparse output
 Δx = @vars(d);

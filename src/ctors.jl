@@ -1,3 +1,105 @@
+"""
+    vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+
+Returns a vector of `TPS`s corresponding to the variables for the 
+`Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each variable
+"""
+function vars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  nv = numvars(use)
+  x = Vector{TPS{Float64,Dynamic}}(undef, nv)
+  for i=1:nv
+    t = TPS{Float64}(use=use)
+    @inbounds t[i] = 1.0
+    @inbounds x[i] = t
+  end
+  return x
+end
+
+
+
+"""
+    params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+
+Returns a vector of `TPS`s corresponding to the parameters for the 
+`Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `x`   -- `Vector` containing unit `TPS{Float64}`s corresponding to each parameters
+"""
+function params(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  np = numparams(use)
+  nv = numvars(use)
+  k = Vector{TPS{Float64,Dynamic}}(undef, np)
+  for i=1:np
+    t = TPS{Float64}(use=use)
+    @inbounds t[nv+i] = 1.0
+    @inbounds k[i] = t
+  end
+  return k
+end
+
+
+
+"""
+    complexvars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+
+Returns a vector of `ComplexTPS64`s corresponding to the variables for the 
+`Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each variable
+"""
+function complexvars(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  nv = numvars(use)
+  x = Vector{TPS{ComplexF64}}(undef, nv)
+  for i=1:nv
+    t = TPS{ComplexF64}(use=use)
+    @inbounds t[i] = 1.0
+    @inbounds x[i] = t
+  end
+  return x
+end
+
+"""
+    complexparams(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+
+Returns a vector of `ComplexTPS64`s corresponding to the parameters for the 
+`Descriptor` specified by `use`. Default value is `GTPSA.desc_current`.
+
+### Input
+- `use` -- (Optional) Specify which `Descriptor` to use, default is `GTPSA.desc_current`
+
+### Output
+- `x`   -- `Vector` containing unit `ComplexTPS64`s corresponding to each parameters
+"""
+function complexparams(use::Union{Descriptor,TPS}=GTPSA.desc_current)
+  getdesc(use).desc != C_NULL || error("Descriptor not defined!")
+  np = numparams(use)
+  nv = numvars(use)
+  k = Vector{TPS{ComplexF64}}(undef, np)
+  for i=1:np
+    t = TPS{ComplexF64}(use=use)
+    @inbounds t[nv+i] = 1.0
+    @inbounds k[i] = t
+  end
+  return k
+end
+
 
 function check_kwargs(fn, kwargs...)
   valid_kwargs = [:(dynamic)=>Bool, :(complex)=>Bool]
@@ -18,13 +120,12 @@ function check_kwargs(fn, kwargs...)
 end
 
 """
-    @vars(descriptor [,complex=bool] [, dynamic=bool])
+    @vars(descriptor [,complex=bool])
 
 Constructs a vector of `TPS`s corresponding to each of the variables in the GTPSA `descriptor`
 
 # Keyword Arguments
 - `complex` -- If `true`, returns the variables as `ComplexTPS64`s. Default is `false`.
-- `dynamic` -- If `true`, the variables will use dynamic `Descriptor` resolution. Default is `false`.
 """
 macro vars(d, kwargs...)
   # Check each kwarg:
@@ -50,13 +151,12 @@ macro vars(d, kwargs...)
 end
 
 """
-    @params(descriptor [,complex=bool] [, dynamic=bool])
+    @params(descriptor [,complex=bool])
 
 Constructs a vector of `TPS`s corresponding to each of the parameters in the GTPSA `descriptor`
 
 # Keyword Arguments
 - `complex` -- If `true`, returns the parameters as `ComplexTPS64`s. Default is `false`.
-- `dynamic` -- If `true`, the parameters will use dynamic `Descriptor` resolution. Default is `false`.
 """
 macro params(d, kwargs...)
   kwargnames = map(t->t[1], map(t->Pair(t.args...), kwargs))

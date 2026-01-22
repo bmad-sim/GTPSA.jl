@@ -49,7 +49,7 @@ GTPSA.hessian!(H, f [, include_params=bool])
 ```@repl
 using GTPSA; #hide
 d = Descriptor(2,10);
-Δx = @vars(d);
+Δx = vars(d);
 f = Δx[1] + 2*Δx[2] + 3*Δx[1]^2 + 4*Δx[1]*Δx[2] + 5*Δx[2]^2;
 g = 5*Δx[1] + 4*Δx[2] + 3*Δx[1]^2 + 2*Δx[1]*Δx[2] + Δx[2]^2;
 grad = GTPSA.gradient(f)

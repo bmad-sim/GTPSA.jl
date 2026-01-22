@@ -19,14 +19,14 @@ The `TPS` type stores all of the monomial coefficients in this Taylor series up 
 
 **In the context of `GTPSA.jl`, we refer to "variables" as each ``\Delta x_i`` in the `TPS`.** The reason for this is that one can always choose a coordinate system where ``\vec{a}=\vec{0}``, and such a choice greatly simplifies the terminology and analysis. This brings up an important point: the `TPS` type itself does NOT explicitly store any expansion point. It just stores the monomial coefficients of each term in the Taylor series, truncated at the chosen order of the (tiny) variables. The setup of the problem, done by you our dear user, will decide the expansion point. In the parlance of Dual numbers, the quantity ``\Delta x_i`` is equivalent to ``0+1\epsilon_i``.
 
-Let's dive into some examples, which will make these above points clearer. After defining the `Descriptor`, we can obtain the variables, which themselves are represented as `TPS`s (with each variable's first order monomial coefficient set to 1) using `@vars`:
+Let's dive into some examples, which will make these above points clearer. After defining the `Descriptor`, we can obtain the variables, which themselves are represented as `TPS`s (with each variable's first order monomial coefficient set to 1) using `vars`:
 
 ```@example 1
-using GTPSA; GTPSA.show_sparse=false;#hide
+using GTPSA; #hide
 d6 = Descriptor(2, 6); # 2 variables to 6th order
 
 # Returns a Vector of each variable as a TPS
-Δx = @vars(d6) 
+Δx = vars(d6) 
 ```
 
 The result is a `TPS` vector function ``\begin{bmatrix} \Delta x_1 \\ \Delta x_2 \end{bmatrix}`` corresponding directly to each variable. `TPS64` is an alias for `TPS{Float64}`, which are `TPS`s that represent 64-bit floats. Likewise, `ComplexTPS64` is an alias for `TPS{ComplexF64}`. Currently, GTPSA only supports `TPS`s which represent `Float64` and `ComplexF64` numbers. 
@@ -70,7 +70,7 @@ The disagreement is quite large! This is due to the truncation error of the `TPS
 
 ```@example 1
 d20 = Descriptor(2, 20); # two variables to 20th order
-Δx = @vars(d20);
+Δx = vars(d20);
 ft = f(x0 + Δx);
 abs(ft([-pi, pi]) - f(x0 + [-pi, pi]))
 ```
@@ -80,9 +80,9 @@ abs(ft([-pi, pi]) - f(x0 + [-pi, pi]))
 We also can _compose_ `TPS`s. For this example, let's define a new GTPSA with only 1 variable to 1st order, and define the functions ``f(x) = x^2+2x`` and ``g(x)=3+4x``:
 
 ```@example 2
-using GTPSA; GTPSA.show_sparse=false;#hide
+using GTPSA; #hide
 d = Descriptor(1, 1);
-Δx = first(@vars(d));
+Δx = first(vars(d));
 f(x) = x^2 + 2*x;
 g(x) = 3 + 4*x;
 ```
@@ -124,9 +124,9 @@ GTPSA also includes a routine to invert a `TPS` map. The inversion routine ignor
 As an example, let's invert the following `TPS` map, which has no scalar part:
 
 ```@example 3
-using GTPSA; GTPSA.show_sparse=false;#hide
+using GTPSA; #hide
 d = Descriptor(2, 2);
-Δx = @vars(d);
+Δx = vars(d);
 M = [  Δx[1] + 2*Δx[2] + 3*Δx[1]*Δx[2], 
      3*Δx[1] + 4*Δx[2] + Δx[1]^2 + Δx[2]^2]
 M_inv = inv(M)
@@ -139,15 +139,14 @@ M_inv ∘ M
 After defining a `Descriptor`, we can construct a `TPS` using any of the following:
 
 ```@repl
-using GTPSA; GTPSA.show_sparse=false; # hide
+using GTPSA;  # hide
 d = Descriptor(3, 5); # 3 variables to 5th order
-t = TPS64{d}() # Constructs a blank `TPS`, equivalent to `TPS{Float64,d}()`
-t1 = TPS64{d}(1.0) # Constructs a `TPS` with scalar part set to 1.0
-t1c = ComplexTPS64{d}(1.0) # Equivalent to `TPS{ComplexF64,d}(1.0)`
-t1im = TPS{d}(1.0im) # If the number type is not specified, then it is inferred
+t = TPS64(use=d) # Constructs a blank `TPS` with `Descriptor` `d`
+t1 = TPS64(1.0, use=d) # Constructs a `TPS` with scalar part set to 1.0
+t1c = ComplexTPS64(1.0, use=d) # Equivalent to `TPS{ComplexF64,GTPSA.Dynamic}(1.0)`
+t1im = TPS(1.0im, use=d) # If the number type is not specified, then it is inferred
 ```
-
-When constructing `TPS`s in this manner, it is important to include the `Descriptor` in the type parameter of the constructor, to ensure the `Descriptor` of the `TPS` is resolved statically (at compile time). If it is not included, then the `Descriptor` of the `TPS` will be resolved dynamically instead, at runtime. `GTPSA.jl` provides both static and dynamic `Descriptor` resolution modes, each of which have certain advantages in different use cases. See the [advanced topics](@ref descmodes) section of the documentation for more details.
+When constructing `TPS`s in this manner, it is important to include the `Descriptor` in the `use` keyword argument of the constructor, to ensure the `Descriptor` of the `TPS` is correct. If it is not included, then the `Descriptor` of the `TPS` will be that in the [global variable](@ref global) `GTPSA.desc_current`, which is always set with the latest defined `Descriptor`. Alternatively, `GTPSA.jl` provides the ability to store the `Descriptor` in the `TPS` type itself. See the [advanced topics](@ref descmodes) section of the documentation for more details.
 
 ## Partial Derivative Getting/Setting
 ### Individual Monomial Coefficient
@@ -163,10 +162,10 @@ Individual monomial coefficients in a `TPS` `t` can be get/set with three method
 These three methods of indexing are best shown with an example:
 
 ```@example 
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 # Example of indexing by monomial index -----------
 d = Descriptor(3, 10);
-t = TPS{d}(); # or equivalently TPS{Float64,d}()
+t = TPS(); # or equivalently TPS{Float64,GTPSA.Dynamic}()
 
 t[0] = 0;
 t[1] = 1;
@@ -185,10 +184,10 @@ t
 
 
 ```@example
-using GTPSA; GTPSA.show_sparse=false;#hide
+using GTPSA; #hide
 # Example of indexing by order -----------
 d = Descriptor(3, 10);
-t = TPS{d}();
+t = TPS();
 
 t[[0]] = 1;
 t[[1]] = 2;
@@ -200,10 +199,10 @@ t
 ```
 
 ```@example 
-using GTPSA; GTPSA.show_sparse=false; #hide
+using GTPSA;  #hide
 # Example of indexing by sparse monomial -----------
 d = Descriptor(3, 10);
-t = TPS{d}();
+t = TPS();
 
 t[[1=>1]] = 2;
 t[[2=>1]] = 3;
@@ -219,10 +218,10 @@ The [`GTPSA.cycle!`](@ref) function can also be used to cycle through all nonzer
 The convenience getters `gradient`, `jacobian`, and `hessian` (as well as their corresponding in-place methods `gradient!`, `jacobian!`, and `hessian!`) are also provided for extracting partial derivatives from a `TPS`/array of `TPS`s. Note that these functions are not actually calculating anything - at this point the `TPS` should already have been propagated through, and these functions are just extracting the corresponding partial derivatives.
 
 ```julia
-using GTPSA; GTPSA.show_sparse=false; #hide
+using GTPSA;  #hide
 # 2nd Order TPSA with 100 variables
 d = Descriptor(100, 2);
-Δx = @vars(d);
+Δx = vars(d);
 
 out = cumsum(Δx);
 
@@ -241,9 +240,9 @@ GTPSA.hessian!(h1, out[1]);
 Parts of a `TPS` with certain variable orders can be extracted by slicing the `TPS`. When indexing by order, a colon (`:`) can be used in place for a variable order to include all orders of that variable. If the last specified index is a colon, then the rest of the variable indices are assumed to be colons:
 
 ```@example slice
-using GTPSA; GTPSA.show_sparse=false; #hide
+using GTPSA;  #hide
 d = Descriptor(5, 10);
-Δx = @vars(d);
+Δx = vars(d);
 
 f = 2*Δx[1]^2*Δx[3] + 3*Δx[1]^2*Δx[2]*Δx[3]*Δx[4]^2*Δx[5] + 6*Δx[3] + 5;
 g = f[[2,:,1]];
@@ -274,7 +273,7 @@ The first macro, `@FastGTPSA` can be prepended to an expression following assign
 ```@repl
 using GTPSA, BenchmarkTools
 
-d = Descriptor(3, 7);  Δx = @vars(d);
+d = Descriptor(3, 7);  Δx = vars(d);
 
 @btime $Δx[1]^3*sin($Δx[2])/log(2+$Δx[3])-exp($Δx[1]*$Δx[2])*im;
 
@@ -291,7 +290,7 @@ The second macro, `@FastGTPSA!` can be prepended to the left-hand side of an ass
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d); # hide
+d = Descriptor(3, 7); Δx = vars(d); # hide
 
 t = ComplexTPS64(); # pre-allocate
 
@@ -306,7 +305,7 @@ Both `@FastGTPSA` and `@FastGTPSA!` can also be prepended to a block of code, in
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d);
+d = Descriptor(3, 7); Δx = vars(d);
 
 y = rand(3);
 
@@ -330,7 +329,7 @@ Both macros are also compatible with broadcasted, vectorized operators:
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d); y = rand(3);
+d = Descriptor(3, 7); Δx = vars(d); y = rand(3);
 @btime @FastGTPSA begin
         out = @. $Δx^3*sin($y)/log(2+$Δx)-exp($Δx*$y)*im;
        end;

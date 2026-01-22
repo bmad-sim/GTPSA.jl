@@ -5,10 +5,10 @@
 A polynomial within the TPS with certain variable orders can be extracted by slicing the TPS. When indexing by order, a colon (`:`) can be used in place for a variable order to include all orders of that variable. If the last specified index is a colon, then the rest of the variable indices are assumed to be colons (else, they are assumed to be zero, following the convention of monomial coefficient indexing).
 
 ```@repl slice
-using GTPSA; GTPSA.show_sparse = false; GTPSA.show_header = false; #hide
+using GTPSA;  GTPSA.show_header = false; #hide
 d = Descriptor(5, 10, 2, 10);
-Δx = @vars(d);
-Δk = @params(d);
+Δx = vars(d);
+Δk = params(d);
 f = 2*Δx[1]^2*Δx[3] + 3*Δx[1]^2*Δx[2]*Δx[3]*Δx[4]^2*Δx[5]*Δk[1] + 6*Δx[3] + 5
 g = f[[2,:,1]]
 h = f[[2,:,1,:]]
@@ -47,10 +47,10 @@ f = par(tps, monomialindex)
 ### Examples
 
 ```@repl par
-using GTPSA; GTPSA.show_sparse = false; GTPSA.show_header=false; #hide
+using GTPSA;  GTPSA.show_header=false; #hide
 d = Descriptor(5, 10, 2, 10);
-Δx = @vars(d);
-Δk = @params(d);
+Δx = vars(d);
+Δk = params(d);
 f = 2*Δx[1]^2*Δx[3] + 3*Δx[1]^2*Δx[2]*Δx[3]*Δx[4]^2*Δx[5]*Δk[1] + 6*Δx[3] + 5
 par(f, 3)
 par(f, param=1)

@@ -171,7 +171,6 @@ include("fastgtpsa/operators.jl") # TempTPS special math operators/functions
 include("global.jl")              # Global variables
 include("getset.jl")              # Indexing/slicing TPS, par, convenience getters (gradient, jacobian, hessian)
 include("ctors.jl")               # @vars @params @mono macros
-include("deprecated_ctors.jl")    # (DEPRECATED) Convenience constructors (vars, params, mono)
 include("show.jl")                # Output
 include("methods.jl")             # Higher-level TPS functions (setTPS!, clear!, derivatives, integrals, evaluate, etc)
 

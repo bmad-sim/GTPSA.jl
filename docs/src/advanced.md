@@ -1,19 +1,9 @@
 # Advanced Usage
 ## [Static and Dynamic `Descriptor` Resolution](@id descmodes)
 
-A constructed `TPS` must correspond to some previously defined `Descriptor`. Two "modes" of the `TPS` type may be constructed to determine how the `Descriptor` to use is resolved:
+A constructed `TPS` must correspond to some previously defined `Descriptor`. Two "modes" of the `TPS` type may be constructed to determine how the `Descriptor` to use is resolved.  Generally, we recommend using dynamic resolution, both so that code can be precompiled and binaries kept small. 
 
-1. **Static `Descriptor` resolution (Default):** The `Descriptor` is stored explicitly in the `TPS` type:
-
-| Ctor Call                                | Descriptor                                                     |
-| :-------------------                     | :--------------------------------------------                  |
-| `TPS{descriptor}([number])`              | `descriptor`                                                   |
-| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor`!)                 |  
-| `TPS(::TPS{T,descriptor})`               | `descriptor`                                                   |
-
-The same applies for all of the above constructor calls with the constructors `TPS64{...}(...)` and `ComplexTPS64{...}(...)`. The created type will be a `TPS{T,descriptor} where {T<:Union{Float64,ComplexF64}}`. Care must be taken with static `Descriptor` resolution to ensure type-stability, and in some cases it may not be possible. However, static resolution has the benefit that the `Descriptor` is stored explicitly in the type. Calls such as `zeros(TPS64{descriptor}, N)` can be made ensuring the `Descriptor` of the output is correct.
-
-2. **Dynamic `Descriptor` resolution:** The `Descriptor` is inferred at runtime, based on the passed arguments. A non-constant global variable `GTPSA.desc_current` stores the most recently-defined `Descriptor` to use if no `Descriptor` is inferrable. `GTPSA.desc_current` can also be set manually at any time by the user. Alternatively, the `Descriptor` to use can be provided to the `use` keyword argument of a `TPS` constructor.
+1. **Dynamic `Descriptor` resolution:** The `Descriptor` is inferred at runtime, based on the passed arguments. A non-constant global variable `GTPSA.desc_current` stores the most recently-defined `Descriptor` to use if no `Descriptor` is inferrable. `GTPSA.desc_current` can also be set manually at any time by the user. Alternatively, the `Descriptor` to use can be provided to the `use` keyword argument of a `TPS` constructor.
 
 | Ctor Call                                | Descriptor                                                      |
 | :-------------------                     | :--------------------------------------------                   |
@@ -29,6 +19,15 @@ The same applies for all of the above constructor calls with the constructors `T
 
 Note that static `Descriptor` resolution has no knowledge of `GTPSA.desc_current`, nor is the `use` kwarg allowed.
 
+2. **Static `Descriptor` resolution:** The `Descriptor` is stored explicitly in the `TPS` type:
+
+| Ctor Call                                | Descriptor                                                     |
+| :-------------------                     | :--------------------------------------------                  |
+| `TPS{descriptor}([number])`              | `descriptor`                                                   |
+| `TPS{descriptor2}(::TPS{T,descriptor1})` | `descriptor2` (copies + changes `Descriptor`!)                 |  
+| `TPS(::TPS{T,descriptor})`               | `descriptor`                                                   |
+
+The same applies for all of the above constructor calls with the constructors `TPS64{...}(...)` and `ComplexTPS64{...}(...)`. The created type will be a `TPS{T,descriptor} where {T<:Union{Float64,ComplexF64}}`. Care must be taken with static `Descriptor` resolution to ensure type-stability, and in some cases it may not be possible. However, static resolution has the benefit that the `Descriptor` is stored explicitly in the type. Calls such as `zeros(TPS64{descriptor}, N)` can be made ensuring the `Descriptor` of the output is correct.
 
 ## Parameters
 GTPSA allows one to explicitly distinguish between *variables* and *parameters*. Generally, a variable would be a dependent variable in a differential equation, and a parameter would be variations in something defining or influencing the system (for example, in a harmonic oscillator with restoring constant ``k``, a "parameter" in the context of `GTPSA.jl` would be ``\Delta k``).
@@ -72,7 +71,7 @@ Suppose we'd like to express a function ``f(x_1,x_2)`` as a truncated power seri
 We can define these two GTPSA `Descriptor`s respectively with:
 
 ```@repl
-using GTPSA; GTPSA.show_sparse=false; #hide
+using GTPSA;  #hide
 d2 = Descriptor([1, 2], 2) # Variable truncation orders [1, 2] and MO=2
 d3 = Descriptor([1, 2], 3) # Variable truncation orders [1, 2] and MO=2
 ```

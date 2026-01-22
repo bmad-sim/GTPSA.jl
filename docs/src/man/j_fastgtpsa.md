@@ -8,7 +8,7 @@ The first macro, `@FastGTPSA` can be prepended to an expression following assign
 ```@repl
 using GTPSA, BenchmarkTools
 
-d = Descriptor(3, 7);  Δx = @vars(d);
+d = Descriptor(3, 7);  Δx = vars(d);
 
 @btime $Δx[1]^3*sin($Δx[2])/log(2+$Δx[3])-exp($Δx[1]*$Δx[2])*im;
 
@@ -25,7 +25,7 @@ The second macro, `@FastGTPSA!` can be prepended to the LHS of an assignment, an
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d); # hide
+d = Descriptor(3, 7); Δx = vars(d); # hide
 
 t = ComplexTPS64(); # pre-allocate
 
@@ -40,7 +40,7 @@ Both `@FastGTPSA` and `@FastGTPSA!` can also be prepended to a block of code, in
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d);
+d = Descriptor(3, 7); Δx = vars(d);
 
 y = rand(3);
 
@@ -64,7 +64,7 @@ t3 = ComplexTPS64(); t4 = ComplexTPS64(); @gensym w;
 
 ```@repl
 using GTPSA, BenchmarkTools # hide
-d = Descriptor(3, 7); Δx = @vars(d); # hide
+d = Descriptor(3, 7); Δx = vars(d); # hide
 y = rand(3); # hide
 @btime @FastGTPSA begin
         out = @. $Δx^3*sin($y)/log(2+$Δx)-exp($Δx*$y)*im;

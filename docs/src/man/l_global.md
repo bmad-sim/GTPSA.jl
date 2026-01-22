@@ -18,14 +18,14 @@ show_sparse::Bool = false    # Use sparse monomial print
 ## Examples
 
 ```@repl
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 GTPSA.desc_current
 d6 = Descriptor(1, 6);
 GTPSA.desc_current
 t = TPS()
 GTPSA.show_sparse = true;
 x
-GTPSA.show_sparse = false;
+
 GTPSA.show_sparse
 x
 ```
