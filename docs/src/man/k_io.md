@@ -14,9 +14,9 @@ show_eps::Float64 =  eps(Float64)     # Print epsilon
 using GTPSA;  #hide
 d = Descriptor(1, 20)
 x = vars(d)
-sin(x)
+sin(x[1])
 GTPSA.show_eps=1e-3
-sin(x)
+sin(x[1])
 ```
 
 
