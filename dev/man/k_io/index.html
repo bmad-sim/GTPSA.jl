@@ -3,22 +3,20 @@
 Descriptor(NV=1, MO=20)
 INDEX  COEFFICIENT             ORDER   EXPONENTS
 ------------------------------------------------
-  1:   1.0000000000000000E+00    1     1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; sin(x)</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: MethodError: no method matching sin(::Vector{TPS64{GTPSA.Dynamic}})
-
-Closest candidates are:
-  sin(<span class="sgr91">::BigFloat</span>)
-<span class="sgr90">   @</span> <span class="sgr90">Base</span> <span class="sgr90"><span class="sgr4">mpfr.jl:801</span></span>
-  sin(<span class="sgr91">::IrrationalConstants.Fourπ</span>)
-<span class="sgr90">   @</span> <span class="sgr35">IrrationalConstants</span> <span class="sgr90">~/.julia/packages/IrrationalConstants/RokwY/src/<span class="sgr4">trigonometric.jl:9</span></span>
-  sin(<span class="sgr91">::Float16</span>)
-<span class="sgr90">   @</span> <span class="sgr90">Base</span> <span class="sgr90"><span class="sgr4">math.jl:1558</span></span>
-  ...</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; GTPSA.show_eps=1e-3</code><code class="nohighlight hljs ansi" style="display:block;">0.001</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; sin(x)</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: MethodError: no method matching sin(::Vector{TPS64{GTPSA.Dynamic}})
-
-Closest candidates are:
-  sin(<span class="sgr91">::BigFloat</span>)
-<span class="sgr90">   @</span> <span class="sgr90">Base</span> <span class="sgr90"><span class="sgr4">mpfr.jl:801</span></span>
-  sin(<span class="sgr91">::IrrationalConstants.Fourπ</span>)
-<span class="sgr90">   @</span> <span class="sgr35">IrrationalConstants</span> <span class="sgr90">~/.julia/packages/IrrationalConstants/RokwY/src/<span class="sgr4">trigonometric.jl:9</span></span>
-  sin(<span class="sgr91">::Float16</span>)
-<span class="sgr90">   @</span> <span class="sgr90">Base</span> <span class="sgr90"><span class="sgr4">math.jl:1558</span></span>
-  ...</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../j_fastgtpsa/">« <code>@FastGTPSA</code>/<code>@FastGTPSA!</code> Macros</a><a class="docs-footer-nextpage" href="../l_global/">Global Variables »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 22 January 2026 18:30">Thursday 22 January 2026</span>. Using Julia version 1.10.10.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  1:   1.0000000000000000E+00    1     1</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; sin(x[1])</code><code class="nohighlight hljs ansi" style="display:block;">TPS64{GTPSA.Dynamic}:
+Descriptor(NV=1, MO=20)
+ COEFFICIENT             ORDER   EXPONENTS
+ 1.0000000000000000E+00    1     1
+-1.6666666666666666E-01    3     3
+ 8.3333333333333332E-03    5     5
+-1.9841269841269841E-04    7     7
+ 2.7557319223985893E-06    9     9
+-2.5052108385441720E-08   11     11
+ 1.6059043836821616E-10   13     13
+-7.6471637318198174E-13   15     15
+ 2.8114572543455210E-15   17     17</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; GTPSA.show_eps=1e-3</code><code class="nohighlight hljs ansi" style="display:block;">0.001</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; sin(x[1])</code><code class="nohighlight hljs ansi" style="display:block;">TPS64{GTPSA.Dynamic}:
+Descriptor(NV=1, MO=20)
+ COEFFICIENT             ORDER   EXPONENTS
+ 1.0000000000000000E+00    1     1
+-1.6666666666666666E-01    3     3
+ 8.3333333333333332E-03    5     5</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../j_fastgtpsa/">« <code>@FastGTPSA</code>/<code>@FastGTPSA!</code> Macros</a><a class="docs-footer-nextpage" href="../l_global/">Global Variables »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 22 January 2026 18:57">Thursday 22 January 2026</span>. Using Julia version 1.10.10.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
