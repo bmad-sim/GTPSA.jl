@@ -17,31 +17,13 @@ Note that `TPS{Float64}{D} == TPS{Float64,D} == TPS64{D}`. [See the Julia docume
 ```
 t = TPS[{descriptor|numtype}]([number] [, use=(descriptor|tps)])
 
-# Static Descriptor resolution:
-t = TPS{descriptor}([number])
-t = TPS{Float64|ComplexF64, descriptor}([number])
-
 # Dynamic Descriptor resolution:
 t = TPS([number] [, use=(descriptor|tps)]) 
 t = TPS{Float64|ComplexF64 [, GTPSA.Dynamic]}([number] [, use=(descriptor|tps)]) 
-```
 
-## Static `Descriptor` Resolution
-`t = TPS{descriptor}([number])` constructs a new `TPS` using `descriptor`, equal to `number` if provided. If `number` is a `TPS` and has the same `Descriptor`, then this is a copy constructor. If `number` is a `TPS` and has a different `Descriptor`, then this will change the `Descriptor` granted the number of variables + parameters are equivalent. The monomial coefficient number type is inferred from `number`, defaulting to `Float64`.
-
-`t = TPS{Float64|ComplexF64, descriptor}([number])` is the same as `t = TPS{descriptor}([number])` but with the monomial coefficient number type explicitly specified.
-
-### Examples
-```@repl desc
-using GTPSA; GTPSA.show_sparse = false; #hide
-d1 = Descriptor(1, 1); # 1 variable to order 1
-t1_1 = TPS{d1}()
-t2_1 = TPS{d1}(5im)
-t3_1 = TPS{d1}(t2_1)
-d10 = Descriptor(1, 10); # New Descriptor to order 10
-t1_2 = TPS64{d10}() # Uses d10
-t2_2 = ComplexTPS64{d10}(6)
-t3_2 = ComplexTPS64{d10}(t3_1) # Promotes and changes Descriptor
+# Static Descriptor resolution:
+t = TPS{descriptor}([number])
+t = TPS{Float64|ComplexF64, descriptor}([number])
 ```
 
 ## Dynamic `Descriptor` Resolution
@@ -65,7 +47,7 @@ t3_2 = ComplexTPS64{d10}(t3_1) # Promotes and changes Descriptor
 
 ### Examples
 ```@repl desc
-using GTPSA; GTPSA.show_sparse = false; #hide
+using GTPSA;  #hide
 d1 = Descriptor(1, 1); # 1 variable to order 1
 t1_1 = TPS()
 t2_1 = TPS(5im)
@@ -74,6 +56,24 @@ d10 = Descriptor(1, 10); # New Descriptor to order 10
 t1_2 = TPS64() # Uses d10
 t2_2 = ComplexTPS64(6)
 t3_2 = ComplexTPS64(t3_1, use=d10) # Promotes and changes Descriptor
+```
+
+## Static `Descriptor` Resolution
+`t = TPS{descriptor}([number])` constructs a new `TPS` using `descriptor`, equal to `number` if provided. If `number` is a `TPS` and has the same `Descriptor`, then this is a copy constructor. If `number` is a `TPS` and has a different `Descriptor`, then this will change the `Descriptor` granted the number of variables + parameters are equivalent. The monomial coefficient number type is inferred from `number`, defaulting to `Float64`.
+
+`t = TPS{Float64|ComplexF64, descriptor}([number])` is the same as `t = TPS{descriptor}([number])` but with the monomial coefficient number type explicitly specified.
+
+### Examples
+```@repl desc
+using GTPSA;  #hide
+d1 = Descriptor(1, 1); # 1 variable to order 1
+t1_1 = TPS{d1}()
+t2_1 = TPS{d1}(5im)
+t3_1 = TPS{d1}(t2_1)
+d10 = Descriptor(1, 10); # New Descriptor to order 10
+t1_2 = TPS64{d10}() # Uses d10
+t2_2 = ComplexTPS64{d10}(6)
+t3_2 = ComplexTPS64{d10}(t3_1) # Promotes and changes Descriptor
 ```
 
 ## Documentation

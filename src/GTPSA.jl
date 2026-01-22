@@ -82,7 +82,7 @@ import Base:  +,
 import LinearAlgebra: norm
 import SpecialFunctions: erf, erfc, erfi, erfcx
 
-using GTPSA_jll, Printf, PrettyTables, MacroTools
+using GTPSA_jll, Printf, MacroTools
 
 export  
   # Layer 2 structs + functions NOT in Base:
@@ -171,7 +171,6 @@ include("fastgtpsa/operators.jl") # TempTPS special math operators/functions
 include("global.jl")              # Global variables
 include("getset.jl")              # Indexing/slicing TPS, par, convenience getters (gradient, jacobian, hessian)
 include("ctors.jl")               # @vars @params @mono macros
-include("deprecated_ctors.jl")    # (DEPRECATED) Convenience constructors (vars, params, mono)
 include("show.jl")                # Output
 include("methods.jl")             # Higher-level TPS functions (setTPS!, clear!, derivatives, integrals, evaluate, etc)
 

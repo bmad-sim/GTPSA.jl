@@ -39,18 +39,19 @@ julia> using GTPSA
 
 julia> d = Descriptor(2, 6); # 2 variables to 6th order
 
-julia> Δx = @vars(d);  # Get truncated power series (TPSs) corresponding to the variables
+julia> Δx = vars(d);  # Get truncated power series (TPSs) corresponding to the variables
 
 julia> f = cos(Δx[1]) + im*sin(Δx[2]) # Manipulate TPSs as you would any other number
-ComplexTPS64{Descriptor(NV=2, MO=6)}:
- Real                     Imag                       Order   Exponent
-  1.0000000000000000e+00   0.0000000000000000e+00      0      0   0
-  0.0000000000000000e+00   1.0000000000000000e+00      1      0   1
- -5.0000000000000000e-01   0.0000000000000000e+00      2      2   0
-  0.0000000000000000e+00  -1.6666666666666666e-01      3      0   3
-  4.1666666666666664e-02   0.0000000000000000e+00      4      4   0
-  0.0000000000000000e+00   8.3333333333333332e-03      5      0   5
- -1.3888888888888887e-03   0.0000000000000000e+00      6      6   0
+ComplexTPS64{GTPSA.Dynamic}:
+Descriptor(NV=2, MO=6)
+ COEFFICIENT                                      ORDER   EXPONENTS
+ 1.0000000000000000E+00 +0.0000000000000000E+00i    0     0 0
+ 0.0000000000000000E+00 +1.0000000000000000E+00i    1     0 1
+-5.0000000000000000E-01 +0.0000000000000000E+00i    2     2 0
+ 0.0000000000000000E+00 -1.6666666666666666E-01i    3     0 3
+ 4.1666666666666664E-02 +0.0000000000000000E+00i    4     4 0
+ 0.0000000000000000E+00 +8.3333333333333332E-03i    5     0 5
+-1.3888888888888887E-03 +0.0000000000000000E+00i    6     6 0
 ```
 
 The GTPSA library currently only supports truncated power series representing `Float64` and `ComplexF64` number types.

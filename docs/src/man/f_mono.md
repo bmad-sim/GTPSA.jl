@@ -17,7 +17,7 @@ m = mono(TPS{Float64|ComplexF64 [, GTPSA.Dynamic]} monomialindex [, use=(descrip
 
 ## Examples
 ```@repl desc
-using GTPSA; GTPSA.show_sparse = false; # hide
+using GTPSA;  # hide
 d15 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
 mono(1)
 mono(TPS64{d15}, 1)
