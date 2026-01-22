@@ -134,7 +134,7 @@ function show_vec(io, m::AbstractArray{<:TPS{T,D}}) where {T,D}
       @sprintf(" %2i:  %s", i, line)
     end
 
-    if lines_used + length(lines) > displaysize(io)[1]-4
+    if get(io, :limit, false) && lines_used + length(lines) > displaysize(io)[1]-4
       oversized=true
       #@show lines_used
       #@show lines_used-(displaysize(io)[1]-6)
