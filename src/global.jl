@@ -6,6 +6,6 @@ const DESC_MAX_TMP::Int = 8
 
 # Global non-constants (types MUST be specified)
 desc_current::Descriptor = Descriptor(MAD_DESC_CURR)   # Current Descriptor
-show_eps::Float64 =  0.0                               # Print epsilon
+show_eps::Float64 =  eps(Float64)                      # Print epsilon
 show_sparse::Bool = false                              # Use sparse monomial print
 show_header::Bool = false                              # Print a header above each TPS
