@@ -1,7 +1,7 @@
 # Table of Contents
 1. **[`Descriptor`](@ref descriptor)**: Defines the number of variables and parameters, and orders for each in the GTPSA
 2. **[`TPS`](@ref tps)**: Truncated Power Series struct
-3. **[`@vars`, `@params`](@ref varsparams)**: Creates a vector of `TPS`s corresponding to each variable (``\Delta x_i``) or parameter (``\Delta k_j``) in the GTPSA
+3. **[`vars`, `params`](@ref varsparams)**: Creates a vector of `TPS`s corresponding to each variable (``\Delta x_i``) or parameter (``\Delta k_j``) in the GTPSA
 4. **[Monomial Indexing](@ref monoindex)**: Get/set individual monomial coefficients
 5. **[`mono`](@ref mono)**: Creates a `TPS` corresponding to a specific monomial
 6. **[`gradient`, `jacobian`, `hessian`](@ref gjh)**: Extracts specific partial derivatives from a `TPS`
