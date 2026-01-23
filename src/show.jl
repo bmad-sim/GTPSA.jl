@@ -89,7 +89,9 @@ function show(io::IO, t::TPS{T,D}) where {T,D}
   return
 end
 
-function show_vec(io, m) where {T,D}
+function show_vec(io, m)
+  T = eltype(m)
+  D = desctype(T)
   N = length(m)
   lines_used = 0
   if N < 1
