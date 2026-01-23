@@ -89,7 +89,7 @@ function show(io::IO, t::TPS{T,D}) where {T,D}
   return
 end
 
-function show_vec(io, m::AbstractArray{<:TPS{T,D}}) where {T,D}
+function show_vec(io, m) where {T,D}
   N = length(m)
   lines_used = 0
   if N < 1
