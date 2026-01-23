@@ -243,7 +243,7 @@ promote_rule(::Type{TPS{T}}, ::Type{G}) where {T<:Union{Float64,ComplexF64},G} =
 promote_rule(::Type{G}, ::Type{TPS{T}}) where {T<:Union{Float64,ComplexF64},G<:Rational} = promote_rule(G, TPS{T,GTPSA.Dynamic})
 promote_rule(::Type{G}, ::Type{TPS{T}}) where {T<:Union{Float64,ComplexF64},G<:AbstractIrrational} = promote_rule(G, TPS{T,GTPSA.Dynamic})
 
-
+real(::Type{TPS{T,D}}) where {T,D} = TPS{real(T),D}
 complex(::Type{TPS{T,D}}) where {T,D} = TPS{complex(T),D}
 eps(::Type{TPS{T,D}}) where {T,D} = eps(T)
 floatmin(::Type{TPS{T,D}}) where {T,D} = floatmin(T)
