@@ -9,6 +9,20 @@ const TPSIndexType = Union{Integer,
                            SMIndexType}
 
 # --- Setters ---
+
+# For python compatibility ===========
+# Sparse monomial indexing not current compatible 
+function setindex!(
+  t::TPS, 
+  v::Union{AbstractVector{<:Number},Number}, 
+  idx::AbstractVector; 
+  param::Union{Integer,Nothing}=nothing,
+  params::Union{SMIndexType,Nothing}=nothing
+)
+  return setindex!(t, v, convert(Vector{UInt8}, idx); param=param, params=params)
+end 
+# =====================================
+
 # All
 function setindex!(t::TPS, v::Union{AbstractVector{<:Number},Number}, idx::Union{TPSIndexType,AbstractVector{<:Integer},Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   lowset!(t, v, idx, param, params)
@@ -59,6 +73,18 @@ lowset!(t, v, idx, param, params) = error("Invalid monomial index specified. Ple
 
 
 # --- Getters ---
+# For python compatibility ===========
+# Sparse monomial indexing not current compatible 
+function getindex(
+  t::TPS, 
+  idx::AbstractVector; 
+  param::Union{Integer,Nothing}=nothing,
+  params::Union{SMIndexType,Nothing}=nothing
+)
+  return getindex(t, convert(Vector{UInt8}, idx); param=param, params=params)
+end 
+# =====================================
+
 # All
 function getindex(t::TPS, idx::Union{AbstractVector{<:Integer},TPSIndexType,Nothing}=nothing; param::Union{Integer,Nothing}=nothing, params::Union{SMIndexType,Nothing}=nothing)
   return lowget(t, idx, param, params)
