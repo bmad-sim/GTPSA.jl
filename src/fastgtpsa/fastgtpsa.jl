@@ -295,7 +295,7 @@ macro FastGTPSA!(expr_or_block)
       end
     end
     return block
-  elseif expr_or_block isa Expr && expr_or_block.args[1].args[2].head != :tuple
+  else
     expr = expr_or_block
     expr = esc(apply_macro(expr))
     lhs = esc(expr.args[1].args[1])
@@ -378,8 +378,6 @@ macro FastGTPSA!(expr_or_block)
     end
     
     return :($(esc(expr)))
-  else
-    return :($(esc(expr_or_block)))
   end
 end 
 
