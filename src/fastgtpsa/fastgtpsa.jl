@@ -182,13 +182,15 @@ macro FastGTPSA(expr_or_block)
       end
     end
     return block
-  else
+  elseif expr_or_block isa Expr && expr_or_block.head != :tuple # We need to ignore tuples
     expr = expr_or_block
     expr = esc(apply_macro(expr))
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
     return :(to_TPS($expr))
+  else
+    return :($(esc(expr_or_block)))
   end
 end 
 
@@ -212,7 +214,7 @@ julia> using GTPSA, BenchmarkTools
 julia> d = Descriptor(3,7); Δx = @vars(d); 
 
 julia> t = ComplexTPS64(); # Pre-allocate
-
+f
 julia> @btime @FastGTPSA! \$t = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   2.972 μs (0 allocations: 0 bytes)
 
