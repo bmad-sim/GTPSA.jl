@@ -166,7 +166,6 @@ macro FastGTPSA(expr_or_block)
   if expr_or_block isa Expr && expr_or_block.head == :block
     block = MacroTools.postwalk(esc(expr_or_block)) do x
       if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
-        @show rhs
         return  :($(lhs) = @FastGTPSA($(rhs)))
       elseif @capture(x, lhs_ += rhs_)
         return  :($(lhs) = @FastGTPSA($(lhs) + $(rhs)))
@@ -215,7 +214,7 @@ julia> using GTPSA, BenchmarkTools
 julia> d = Descriptor(3,7); Δx = @vars(d); 
 
 julia> t = ComplexTPS64(); # Pre-allocate
-
+f
 julia> @btime @FastGTPSA! \$t = \$Δx[1]^3*sin(\$Δx[2])/log(2+\$Δx[3])-exp(\$Δx[1]*\$Δx[2])*im;
   2.972 μs (0 allocations: 0 bytes)
 
