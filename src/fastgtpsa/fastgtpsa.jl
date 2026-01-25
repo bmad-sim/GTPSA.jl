@@ -166,6 +166,7 @@ macro FastGTPSA(expr_or_block)
   if expr_or_block isa Expr && expr_or_block.head == :block
     block = MacroTools.postwalk(esc(expr_or_block)) do x
       if !(@capture(x, lhs_ = @FastGTPSA(rhs_))) && @capture(x, lhs_ = rhs_) 
+        @show rhs
         return  :($(lhs) = @FastGTPSA($(rhs)))
       elseif @capture(x, lhs_ += rhs_)
         return  :($(lhs) = @FastGTPSA($(lhs) + $(rhs)))
@@ -182,13 +183,15 @@ macro FastGTPSA(expr_or_block)
       end
     end
     return block
-  else
+  elseif expr_or_block isa Expr && expr_or_block.head != :tuple # We need to ignore tuples
     expr = expr_or_block
     expr = esc(apply_macro(expr))
     expr = change_dots(expr)
     expr = munge_expr(expr)
     expr = change_functions(expr)
     return :(to_TPS($expr))
+  else
+    return :($(esc(expr_or_block)))
   end
 end 
 
@@ -293,7 +296,7 @@ macro FastGTPSA!(expr_or_block)
       end
     end
     return block
-  else
+  elseif expr_or_block isa Expr && expr_or_block.args[1].args[2].head != :tuple
     expr = expr_or_block
     expr = esc(apply_macro(expr))
     lhs = esc(expr.args[1].args[1])
@@ -376,6 +379,8 @@ macro FastGTPSA!(expr_or_block)
     end
     
     return :($(esc(expr)))
+  else
+    return :($(esc(expr_or_block)))
   end
 end 
 
