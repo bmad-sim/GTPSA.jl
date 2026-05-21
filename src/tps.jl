@@ -95,7 +95,7 @@ TPS(
 # Now ctors including TPSs:
 function TPS{T,D}(
   ta::TPS{TA,DA}; 
-  use::Union{Descriptor,TPS,Nothing}=nothing,
+  use::Union{Descriptor,TPS,Nothing}=getdesc(ta),
   _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
 ) where {T<:Union{Float64,ComplexF64},TA<:Union{Float64,ComplexF64},D,DA}
   t = TPS{T,D}(; use=use, _mo=_mo);
