@@ -95,9 +95,12 @@ TPS(
 # Now ctors including TPSs:
 function TPS{T,D}(
   ta::TPS{TA,DA}; 
-  use::Union{Descriptor,TPS,Nothing}=getdesc(ta),
+  use::Union{Descriptor,TPS,Nothing}=nothing,
   _mo::UInt8=ta isa TPS ? ta.mo : MAD_TPSA_DEFAULT
 ) where {T<:Union{Float64,ComplexF64},TA<:Union{Float64,ComplexF64},D,DA}
+  if D == Dynamic && isnothing(use)
+    use = getdesc(ta)
+  end
   t = TPS{T,D}(; use=use, _mo=_mo);
   if getdesc(t) == getdesc(ta)
     copy!(t, ta)
