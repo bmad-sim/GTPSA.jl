@@ -6227,4 +6227,10 @@ end
   @test all(abs.(h6 - h6FD) .< tol)
 end
 
-
+@testset "Multiple descriptors" begin
+  d2 = Descriptor(6,2,2,1)
+  d1 = Descriptor(6,1,2,1)
+  p = params(d2)[1]
+  p2 = TPS64(p)
+  @test GTPSA.getdesc(p2) == GTPSA.getdesc(p)
+end
