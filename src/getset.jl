@@ -53,7 +53,16 @@ end
 
 # Monomial
 function lowset!(t::TPS, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
-  setm!(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords), 0, v)
+  nn = numnn(t)
+  n = length(ords)
+  if n != nn
+    ords1 = Vector{Cuchar}(undef, nn)
+    copyto!(ords1, ords)
+    fill!(@view(ords1[n+1:nn]), 0x0)
+  else
+    ords1 = ords
+  end
+  setm!(t, nn, ords1 isa Vector{Cuchar} ? ords1 : collect(Cuchar, ords1), 0, v)
 end
 
 # By sparse monomial
@@ -119,7 +128,16 @@ end
 
 # Monomial
 function lowget(t::TPS, ords::MIndexType, param::Nothing, params::Nothing)
-  return getm(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords))
+  nn = numnn(t)
+  n = length(ords)
+  if n != nn
+    ords1 = Vector{Cuchar}(undef, nn)
+    copyto!(ords1, ords)
+    fill!(@view(ords1[n+1:nn]), 0x0)
+  else
+    ords1 = ords
+  end
+  return getm(t, nn, ords1 isa Vector{Cuchar} ? ords1 : collect(Cuchar, ords1))
 end
 
 # By sparse monomial

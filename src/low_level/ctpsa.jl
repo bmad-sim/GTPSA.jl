@@ -2015,6 +2015,23 @@ end
 
 
 """
+    mad_ctpsa_divn!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
+
+Sets TPSA `c` to `a/v`.
+
+### Input
+- `a` -- Source TPSA `a`
+- `v` -- Scalar with double precision
+
+### Output
+- `c` -- Destination TPSA `c = a/v`
+"""
+function mad_ctpsa_divn!(a::ComplexTPS, v::ComplexF64, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_divn(a::Ref{TPS{ComplexF64}}, v::ComplexF64, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+
+"""
     mad_ctpsa_inv!(a::ComplexTPS,  v::ComplexF64, c::ComplexTPS)
 
 Sets TPSA `c` to `v/a`. 
@@ -2261,6 +2278,24 @@ Sets TPSA `c` to `v*a`.  Without complex-by-value arguments.
 """
 function mad_ctpsa_scl_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
   @ccall MAD_TPSA.mad_ctpsa_scl_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+
+"""
+    mad_ctpsa_divn_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
+
+Sets TPSA `c` to `a/v`. Without complex-by-value arguments.
+
+### Input
+- `a`    -- Source TPSA `a`
+- `v_re` -- Real part of scalar with double precision
+- `v_im` -- Imaginary part of scalar with double precision
+
+### Output
+- `c`    -- Destination TPSA `c = a/v`
+"""
+function mad_ctpsa_divn_r!(a::ComplexTPS, v_re::Cdouble, v_im::Cdouble, c::ComplexTPS)
+  @ccall MAD_TPSA.mad_ctpsa_divn_r(a::Ref{TPS{ComplexF64}}, v_re::Cdouble, v_im::Cdouble, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
 
@@ -2744,25 +2779,26 @@ end
 
 
 """
-    mad_ctpsa_exppb!(na::Cint, ma, mb, mc)
+    mad_ctpsa_exppb!(na::Cint, ma, nb, mb, mc)
 
 Computes the exponential of fgrad of the vector fields `ma` and `mb`,
 literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
 
 ### Input
-- `na` -- Length of `ma` and `mb`
+- `na` -- Length of `ma`
 - `ma` -- Vector of TPSA `ma`
+- `nb` -- Length of `mb`
 - `mb` -- Vector of TPSA `mb`
 
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_ctpsa_exppb!(na::Cint, ma, mb, mc)
+function mad_ctpsa_exppb!(na::Cint, ma, nb::Cint, mb, mc)
   eltype(ma) <: ComplexTPS || error("ma must have eltype <: ComplexTPS !")
   eltype(mb) <: ComplexTPS || error("mb must have eltype <: ComplexTPS !")
   eltype(mc) <: ComplexTPS || error("mc must have eltype <: ComplexTPS !")
   GC.@preserve ma mb mc begin
-  @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{TPS{ComplexF64}}, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_exppb(na::Cint, ma::Ptr{TPS{ComplexF64}}, nb::Cint, mb::Ptr{TPS{ComplexF64}}, mc::Ptr{TPS{ComplexF64}})::Cvoid
   end
 end
 

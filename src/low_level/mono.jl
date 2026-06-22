@@ -1,5 +1,5 @@
 """
-    mad_mono_str!(n::Cint, a, s::Cstring)::Cint
+    mad_mono_str!(n::Cint, a, s::Cstring)::Cvoid
 
 Writes the monomial defined in the string `s`, which stores the orders in a human-readable format 
 (e.g. 10 is 10, not 0xa), into the byte array `a` with the orders specified in hexadecimal.
@@ -10,12 +10,10 @@ Writes the monomial defined in the string `s`, which stores the orders in a huma
 
 ### Output
 - `a` -- Monomial as a byte array converted from the input string
-- `i` -- Adjusted size `n` of byte array if '\0' found
 """
-function mad_mono_str!(n::Cint, a, s::Cstring)::Cint
+function mad_mono_str!(n::Cint, a, s::Cstring)::Cvoid
   eltype(a) == Cuchar || error("a must have eltype Cuchar !")
-  i = @ccall MAD_TPSA.mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cint
-  return i
+  @ccall MAD_TPSA.mad_mono_str(n::Cint, a::Ptr{Cuchar}, s::Cstring)::Cvoid
 end
 
 
@@ -111,7 +109,7 @@ end
 
 
 """
-    mad_mono_ord(n::Cint, a)::Cint
+    mad_mono_ord(n::Cint, a)::UInt32
 
 Returns the sum of the orders of the monomial `a`.
 
@@ -122,9 +120,9 @@ Returns the sum of the orders of the monomial `a`.
 ### Output
 - `s` -- Sum of orders of monomial
 """
-function mad_mono_ord(n::Cint, a)::Cint
+function mad_mono_ord(n::Cint, a)::UInt32
   eltype(a) == Cuchar || error("a must have eltype Cuchar !")
-  s = @ccall MAD_TPSA.mad_mono_ord(n::Cint, a::Ptr{Cuchar})::Cint
+  s = @ccall MAD_TPSA.mad_mono_ord(n::Cint, a::Ptr{Cuchar})::UInt32
   return s
 end
 
