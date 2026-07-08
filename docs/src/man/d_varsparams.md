@@ -29,7 +29,7 @@
 
 
 ### Examples
-```@repl desc
+```@repl desc4
 using GTPSA;  #hide
 d5 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
 Δx = vars(d5)
@@ -49,7 +49,7 @@ d5 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
 `complex` if `true`, will return the corresponding `TPS`s as `ComplexTPS64`. Default is `false`.
 
 ### Examples
-```@repl desc
+```@repl desc5
 using GTPSA;  #hide
 d5 = Descriptor(3, 5, 2, 5); # 3 vars, 2 params, all to order 5
 Δx = @vars(d5)

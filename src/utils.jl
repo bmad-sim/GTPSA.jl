@@ -70,17 +70,12 @@ end
 function pairs_to_m(t::TPS, vars; params=Pair{Int,Int}[],zero_mono=true)::Tuple{Vector{UInt8}, Cint}
   eltype(vars) <: Pair{<:Integer,<:Integer} || error("Invalid input for vars!")
   isnothing(params) || eltype(params) <: Pair{<:Integer,<:Integer} || error("Invalid input for params!")
+  nn = numnn(t)
   nv = numvars(t)
-  n = Cint(0)
-  if isempty(params)
-    n = Cint(maximum(map(x->x.first, vars)))
-  else
-    n = Cint(maximum(map(x->x.first, params))) + nv
-  end
   if zero_mono
-    ords = zeros(Cuchar, n)
+    ords = zeros(Cuchar, nn)
   else
-    ords = ones(Cuchar, n).*0xff
+    ords = ones(Cuchar, nn).*0xff
   end
   for var in vars
     ords[var.first] = convert(Cuchar, var.second)
@@ -88,5 +83,5 @@ function pairs_to_m(t::TPS, vars; params=Pair{Int,Int}[],zero_mono=true)::Tuple{
   for param in params
     ords[nv + param.first] = convert(Cuchar, param.second)
   end
-  return ords, n
+  return ords, nn
 end
