@@ -1458,6 +1458,23 @@ end
 
 
 """
+    mad_tpsa_divn!(a::RealTPS, v::Cdouble, c::RealTPS)
+
+Sets TPSA `c` to `a/v`.
+
+### Input
+- `a` -- Source TPSA `a`
+- `v` -- Scalar with double precision
+
+### Output
+- `c` -- Destination TPSA `c = a/v`
+"""
+function mad_tpsa_divn!(a::RealTPS, v::Cdouble, c::RealTPS)
+  @ccall MAD_TPSA.mad_tpsa_divn(a::Ref{TPS{Float64}}, v::Cdouble, c::Ref{TPS{Float64}})::Cvoid
+end
+
+
+"""
     mad_tpsa_inv!(a::RealTPS,  v::Cdouble, c::RealTPS)
 
 Sets TPSA `c` to `v/a`. 
@@ -1933,25 +1950,26 @@ end
 
 
 """
-    mad_tpsa_exppb!(na::Cint, ma, mb, mc)
+    mad_tpsa_exppb!(na::Cint, ma, nb::Cint, mb, mc)
 
 Computes the exponential of fgrad of the vector fields `ma` and `mb`,
 literally `exppb(ma, mb) = mb + fgrad(ma, mb) + fgrad(ma, fgrad(ma, mb))/2! + ...`
 
 ### Input
-- `na` -- Length of `ma` and `mb`
+- `na` -- Length of `ma`
 - `ma` -- Vector of TPSA `ma`
+- `nb` -- Length of `mb`
 - `mb` -- Vector of TPSA `mb`
 
 ### Output
 - `mc` -- Destination vector of TPSA `mc`
 """
-function mad_tpsa_exppb!(na::Cint, ma, mb, mc)
+function mad_tpsa_exppb!(na::Cint, ma, nb::Cint, mb, mc)
   eltype(ma) <: RealTPS || error("ma must have eltype <: RealTPS !")
   eltype(mb) <: RealTPS || error("mb must have eltype <: RealTPS !")
   eltype(mc) <: RealTPS || error("mc must have eltype <: RealTPS !")
   GC.@preserve ma mb mc begin
-  @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{TPS{Float64}}, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_exppb(na::Cint, ma::Ptr{TPS{Float64}}, nb::Cint, mb::Ptr{TPS{Float64}}, mc::Ptr{TPS{Float64}})::Cvoid
   end
 end
 

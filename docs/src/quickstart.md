@@ -2,7 +2,7 @@
 ## Defining the GTPSA
 We first must define a `Descriptor` which includes all information about a GTPSA, including the number of variables and truncation order:
 
-```@example desc
+```@example desc1
 using GTPSA #hide
 # 2 variables with max truncation order 10
 d10 = Descriptor(2, 10)     

@@ -60,7 +60,9 @@ div!(c::ComplexTPS, a::RealTPS,    b::ComplexTPS) = mad_ctpsa_tdiv!(a, b, c)
 inv!(c::RealTPS,    a::RealTPS,     v=1) = mad_tpsa_inv!(a, Float64(v), c)
 inv!(c::ComplexTPS, a::ComplexTPS,  v=1) = mad_ctpsa_inv!(a, ComplexF64(v), c)
 inv!(c::ComplexTPS, a::RealTPS,     v=1) = (copy!(c, a); inv!(c, c, v))
-div!(c::TPSType, a::TPSType, v) = mul!(c, a, 1/v)
+div!(c::RealTPS,    a::RealTPS,    v) = mad_tpsa_divn!( a, Float64(v),    c)
+div!(c::ComplexTPS, a::ComplexTPS, v) = mad_ctpsa_divn!(a, ComplexF64(v), c)
+div!(c::ComplexTPS, a::RealTPS,    v) = (copy!(c, a); div!(c, c, v))
 div!(c::TPSType, v, a::TPSType) = inv!(c, a, v)
 
 # --- pow! ---

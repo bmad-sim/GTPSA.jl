@@ -53,7 +53,16 @@ end
 
 # Monomial
 function lowset!(t::TPS, v::Number, ords::MIndexType, param::Nothing, params::Nothing)
-  setm!(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords), 0, v)
+  nn = numnn(t)
+  n = length(ords)
+  if n != nn
+    ords1 = Vector{Cuchar}(undef, nn)
+    copyto!(ords1, ords)
+    fill!(@view(ords1[n+1:nn]), 0x0)
+  else
+    ords1 = ords
+  end
+  setm!(t, nn, ords1 isa Vector{Cuchar} ? ords1 : collect(Cuchar, ords1), 0, v)
 end
 
 # By sparse monomial
@@ -119,7 +128,16 @@ end
 
 # Monomial
 function lowget(t::TPS, ords::MIndexType, param::Nothing, params::Nothing)
-  return getm(t, length(ords), ords isa Vector{Cuchar} ? ords : collect(Cuchar, ords))
+  nn = numnn(t)
+  n = length(ords)
+  if n != nn
+    ords1 = Vector{Cuchar}(undef, nn)
+    copyto!(ords1, ords)
+    fill!(@view(ords1[n+1:nn]), 0x0)
+  else
+    ords1 = ords
+  end
+  return getm(t, nn, ords1 isa Vector{Cuchar} ? ords1 : collect(Cuchar, ords1))
 end
 
 # By sparse monomial
@@ -264,14 +282,18 @@ end
 
 # Flat index:
 function setup_mono(t1::TPS, v::Integer, param::Nothing, params::Nothing)::Vector{Cuchar}
-  par_mono = ones(Cuchar, v+1).*0xff
+  nn = numnn(t1)
+  par_mono = Vector{Cuchar}(undef, nn)
+  par_mono .= 0xff
   par_mono[v] = 0x1
   return par_mono
 end
 
 function setup_mono(t1::TPS, v::Union{Nothing,Colon}, param::Integer, params::Nothing)::Vector{Cuchar}
-  nv = numvars(t1) # TOTAL NUMBER OF VARS!!!!
-  par_mono = ones(Cuchar, param+nv+1).*0xff
+  nn = numnn(t1) 
+  nv = numvars(t1)
+  par_mono = Vector{Cuchar}(undef, nn)
+  par_mono .= 0xff
   par_mono[nv+param] = 0x1
   return par_mono
 end
@@ -279,7 +301,14 @@ end
 # Monomial by order:
 # This one should ALWAYS be called by par or splicing colon IS in the tuple or vector somewhere
 function setup_mono(t1::TPS, v::MColonIndexType, param::Nothing, params::Nothing)::Vector{Cuchar}
-  return collect(replace(x-> x isa Colon ? 0xff::Cuchar : convert(Cuchar, x)::Cuchar, v))
+  nn = numnn(t1)
+  n = length(v)
+  ords1 = Vector{Cuchar}(undef, nn)
+  fill!(@view(ords1[n+1:nn]), last(v) isa Colon ? 0xff : 0x0)
+  for i in 1:min(n,nn)
+    ords1[i] = v[i] isa Colon ? 0xff::Cuchar : convert(Cuchar, v[i])::Cuchar
+  end
+  return ords1
 end
 
 # By definition, sparse monomial makes everything else zero. SO if we reach this, it is automatically
@@ -313,20 +342,21 @@ end
 function slice(t1::TPS, par_mono::Vector{Cuchar}, par_it=true)
   nv = numvars(t1)
   np = numparams(t1)
+  nn = numnn(t1)
   t = zero(t1)
   v = length(par_mono)-1
   coef = Ref{numtype(t)}()
-  mono = Vector{Cuchar}(undef, np+nv)
-  idx = idxm(t1, v, replace(x->x==0xff ? 0x0 : x, par_mono))-1
-  idx = cycle!(t1, idx, np+nv, mono, coef)
+  mono = Vector{Cuchar}(undef, nn)
+  idx = idxm(t1, nn, replace(x->x==0xff ? 0x0 : x, par_mono))-1
+  idx = cycle!(t1, idx, nn, mono, coef)
   valid_idxs = findall(x->x != 0xff, par_mono)
-  invalid_idxs = findall(x->x == 0xff, par_mono[1:min(v,np+nv)])
+  invalid_idxs = findall(x->x == 0xff, par_mono[1:min(v,nn)])
   while idx >= 0
     if all(mono[valid_idxs] .== par_mono[valid_idxs])
       # if last index in par_mono is a colon, assume all the rest are colons, else check if all are zeros
       if last(par_mono) == 0xff || all(mono[valid_idxs[end]+1:end] .== 0x0)
         if par_it
-          tmp = zeros(Cuchar, np+nv)
+          tmp = zeros(Cuchar, nn)
           tmp[invalid_idxs] .= mono[invalid_idxs]
           tmp[v+1:end] .= mono[v+1:end]
           t[tmp] = coef[]
@@ -335,7 +365,7 @@ function slice(t1::TPS, par_mono::Vector{Cuchar}, par_it=true)
         end
       end
     end
-    idx = cycle!(t1, idx, np+nv, mono, coef)
+    idx = cycle!(t1, idx, nn, mono, coef)
   end
   return t
 end

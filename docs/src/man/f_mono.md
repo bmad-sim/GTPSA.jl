@@ -16,7 +16,7 @@ m = mono(TPS{Float64|ComplexF64 [, GTPSA.Dynamic]} monomialindex [, use=(descrip
 `monomialindex` can be any of kind monomial indexing: by index, by order, and by sparse monomial. See the [monomial indexing](@ref monoindex) for more details on each.
 
 ## Examples
-```@repl desc
+```@repl desc6
 using GTPSA;  # hide
 d15 = Descriptor(3, 15, 2, 15); # 3 vars, 2 params, all to order 15
 mono(1)

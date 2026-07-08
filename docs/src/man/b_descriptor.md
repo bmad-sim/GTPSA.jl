@@ -31,7 +31,7 @@ da = Descriptor(2, 10)
 db = Descriptor([1, 2, 3], 5)     
 dc = Descriptor(3, 4, 1, 2)    
 dd = Descriptor([6, 5], 8, [4, 3], 7)   
-GTPSA.desc_current = d1
+GTPSA.desc_current = da
 ```
 
 ## Documentation

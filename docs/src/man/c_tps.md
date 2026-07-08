@@ -46,7 +46,7 @@ t = TPS{Float64|ComplexF64, descriptor}([number])
 `use=(descriptor|tps)` creates a new `TPS` having a `Descriptor` equal to that passed. If changing the `Descriptor` of a `TPS`, the number of variable + number of parameters must be equivalent, and invalid monomials in the new `Descriptor` will be removed.
 
 ### Examples
-```@repl desc
+```@repl desc2
 using GTPSA;  #hide
 d1 = Descriptor(1, 1); # 1 variable to order 1
 t1_1 = TPS()
@@ -64,7 +64,7 @@ t3_2 = ComplexTPS64(t3_1, use=d10) # Promotes and changes Descriptor
 `t = TPS{Float64|ComplexF64, descriptor}([number])` is the same as `t = TPS{descriptor}([number])` but with the monomial coefficient number type explicitly specified.
 
 ### Examples
-```@repl desc
+```@repl desc3
 using GTPSA;  #hide
 d1 = Descriptor(1, 1); # 1 variable to order 1
 t1_1 = TPS{d1}()
