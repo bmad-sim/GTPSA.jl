@@ -228,3 +228,6 @@ sincosmq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincosmq!(a,
 sincosmq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincosmq!(a, s, c); return (s, c))
 sinhcoshmq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincoshmq!(a, s, c); return (s, c))
 sinhcoshmq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincoshmq!(a, s, c); return (s, c))
+
+divc!(c::RealTPS, a::RealTPS, b::RealTPS; tol::Cdouble=eps()) = mad_tpsa_divc!(a, b, c, tol)
+divc!(c::ComplexTPS, a::ComplexTPS, b::ComplexTPS; tol::Cdouble=eps()) = mad_ctpsa_divc!(a, b, c, tol)

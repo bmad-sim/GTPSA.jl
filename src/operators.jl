@@ -267,3 +267,15 @@ sincosmq(t1::TPS) = (s = zero(t1); c = zero(t1); sincosmq!(s, c, t1); return (s,
 Returns a tuple `sinh(sqrt(x))-1)/x, (cosh(sqrt(x))-1)/x`
 """
 sinhcoshmq(t1::TPS) = (s = zero(t1); c = zero(t1); sinhcoshmq!(s, c, t1); return (s, c))
+
+# --- divc ---
+
+"""
+    divc(a::TPS, b::TPS; tol::Float64=0.)
+
+Computes `c = a / b` by cancellation (supports singularities), however may fail.
+"""
+divc(a::TPS{Float64}, b::TPS{Float64}; tol::Float64=eps()) = (c = zero(a); divc!(c, a, b; tol=tol); return c)
+divc(a::TPS{ComplexF64}, br::TPS{Float64}; tol::Float64=eps()) = (c = zero(a); b = complex(br); divc!(c, a, b; tol=tol); return c)
+divc(ar::TPS{Float64}, b::TPS{ComplexF64}; tol::Float64=eps()) = (c = zero(b); a = complex(ar); divc!(c, a, b; tol=tol); return c)
+divc(a::TPS{ComplexF64}, b::TPS{ComplexF64}; tol::Float64=eps()) = (c = zero(a); divc!(c, a, b; tol=tol); return c)

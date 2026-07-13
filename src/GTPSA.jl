@@ -113,6 +113,7 @@ export
   sinhcoshq,
   sincosmq,
   sinhcoshmq,
+  divc,  
 
   # TPS ctors:
   @vars,

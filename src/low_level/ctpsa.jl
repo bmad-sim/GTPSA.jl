@@ -3254,3 +3254,25 @@ function mad_ctpsa_init!(t::ComplexTPS, d::Ptr{Desc}, mo::Cuchar)::ComplexTPS
   t = @ccall MAD_TPSA.mad_ctpsa_init(t::Ref{TPS{ComplexF64}}, d::Ptr{Desc}, mo::Cuchar)::Ptr{TPS{ComplexF64}}
   return t
 end
+
+"""
+    mad_ctpsa_divc_clrcnt!
+
+Resets the counters for `div` and `divc` calls, used as diagnostic (not thread-safe).
+"""
+function mad_ctpsa_divc_clrcnt!()
+  @ccall MAD_TPSA.mad_ctpsa_divc_clrcnt()::Cvoid
+end
+
+"""
+    mad_ctpsa_divc_getcnt!(cnt, fail)
+
+Mutates `cnt` and `fail` to the current `divc` count and current `divc` fail counts respectively.
+
+### Arguments:
+- `cnt`: pointer/reference to `Cint` value to be mutated in place
+- `fail`: pointer/reference to `Cint` value to be mutated in place
+"""
+function mad_ctpsa_divc_getcnt!(cnt, fail)
+  @ccall MAD_TPSA.mad_ctpsa_divc_getcnt(cnt::Ptr{Cint}, fail::Ptr{Cint})::Cvoid
+end

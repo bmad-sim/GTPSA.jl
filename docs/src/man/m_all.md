@@ -20,7 +20,7 @@ sincos
 `GTPSA.jl` also provides the following math functions NOT included in Base or any of the above packages (and not already documented in [`TPS`-Specific Functions](@ref tpsmethods)):
 ```
 unit, sincu, sinhc, sinhcu, asinc, asincu, asinhc, asinhcu, wf, polar, rect,
-sinhcosh, sincosq, sinhcoshq, sincosmq, sinhcoshmq
+sinhcosh, sincosq, sinhcoshq, sincosmq, sinhcoshmq, divc
 ```
 If there is a mathematical function in Base which you'd like and is not included in the above list, feel free to submit an [issue](https://github.com/bmad-sim/GTPSA.jl/issues).
 

@@ -20,18 +20,13 @@ include("test_static.jl")
   mad_tpsa.h downloaded.
   Comparing mad_tpsa.h to rtpsa.jl...
   mad_tpsa_sincoshmq: Number of C variables different from number of Julia variables! Skipping variable check...
-  mad_tpsa_divc_clrcnt not found in GTPSA.jl!
-  mad_tpsa_divc_getcnt not found in GTPSA.jl!
   mad_ctpsa.h downloaded.
   Comparing mad_ctpsa.h to ctpsa.jl...
   mad_ctpsa_sincoshmq: Number of C variables different from number of Julia variables! Skipping variable check...
-  mad_ctpsa_divc_clrcnt not found in GTPSA.jl!
-  mad_ctpsa_divc_getcnt not found in GTPSA.jl!
   mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
   mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
   mad_ctpsa_cplx found in GTPSA.jl, but not MAD_TPSA!
   """
-  # Note: clrcnt and getcnt are debug functions for divc that we are not currently including
   # sincoshmq in the header file (which this compare script reads) does not have a space between 
   # tpsa_t* and "a", so it looks like tpsa_t*a, tpsa_t *b, ... which messes up the variable count. 
   # so everything is ok, perhaps the script can be modified to account for this in the future but 

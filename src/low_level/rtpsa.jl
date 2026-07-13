@@ -2425,3 +2425,24 @@ function mad_tpsa_init!(t::RealTPS, d::Ptr{Desc}, mo::Cuchar)::RealTPS
   return t
 end
 
+"""
+    mad_tpsa_divc_clrcnt!
+
+Resets the counters for `div` and `divc` calls, used as diagnostic (not thread-safe).
+"""
+function mad_tpsa_divc_clrcnt!()
+  @ccall MAD_TPSA.mad_tpsa_divc_clrcnt()::Cvoid
+end
+
+"""
+    mad_tpsa_divc_getcnt!(cnt, fail)
+
+Mutates `cnt` and `fail` to the current `divc` count and current `divc` fail counts respectively.
+
+### Arguments:
+- `cnt`: pointer/reference to `Cint` value to be mutated in place
+- `fail`: pointer/reference to `Cint` value to be mutated in place
+"""
+function mad_tpsa_divc_getcnt!(cnt, fail)
+  @ccall MAD_TPSA.mad_tpsa_divc_getcnt(cnt::Ptr{Cint}, fail::Ptr{Cint})::Cvoid
+end

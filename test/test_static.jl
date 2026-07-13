@@ -532,7 +532,7 @@ end
   @test normTPS(erf(-t) + erf(t)) < tol
   @test normTPS(angle(t) - atan(imag(t),real(t))) < tol
   @test normTPS(complex(t) - t) < tol
-
+  
   s, c = sincos(t)
   @test normTPS(s - sin(t)) < tol
   @test normTPS(c - cos(t)) < tol
@@ -542,19 +542,19 @@ end
   @test normTPS(ch - cosh(t)) < tol
   
   sq, cq = sincosq(t)
-  @test normTPS(sq - sinc(sqrt(t))) < tol
+  @test normTPS(sq - sincu(sqrt(t))) < tol
   @test normTPS(cq - cos(sqrt(t))) < tol
 
   shq, chq = sinhcoshq(t)
-  @test normTPS(shq - sinhc(sqrt(t))) < tol
+  @test normTPS(shq - sinhcu(sqrt(t))) < tol
   @test normTPS(chq - cosh(sqrt(t))) < tol
 
   smq, cmq = sincosmq(t)
-  @test normTPS(smq - (sinc(sqrt(t))-1)/t) < tol
+  @test normTPS(smq - (sincu(sqrt(t))-1)/t) < tol
   @test normTPS(cmq - (cos(sqrt(t))-1)/t) < tol
 
   shmq, chmq = sinhcoshmq(t)
-  @test normTPS(shmq - (sinhc(sqrt(t))-1)/t) < tol
+  @test normTPS(shmq - (sinhcu(sqrt(t))-1)/t) < tol
   @test normTPS(chmq - (cosh(sqrt(t))-1)/t) < tol
 end
 
