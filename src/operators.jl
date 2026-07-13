@@ -229,3 +229,41 @@ hypot(a::TPS{<:Number,D}, b::Number...) where {D} = (t = TPS{Float64,D}(); hypot
 hypot(a::TPS{<:Number,Dynamic}...)= (t = TPS{Float64,Dynamic}(use=a[1]); hypot!(t, a...); return t)
 hypot(a::TPS{<:Number,D}...) where {D} = (t = TPS{Float64,D}(); hypot!(t, a...); return t)
 
+# --- sin(h)cos(h)(q) ---
+sincos(t1::TPS) = (s = zero(t1); c = zero(t1); sincos!(s, c, t1); return (s, c))
+
+"""
+    sinhcosh(x)
+
+Simultaneously compute the hyperbolic sine and hyperbolic osine of x, where x is in radians,
+returning a tuple `(hyperbolic sine, hyperbolic cosine)`.
+"""
+sinhcosh(t1::TPS) = (s = zero(t1); c = zero(t1); sinhcosh!(s, c, t1); return (s, c))
+
+"""
+    sincosq(x)
+
+Returns a tuple `(sinc(sqrt(x)), cos(sqrt(x))`
+"""
+sincosq(t1::TPS) = (s = zero(t1); c = zero(t1); sincosq!(s, c, t1); return (s, c))
+
+"""
+    sinhcoshq(x)
+
+Returns a tuple `(sinhc(sqrt(x)), cosh(sqrt(x))`
+"""
+sinhcoshq(t1::TPS) = (s = zero(t1); c = zero(t1); sinhcoshq!(s, c, t1); return (s, c))
+
+"""
+    sincosmq(x)
+
+Returns a tuple `sin(sqrt(x))-1)/x, (cos(sqrt(x))-1)/x`
+"""
+sincosmq(t1::TPS) = (s = zero(t1); c = zero(t1); sincosmq!(s, c, t1); return (s, c))
+
+"""
+    sinhcoshmq(x)
+
+Returns a tuple `sinh(sqrt(x))-1)/x, (cosh(sqrt(x))-1)/x`
+"""
+sinhcoshmq(t1::TPS) = (s = zero(t1); c = zero(t1); sinhcoshmq!(s, c, t1); return (s, c))

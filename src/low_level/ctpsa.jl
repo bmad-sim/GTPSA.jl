@@ -1101,7 +1101,7 @@ end
 """
     mad_ctpsa_equ(a::ComplexTPS, b::ComplexTPS, tol_::Cdouble)::Bool
 
-Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
+Checks if each coefficient in the TPSAs `a` and `b` are equal within the specified absolute tolerance `tol_`. 
 
 ### Input
 - `a`    -- TPSA `a`
@@ -1109,7 +1109,7 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 - `tol_` -- (Optional) Difference below which the TPSAs are considered equal
 
 ### Output
-- `ret`   - True if `a == b` within `tol_`
+- `ret`  -- True if `a == b` within `tol_`
 """
 function mad_ctpsa_equ(a::ComplexTPS, b::ComplexTPS, tol_::Cdouble)::Bool
   ret = @ccall MAD_TPSA.mad_ctpsa_equ(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, tol_::Cdouble)::Bool
@@ -1220,6 +1220,25 @@ Sets the destination TPSA `c = a ^ b`
 """
 function mad_ctpsa_pow!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS)
   @ccall MAD_TPSA.mad_ctpsa_pow(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+"""
+    mad_ctpsa_divc!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS, tol_::Cdouble)::Bool
+
+Computes `c = a / b` by cancellation (supports singularities), however may fail.
+
+### Input
+- `a` -- Source TPSA `a`
+- `b` -- Source TPSA `b`
+- `tol_` -- (Optional) tolerance to check division, defaults to `mad_tpsa_eps`
+
+### Output
+- `c`   -- Destination TPSA `c = a / b`
+- `ret` -- True if `c == a / b` within `tol_`
+"""
+function mad_ctpsa_divc!(a::ComplexTPS, b::ComplexTPS, c::ComplexTPS, tol_::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_ctpsa_divc(a::Ref{TPS{ComplexF64}}, b::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}}, tol_::Cdouble)::Bool
+  return ret
 end
 
 
@@ -1569,6 +1588,39 @@ end
 
 
 """
+    mad_ctpsa_sincosq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+    
+Sets TPSA `s = sinc(sqrt(a))` and `c = cos(sqrt(a))`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinc(sqrt(a))`
+- `c` -- Destination TPSA `c = cos(sqrt(a))`
+"""
+function mad_ctpsa_sincosq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincosq(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+"""
+    mad_ctpsa_sincosmq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+    
+Sets TPSA `s = sinc(sqrt(a))-1)/a` and `c = (cos(sqrt(a))-1)/a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinc(sqrt(a))-1)/a`
+- `c` -- Destination TPSA `c = (cos(sqrt(a))-1)/a`
+"""
+function mad_ctpsa_sincosmq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincosmq(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+
+"""
     mad_ctpsa_sin!(a::ComplexTPS, c::ComplexTPS)
 
 Sets TPSA `c` to the `sin` of TPSA `a`.
@@ -1664,6 +1716,38 @@ function mad_ctpsa_sincosh!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)
   @ccall MAD_TPSA.mad_ctpsa_sincosh(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
 end
 
+
+"""
+    mad_ctpsa_sincoshq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+    
+Sets TPSA `s = sinhc(sqrt(a))` and `c = cosh(sqrt(a))`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinhc(sqrt(a))`
+- `c` -- Destination TPSA `c = cosh(sqrt(a))`
+"""
+function mad_ctpsa_sincoshq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincoshq(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
+
+"""
+    mad_ctpsa_sincoshmq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+    
+Sets TPSA `s = sinhc(sqrt(a))-1)/a` and `c = (cosh(sqrt(a))-1)/a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinhc(sqrt(a))-1)/a`
+- `c` -- Destination TPSA `c = (cosh(sqrt(a))-1)/a`
+"""
+function mad_ctpsa_sincoshmq!(a::ComplexTPS, s::ComplexTPS, c::ComplexTPS)::Cvoid
+  @ccall MAD_TPSA.mad_ctpsa_sincoshmq(a::Ref{TPS{ComplexF64}}, s::Ref{TPS{ComplexF64}}, c::Ref{TPS{ComplexF64}})::Cvoid
+end
 
 """
     mad_ctpsa_sinh!(a::ComplexTPS, c::ComplexTPS)
