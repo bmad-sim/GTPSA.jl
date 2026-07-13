@@ -456,6 +456,30 @@ end
   @test normTPS(complex(t) - t) < tol
   @test normTPS(complex(t,t) - (t+im*t)) < tol
 
+  s, c = sincos(t)
+  @test normTPS(s - sin(t)) < tol
+  @test normTPS(c - cos(t)) < tol
+  
+  sh, ch = sinhcosh(t)
+  @test normTPS(sh - sinh(t)) < tol
+  @test normTPS(ch - cosh(t)) < tol
+  
+  sq, cq = sincosq(t)
+  @test normTPS(sq - sincu(sqrt(t))) < tol
+  @test normTPS(cq - cos(sqrt(t))) < tol
+
+  shq, chq = sinhcoshq(t)
+  @test normTPS(shq - sinhcu(sqrt(t))) < tol
+  @test normTPS(chq - cosh(sqrt(t))) < tol
+
+  smq, cmq = sincosmq(t)
+  @test normTPS(smq - (sincu(sqrt(t))-1)/t) < tol
+  @test normTPS(cmq - (cos(sqrt(t))-1)/t) < tol
+
+  shmq, chmq = sinhcoshmq(t)
+  @test normTPS(shmq - (sinhcu(sqrt(t))-1)/t) < tol
+  @test normTPS(chmq - (cosh(sqrt(t))-1)/t) < tol
+
   t = ComplexTPS64(t)
   t[0] = 0.5+0.5im; t[[1]] = 2+2im; t[[2]] = 3+3im; t[[3]] = 4+4im; t[[4]] = 5+5im; t[[5]] = 6+6im
   @test normTPS(sin(t)^2+cos(t)^2 - 1) < tol
@@ -508,6 +532,30 @@ end
   @test normTPS(erf(-t) + erf(t)) < tol
   @test normTPS(angle(t) - atan(imag(t),real(t))) < tol
   @test normTPS(complex(t) - t) < tol
+  
+  s, c = sincos(t)
+  @test normTPS(s - sin(t)) < tol
+  @test normTPS(c - cos(t)) < tol
+  
+  sh, ch = sinhcosh(t)
+  @test normTPS(sh - sinh(t)) < tol
+  @test normTPS(ch - cosh(t)) < tol
+  
+  sq, cq = sincosq(t)
+  @test normTPS(sq - sincu(sqrt(t))) < tol
+  @test normTPS(cq - cos(sqrt(t))) < tol
+
+  shq, chq = sinhcoshq(t)
+  @test normTPS(shq - sinhcu(sqrt(t))) < tol
+  @test normTPS(chq - cosh(sqrt(t))) < tol
+
+  smq, cmq = sincosmq(t)
+  @test normTPS(smq - (sincu(sqrt(t))-1)/t) < tol
+  @test normTPS(cmq - (cos(sqrt(t))-1)/t) < tol
+
+  shmq, chmq = sinhcoshmq(t)
+  @test normTPS(shmq - (sinhcu(sqrt(t))-1)/t) < tol
+  @test normTPS(chmq - (cosh(sqrt(t))-1)/t) < tol
 end
 
 @testset "Static: Indexing" begin

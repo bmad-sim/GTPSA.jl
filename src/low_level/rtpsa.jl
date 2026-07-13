@@ -751,7 +751,7 @@ end
 """
     mad_tpsa_equ(a::RealTPS, b::RealTPS, tol_::Cdouble)::Bool
 
-Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`. If `tol_` is not specified, `DBL_GTPSA.show_epsILON` is used.
+Checks if each coefficient in the TPSAs `a` and `b` are equal within the specified absolute tolerance `tol_`. 
 
 ### Input
 - `a`    -- TPSA `a`
@@ -759,7 +759,7 @@ Checks if the TPSAs `a` and `b` are equal within the specified tolerance `tol_`.
 - `tol_` -- (Optional) Difference below which the TPSAs are considered equal
 
 ### Output
-- `ret`   - True if `a == b` within `tol_`
+- `ret`  -- True if `a == b` within `tol_`
 """
 function mad_tpsa_equ(a::RealTPS, b::RealTPS, tol_::Cdouble)::Bool
   ret = @ccall MAD_TPSA.mad_tpsa_equ(a::Ref{TPS{Float64}}, b::Ref{TPS{Float64}}, tol_::Cdouble)::Bool
@@ -872,6 +872,25 @@ function mad_tpsa_pow!(a::RealTPS, b::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_pow(a::Ref{TPS{Float64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
+
+"""
+    mad_tpsa_divc!(a::RealTPS, b::RealTPS, c::RealTPS, tol_::Cdouble)::Bool
+
+Computes `c = a / b` by cancellation (supports singularities), however may fail.
+
+### Input
+- `a` -- Source TPSA `a`
+- `b` -- Source TPSA `b`
+- `tol_` -- (Optional) tolerance to check division, defaults to `mad_tpsa_eps`
+
+### Output
+- `c`   -- Destination TPSA `c = a / b`
+- `ret` -- True if `c == a / b` within `tol_`
+"""
+function mad_tpsa_divc!(a::RealTPS, b::RealTPS, c::RealTPS, tol_::Cdouble)::Bool
+  ret = @ccall MAD_TPSA.mad_tpsa_divc(a::Ref{TPS{Float64}}, b::Ref{TPS{Float64}}, c::Ref{TPS{Float64}}, tol_::Cdouble)::Bool
+  return ret
+end
 
 """
     mad_tpsa_powi!(a::RealTPS, n::Cint, c::RealTPS)
@@ -1006,6 +1025,37 @@ function mad_tpsa_sincos!(a::RealTPS, s::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sincos(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
+"""
+    mad_tpsa_sincosq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+    
+Sets TPSA `s = sinc(sqrt(a))` and `c = cos(sqrt(a))`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinc(sqrt(a))`
+- `c` -- Destination TPSA `c = cos(sqrt(a))`
+"""
+function mad_tpsa_sincosq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_sincosq(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+end
+
+"""
+    mad_tpsa_sincosmq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+    
+Sets TPSA `s = sinc(sqrt(a))-1)/a` and `c = (cos(sqrt(a))-1)/a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinc(sqrt(a))-1)/a`
+- `c` -- Destination TPSA `c = (cos(sqrt(a))-1)/a`
+"""
+function mad_tpsa_sincosmq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_sincosmq(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+end
 
 """
     mad_tpsa_sin!(a::RealTPS, c::RealTPS)
@@ -1101,6 +1151,38 @@ Sets TPSA `s = sinh(a)` and TPSA `c = cosh(a)`
 """
 function mad_tpsa_sincosh!(a::RealTPS, s::RealTPS, c::RealTPS)
   @ccall MAD_TPSA.mad_tpsa_sincosh(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+end
+
+"""
+    mad_tpsa_sincoshq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+    
+Sets TPSA `s = sinhc(sqrt(a))` and `c = cosh(sqrt(a))`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinhc(sqrt(a))`
+- `c` -- Destination TPSA `c = cosh(sqrt(a))`
+"""
+function mad_tpsa_sincoshq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_sincoshq(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
+end
+
+"""
+    mad_tpsa_sincoshmq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+    
+Sets TPSA `s = sinhc(sqrt(a))-1)/a` and `c = (cosh(sqrt(a))-1)/a`
+
+### Input
+- `a` -- Source TPSA `a`
+
+### Output
+- `s` -- Destination TPSA `s = sinhc(sqrt(a))-1)/a`
+- `c` -- Destination TPSA `c = (cosh(sqrt(a))-1)/a`
+"""
+function mad_tpsa_sincoshmq!(a::RealTPS, s::RealTPS, c::RealTPS)::Cvoid
+  @ccall MAD_TPSA.mad_tpsa_sincoshmq(a::Ref{TPS{Float64}}, s::Ref{TPS{Float64}}, c::Ref{TPS{Float64}})::Cvoid
 end
 
 
@@ -2343,3 +2425,24 @@ function mad_tpsa_init!(t::RealTPS, d::Ptr{Desc}, mo::Cuchar)::RealTPS
   return t
 end
 
+"""
+    mad_tpsa_divc_clrcnt!
+
+Resets the counters for `div` and `divc` calls, used as diagnostic (not thread-safe).
+"""
+function mad_tpsa_divc_clrcnt!()
+  @ccall MAD_TPSA.mad_tpsa_divc_clrcnt()::Cvoid
+end
+
+"""
+    mad_tpsa_divc_getcnt!(cnt, fail)
+
+Mutates `cnt` and `fail` to the current `divc` count and current `divc` fail counts respectively.
+
+### Arguments:
+- `cnt`: pointer/reference to `Cint` value to be mutated in place
+- `fail`: pointer/reference to `Cint` value to be mutated in place
+"""
+function mad_tpsa_divc_getcnt!(cnt, fail)
+  @ccall MAD_TPSA.mad_tpsa_divc_getcnt(cnt::Ptr{Cint}, fail::Ptr{Cint})::Cvoid
+end

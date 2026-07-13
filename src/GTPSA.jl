@@ -77,7 +77,8 @@ import Base:  +,
               delete!,
               deepcopy_internal,
               float,
-              isapprox
+              isapprox,
+              sincos
 
 import LinearAlgebra: norm
 import SpecialFunctions: erf, erfc, erfi, erfcx
@@ -107,6 +108,12 @@ export
   polar,
   rect, 
   clear!,
+  sinhcosh,
+  sincosq,
+  sinhcoshq,
+  sincosmq,
+  sinhcoshmq,
+  divc,  
 
   # TPS ctors:
   @vars,

@@ -213,3 +213,21 @@ end
 # --- extras ---
 log10!(t::RealTPS,    t1::RealTPS)    = (log!(t, t1); div!(t, t, log(10)))
 log10!(t::ComplexTPS, t1::ComplexTPS) = (log!(t, t1); div!(t, t, log(10)))
+
+sincos!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincos!(a, s, c); return (s, c))
+sincos!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincos!(a, s, c); return (s, c))
+sinhcosh!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincosh!(a, s, c); return (s, c))
+sinhcosh!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincosh!(a, s, c); return (s, c))
+
+sincosq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincosq!(a, s, c); return (s, c))
+sincosq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincosq!(a, s, c); return (s, c))
+sinhcoshq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincoshq!(a, s, c); return (s, c))
+sinhcoshq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincoshq!(a, s, c); return (s, c))
+
+sincosmq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincosmq!(a, s, c); return (s, c))
+sincosmq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincosmq!(a, s, c); return (s, c))
+sinhcoshmq!(s::ComplexTPS, c::ComplexTPS, a::ComplexTPS) = (mad_ctpsa_sincoshmq!(a, s, c); return (s, c))
+sinhcoshmq!(s::RealTPS, c::RealTPS, a::RealTPS) = (mad_tpsa_sincoshmq!(a, s, c); return (s, c))
+
+divc!(c::RealTPS, a::RealTPS, b::RealTPS; tol::Cdouble=eps()) = mad_tpsa_divc!(a, b, c, tol)
+divc!(c::ComplexTPS, a::ComplexTPS, b::ComplexTPS; tol::Cdouble=eps()) = mad_ctpsa_divc!(a, b, c, tol)
