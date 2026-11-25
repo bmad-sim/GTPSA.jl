@@ -236,7 +236,11 @@ promote_rule(::Type{TPS{Float64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} 
 promote_rule(::Type{TPS{ComplexF64,D1}}, ::Type{TPS{ComplexF64,D2}}) where {D1,D2} = error("Cannot promote `TPS`s different descriptor resolution modes (maybe you tried an out of place operation with one `TPS` dynamic and the other static descriptor resolution?)")
 
 promote_rule(::Type{TPS{ComplexF64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
-promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} = TPS{ComplexF64,D}
+# A non-Real number type gives a complex TPS, except a Union of number types (e.g. the eltype
+# of a Vector holding both Float64s and TPSs), which promotes component-wise: otherwise
+# promote_type(Union{Float64,TPS64}, TPS64) would be ComplexTPS64
+promote_rule(::Type{TPS{Float64,D}}, ::Type{T}) where {D,T<:Number} =
+  T isa Union ? foldl(promote_type, Base.uniontypes(T); init=TPS{Float64,D}) : TPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
 promote_rule(::Type{T}, ::Type{TPS{ComplexF64,D}}) where {T<:AbstractIrrational,D} = TPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TPS{Float64,D}}) where {T<:Rational,D} = (T <: Real ? TPS{Float64,D} : TPS{ComplexF64,D})
