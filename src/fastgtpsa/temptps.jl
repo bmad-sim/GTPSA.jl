@@ -133,7 +133,9 @@ numtype(::TempTPS{T}) where {T} = T
 promote_rule(::Type{TempTPS{Float64,D}}, ::Type{T}) where {T<:Real,D} = TempTPS{Float64,D} 
 promote_rule(::Type{TempTPS{Float64,D}}, ::Type{TempTPS{ComplexF64,D}}) where {D} = TempTPS{ComplexF64,D}
 promote_rule(::Type{TempTPS{ComplexF64,D}}, ::Type{T}) where {T<:Number} where {D} = TempTPS{ComplexF64,D}
-promote_rule(::Type{TempTPS{Float64,D}}, ::Type{T}) where {T<:Number} where {D} = TempTPS{ComplexF64,D}
+# (component-wise for a Union of number types, as for TPS)
+promote_rule(::Type{TempTPS{Float64,D}}, ::Type{T}) where {T<:Number} where {D} =
+  T isa Union ? foldl(promote_type, Base.uniontypes(T); init=TempTPS{Float64,D}) : TempTPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TempTPS{Float64,D}}) where {T<:AbstractIrrational,D} = (T <: Real ? TempTPS{Float64,D} : TempTPS{ComplexF64,D})
 promote_rule(::Type{T}, ::Type{TempTPS{ComplexF64,D}}) where {T<:AbstractIrrational,D} = TempTPS{ComplexF64,D}
 promote_rule(::Type{T}, ::Type{TempTPS{Float64,D}}) where {T<:Rational,D} = (T <: Real ? TempTPS{Float64,D} : TempTPS{ComplexF64,D})

@@ -6282,3 +6282,19 @@ end
   p2 = TPS64(p)
   @test GTPSA.getdesc(p2) == GTPSA.getdesc(p)
 end
+@testset "Dynamic: Promotion of Union eltypes" begin
+  T = TPS64{GTPSA.Dynamic}
+  CT = ComplexTPS64{GTPSA.Dynamic}
+  # e.g. the eltype of [1.0, tps]: component-wise, not complex
+  @test promote_type(Union{Float64,T}, T) == T
+  @test promote_type(T, Union{Float64,T}) == T
+  @test promote_type(Union{Float64,Float32,T}, T) == T
+  @test promote_type(Union{Float64,Int}, T) == T
+  @test promote_type(Union{Float64,CT}, T) == CT
+  @test promote_type(Union{Float64,ComplexF64}, T) == CT
+  @test promote_type(ComplexF64, T) == CT
+  d = Descriptor(2, 2)
+  x = vars(d)
+  @test eltype(promote(1.0, x[1])) == T
+  @test eltype([Union{Float64,T}[1.0, x[1]]; x[2]]) == T
+end
